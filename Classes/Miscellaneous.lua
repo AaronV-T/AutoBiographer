@@ -15,13 +15,11 @@ end
 
 KillBreakdown = {}
 function KillBreakdown.New()
-  local newInstance = {
+  return {
     PlayerKillingBlows = {}, -- int[]
     PlayerAssists = {}, -- int[]
     GroupAssistsAndKillingBlows = {} -- int[]
   }
-  
-  return newInstance
 end
 
 function KillBreakdown.AddKill(kb, kill)
@@ -53,4 +51,15 @@ function KillBreakdown.GetTotalKillsByCatalogUnitId(kb, catalogUnitId)
   end
   
   return sum
+end
+
+-- *** Coordinates ***
+
+Coordinates = {}
+function Coordinates.New(mapId, x, y)
+  return {
+    MapId = mapId,
+    X = x,
+    Y = y
+  }
 end

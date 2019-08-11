@@ -2,7 +2,7 @@
 
 AggregatedStatistics = {}
 function AggregatedStatistics.New()
-  local newInstance = {
+  return {
     GatheringStatistics = nil,
     ItemStatistics = nil,
     KillStatistics = KillStatistics.New(),
@@ -12,20 +12,16 @@ function AggregatedStatistics.New()
     SpellStatistics = nil,
     TimeStatisticsByZone = nil
   }
-  
-  return newInstance
 end
 
 -- *** KillStatistics ***
 
 KillStatistics = {}
 function KillStatistics.New()
-  local newInstance = {
+  return {
     UntaggedKills = KillBreakdown.New(),
     TaggedKills = KillBreakdown.New()
   }
-  
-  return newInstance
 end
 
 function KillStatistics.AddKill(ks, kill) 

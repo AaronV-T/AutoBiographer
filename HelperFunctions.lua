@@ -18,7 +18,23 @@ function HF.GetCatalogIdFromGuid(guid)
   end
 end
 
--- Lua Table Helpers
+function HF.GetCoordinatesByUnitId(unitId)
+  local mapId = C_Map.GetBestMapForUnit(unitId)
+  local position = C_Map.GetPlayerMapPosition(mapId, unitId)
+  return Coordinates.New(mapId, HF.Round(position.x * 100, 2), HF.Round(position.y * 100, 2))
+end
+
+-- Lua Helpers
+
+function HF.Round(number, precision)
+  if (not precision) then precision = 0 end
+  
+  local factor = math.pow(10, precision)
+  
+  number = number * factor
+  number = math.floor(number + 0.5)
+  return number / factor
+end
 
 function HF.GetKeysFromTable(tab)
   if tab == nil then return nil end

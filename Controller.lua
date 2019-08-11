@@ -2,7 +2,7 @@ Controller = {
   CharacterData = {}
 }
 
-function Controller:AddLevel(levelNum, timestampAtDing, totalTimePlayedAtDing)
+function Controller:AddLevel(levelNum, timestampAtDing, totalTimePlayedAtDing, coordinates)
   if self.CharacterData.Levels[levelNum] ~= nil then error("Can not add level " .. levelNum .. " because it was already added.") end
   
   self.CharacterData.Levels[levelNum] = LevelStatistics.New(levelNum, totalTimePlayedAtDing, nil)
@@ -15,6 +15,11 @@ function Controller:AddLevel(levelNum, timestampAtDing, totalTimePlayedAtDing)
   if (previousLevel ~= nil and previousLevel.TotalTimePlayedAtDing ~= nil) then
     previousLevel.TimePlayedThisLevel = currentLevel.TotalTimePlayedAtDing - previousLevel.TotalTimePlayedAtDing
     print("Time played last level = " .. HelperFunctions.SecondsToTimeString(previousLevel.TimePlayedThisLevel))
+  end
+  
+  if (timestampAtDing ~= nil) then
+    table.insert(self.CharacterData.Events, LevelEvent.New(timestampAtDing, coordinates, levelNum))
+    self:PrintEvents()
   end
 end
 
@@ -42,6 +47,14 @@ function Controller:GetTotalKillsForUnitId(catalogUnitId)
   return kills
 end
 
+function Controller:PrintEvents()
+  print("Printing " .. tostring(#self.CharacterData.Events) .. " events.")
+  for _,v in pairs(self.CharacterData.Events) do
+    print(Event.ToString(v))
+  end
+end
+
 function Controller:UpdateCatalogUnit(catalogUnit)
   self.CharacterData.Catalogs.UnitCatalog[catalogUnit.Id] = catalogUnit
+  --Catalogs.PrintUnitCatalog(self.CharacterData.Catalogs)
 end

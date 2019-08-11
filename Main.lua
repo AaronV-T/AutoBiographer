@@ -72,12 +72,16 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   if type(_G["AUTOBIOGRAPHER_CATALOGS_CHAR"]) ~= "table" then
 		_G["AUTOBIOGRAPHER_CATALOGS_CHAR"] = Catalogs.New()
 	end
+  if type(_G["AUTOBIOGRAPHER_EVENTS_CHAR"]) ~= "table" then
+		_G["AUTOBIOGRAPHER_EVENTS_CHAR"] = {}
+	end
   if type(_G["AUTOBIOGRAPHER_LEVELS_CHAR"]) ~= "table" then
-		_G["AUTOBIOGRAPHER_LEVELS_CHAR"] = { }
+		_G["AUTOBIOGRAPHER_LEVELS_CHAR"] = {}
 	end
   
 	Controller.CharacterData = {
     Catalogs = _G["AUTOBIOGRAPHER_CATALOGS_CHAR"],
+    Events = _G["AUTOBIOGRAPHER_EVENTS_CHAR"],
     Levels = _G["AUTOBIOGRAPHER_LEVELS_CHAR"]
   }
   
@@ -107,7 +111,6 @@ function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
       local damagedCatalogUnitId = HelperFunctions.GetCatalogIdFromGuid(destGuid)
       if (Controller.CharacterData.Catalogs.UnitCatalog[damagedCatalogUnitId] == nil) then
         Controller:UpdateCatalogUnit(CatalogUnit.New(damagedCatalogUnitId, UnitClass(damagedUnitId), UnitClassification(damagedUnitId), UnitCreatureFamily(damagedUnitId), UnitCreatureType(damagedUnitId), UnitName(damagedUnitId), UnitRace(damagedUnitId)))
-        Catalogs.PrintUnitCatalog(Controller.CharacterData.Catalogs)
       end
     end
     
@@ -174,7 +177,7 @@ end
 
 function EM.EventHandlers.TIME_PLAYED_MSG(self, totalTimePlayed, levelTimePlayed) 
   if self.NewLevelToAddToHistory ~= nil then
-    Controller:AddLevel(self.NewLevelToAddToHistory, time(), totalTimePlayed)
+    Controller:AddLevel(self.NewLevelToAddToHistory, time(), totalTimePlayed, HelperFunctions.GetCoordinatesByUnitId("player"))
     self.NewLevelToAddToHistory = nil
   end
 end
@@ -229,8 +232,11 @@ function EM:Test()
   
 
   --print(UnitLevel("target")) -- death
+  local mapID = C_Map.GetBestMapForUnit("player")
+  HelperFunctions.PrintKeysAndValuesFromTable(C_Map.GetMapInfo(mapID))
+  HelperFunctions.PrintKeysAndValuesFromTable(HelperFunctions.GetCoordinatesByUnitId("player"))
   
-  for i = 1, 300000 do
-    Controller:UpdateCatalogUnit(CatalogUnit.New(i, "UnitClass", "UnitClassification", "UnitCreatureFamily", "UnitCreatureType", "UnitName", "UnitRace"))
-  end
+  print(GetZoneText())
+  print(GetSubZoneText())
+  print(GetRealZoneText())
 end
