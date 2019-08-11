@@ -36,12 +36,12 @@ function KillStatistics.AddKill(ks, kill)
   end
 end
 
-function KillStatistics.GetTaggedKillsForUnit(ks, unitId)
-  return KillBreakdown.GetTotalKillsForUnit(ks.TaggedKills, unitId)
+function KillStatistics.GetTaggedKillsByCatalogUnitId(ks, catalogUnitId)
+  return KillBreakdown.GetTotalKillsByCatalogUnitId(ks.TaggedKills, catalogUnitId)
 end
 
-function KillStatistics.GetTotalKillsForUnit(ks, unitId)
-  return KillBreakdown.GetTotalKillsForUnit(ks.UntaggedKills, unitId) + KillBreakdown.GetTotalKillsForUnit(ks.TaggedKills, unitId)
+function KillStatistics.GetTotalKillsByCatalogUnitId(ks, unitId)
+  return KillBreakdown.GetTotalKillsByCatalogUnitId(ks.UntaggedKills, unitId) + KillBreakdown.GetTotalKillsByCatalogUnitId(ks.TaggedKills, unitId)
 end
 
 -- *** LevelStatistics ***

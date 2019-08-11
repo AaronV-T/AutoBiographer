@@ -2,7 +2,7 @@ HelperFunctions = {}
 local HF = HelperFunctions
 
 
-function HF.GetIdFromGuid(guid)
+function HF.GetCatalogIdFromGuid(guid)
   if guid == nil then return nil end
 
   local index = 0
@@ -12,8 +12,8 @@ function HF.GetIdFromGuid(guid)
     splitGuid[index] = text
   end
    
-  if splitGuid[1] == "Player" then return guid
-  elseif splitGuid[1] == "Creature" then return splitGuid[6]
+  if splitGuid[1] == "Player" then return splitGuid[2] .. "-" .. splitGuid[3] -- serverID-playerUID
+  elseif splitGuid[1] == "Creature" or "Pet" then return tonumber(splitGuid[6]) -- ID
   else error("Unsupported GUID: " .. guid)
   end
 end

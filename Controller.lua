@@ -12,7 +12,7 @@ function Controller:AddLevel(levelNum, timestampAtDing, totalTimePlayedAtDing)
   
   print("level " .. levelNum .. ": " .. HelperFunctions.SecondsToTimeString(currentLevel.TotalTimePlayedAtDing))
   
-  if previousLevel ~= nil and previousLevel.TotalTimePlayedAtDing ~= nil then
+  if (previousLevel ~= nil and previousLevel.TotalTimePlayedAtDing ~= nil) then
     previousLevel.TimePlayedThisLevel = currentLevel.TotalTimePlayedAtDing - previousLevel.TotalTimePlayedAtDing
     print("Time played last level = " .. HelperFunctions.SecondsToTimeString(previousLevel.TimePlayedThisLevel))
   end
@@ -22,23 +22,26 @@ function Controller:AddKill(kill)
   local currentLevel = HelperFunctions.GetLastKeyFromTable(self.CharacterData.Levels)
 
   KillStatistics.AddKill(self.CharacterData.Levels[currentLevel].KillStatistics, kill)
-  print (KillStatistics.GetTaggedKillsForUnit(self.CharacterData.Levels[currentLevel].KillStatistics, kill.UnitId))
+  if (kill.PlayerHasTag) then print (KillStatistics.GetTaggedKillsByCatalogUnitId(self.CharacterData.Levels[currentLevel].KillStatistics, kill.CatalogUnitId)) end
 end
 
-function GetLevelKillsForUnitId(unitId, level)
-  if (self.CharacterData.Levels.Kills[unitId] == nil) then return 0 end
+function GetLevelKillsForUnitId(catalogUnitId, level)
+  if (self.CharacterData.Levels.Kills[catalogUnitId] == nil) then return 0 end
   
-  return self.CharacterData.Levels.Kills[unitId]
+  return self.CharacterData.Levels.Kills[catalogUnitId]
 end
 
-function Controller:GetTotalKillsForUnitId(unitId)
+function Controller:GetTotalKillsForUnitId(catalogUnitId)
   local kills = 0
   for k,v in pairs(self.CharacterData.Levels) do
-    if (v.Kills[unitId] ~= nil) then
-      kills = kills + v.Kills[unitId]
+    if (v.Kills[catalogUnitId] ~= nil) then
+      kills = kills + v.Kills[catalogUnitId]
     end
   end
   
   return kills
 end
 
+function Controller:UpdateCatalogUnit(catalogUnit)
+  self.CharacterData.Catalogs.UnitCatalog[catalogUnit.Id] = catalogUnit
+end

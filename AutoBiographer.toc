@@ -2,8 +2,9 @@
 ## Title: AutoBiographer 0.1.0 Alpha
 ## Author: Tollski
 ## Version: 0.1.0
-## SavedVariablesPerCharacter: AUTOBIOGRAPHER_LEVELS_CHAR
+## SavedVariablesPerCharacter: AUTOBIOGRAPHER_CATALOGS_CHAR, AUTOBIOGRAPHER_LEVELS_CHAR
 
+Classes/CatalogClasses.lua
 Classes/KillClasses.lua
 Classes/StatisticsClasses.lua
 Controller.lua

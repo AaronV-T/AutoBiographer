@@ -29,6 +29,9 @@ for i = 1, 40 do
 	validUnitIds[#validUnitIds + 1] = "raid" .. i
 	validUnitIds[#validUnitIds + 1] = "raidpet" .. i
 end
+for i = 1, 50 do
+  validUnitIds[#validUnitIds + 1] = "nameplate" .. i
+end
 for i = 1, #validUnitIds do
 	validUnitIds[#validUnitIds + 1] = validUnitIds[i] .. "target"
 end
@@ -40,12 +43,18 @@ local function FindUnitIdByUnitGUID(unitGuid)
 	return nil
 end
 
-local function IsUnitInOurPartyOrRaid(unitGuid)
+local function IsUnitGUIDInOurPartyOrRaid(unitGuid)
   for i = 1, #validUnitIds do
     if ((string.match(validUnitIds[i], "party%d") or string.match(validUnitIds[i], "raid%d")) and not string.match(validUnitIds[i], "target")) then
         if (UnitGUID(validUnitIds[i]) == unitGuid) then return true end
     end
 	end
+	return false
+end
+
+local function IsUnitGUIDPlayerOrPlayerPet(unitGuid)
+  if (UnitGUID("player") == unitGuid) then return true end
+  if (UnitGUID("pet") == unitGuid) then return true end
 	return false
 end
 
@@ -60,78 +69,94 @@ end
 function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   if addonName ~= "AutoBiographer" then return end
  
+  if type(_G["AUTOBIOGRAPHER_CATALOGS_CHAR"]) ~= "table" then
+		_G["AUTOBIOGRAPHER_CATALOGS_CHAR"] = Catalogs.New()
+	end
   if type(_G["AUTOBIOGRAPHER_LEVELS_CHAR"]) ~= "table" then
 		_G["AUTOBIOGRAPHER_LEVELS_CHAR"] = { }
 	end
   
 	Controller.CharacterData = {
+    Catalogs = _G["AUTOBIOGRAPHER_CATALOGS_CHAR"],
     Levels = _G["AUTOBIOGRAPHER_LEVELS_CHAR"]
   }
   
-  if (Controller.CharacterData.Levels[UnitLevel("player")]) == nil then 
-    if (UnitLevel("player") == 1 and UnitXP("player")) == 0 then
-      Controller:AddLevel(UnitLevel("player"), time(), 0)
+  local playerLevel = UnitLevel("player")
+  if (Controller.CharacterData.Levels[playerLevel]) == nil then 
+    if (playerLevel == 1 and UnitXP("player")) == 0 then
+      Controller:AddLevel(playerLevel, time(), 0)
     else 
-      Controller:AddLevel(UnitLevel("player"))
+      Controller:AddLevel(playerLevel)
     end
   end
 end
 
 function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
   local timestamp, event, hideCaster, sourceGuid, sourceName, sourceFlags, sourceRaidFlags, destGuid, destName, destFlags, destRaidflags = CombatLogGetCurrentEventInfo()
-
-  --print(event)
-  --if (playerCausedThisEvent) then print(CombatLogGetCurrentEventInfo()) end
   
   if (combatLogDamageEvents[event]) then
     local playerCausedThisEvent = sourceGuid == self.PlayerGuid
-    --if (playerCausedThisEvent) then print(UnitIsTapDenied("target")) end
+    local playerPetCausedThisEvent = sourceGuid == UnitGUID("pet")
+    local groupMemberCausedThisEvent = IsUnitGUIDInOurPartyOrRaid(sourceGuid)
     
-    if (damagedUnits[destGuid] == nil) then   
-      local firstObservedDamageCausedByPlayerOrGroup = false
-      if (playerCausedThisEvent or IsUnitInOurPartyOrRaid(sourceGuid)) then
-        firstObservedDamageCausedByPlayerOrGroup = true
-
+    local damagedUnitId = FindUnitIdByUnitGUID(destGuid)
+    local unitWasOutOfCombat = nil
+    if (damagedUnitId ~= nil) then 
+      unitWasOutOfCombat = not UnitAffectingCombat(damagedUnitId)
+      
+      local damagedCatalogUnitId = HelperFunctions.GetCatalogIdFromGuid(destGuid)
+      if (Controller.CharacterData.Catalogs.UnitCatalog[damagedCatalogUnitId] == nil) then
+        Controller:UpdateCatalogUnit(CatalogUnit.New(damagedCatalogUnitId, UnitClass(damagedUnitId), UnitClassification(damagedUnitId), UnitCreatureFamily(damagedUnitId), UnitCreatureType(damagedUnitId), UnitName(damagedUnitId), UnitRace(damagedUnitId)))
+        Catalogs.PrintUnitCatalog(Controller.CharacterData.Catalogs)
       end
+    end
+    
+    if (damagedUnits[destGuid] == nil or unitWasOutOfCombat) then   
+      local firstObservedDamageCausedByPlayerOrGroup = playerCausedThisEvent or playerPetCausedThisEvent or groupMemberCausedThisEvent
       
       damagedUnits[destGuid] = {
         FirstObservedDamageCausedByPlayerOrGroup = firstObservedDamageCausedByPlayerOrGroup,
-        IsTapDenied = nil, -- If true, guaranteed we don't have tag. If false, guaranteed we have tag.
-        LastUnitGuidWhoCausedDamage = sourceGuid,
-        PlayerHasDamaged = playerCausedThisEvent
+        GroupHasDamaged = nil,
+        IsTapDenied = nil,
+        LastUnitGuidWhoCausedDamage = nil,
+        PlayerHasDamaged = nil,
+        PlayerPetHasDamaged = nil
       }
     else
-      if (damagedUnits[destGuid].IsTapDenied == nil) then
-        local damagedUnitId = FindUnitIdByUnitGUID(destGuid)
-        if (damagedUnitId ~= nil) then
-          damagedUnits[destGuid].IsTapDenied = UnitIsTapDenied(damagedUnitId)
-          --print(destName .. " tap denied: " .. tostring(damagedUnits[destGuid].IsTapDenied))
-        end
+      if (damagedUnitId ~= nil) then
+        damagedUnits[destGuid].IsTapDenied = UnitIsTapDenied(damagedUnitId)
+        --print(destName .. " (" .. damagedUnitId .. ") tap denied: " .. tostring(damagedUnits[destGuid].IsTapDenied))
       end
     end
     
     local damagedUnit = damagedUnits[destGuid]
-    if (not damagedUnit.PlayerHasDamaged and playerCausedThisEvent) then damagedUnit.PlayerHasDamaged = true end
+    
+    if (playerCausedThisEvent) then damagedUnit.PlayerHasDamaged = true
+    elseif (playerPetCausedThisEvent) then damagedUnit.PlayerPetHasDamaged = true
+    elseif (groupMemberCausedThisEvent) then damagedUnit.GroupHasDamaged = true
+    end
+    
     damagedUnit.LastUnitGuidWhoCausedDamage = sourceGuid
   end
 
   if (event ~= "UNIT_DIED") then return end
-  
   if (damagedUnits[destGuid] == nil) then return end
   
   local deadUnit = damagedUnits[destGuid]
-  
+
   local weHadTag = false
-  if (deadUnit.IsTapDenied ~= nil) then
-    weHadTag = not deadUnit.IsTapDenied
+  if (deadUnit.IsTapDenied) then
+    weHadTag = false
+  elseif (deadUnit.IsTapDenied ~= nil and not deadUnit.IsTapDenied and (deadUnit.PlayerHasDamaged or deadUnit.PlayerPetHasDamaged or deadUnit.GroupHasDamaged)) then
+    weHadTag = true
   else
     weHadTag = deadUnit.FirstObservedDamageCausedByPlayerOrGroup
   end
   
-  if (deadUnit.PlayerHasDamaged or weHadTag) then
-    print (destName .. " Died.  Tagged: " .. tostring(weHadTag) .. ". FirstDmg: " .. tostring(deadUnit.FirstObservedDamageCausedByPlayerOrGroup) .. ". IsTapDenied: "  .. tostring(deadUnit.IsTapDenied) .. ". PlayerHasDamaged: " .. tostring(deadUnit.PlayerHasDamaged) .. ". LastDmg: " .. tostring(deadUnit.LastUnitGuidWhoCausedDamage))
+  if (deadUnit.PlayerHasDamaged or deadUnit.PlayerPetHasDamaged or weHadTag) then
+    print (destName .. " Died.  Tagged: " .. tostring(weHadTag) .. ". FODCBPOG: " .. tostring(deadUnit.FirstObservedDamageCausedByPlayerOrGroup) .. ". ITD: "  .. tostring(deadUnit.IsTapDenied) .. ". PHD: " .. tostring(deadUnit.PlayerHasDamaged) .. ". PPHD: " .. tostring(deadUnit.PlayerPetHasDamaged).. ". GHD: "  .. tostring(deadUnit.GroupHasDamaged)  .. ". LastDmg: " .. tostring(deadUnit.LastUnitGuidWhoCausedDamage))
     
-    Controller:AddKill(Kill.New(false, deadUnit.PlayerHasDamaged, deadUnit.LastUnitGuidWhoCausedDamage == self.PlayerGuid, weHadTag, HelperFunctions.GetIdFromGuid(destGuid)))
+    Controller:AddKill(Kill.New(deadUnit.GroupHasDamaged, deadUnit.PlayerHasDamaged or deadUnit.PlayerPetHasDamaged, IsUnitGUIDPlayerOrPlayerPet(deadUnit.LastUnitGuidWhoCausedDamage), weHadTag, HelperFunctions.GetCatalogIdFromGuid(destGuid)))
   end
   
   damagedUnits[destGuid] = nil
@@ -154,6 +179,32 @@ function EM.EventHandlers.TIME_PLAYED_MSG(self, totalTimePlayed, levelTimePlayed
   end
 end
 
+function EM.EventHandlers.PLAYER_REGEN_DISABLED(self)
+  --print ("PLAYER_REGEN_DISABLED.")
+  --if (UnitAffectingCombat("player")) then print("Player entered combat.") end
+end
+
+function EM.EventHandlers.PLAYER_REGEN_ENABLED(self)
+  --print ("PLAYER_REGEN_ENABLED.")
+  --if (not UnitAffectingCombat("player")) then print("Player left combat.") end
+end
+
+function EM.EventHandlers.UNIT_COMBAT(self, unitId, action, ind, dmg, dmgType)
+  --print (unitId .. ". " .. action .. ". " .. ind .. ". " .. dmg .. ". " .. dmgType)
+end
+
+function EM.EventHandlers.UNIT_FLAGS(self, unitId)
+  --print("UNIT_FLAGS. " .. unitId)
+end
+
+function EM.EventHandlers.UNIT_HEALTH(self, unitId)
+  --print (unitId .. ". " .. tostring(UnitIsTapDenied(unitId)))
+end
+
+function EM.EventHandlers.UNIT_TARGET(self, unitId)
+  --print ("UNIT_TARGET. " .. unitId .. ": " .. tostring(UnitGUID(unitId .. "target")))
+end
+
 -- Register each event for which we have an event handler.
 EM.Frame = CreateFrame("Frame")
 for eventName,_ in pairs(EM.EventHandlers) do
@@ -163,14 +214,23 @@ EM.Frame:SetScript("OnEvent", function(_, event, ...) EM:OnEvent(_, event, ...) 
 
 -- Test function.
 function EM:Clear() 
-  _G["Controller_CHAR"] = nil
-  print("Data cleared. Please reload ui.")
+  --_G["Controller_CHAR"] = nil
+  --print("Data cleared. Please reload ui.")
 end
 
 function EM:Test()
-  print("Test")
   local unitGuid = UnitGUID("target")
   --print (UnitIsTapDenied("target"))
-  --print(CanLootUnit(unitGuid))
+  --print (UnitAffectingCombat("target"))
+  --print(CanLootUnit(unitGuid)) -- hasLoot always false when called in UNIT_DIED combat log event
   --print(UnitAffectingCombat("target"))
+  --print (HelperFunctions.PrintKeysAndValuesFromTable(validUnitIds))
+  --print(UnitReaction("target", "player"))
+  
+
+  --print(UnitLevel("target")) -- death
+  
+  for i = 1, 300000 do
+    Controller:UpdateCatalogUnit(CatalogUnit.New(i, "UnitClass", "UnitClassification", "UnitCreatureFamily", "UnitCreatureType", "UnitName", "UnitRace"))
+  end
 end
