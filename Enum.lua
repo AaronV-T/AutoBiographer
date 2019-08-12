@@ -59,7 +59,7 @@ AutoBiographerEnum = {
     
   },
   QuestEventSubType = {
-    
+    QuestTurnIn = 0
   },
   SpellEventSubType = {
     

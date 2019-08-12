@@ -20,6 +20,10 @@ function Event.ToString(e, catalogs)
     if (e.SubType == AutoBiographerEnum.LevelEventSubType.LevelUp) then
       return timestampString .. "You hit level " .. e.LevelNum .. "."
     end
+  elseif (e.Type == AutoBiographerEnum.EventType.Quest) then
+    if (e.SubType == AutoBiographerEnum.LevelEventSubType.QuestTurnIn) then
+      return timestampString .. "You turned in " .. e.QuestTitle .. "."
+    end
   else
     return timestampString .. "Event with type '" .. e.Type .. "' and subType '" .. e.SubType .. "'."
   end
@@ -49,3 +53,13 @@ function LevelUpEvent.New(timestamp, coordinates, levelNum)
   return newInstance
 end
 
+QuestTurnInEvent = {}
+function QuestTurnInEvent.New(timestamp, coordinates, questId, questTitle, xpGained, moneyGained)
+  local newInstance = WorldEvent.New(timestamp, AutoBiographerEnum.EventType.Quest, AutoBiographerEnum.LevelEventSubType.QuestTurnIn, coordinates)
+  newInstance.QuestId = questId
+  newInstance.QuestTitle = questTitle
+  newInstance.XpGained = xpGained
+  newInstance.MoneyGained = moneyGained
+  
+  return newInstance
+end

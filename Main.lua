@@ -158,8 +158,8 @@ function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
   
   if (deadUnit.PlayerHasDamaged or deadUnit.PlayerPetHasDamaged or weHadTag) then
     print (destName .. " Died.  Tagged: " .. tostring(weHadTag) .. ". FODCBPOG: " .. tostring(deadUnit.FirstObservedDamageCausedByPlayerOrGroup) .. ". ITD: "  .. tostring(deadUnit.IsTapDenied) .. ". PHD: " .. tostring(deadUnit.PlayerHasDamaged) .. ". PPHD: " .. tostring(deadUnit.PlayerPetHasDamaged).. ". GHD: "  .. tostring(deadUnit.GroupHasDamaged)  .. ". LastDmg: " .. tostring(deadUnit.LastUnitGuidWhoCausedDamage))
-    
-    Controller:AddKill(Kill.New(deadUnit.GroupHasDamaged, deadUnit.PlayerHasDamaged or deadUnit.PlayerPetHasDamaged, IsUnitGUIDPlayerOrPlayerPet(deadUnit.LastUnitGuidWhoCausedDamage), weHadTag, HelperFunctions.GetCatalogIdFromGuid(destGuid)), time())
+    local kill = Kill.New(deadUnit.GroupHasDamaged, deadUnit.PlayerHasDamaged or deadUnit.PlayerPetHasDamaged, IsUnitGUIDPlayerOrPlayerPet(deadUnit.LastUnitGuidWhoCausedDamage), weHadTag, HelperFunctions.GetCatalogIdFromGuid(destGuid))
+    Controller:AddKill(kill, time(), HelperFunctions.GetCoordinatesByUnitId("player"))
   end
   
   damagedUnits[destGuid] = nil
@@ -183,17 +183,21 @@ function EM.EventHandlers.TIME_PLAYED_MSG(self, totalTimePlayed, levelTimePlayed
 end
 
 function EM.EventHandlers.PLAYER_REGEN_DISABLED(self)
-  --print ("PLAYER_REGEN_DISABLED.")
+  --print("PLAYER_REGEN_DISABLED.")
   --if (UnitAffectingCombat("player")) then print("Player entered combat.") end
 end
 
 function EM.EventHandlers.PLAYER_REGEN_ENABLED(self)
-  --print ("PLAYER_REGEN_ENABLED.")
+  --print("PLAYER_REGEN_ENABLED.")
   --if (not UnitAffectingCombat("player")) then print("Player left combat.") end
 end
 
+function EM.EventHandlers.QUEST_TURNED_IN(self, questId, xpGained, moneyGained, arg4,arg5, arg6)
+  Controller:QuestTurnedIn(time(), HelperFunctions.GetCoordinatesByUnitId("player"), questId, C_QuestLog.GetQuestInfo(questId), xpGained, moneyGained)
+end
+
 function EM.EventHandlers.UNIT_COMBAT(self, unitId, action, ind, dmg, dmgType)
-  --print (unitId .. ". " .. action .. ". " .. ind .. ". " .. dmg .. ". " .. dmgType)
+  --print(unitId .. ". " .. action .. ". " .. ind .. ". " .. dmg .. ". " .. dmgType)
 end
 
 function EM.EventHandlers.UNIT_FLAGS(self, unitId)
@@ -201,7 +205,7 @@ function EM.EventHandlers.UNIT_FLAGS(self, unitId)
 end
 
 function EM.EventHandlers.UNIT_HEALTH(self, unitId)
-  --print (unitId .. ". " .. tostring(UnitIsTapDenied(unitId)))
+  --print(unitId .. ". " .. tostring(UnitIsTapDenied(unitId)))
 end
 
 function EM.EventHandlers.UNIT_TARGET(self, unitId)
@@ -225,11 +229,11 @@ end
 
 function EM:Test()
   local unitGuid = UnitGUID("target")
-  --print (UnitIsTapDenied("target"))
-  --print (UnitAffectingCombat("target"))
+  --print(UnitIsTapDenied("target"))
+  --print(UnitAffectingCombat("target"))
   --print(CanLootUnit(unitGuid)) -- hasLoot always false when called in UNIT_DIED combat log event
   --print(UnitAffectingCombat("target"))
-  --print (HelperFunctions.PrintKeysAndValuesFromTable(validUnitIds))
+  --print(HelperFunctions.PrintKeysAndValuesFromTable(validUnitIds))
   --print(UnitReaction("target", "player"))
   
 
