@@ -18,16 +18,31 @@ function Controller:AddLevel(levelNum, timestampAtDing, totalTimePlayedAtDing, c
   end
   
   if (timestampAtDing ~= nil) then
-    table.insert(self.CharacterData.Events, LevelEvent.New(timestampAtDing, coordinates, levelNum))
+    table.insert(self.CharacterData.Events, LevelUpEvent.New(timestampAtDing, coordinates, levelNum))
     self:PrintEvents()
   end
 end
 
-function Controller:AddKill(kill)
+function Controller:AddKill(kill, timestamp)
   local currentLevel = HelperFunctions.GetLastKeyFromTable(self.CharacterData.Levels)
 
   KillStatistics.AddKill(self.CharacterData.Levels[currentLevel].KillStatistics, kill)
-  if (kill.PlayerHasTag) then print (KillStatistics.GetTaggedKillsByCatalogUnitId(self.CharacterData.Levels[currentLevel].KillStatistics, kill.CatalogUnitId)) end
+  if (kill.PlayerHasTag) then 
+    print (KillStatistics.GetTaggedKillsByCatalogUnitId(self.CharacterData.Levels[currentLevel].KillStatistics, kill.CatalogUnitId))
+    if (not Catalogs.PlayerHasKilledUnit(self.CharacterData.Catalogs, kill.CatalogUnitId)) then
+      local catalogUnit = self.CharacterData.Catalogs.UnitCatalog[kill.CatalogUnitId]
+      
+      if (catalogUnit ~= nil) then 
+        catalogUnit.Killed = true
+      else
+        catalogUnit = CatalogUnit.New(kill.catalogUnitId, nil, nil, nil, nil, nil, nil, true)
+      end
+      
+      self:UpdateCatalogUnit(catalogUnit)
+      table.insert(self.CharacterData.Events, FirstKillEvent.New(timestamp, coordinates, kill.CatalogUnitId))
+      self:PrintEvents()
+    end
+  end
 end
 
 function GetLevelKillsForUnitId(catalogUnitId, level)
@@ -48,9 +63,8 @@ function Controller:GetTotalKillsForUnitId(catalogUnitId)
 end
 
 function Controller:PrintEvents()
-  print("Printing " .. tostring(#self.CharacterData.Events) .. " events.")
   for _,v in pairs(self.CharacterData.Events) do
-    print(Event.ToString(v))
+    print(Event.ToString(v, self.CharacterData.Catalogs))
   end
 end
 

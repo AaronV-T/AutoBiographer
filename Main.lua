@@ -159,7 +159,7 @@ function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
   if (deadUnit.PlayerHasDamaged or deadUnit.PlayerPetHasDamaged or weHadTag) then
     print (destName .. " Died.  Tagged: " .. tostring(weHadTag) .. ". FODCBPOG: " .. tostring(deadUnit.FirstObservedDamageCausedByPlayerOrGroup) .. ". ITD: "  .. tostring(deadUnit.IsTapDenied) .. ". PHD: " .. tostring(deadUnit.PlayerHasDamaged) .. ". PPHD: " .. tostring(deadUnit.PlayerPetHasDamaged).. ". GHD: "  .. tostring(deadUnit.GroupHasDamaged)  .. ". LastDmg: " .. tostring(deadUnit.LastUnitGuidWhoCausedDamage))
     
-    Controller:AddKill(Kill.New(deadUnit.GroupHasDamaged, deadUnit.PlayerHasDamaged or deadUnit.PlayerPetHasDamaged, IsUnitGUIDPlayerOrPlayerPet(deadUnit.LastUnitGuidWhoCausedDamage), weHadTag, HelperFunctions.GetCatalogIdFromGuid(destGuid)))
+    Controller:AddKill(Kill.New(deadUnit.GroupHasDamaged, deadUnit.PlayerHasDamaged or deadUnit.PlayerPetHasDamaged, IsUnitGUIDPlayerOrPlayerPet(deadUnit.LastUnitGuidWhoCausedDamage), weHadTag, HelperFunctions.GetCatalogIdFromGuid(destGuid)), time())
   end
   
   damagedUnits[destGuid] = nil
@@ -217,8 +217,10 @@ EM.Frame:SetScript("OnEvent", function(_, event, ...) EM:OnEvent(_, event, ...) 
 
 -- Test function.
 function EM:Clear() 
-  --_G["Controller_CHAR"] = nil
-  --print("Data cleared. Please reload ui.")
+  _G["AUTOBIOGRAPHER_CATALOGS_CHAR"] = nil
+  _G["AUTOBIOGRAPHER_EVENTS_CHAR"] = nil
+  _G["AUTOBIOGRAPHER_LEVELS_CHAR"] = nil
+  print("Data cleared. Please reload ui.")
 end
 
 function EM:Test()

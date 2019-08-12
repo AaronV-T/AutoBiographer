@@ -5,14 +5,19 @@ function Catalogs.New()
   }
 end
 
-function Catalogs.PrintUnitCatalog(c)
-  for k,v in pairs(c.UnitCatalog) do
+function Catalogs.PlayerHasKilledUnit(catalogs, catalogUnitId)
+  local catalogUnit = catalogs.UnitCatalog[catalogUnitId]
+  return catalogUnit ~= nil and catalogUnit.Killed
+end
+
+function Catalogs.PrintUnitCatalog(catalogs)
+  for k,v in pairs(catalogs.UnitCatalog) do
     print(CatalogUnit.ToString(v))
   end
 end
 
 CatalogUnit = {}
-function CatalogUnit.New(id, class, classification, creatureFamily, creatureType, name, race)
+function CatalogUnit.New(id, class, classification, creatureFamily, creatureType, name, race, playerHasKilled)
   return {
     Id = id,
     Class = class,
@@ -20,7 +25,8 @@ function CatalogUnit.New(id, class, classification, creatureFamily, creatureType
     CFam = creatureFamily,
     CType = creatureType,
     Name = name,
-    Race = race
+    Race = race,
+    Killed = playerHasKilled
   }
 end
 

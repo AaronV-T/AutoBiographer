@@ -41,7 +41,7 @@ AutoBiographerEnum = {
     
   },
   KillEventSubType = {
-    
+    FirstKill = 0
   },
   MapEventSubType = {
     
