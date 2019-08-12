@@ -23,7 +23,7 @@ AutoBiographerEnum = {
     
   },
   DeathEventSubType = {
-    
+    PlayerDeath = 0
   },
   LevelEventSubType = {
     LevelUp = 0

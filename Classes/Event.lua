@@ -10,7 +10,23 @@ end
 function Event.ToString(e, catalogs)
   local timestampString = HelperFunctions.TimestampToDateString(e.Timestamp) .. ": "
 
-  if (e.Type == AutoBiographerEnum.EventType.Kill) then
+  if (e.Type == AutoBiographerEnum.EventType.Death) then
+    if (e.SubType == AutoBiographerEnum.LevelEventSubType.PlayerDeath) then
+      if (e.KillerCuid == nil) then
+        return timestampString .. "You died."
+      else
+        local unitName = "#" .. e.KillerCuid
+        if (catalogs ~= nil and catalogs.UnitCatalog ~= nil and catalogs.UnitCatalog[e.KillerCuid] ~= nil and catalogs.UnitCatalog[e.KillerCuid].Name ~= nil) then unitName = catalogs.UnitCatalog[e.KillerCuid].Name end
+        local killerLevelText = ""
+        if (e.KillerLevel ~= nil) then 
+          local killerLevel = e.KillerLevel
+          if (killerLevel == -1) then killerLevel = "?" end
+          killerLevelText = " (level " .. tostring(killerLevel) .. ")"
+        end
+        return timestampString .. "You were killed by " .. unitName .. killerLevelText .. "."
+      end
+    end
+  elseif (e.Type == AutoBiographerEnum.EventType.Kill) then
     if (e.SubType == AutoBiographerEnum.LevelEventSubType.FirstKill) then
       local unitName = "#" .. e.CatalogUnitId
       if (catalogs ~= nil and catalogs.UnitCatalog ~= nil and catalogs.UnitCatalog[e.CatalogUnitId] ~= nil and catalogs.UnitCatalog[e.CatalogUnitId].Name ~= nil) then unitName = catalogs.UnitCatalog[e.CatalogUnitId].Name end
@@ -49,6 +65,15 @@ LevelUpEvent = {}
 function LevelUpEvent.New(timestamp, coordinates, levelNum)
   local newInstance = WorldEvent.New(timestamp, AutoBiographerEnum.EventType.Level, AutoBiographerEnum.LevelEventSubType.LevelUp, coordinates)
   newInstance.LevelNum = levelNum
+  
+  return newInstance
+end
+
+PlayerDeathEvent = {}
+function PlayerDeathEvent.New(timestamp, coordinates, killerCatalogUnitId, killerLevel)
+  local newInstance = WorldEvent.New(timestamp, AutoBiographerEnum.EventType.Death, AutoBiographerEnum.LevelEventSubType.PlayerDeath, coordinates)
+  newInstance.KillerCuid = killerCatalogUnitId
+  newInstance.KillerLevel = killerLevel
   
   return newInstance
 end

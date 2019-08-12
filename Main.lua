@@ -20,7 +20,7 @@ do
     end
 end
 
-local validUnitIds = { "focus", "focuspet", "mouseover", "mouseoverpet", "pet", "target", "targetpet" }
+local validUnitIds = { "focus", "focuspet", "mouseover", "mouseoverpet", "pet", "player", "target", "targetpet" }
 for i = 1, 40 do
 	if i <= 4 then
 		validUnitIds[#validUnitIds + 1] = "party" .. i
@@ -103,13 +103,21 @@ function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
     local playerPetCausedThisEvent = sourceGuid == UnitGUID("pet")
     local groupMemberCausedThisEvent = IsUnitGUIDInOurPartyOrRaid(sourceGuid)
     
+    local damagerUnitId = FindUnitIdByUnitGUID(sourceGuid)
+    if (damagerUnitId ~= nil) then 
+      local damagerCatalogUnitId = HelperFunctions.GetCatalogIdFromGuid(sourceGuid)
+      if (Controller:CatalogUnitIsIncomplete(damagerCatalogUnitId)) then
+        Controller:UpdateCatalogUnit(CatalogUnit.New(damagerCatalogUnitId, UnitClass(damagerUnitId), UnitClassification(damagerUnitId), UnitCreatureFamily(damagerUnitId), UnitCreatureType(damagerUnitId), UnitName(damagerUnitId), UnitRace(damagerUnitId)))
+      end
+    end
+    
     local damagedUnitId = FindUnitIdByUnitGUID(destGuid)
     local unitWasOutOfCombat = nil
     if (damagedUnitId ~= nil) then 
       unitWasOutOfCombat = not UnitAffectingCombat(damagedUnitId)
       
       local damagedCatalogUnitId = HelperFunctions.GetCatalogIdFromGuid(destGuid)
-      if (Controller.CharacterData.Catalogs.UnitCatalog[damagedCatalogUnitId] == nil) then
+      if (Controller:CatalogUnitIsIncomplete(damagedCatalogUnitId)) then
         Controller:UpdateCatalogUnit(CatalogUnit.New(damagedCatalogUnitId, UnitClass(damagedUnitId), UnitClassification(damagedUnitId), UnitCreatureFamily(damagedUnitId), UnitCreatureType(damagedUnitId), UnitName(damagedUnitId), UnitRace(damagedUnitId)))
       end
     end
@@ -140,6 +148,8 @@ function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
     end
     
     damagedUnit.LastUnitGuidWhoCausedDamage = sourceGuid
+    
+    if (destGuid == self.PlayerGuid) then damagedUnit.LastCombatDamageTakenTimestamp = time() end
   end
 
   if (event ~= "UNIT_DIED") then return end
@@ -162,7 +172,7 @@ function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
     Controller:AddKill(kill, time(), HelperFunctions.GetCoordinatesByUnitId("player"))
   end
   
-  damagedUnits[destGuid] = nil
+  if (destGuid ~= self.PlayerGuid) then damagedUnits[destGuid] = nil end
 end
 
 function EM.EventHandlers.PLAYER_LEVEL_UP(self, newLevel, ...)
@@ -180,6 +190,21 @@ function EM.EventHandlers.TIME_PLAYED_MSG(self, totalTimePlayed, levelTimePlayed
     Controller:AddLevel(self.NewLevelToAddToHistory, time(), totalTimePlayed, HelperFunctions.GetCoordinatesByUnitId("player"))
     self.NewLevelToAddToHistory = nil
   end
+end
+
+function EM.EventHandlers.PLAYER_DEAD(self)
+  local killerCatalogUnitId = nil
+  local killerLevel = nil
+  if (damagedUnits[self.PlayerGuid] ~= nil) then
+    if (damagedUnits[self.PlayerGuid].LastCombatDamageTakenTimestamp ~= nil and time() - damagedUnits[self.PlayerGuid].LastCombatDamageTakenTimestamp < 5) then
+      killerCatalogUnitId = HelperFunctions.GetCatalogIdFromGuid(damagedUnits[self.PlayerGuid].LastUnitGuidWhoCausedDamage)
+      
+      local killerUnitId = FindUnitIdByUnitGUID(damagedUnits[self.PlayerGuid].LastUnitGuidWhoCausedDamage)
+      if (killerUnitId ~= nil) then killerLevel = UnitLevel(killerUnitId) end
+    end
+  end
+  
+  Controller:PlayerDied(time(), HelperFunctions.GetCoordinatesByUnitId("player"), killerCatalogUnitId, killerLevel)
 end
 
 function EM.EventHandlers.PLAYER_REGEN_DISABLED(self)

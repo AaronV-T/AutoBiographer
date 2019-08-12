@@ -23,8 +23,6 @@ function Controller:AddLevel(levelNum, timestampAtDing, totalTimePlayedAtDing, c
   end
   
   if (timestampAtDing ~= nil) then
-    --table.insert(self.CharacterData.Events, LevelUpEvent.New(timestampAtDing, coordinates, levelNum))
-    --self:PrintLastEvent()
     self:AddEvent(LevelUpEvent.New(timestampAtDing, coordinates, levelNum))
   end
 end
@@ -36,20 +34,14 @@ function Controller:AddKill(kill, timestamp, coordinates)
   if (kill.PlayerHasTag) then 
     print (self:GetTaggedKillsByCatalogUnitId(kill.CatalogUnitId))
     if (not Catalogs.PlayerHasKilledUnit(self.CharacterData.Catalogs, kill.CatalogUnitId)) then
-      local catalogUnit = self.CharacterData.Catalogs.UnitCatalog[kill.CatalogUnitId]
-      
-      if (catalogUnit ~= nil) then 
-        catalogUnit.Killed = true
-      else
-        catalogUnit = CatalogUnit.New(kill.catalogUnitId, nil, nil, nil, nil, nil, nil, true)
-      end
-      
-      self:UpdateCatalogUnit(catalogUnit)
-      --table.insert(self.CharacterData.Events, FirstKillEvent.New(timestamp, coordinates, kill.CatalogUnitId))
-      --self:PrintLastEvent()
+      self:UpdateCatalogUnit(CatalogUnit.New(kill.CatalogUnitId, nil, nil, nil, nil, nil, nil, true))
       self:AddEvent(FirstKillEvent.New(timestamp, coordinates, kill.CatalogUnitId))
     end
   end
+end
+
+function Controller:CatalogUnitIsIncomplete(catalogUnitId)
+  return self.CharacterData.Catalogs.UnitCatalog[catalogUnitId] == nil or self.CharacterData.Catalogs.UnitCatalog[catalogUnitId].Name == nil
 end
 
 function Controller:GetTaggedKillsByCatalogUnitId(catalogUnitId)
@@ -59,6 +51,10 @@ function Controller:GetTaggedKillsByCatalogUnitId(catalogUnitId)
   end
   
   return sum
+end
+
+function Controller:PlayerDied(timestamp, coordinates, killerCatalogUnitId, killerLevel)
+  self:AddEvent(PlayerDeathEvent.New(timestamp, coordinates, killerCatalogUnitId, killerLevel))
 end
 
 function Controller:PrintEvents()
@@ -76,6 +72,10 @@ function Controller:QuestTurnedIn(timestamp, coordinates, questId, questTitle, x
 end
 
 function Controller:UpdateCatalogUnit(catalogUnit)
-  self.CharacterData.Catalogs.UnitCatalog[catalogUnit.Id] = catalogUnit
+  if (self.CharacterData.Catalogs.UnitCatalog[catalogUnit.Id] == nil) then
+    self.CharacterData.Catalogs.UnitCatalog[catalogUnit.Id] = catalogUnit
+  else
+    CatalogUnit.Update(self.CharacterData.Catalogs.UnitCatalog[catalogUnit.Id], catalogUnit.Id, catalogUnit.Class, catalogUnit.Clsfctn, catalogUnit.CFam, catalogUnit.CType, catalogUnit.Name, catalogUnit.Race, catalogUnit.Killed)
+  end
   --Catalogs.PrintUnitCatalog(self.CharacterData.Catalogs)
 end
