@@ -1,6 +1,10 @@
 EventManager = {
   EventHandlers = {},
-  NewLevelToAddToHistory = nil
+  NewLevelToAddToHistory = nil,
+  PlayerFlags = {
+    OnTaxi = nil
+  },
+  ZoneChangedNewAreaEventHasFired = false
 }
 
 local EM = EventManager
@@ -93,6 +97,8 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
       Controller:AddLevel(playerLevel)
     end
   end
+  
+  self:UpdatePlayerFlags()
 end
 
 function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
@@ -175,7 +181,11 @@ function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
   if (destGuid ~= self.PlayerGuid) then damagedUnits[destGuid] = nil end
 end
 
-function EM.EventHandlers.PLAYER_ALIVE(self) -- Fired when the player releases from death to a graveyard; or accepts a resurrect before releasing their spirit.
+function EM.EventHandlers.PLAYER_ALIVE(self) -- Fired when the player releases from death to a graveyard; or accepts a resurrect before releasing their spirit. Also fires when logging in.
+  --print("PLAYER_ALIVE")
+  -- Upon logging in this event fires before ZONE_CHANGED_NEW_AREA and GeaRealZoneText() returns the zone of the last character logged in (or nil if you haven't logged into any other characters since launching WoW).
+  if (not self.ZoneChangedNewAreaEventHasFired or UnitOnTaxi("player")) then return end 
+  
   Controller:PlayerChangedZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText())
   Controller:PlayerChangedSubZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText(), GetSubZoneText())
 end
@@ -216,6 +226,7 @@ function EM.EventHandlers.PLAYER_REGEN_ENABLED(self)
 end
 
 function EM.EventHandlers.PLAYER_UNGHOST(self) -- Fired when the player is alive after being a ghost.
+  if (UnitOnTaxi("player")) then return end
   Controller:PlayerChangedZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText())
   Controller:PlayerChangedSubZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText(), GetSubZoneText())
 end
@@ -237,6 +248,7 @@ end
 
 function EM.EventHandlers.UNIT_FLAGS(self, unitId)
   --print("UNIT_FLAGS. " .. unitId)
+  if (unitId == "player") then self:UpdatePlayerFlags() end
 end
 
 function EM.EventHandlers.UNIT_HEALTH(self, unitId)
@@ -248,19 +260,39 @@ function EM.EventHandlers.UNIT_TARGET(self, unitId)
 end
 
 function EM.EventHandlers.ZONE_CHANGED(self)
-  if (UnitIsDeadOrGhost("Player")) then return end
+  --print("ZONE_CHANGED")
+  if (UnitIsDeadOrGhost("player") or UnitOnTaxi("player")) then return end
   Controller:PlayerChangedSubZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText(), GetSubZoneText())
 end
 
 function EM.EventHandlers.ZONE_CHANGED_INDOORS(self)
-  if (UnitIsDeadOrGhost("Player")) then return end
+  --print("ZONE_CHANGED_INDOORS")
+  if (UnitIsDeadOrGhost("player") or UnitOnTaxi("player")) then return end
   Controller:PlayerChangedSubZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText(), GetSubZoneText())
 end
 
 function EM.EventHandlers.ZONE_CHANGED_NEW_AREA(self)
-  if (UnitIsDeadOrGhost("Player")) then return end
+  --print("ZONE_CHANGED_NEW_AREA")
+  
+  if (not self.ZoneChangedNewAreaEventHasFired) then
+    self.ZoneChangedNewAreaEventHasFired = true
+  end 
+  
+  if (UnitIsDeadOrGhost("player") or UnitOnTaxi("player")) then return end
   Controller:PlayerChangedZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText())
   Controller:PlayerChangedSubZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText(), GetSubZoneText())
+end
+
+-- *** Miscellaneous Member Functions ***
+ 
+function EM:UpdatePlayerFlags()
+  local wasOnTaxi = self.PlayerFlags.OnTaxi
+  self.PlayerFlags.OnTaxi = UnitOnTaxi("player")
+  
+  if (wasOnTaxi and not self.PlayerFlags.OnTaxi and not UnitIsDeadOrGhost("player")) then 
+    Controller:PlayerChangedZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText())
+    Controller:PlayerChangedSubZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText(), GetSubZoneText())
+  end
 end
 
 -- Register each event for which we have an event handler.

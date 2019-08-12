@@ -38,7 +38,9 @@ function Event.ToString(e, catalogs)
     end
   elseif (e.Type == AutoBiographerEnum.EventType.Map) then
     if (e.SubType == AutoBiographerEnum.MapEventSubType.SubZoneFirstVisit) then
-      return timestampString .. "You entered " .. e.SubZoneName .. " (" .. tostring(e.ZoneName) .. ") for the first time."
+      local zoneName = "?"
+      if (catalogs ~= nil and catalogs.SubZoneCatalog ~= nil and catalogs.SubZoneCatalog[e.SubZoneName] ~= nil and catalogs.SubZoneCatalog[e.SubZoneName].ZoneName ~= nil) then zoneName = catalogs.SubZoneCatalog[e.SubZoneName].ZoneName end
+      return timestampString .. "You entered " .. e.SubZoneName .. " (" .. tostring(zoneName) .. ") for the first time."
     end
     if (e.SubType == AutoBiographerEnum.MapEventSubType.ZoneFirstVisit) then
       return timestampString .. "You entered " .. e.ZoneName .. " for the first time."
