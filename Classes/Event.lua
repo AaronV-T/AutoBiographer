@@ -11,7 +11,7 @@ function Event.ToString(e, catalogs)
   local timestampString = HelperFunctions.TimestampToDateString(e.Timestamp) .. ": "
 
   if (e.Type == AutoBiographerEnum.EventType.Death) then
-    if (e.SubType == AutoBiographerEnum.LevelEventSubType.PlayerDeath) then
+    if (e.SubType == AutoBiographerEnum.DeathEventSubType.PlayerDeath) then
       if (e.KillerCuid == nil) then
         return timestampString .. "You died."
       else
@@ -27,7 +27,7 @@ function Event.ToString(e, catalogs)
       end
     end
   elseif (e.Type == AutoBiographerEnum.EventType.Kill) then
-    if (e.SubType == AutoBiographerEnum.LevelEventSubType.FirstKill) then
+    if (e.SubType == AutoBiographerEnum.KillEventSubType.FirstKill) then
       local unitName = "#" .. e.CatalogUnitId
       if (catalogs ~= nil and catalogs.UnitCatalog ~= nil and catalogs.UnitCatalog[e.CatalogUnitId] ~= nil and catalogs.UnitCatalog[e.CatalogUnitId].Name ~= nil) then unitName = catalogs.UnitCatalog[e.CatalogUnitId].Name end
       return timestampString .. "You killed " .. unitName .. " for the first time."
@@ -36,8 +36,15 @@ function Event.ToString(e, catalogs)
     if (e.SubType == AutoBiographerEnum.LevelEventSubType.LevelUp) then
       return timestampString .. "You hit level " .. e.LevelNum .. "."
     end
+  elseif (e.Type == AutoBiographerEnum.EventType.Map) then
+    if (e.SubType == AutoBiographerEnum.MapEventSubType.SubZoneFirstVisit) then
+      return timestampString .. "You entered " .. e.SubZoneName .. " (" .. tostring(e.ZoneName) .. ") for the first time."
+    end
+    if (e.SubType == AutoBiographerEnum.MapEventSubType.ZoneFirstVisit) then
+      return timestampString .. "You entered " .. e.ZoneName .. " for the first time."
+    end
   elseif (e.Type == AutoBiographerEnum.EventType.Quest) then
-    if (e.SubType == AutoBiographerEnum.LevelEventSubType.QuestTurnIn) then
+    if (e.SubType == AutoBiographerEnum.QuestEventSubType.QuestTurnIn) then
       return timestampString .. "You turned in " .. e.QuestTitle .. "."
     end
   else
@@ -55,7 +62,7 @@ end
 
 FirstKillEvent = {}
 function FirstKillEvent.New(timestamp, coordinates, catalogUnitId)
-  local newInstance = WorldEvent.New(timestamp, AutoBiographerEnum.EventType.Kill, AutoBiographerEnum.LevelEventSubType.FirstKill, coordinates)
+  local newInstance = WorldEvent.New(timestamp, AutoBiographerEnum.EventType.Kill, AutoBiographerEnum.KillEventSubType.FirstKill, coordinates)
   newInstance.CatalogUnitId = catalogUnitId
   
   return newInstance
@@ -71,7 +78,7 @@ end
 
 PlayerDeathEvent = {}
 function PlayerDeathEvent.New(timestamp, coordinates, killerCatalogUnitId, killerLevel)
-  local newInstance = WorldEvent.New(timestamp, AutoBiographerEnum.EventType.Death, AutoBiographerEnum.LevelEventSubType.PlayerDeath, coordinates)
+  local newInstance = WorldEvent.New(timestamp, AutoBiographerEnum.EventType.Death, AutoBiographerEnum.DeathEventSubType.PlayerDeath, coordinates)
   newInstance.KillerCuid = killerCatalogUnitId
   newInstance.KillerLevel = killerLevel
   
@@ -80,11 +87,27 @@ end
 
 QuestTurnInEvent = {}
 function QuestTurnInEvent.New(timestamp, coordinates, questId, questTitle, xpGained, moneyGained)
-  local newInstance = WorldEvent.New(timestamp, AutoBiographerEnum.EventType.Quest, AutoBiographerEnum.LevelEventSubType.QuestTurnIn, coordinates)
+  local newInstance = WorldEvent.New(timestamp, AutoBiographerEnum.EventType.Quest, AutoBiographerEnum.QuestEventSubType.QuestTurnIn, coordinates)
   newInstance.QuestId = questId
   newInstance.QuestTitle = questTitle
   newInstance.XpGained = xpGained
   newInstance.MoneyGained = moneyGained
+  
+  return newInstance
+end
+
+SubZoneFirstVisitEvent = {}
+function SubZoneFirstVisitEvent.New(timestamp, coordinates, subZoneName)
+  local newInstance = WorldEvent.New(timestamp, AutoBiographerEnum.EventType.Map, AutoBiographerEnum.MapEventSubType.SubZoneFirstVisit, coordinates)
+  newInstance.SubZoneName = subZoneName
+  
+  return newInstance
+end
+
+ZoneFirstVisitEvent = {}
+function ZoneFirstVisitEvent.New(timestamp, coordinates, zoneName)
+  local newInstance = WorldEvent.New(timestamp, AutoBiographerEnum.EventType.Map, AutoBiographerEnum.MapEventSubType.ZoneFirstVisit, coordinates)
+  newInstance.ZoneName = zoneName
   
   return newInstance
 end

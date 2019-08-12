@@ -175,21 +175,9 @@ function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
   if (destGuid ~= self.PlayerGuid) then damagedUnits[destGuid] = nil end
 end
 
-function EM.EventHandlers.PLAYER_LEVEL_UP(self, newLevel, ...)
-  self.NewLevelToAddToHistory = newLevel
-  
-  RequestTimePlayed()
-end
-
-function EM.EventHandlers.PLAYER_LOGIN(self)
-  self.PlayerGuid = UnitGUID("player") -- Player GUID Format: Player-[server ID]-[player UID]
-end
-
-function EM.EventHandlers.TIME_PLAYED_MSG(self, totalTimePlayed, levelTimePlayed) 
-  if self.NewLevelToAddToHistory ~= nil then
-    Controller:AddLevel(self.NewLevelToAddToHistory, time(), totalTimePlayed, HelperFunctions.GetCoordinatesByUnitId("player"))
-    self.NewLevelToAddToHistory = nil
-  end
+function EM.EventHandlers.PLAYER_ALIVE(self) -- Fired when the player releases from death to a graveyard; or accepts a resurrect before releasing their spirit.
+  Controller:PlayerChangedZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText())
+  Controller:PlayerChangedSubZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText(), GetSubZoneText())
 end
 
 function EM.EventHandlers.PLAYER_DEAD(self)
@@ -207,6 +195,16 @@ function EM.EventHandlers.PLAYER_DEAD(self)
   Controller:PlayerDied(time(), HelperFunctions.GetCoordinatesByUnitId("player"), killerCatalogUnitId, killerLevel)
 end
 
+function EM.EventHandlers.PLAYER_LEVEL_UP(self, newLevel, ...)
+  self.NewLevelToAddToHistory = newLevel
+  
+  RequestTimePlayed()
+end
+
+function EM.EventHandlers.PLAYER_LOGIN(self)
+  self.PlayerGuid = UnitGUID("player") -- Player GUID Format: Player-[server ID]-[player UID]
+end
+
 function EM.EventHandlers.PLAYER_REGEN_DISABLED(self)
   --print("PLAYER_REGEN_DISABLED.")
   --if (UnitAffectingCombat("player")) then print("Player entered combat.") end
@@ -217,8 +215,20 @@ function EM.EventHandlers.PLAYER_REGEN_ENABLED(self)
   --if (not UnitAffectingCombat("player")) then print("Player left combat.") end
 end
 
+function EM.EventHandlers.PLAYER_UNGHOST(self) -- Fired when the player is alive after being a ghost.
+  Controller:PlayerChangedZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText())
+  Controller:PlayerChangedSubZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText(), GetSubZoneText())
+end
+
 function EM.EventHandlers.QUEST_TURNED_IN(self, questId, xpGained, moneyGained, arg4,arg5, arg6)
   Controller:QuestTurnedIn(time(), HelperFunctions.GetCoordinatesByUnitId("player"), questId, C_QuestLog.GetQuestInfo(questId), xpGained, moneyGained)
+end
+
+function EM.EventHandlers.TIME_PLAYED_MSG(self, totalTimePlayed, levelTimePlayed) 
+  if self.NewLevelToAddToHistory ~= nil then
+    Controller:AddLevel(self.NewLevelToAddToHistory, time(), totalTimePlayed, HelperFunctions.GetCoordinatesByUnitId("player"))
+    self.NewLevelToAddToHistory = nil
+  end
 end
 
 function EM.EventHandlers.UNIT_COMBAT(self, unitId, action, ind, dmg, dmgType)
@@ -235,6 +245,22 @@ end
 
 function EM.EventHandlers.UNIT_TARGET(self, unitId)
   --print ("UNIT_TARGET. " .. unitId .. ": " .. tostring(UnitGUID(unitId .. "target")))
+end
+
+function EM.EventHandlers.ZONE_CHANGED(self)
+  if (UnitIsDeadOrGhost("Player")) then return end
+  Controller:PlayerChangedSubZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText(), GetSubZoneText())
+end
+
+function EM.EventHandlers.ZONE_CHANGED_INDOORS(self)
+  if (UnitIsDeadOrGhost("Player")) then return end
+  Controller:PlayerChangedSubZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText(), GetSubZoneText())
+end
+
+function EM.EventHandlers.ZONE_CHANGED_NEW_AREA(self)
+  if (UnitIsDeadOrGhost("Player")) then return end
+  Controller:PlayerChangedZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText())
+  Controller:PlayerChangedSubZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText(), GetSubZoneText())
 end
 
 -- Register each event for which we have an event handler.
@@ -254,20 +280,8 @@ end
 
 function EM:Test()
   local unitGuid = UnitGUID("target")
-  --print(UnitIsTapDenied("target"))
-  --print(UnitAffectingCombat("target"))
-  --print(CanLootUnit(unitGuid)) -- hasLoot always false when called in UNIT_DIED combat log event
-  --print(UnitAffectingCombat("target"))
-  --print(HelperFunctions.PrintKeysAndValuesFromTable(validUnitIds))
-  --print(UnitReaction("target", "player"))
-  
+  --print(CanLootUnit(unitGuid)) -- hasLoot always false when called in UNIT_DIED combat log event, have to wait for it to register correctly
 
-  --print(UnitLevel("target")) -- death
-  local mapID = C_Map.GetBestMapForUnit("player")
-  HelperFunctions.PrintKeysAndValuesFromTable(C_Map.GetMapInfo(mapID))
-  HelperFunctions.PrintKeysAndValuesFromTable(HelperFunctions.GetCoordinatesByUnitId("player"))
   
-  print(GetZoneText())
-  print(GetSubZoneText())
-  print(GetRealZoneText())
+  --GetQuestsCompleted() -- lists ids of every completed quest
 end

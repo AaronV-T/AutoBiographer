@@ -1,7 +1,11 @@
+-- *** Catalogs ***
+
 Catalogs = {}
 function Catalogs.New()
   return {
+    SubZoneCatalog = {}, -- Dict<CatalogSubZoneName, CatalogSubZone>
     UnitCatalog = {}, -- Dict<CatalogUnitId, CatalogUnit>
+    ZoneCatalog = {}, -- Dict<CatalogZoneName, CatalogZone>
   }
 end
 
@@ -15,6 +19,8 @@ function Catalogs.PrintUnitCatalog(catalogs)
     print(CatalogUnit.ToString(v))
   end
 end
+
+-- *** CatalogUnit ***
 
 CatalogUnit = {}
 function CatalogUnit.New(id, class, classification, creatureFamily, creatureType, name, race, playerHasKilled)
@@ -44,3 +50,25 @@ function CatalogUnit.Update(cu, id, class, classification, creatureFamily, creat
   if (race ~= nil) then cu.Race = Race end
   if (playerHasKilled ~= nil) then cu.Killed = playerHasKilled end
 end
+
+-- *** CatalogSubZone ***
+
+CatalogSubZone = {}
+function CatalogSubZone.New(name, hasEntered, zoneName)
+  return {
+    Name = name,
+    HasEntered = hasEntered,
+    ZoneName = zoneName
+  }
+end
+
+-- *** CatalogZone ***
+
+CatalogZone = {}
+function CatalogZone.New(name, hasEntered)
+  return {
+    Name = name,
+    HasEntered = hasEntered
+  }
+end
+

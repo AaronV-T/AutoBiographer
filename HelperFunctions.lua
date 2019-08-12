@@ -20,6 +20,9 @@ end
 
 function HF.GetCoordinatesByUnitId(unitId)
   local mapId = C_Map.GetBestMapForUnit(unitId)
+  
+  if (mapId == nil) then return nil end
+  
   local position = C_Map.GetPlayerMapPosition(mapId, unitId)
   return Coordinates.New(mapId, HF.Round(position.x * 100, 2), HF.Round(position.y * 100, 2))
 end

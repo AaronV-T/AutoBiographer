@@ -4,7 +4,7 @@ Controller = {
 
 function Controller:AddEvent(event)
   table.insert(self.CharacterData.Events, event)
-    self:PrintLastEvent()
+  self:PrintLastEvent()
 end
 
 function Controller:AddLevel(levelNum, timestampAtDing, totalTimePlayedAtDing, coordinates)
@@ -51,6 +51,22 @@ function Controller:GetTaggedKillsByCatalogUnitId(catalogUnitId)
   end
   
   return sum
+end
+
+function Controller:PlayerChangedSubZone(timestamp, coordinates, zoneName, subZoneName)
+  if (subZoneName == nil or subZoneName == "") then return end
+  
+  if (self.CharacterData.Catalogs.SubZoneCatalog[subZoneName] == nil) then
+    self.CharacterData.Catalogs.SubZoneCatalog[subZoneName] = CatalogSubZone.New(subZoneName, true, zoneName)
+    self:AddEvent(SubZoneFirstVisitEvent.New(timestamp, coordinates, subZoneName))
+  end
+end
+
+function Controller:PlayerChangedZone(timestamp, coordinates, zoneName)
+  if (self.CharacterData.Catalogs.ZoneCatalog[zoneName] == nil) then
+    self.CharacterData.Catalogs.ZoneCatalog[zoneName] = CatalogZone.New(zoneName, true)
+    self:AddEvent(ZoneFirstVisitEvent.New(timestamp, coordinates, zoneName))
+  end
 end
 
 function Controller:PlayerDied(timestamp, coordinates, killerCatalogUnitId, killerLevel)

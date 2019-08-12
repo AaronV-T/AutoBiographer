@@ -44,7 +44,8 @@ AutoBiographerEnum = {
     FirstKill = 0
   },
   MapEventSubType = {
-    
+    SubZoneFirstVisit = 0,
+    ZoneFirstVisit = 1
   },
   MiscellaneousEventSubType = {
     
