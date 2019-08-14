@@ -41,7 +41,8 @@ AutoBiographerEnum = {
     
   },
   KillEventSubType = {
-    FirstKill = 0
+    BossKill = 0,
+    FirstKill = 1
   },
   MapEventSubType = {
     SubZoneFirstVisit = 0,

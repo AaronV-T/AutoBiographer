@@ -53,6 +53,10 @@ function Controller:GetTaggedKillsByCatalogUnitId(catalogUnitId)
   return sum
 end
 
+function Controller:OnBossKill(timestamp, coordinates, bossId, bossName)
+  self:AddEvent(BossKillEvent.New(timestamp, coordinates, bossId, bossName))
+end
+
 function Controller:PlayerChangedSubZone(timestamp, coordinates, zoneName, subZoneName)
   if (subZoneName == nil or subZoneName == "") then return end
   

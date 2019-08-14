@@ -2,6 +2,7 @@ EventManager = {
   EventHandlers = {},
   NewLevelToAddToHistory = nil,
   PlayerFlags = {
+    AffectingCombat = nil,
     OnTaxi = nil
   },
   ZoneChangedNewAreaEventHasFired = false
@@ -97,8 +98,10 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
       Controller:AddLevel(playerLevel)
     end
   end
-  
-  self:UpdatePlayerFlags()
+end
+
+function EM.EventHandlers.BOSS_KILL(self, bossId, bossName)
+  Controller:OnBossKill(time(), HelperFunctions.GetCoordinatesByUnitId("player"), bossId, bossName)
 end
 
 function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
@@ -181,6 +184,11 @@ function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
   if (destGuid ~= self.PlayerGuid) then damagedUnits[destGuid] = nil end
 end
 
+function EM.EventHandlers.LEARNED_SPELL_IN_TAB(self, spellId, skillInfoIndex, isGuildPerkSpell)
+  print(tostring(spellId) .. ", " .. tostring(skillInfoIndex) .. ", " .. tostring(isGuildPerkSpell))
+  --Controller:OnBossKill(time(), HelperFunctions.GetCoordinatesByUnitId("player"), bossId, bossName)
+end
+
 function EM.EventHandlers.PLAYER_ALIVE(self) -- Fired when the player releases from death to a graveyard; or accepts a resurrect before releasing their spirit. Also fires when logging in.
   --print("PLAYER_ALIVE")
   -- Upon logging in this event fires before ZONE_CHANGED_NEW_AREA and GeaRealZoneText() returns the zone of the last character logged in (or nil if you haven't logged into any other characters since launching WoW).
@@ -213,16 +221,6 @@ end
 
 function EM.EventHandlers.PLAYER_LOGIN(self)
   self.PlayerGuid = UnitGUID("player") -- Player GUID Format: Player-[server ID]-[player UID]
-end
-
-function EM.EventHandlers.PLAYER_REGEN_DISABLED(self)
-  --print("PLAYER_REGEN_DISABLED.")
-  --if (UnitAffectingCombat("player")) then print("Player entered combat.") end
-end
-
-function EM.EventHandlers.PLAYER_REGEN_ENABLED(self)
-  --print("PLAYER_REGEN_ENABLED.")
-  --if (not UnitAffectingCombat("player")) then print("Player left combat.") end
 end
 
 function EM.EventHandlers.PLAYER_UNGHOST(self) -- Fired when the player is alive after being a ghost.
@@ -286,12 +284,22 @@ end
 -- *** Miscellaneous Member Functions ***
  
 function EM:UpdatePlayerFlags()
-  local wasOnTaxi = self.PlayerFlags.OnTaxi
+  -- 
+  local playerWasOnTaxi = self.PlayerFlags.OnTaxi
   self.PlayerFlags.OnTaxi = UnitOnTaxi("player")
   
-  if (wasOnTaxi and not self.PlayerFlags.OnTaxi and not UnitIsDeadOrGhost("player")) then 
-    Controller:PlayerChangedZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText())
-    Controller:PlayerChangedSubZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText(), GetSubZoneText())
+  local playerWasAffectingCombat = self.PlayerFlags.AffectingCombat
+  self.PlayerFlags.AffectingCombat = UnitAffectingCombat("player")
+  
+  -- Special 
+  if (playerWasOnTaxi and not self.PlayerFlags.OnTaxi) then
+    print("Player exited taxi.")
+    if (not UnitIsDeadOrGhost("player")) then 
+      Controller:PlayerChangedZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText())
+      Controller:PlayerChangedSubZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText(), GetSubZoneText())
+    end
+  elseif (playerWasOnTaxi == false and self.PlayerFlags.OnTaxi) then
+    print("Player entered taxi.")
   end
 end
 
@@ -314,6 +322,5 @@ function EM:Test()
   local unitGuid = UnitGUID("target")
   --print(CanLootUnit(unitGuid)) -- hasLoot always false when called in UNIT_DIED combat log event, have to wait for it to register correctly
 
-  
   --GetQuestsCompleted() -- lists ids of every completed quest
 end

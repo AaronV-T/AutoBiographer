@@ -27,6 +27,9 @@ function Event.ToString(e, catalogs)
       end
     end
   elseif (e.Type == AutoBiographerEnum.EventType.Kill) then
+    if (e.SubType == AutoBiographerEnum.KillEventSubType.BossKill) then
+      return timestampString .. "You killed " .. e.BossName.. "."
+    end
     if (e.SubType == AutoBiographerEnum.KillEventSubType.FirstKill) then
       local unitName = "#" .. e.CatalogUnitId
       if (catalogs ~= nil and catalogs.UnitCatalog ~= nil and catalogs.UnitCatalog[e.CatalogUnitId] ~= nil and catalogs.UnitCatalog[e.CatalogUnitId].Name ~= nil) then unitName = catalogs.UnitCatalog[e.CatalogUnitId].Name end
@@ -58,6 +61,17 @@ WorldEvent = {}
 function WorldEvent.New(timestamp, type, subType, coordinates)
   local newInstance = Event.New(timestamp, type, subType)
   newInstance.Coordinates = coordinates
+  
+  return newInstance
+end
+
+-- *** Concrete Events ***
+
+BossKillEvent = {}
+function BossKillEvent.New(timestamp, coordinates, bossId, bossName)
+  local newInstance = WorldEvent.New(timestamp, AutoBiographerEnum.EventType.Kill, AutoBiographerEnum.KillEventSubType.BossKill, coordinates)
+  newInstance.BossId = bossId
+  newInstance.BossName = bossName
   
   return newInstance
 end
