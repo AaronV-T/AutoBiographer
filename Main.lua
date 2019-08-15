@@ -93,9 +93,9 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   local playerLevel = UnitLevel("player")
   if (Controller.CharacterData.Levels[playerLevel]) == nil then 
     if (playerLevel == 1 and UnitXP("player")) == 0 then
-      Controller:AddLevel(playerLevel, time(), 0)
+      Controller:OnLevelUp(time(), nil, playerLevel, 0)
     else 
-      Controller:AddLevel(playerLevel)
+      Controller:OnLevelUp(nil, nil, playerLevel)
     end
   end
 end
@@ -176,27 +176,25 @@ function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
   end
   
   if (deadUnit.PlayerHasDamaged or deadUnit.PlayerPetHasDamaged or weHadTag) then
-    print (destName .. " Died.  Tagged: " .. tostring(weHadTag) .. ". FODCBPOG: " .. tostring(deadUnit.FirstObservedDamageCausedByPlayerOrGroup) .. ". ITD: "  .. tostring(deadUnit.IsTapDenied) .. ". PHD: " .. tostring(deadUnit.PlayerHasDamaged) .. ". PPHD: " .. tostring(deadUnit.PlayerPetHasDamaged).. ". GHD: "  .. tostring(deadUnit.GroupHasDamaged)  .. ". LastDmg: " .. tostring(deadUnit.LastUnitGuidWhoCausedDamage))
+    --print (destName .. " Died.  Tagged: " .. tostring(weHadTag) .. ". FODCBPOG: " .. tostring(deadUnit.FirstObservedDamageCausedByPlayerOrGroup) .. ". ITD: "  .. tostring(deadUnit.IsTapDenied) .. ". PHD: " .. tostring(deadUnit.PlayerHasDamaged) .. ". PPHD: " .. tostring(deadUnit.PlayerPetHasDamaged).. ". GHD: "  .. tostring(deadUnit.GroupHasDamaged)  .. ". LastDmg: " .. tostring(deadUnit.LastUnitGuidWhoCausedDamage))
     local kill = Kill.New(deadUnit.GroupHasDamaged, deadUnit.PlayerHasDamaged or deadUnit.PlayerPetHasDamaged, IsUnitGUIDPlayerOrPlayerPet(deadUnit.LastUnitGuidWhoCausedDamage), weHadTag, HelperFunctions.GetCatalogIdFromGuid(destGuid))
-    Controller:AddKill(kill, time(), HelperFunctions.GetCoordinatesByUnitId("player"))
+    Controller:OnKill(time(), HelperFunctions.GetCoordinatesByUnitId("player"), kill)
   end
   
   if (destGuid ~= self.PlayerGuid) then damagedUnits[destGuid] = nil end
 end
 
 function EM.EventHandlers.LEARNED_SPELL_IN_TAB(self, spellId, skillInfoIndex, isGuildPerkSpell)
-  print(tostring(spellId) .. ", " .. tostring(skillInfoIndex) .. ", " .. tostring(isGuildPerkSpell))
   local name, rank, icon, castTime, minRange, maxRange, spellId = GetSpellInfo(spellId)
   Controller:OnSpellLearned(time(), HelperFunctions.GetCoordinatesByUnitId("player"), spellId, name, rank)
 end
 
 function EM.EventHandlers.PLAYER_ALIVE(self) -- Fired when the player releases from death to a graveyard; or accepts a resurrect before releasing their spirit. Also fires when logging in.
-  --print("PLAYER_ALIVE")
   -- Upon logging in this event fires before ZONE_CHANGED_NEW_AREA and GeaRealZoneText() returns the zone of the last character logged in (or nil if you haven't logged into any other characters since launching WoW).
   if (not self.ZoneChangedNewAreaEventHasFired or UnitOnTaxi("player")) then return end 
   
-  Controller:PlayerChangedZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText())
-  Controller:PlayerChangedSubZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText(), GetSubZoneText())
+  Controller:OnChangedZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText())
+  Controller:OnChangedSubZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText(), GetSubZoneText())
 end
 
 function EM.EventHandlers.PLAYER_DEAD(self)
@@ -211,7 +209,7 @@ function EM.EventHandlers.PLAYER_DEAD(self)
     end
   end
   
-  Controller:PlayerDied(time(), HelperFunctions.GetCoordinatesByUnitId("player"), killerCatalogUnitId, killerLevel)
+  Controller:OnDeath(time(), HelperFunctions.GetCoordinatesByUnitId("player"), killerCatalogUnitId, killerLevel)
 end
 
 function EM.EventHandlers.PLAYER_LEVEL_UP(self, newLevel, ...)
@@ -226,17 +224,17 @@ end
 
 function EM.EventHandlers.PLAYER_UNGHOST(self) -- Fired when the player is alive after being a ghost.
   if (UnitOnTaxi("player")) then return end
-  Controller:PlayerChangedZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText())
-  Controller:PlayerChangedSubZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText(), GetSubZoneText())
+  Controller:OnChangedZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText())
+  Controller:OnChangedSubZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText(), GetSubZoneText())
 end
 
 function EM.EventHandlers.QUEST_TURNED_IN(self, questId, xpGained, moneyGained, arg4,arg5, arg6)
-  Controller:QuestTurnedIn(time(), HelperFunctions.GetCoordinatesByUnitId("player"), questId, C_QuestLog.GetQuestInfo(questId), xpGained, moneyGained)
+  Controller:OnQuestTurnedIn(time(), HelperFunctions.GetCoordinatesByUnitId("player"), questId, C_QuestLog.GetQuestInfo(questId), xpGained, moneyGained)
 end
 
 function EM.EventHandlers.TIME_PLAYED_MSG(self, totalTimePlayed, levelTimePlayed) 
   if self.NewLevelToAddToHistory ~= nil then
-    Controller:AddLevel(self.NewLevelToAddToHistory, time(), totalTimePlayed, HelperFunctions.GetCoordinatesByUnitId("player"))
+    Controller:OnLevelUp(time(), HelperFunctions.GetCoordinatesByUnitId("player"), self.NewLevelToAddToHistory, totalTimePlayed)
     self.NewLevelToAddToHistory = nil
   end
 end
@@ -259,27 +257,23 @@ function EM.EventHandlers.UNIT_TARGET(self, unitId)
 end
 
 function EM.EventHandlers.ZONE_CHANGED(self)
-  --print("ZONE_CHANGED")
   if (UnitIsDeadOrGhost("player") or UnitOnTaxi("player")) then return end
-  Controller:PlayerChangedSubZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText(), GetSubZoneText())
+  Controller:OnChangedSubZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText(), GetSubZoneText())
 end
 
 function EM.EventHandlers.ZONE_CHANGED_INDOORS(self)
-  --print("ZONE_CHANGED_INDOORS")
   if (UnitIsDeadOrGhost("player") or UnitOnTaxi("player")) then return end
-  Controller:PlayerChangedSubZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText(), GetSubZoneText())
+  Controller:OnChangedSubZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText(), GetSubZoneText())
 end
 
 function EM.EventHandlers.ZONE_CHANGED_NEW_AREA(self)
-  --print("ZONE_CHANGED_NEW_AREA")
-  
   if (not self.ZoneChangedNewAreaEventHasFired) then
     self.ZoneChangedNewAreaEventHasFired = true
   end 
   
   if (UnitIsDeadOrGhost("player") or UnitOnTaxi("player")) then return end
-  Controller:PlayerChangedZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText())
-  Controller:PlayerChangedSubZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText(), GetSubZoneText())
+  Controller:OnChangedZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText())
+  Controller:OnChangedSubZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText(), GetSubZoneText())
 end
 
 -- *** Miscellaneous Member Functions ***
@@ -296,8 +290,8 @@ function EM:UpdatePlayerFlags()
   if (playerWasOnTaxi and not self.PlayerFlags.OnTaxi) then
     print("Player exited taxi.")
     if (not UnitIsDeadOrGhost("player")) then 
-      Controller:PlayerChangedZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText())
-      Controller:PlayerChangedSubZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText(), GetSubZoneText())
+      Controller:OnChangedZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText())
+      Controller:OnChangedSubZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText(), GetSubZoneText())
     end
   elseif (playerWasOnTaxi == false and self.PlayerFlags.OnTaxi) then
     print("Player entered taxi.")
