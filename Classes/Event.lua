@@ -43,10 +43,19 @@ function Event.ToString(e, catalogs)
     if (e.SubType == AutoBiographerEnum.MapEventSubType.SubZoneFirstVisit) then
       local zoneName = "?"
       if (catalogs ~= nil and catalogs.SubZoneCatalog ~= nil and catalogs.SubZoneCatalog[e.SubZoneName] ~= nil and catalogs.SubZoneCatalog[e.SubZoneName].ZoneName ~= nil) then zoneName = catalogs.SubZoneCatalog[e.SubZoneName].ZoneName end
-      return timestampString .. "You entered " .. e.SubZoneName .. " (" .. tostring(zoneName) .. ") for the first time."
+      return timestampString .. "You entered " .. e.SubZoneName .. " (" .. zoneName .. ") for the first time."
     end
     if (e.SubType == AutoBiographerEnum.MapEventSubType.ZoneFirstVisit) then
       return timestampString .. "You entered " .. e.ZoneName .. " for the first time."
+    end
+  elseif (e.Type == AutoBiographerEnum.EventType.Spell) then
+    if (e.SubType == AutoBiographerEnum.SpellEventSubType.SpellLearned) then
+      local spellText = "spell #" .. e.SpellId
+      if (catalogs and catalogs.SpellCatalog and catalogs.SpellCatalog[e.SpellId] and catalogs.SpellCatalog[e.SpellId].Name) then 
+        spellText = catalogs.SpellCatalog[e.SpellId].Name 
+        if (catalogs.SpellCatalog[e.SpellId].Rank) then spellText = spellText .. " (Rank " .. catalogs.SpellCatalog[e.SpellId].Rank .. ")" end
+      end
+      return timestampString .. "You learned " .. spellText .. "."
     end
   elseif (e.Type == AutoBiographerEnum.EventType.Quest) then
     if (e.SubType == AutoBiographerEnum.QuestEventSubType.QuestTurnIn) then
@@ -108,6 +117,14 @@ function QuestTurnInEvent.New(timestamp, coordinates, questId, questTitle, xpGai
   newInstance.QuestTitle = questTitle
   newInstance.XpGained = xpGained
   newInstance.MoneyGained = moneyGained
+  
+  return newInstance
+end
+
+SpellLearnedEvent = {}
+function SpellLearnedEvent.New(timestamp, coordinates, spellId)
+  local newInstance = WorldEvent.New(timestamp, AutoBiographerEnum.EventType.Spell, AutoBiographerEnum.SpellEventSubType.SpellLearned, coordinates)
+  newInstance.SpellId = spellId
   
   return newInstance
 end

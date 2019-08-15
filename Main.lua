@@ -186,7 +186,8 @@ end
 
 function EM.EventHandlers.LEARNED_SPELL_IN_TAB(self, spellId, skillInfoIndex, isGuildPerkSpell)
   print(tostring(spellId) .. ", " .. tostring(skillInfoIndex) .. ", " .. tostring(isGuildPerkSpell))
-  --Controller:OnBossKill(time(), HelperFunctions.GetCoordinatesByUnitId("player"), bossId, bossName)
+  local name, rank, icon, castTime, minRange, maxRange, spellId = GetSpellInfo(spellId)
+  Controller:OnSpellLearned(time(), HelperFunctions.GetCoordinatesByUnitId("player"), spellId, name, rank)
 end
 
 function EM.EventHandlers.PLAYER_ALIVE(self) -- Fired when the player releases from death to a graveyard; or accepts a resurrect before releasing their spirit. Also fires when logging in.

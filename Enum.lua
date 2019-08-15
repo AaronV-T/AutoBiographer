@@ -64,7 +64,7 @@ AutoBiographerEnum = {
     QuestTurnIn = 0
   },
   SpellEventSubType = {
-    
+    SpellLearned = 0
   },
   TalentEventSubType = {
     

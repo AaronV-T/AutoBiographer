@@ -4,6 +4,7 @@ Catalogs = {}
 function Catalogs.New()
   return {
     SubZoneCatalog = {}, -- Dict<CatalogSubZoneName, CatalogSubZone>
+    SpellCatalog = {}, -- Dict<CatalogSpellId, CatalogSpell>
     UnitCatalog = {}, -- Dict<CatalogUnitId, CatalogUnit>
     ZoneCatalog = {}, -- Dict<CatalogZoneName, CatalogZone>
   }
@@ -49,6 +50,17 @@ function CatalogUnit.Update(cu, id, class, classification, creatureFamily, creat
   if (name ~= nil) then cu.Name = Name end
   if (race ~= nil) then cu.Race = Race end
   if (playerHasKilled ~= nil) then cu.Killed = playerHasKilled end
+end
+
+-- *** CatalogSpell ***
+
+CatalogSpell = {}
+function CatalogSpell.New(id, name, rank)
+  return {
+    Id = id,
+    Name = name,
+    Rank = rank
+  }
 end
 
 -- *** CatalogSubZone ***

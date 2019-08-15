@@ -57,6 +57,14 @@ function Controller:OnBossKill(timestamp, coordinates, bossId, bossName)
   self:AddEvent(BossKillEvent.New(timestamp, coordinates, bossId, bossName))
 end
 
+function Controller:OnSpellLearned(timestamp, coordinates, spellId, spellName, spellRank)
+  if (self.CharacterData.Catalogs.SpellCatalog[spellId] == nil) then
+    self.CharacterData.Catalogs.SpellCatalog[spellId] = CatalogSpell.New(spellId, spellName, spellRank)
+  end
+  
+  self:AddEvent(SpellLearnedEvent.New(timestamp, coordinates, spellId))
+end
+
 function Controller:PlayerChangedSubZone(timestamp, coordinates, zoneName, subZoneName)
   if (subZoneName == nil or subZoneName == "") then return end
   
