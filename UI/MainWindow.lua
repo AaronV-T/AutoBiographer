@@ -5,15 +5,22 @@ function Toggle_MainWindow()
   if (not MainWindow_Frame) then
   
     local events = Controller:GetEvents()
+    
     --parent frame 
     local frame = CreateFrame("Frame", "MyFrame", UIParent, "BasicFrameTemplateWithInset") 
     frame:SetSize(750, 500) 
     frame:SetPoint("CENTER") 
+    
+    frame:SetScript("OnHide", 
+      function(self)
+        MainWindow_Frame = nil 
+      end
+    )
 
     frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight");
     frame.title:SetPoint("LEFT", frame.TitleBg, "LEFT", 5, 0);
-    frame.title:SetText("AutoBiographer Test Window");
-
+    frame.title:SetText("AutoBiographer Test Window. Gold looted: " .. tostring(Controller:GetLootedMoney() / 10000));
+    
     --scrollframe 
     scrollframe = CreateFrame("ScrollFrame", nil, frame) 
     scrollframe:SetPoint("TOPLEFT", 10, -25) 
@@ -26,8 +33,9 @@ function Toggle_MainWindow()
     --scrollbar 
     scrollbar = CreateFrame("Slider", nil, scrollframe, "UIPanelScrollBarTemplate") 
     scrollbar:SetPoint("TOPLEFT", frame, "TOPRIGHT", 4, -16) 
-    scrollbar:SetPoint("BOTTOMLEFT", frame, "BOTTOMRIGHT", 4, 16) 
-    scrollbar:SetMinMaxValues(1, #events * 10) 
+    scrollbar:SetPoint("BOTTOMLEFT", frame, "BOTTOMRIGHT", 4, 16)
+    scrollbar:SetMinMaxValues(1, (#events * 20) + 20) 
+    
     scrollbar:SetValueStep(1) 
     scrollbar.scrollStep = 1 
     scrollbar:SetValue(0) 

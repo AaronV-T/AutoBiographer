@@ -75,6 +75,11 @@ end
 
 function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   if addonName ~= "AutoBiographer" then return end
+
+  if (time() > 1566259200) then 
+    message("This version of AutoBiographer is disabled on live Classic servers.")
+    return
+  end
   
   if type(_G["AUTOBIOGRAPHER_SETTINGS"]) ~= "table" then
 		_G["AUTOBIOGRAPHER_SETTINGS"] = {
@@ -114,6 +119,38 @@ end
 
 function EM.EventHandlers.BOSS_KILL(self, bossId, bossName)
   Controller:OnBossKill(time(), HelperFunctions.GetCoordinatesByUnitId("player"), bossId, bossName)
+end
+
+function EM.EventHandlers.CHAT_MSG_MONEY(self, text, arg2, arg3, arg4, arg5)
+  --print("CHAT_MSG_MONEY. " .. tostring(arg1) .. ", " .. tostring(arg2) .. ", " .. tostring(arg3) .. ", " .. tostring(arg4) .. ", " .. tostring(arg5) .. tostring(arg6) .. ", " .. tostring(arg7) .. ", " .. tostring(arg8) .. ", " .. tostring(arg9) .. ", " .. tostring(arg10) .. tostring(arg11) .. ", " .. tostring(arg12) .. tostring(arg13) .. ", " .. tostring(arg14) .. ", " .. tostring(arg15) .. ", " .. tostring(arg16) .. ", " .. tostring(arg17))
+  
+  local moneySum = 0
+  
+  for copperText in string.gmatch(text, "%d+%sCopper") do
+    local i = 1
+    for word in string.gmatch(copperText, "%S+") do
+      if (i == 1) then moneySum = tonumber(word) end
+      i = i + 1
+    end
+  end
+  
+  for silverText in string.gmatch(text, "%d+%sSilver") do
+    local i = 1
+    for word in string.gmatch(silverText, "%S+") do
+      if (i == 1) then moneySum = moneySum + tonumber(word) * 100 end
+      i = i + 1
+    end
+  end
+  
+  for goldText in string.gmatch(text, "%d+%sGold") do
+    local i = 1
+    for word in string.gmatch(goldText, "%S+") do
+      if (i == 1) then moneySum = moneySum + tonumber(word) * 10000 end
+      i = i + 1
+    end
+  end
+  
+  Controller:OnLootMoney(time(), HelperFunctions.GetCoordinatesByUnitId("player"), moneySum)
 end
 
 function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)

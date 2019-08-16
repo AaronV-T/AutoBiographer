@@ -7,7 +7,7 @@ function AggregatedStatistics.New()
     ItemStatistics = nil,
     KillStatistics = KillStatistics.New(),
     MiscellaneousStatistics = nil,
-    MoneyStatistics = nil,
+    MoneyStatistics = MoneyStatistics.New(),
     PvpStatistics = nil,
     SpellStatistics = nil,
     TimeStatisticsByZone = nil
@@ -50,4 +50,17 @@ function LevelStatistics.New(levelNum, totalTimePlayedAtDing, timePlayedThisLeve
   newInstance.TimePlayedThisLevel = timePlayedThisLevel -- int (seconds)
 
   return newInstance
+end
+
+-- *** MoneyStatistics ***
+
+MoneyStatistics = {}
+function MoneyStatistics.New()
+  return {
+    MoneyLooted = 0, -- int (copper)
+  }
+end
+
+function MoneyStatistics.AddLootedMoney(ms, money) 
+  ms.MoneyLooted = ms.MoneyLooted + money
 end

@@ -20,6 +20,15 @@ function Controller:GetEvents()
   return retVal
 end
 
+function Controller:GetLootedMoney()
+  local sum = 0
+  for k,v in pairs(self.CharacterData.Levels) do
+    sum = sum + v.MoneyStatistics.MoneyLooted
+  end
+  
+  return sum
+end
+
 function Controller:GetTaggedKillsByCatalogUnitId(catalogUnitId)
   local sum = 0
   for k,v in pairs(self.CharacterData.Levels) do
@@ -86,6 +95,11 @@ function Controller:OnLevelUp(timestamp, coordinates, levelNum, totalTimePlayedA
   if (timestamp) then
     self:AddEvent(LevelUpEvent.New(timestamp, coordinates, levelNum))
   end
+end
+
+function Controller:OnLootMoney(timestamp, coordinates, money)
+  local currentLevel = HelperFunctions.GetLastKeyFromTable(self.CharacterData.Levels)
+  MoneyStatistics.AddLootedMoney(self.CharacterData.Levels[currentLevel].MoneyStatistics, money)
 end
 
 function Controller:OnQuestTurnedIn(timestamp, coordinates, questId, questTitle, xpGained, moneyGained)

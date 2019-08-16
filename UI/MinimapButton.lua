@@ -12,7 +12,6 @@ function AutoBiographer_MinimapButton_DraggingFrame_OnUpdate()
 
 	AutoBiographer_Settings.MinimapPos = math.deg(math.atan2(ypos,xpos)) -- save the degrees we are relative to the minimap center
 	AutoBiographer_MinimapButton_Reposition() -- move the button
-  print(AutoBiographer_Settings.MinimapPos)
 end
 
 function AutoBiographer_MinimapButton_OnClick(arg1)
