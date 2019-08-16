@@ -1,3 +1,5 @@
+AutoBiographer_Settings = nil
+
 EventManager = {
   EventHandlers = {},
   NewLevelToAddToHistory = nil,
@@ -73,6 +75,14 @@ end
 
 function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   if addonName ~= "AutoBiographer" then return end
+  
+  if type(_G["AUTOBIOGRAPHER_SETTINGS"]) ~= "table" then
+		_G["AUTOBIOGRAPHER_SETTINGS"] = {
+      MinimapPos = 45,
+    }
+	end
+  
+  AutoBiographer_Settings = _G["AUTOBIOGRAPHER_SETTINGS"]
  
   if type(_G["AUTOBIOGRAPHER_CATALOGS_CHAR"]) ~= "table" then
 		_G["AUTOBIOGRAPHER_CATALOGS_CHAR"] = Catalogs.New()
@@ -98,6 +108,8 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
       Controller:OnLevelUp(nil, nil, playerLevel)
     end
   end
+  
+  AutoBiographer_MinimapButton_Reposition()
 end
 
 function EM.EventHandlers.BOSS_KILL(self, bossId, bossName)
@@ -256,6 +268,16 @@ function EM.EventHandlers.UNIT_TARGET(self, unitId)
   --print ("UNIT_TARGET. " .. unitId .. ": " .. tostring(UnitGUID(unitId .. "target")))
 end
 
+function EM.EventHandlers.UPDATE_MOUSEOVER_UNIT(self)
+  --if UnitIsPlayer("mouseover") then return end
+	local catalogUnitId = HelperFunctions.GetCatalogIdFromGuid(UnitGUID("mouseover"))
+	if not catalogUnitId then return end
+	if UnitCanAttack("player", "mouseover") then
+		GameTooltip:AddLine("Killed " .. tostring(Controller:GetTaggedKillsByCatalogUnitId(catalogUnitId)) .. " times.")
+	end
+
+	GameTooltip:Show()
+end
 function EM.EventHandlers.ZONE_CHANGED(self)
   if (UnitIsDeadOrGhost("player") or UnitOnTaxi("player")) then return end
   Controller:OnChangedSubZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText(), GetSubZoneText())

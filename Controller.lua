@@ -11,6 +11,15 @@ function Controller:CatalogUnitIsIncomplete(catalogUnitId)
   return self.CharacterData.Catalogs.UnitCatalog[catalogUnitId] == nil or self.CharacterData.Catalogs.UnitCatalog[catalogUnitId].Name == nil
 end
 
+function Controller:GetEvents()
+  local retVal = {}
+  for _,v in pairs(self.CharacterData.Events) do
+    table.insert(retVal, tostring(Event.ToString(v, self.CharacterData.Catalogs)))
+  end
+  
+  return retVal
+end
+
 function Controller:GetTaggedKillsByCatalogUnitId(catalogUnitId)
   local sum = 0
   for k,v in pairs(self.CharacterData.Levels) do
@@ -51,7 +60,7 @@ function Controller:OnKill(timestamp, coordinates, kill)
 
   KillStatistics.AddKill(self.CharacterData.Levels[currentLevel].KillStatistics, kill)
   if (kill.PlayerHasTag) then 
-    print (self:GetTaggedKillsByCatalogUnitId(kill.CatalogUnitId))
+    --print (self:GetTaggedKillsByCatalogUnitId(kill.CatalogUnitId))
     if (not Catalogs.PlayerHasKilledUnit(self.CharacterData.Catalogs, kill.CatalogUnitId)) then
       self:UpdateCatalogUnit(CatalogUnit.New(kill.CatalogUnitId, nil, nil, nil, nil, nil, nil, true))
       self:AddEvent(FirstKillEvent.New(timestamp, coordinates, kill.CatalogUnitId))
