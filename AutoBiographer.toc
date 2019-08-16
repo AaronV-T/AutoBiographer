@@ -1,4 +1,4 @@
-## Interface: 80200
+## Interface: 11302
 ## Title: AutoBiographer 0.1.1 Alpha
 ## Author: Tollski
 ## Version: 0.1.0
