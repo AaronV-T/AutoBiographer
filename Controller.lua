@@ -11,6 +11,10 @@ function Controller:CatalogUnitIsIncomplete(catalogUnitId)
   return self.CharacterData.Catalogs.UnitCatalog[catalogUnitId] == nil or self.CharacterData.Catalogs.UnitCatalog[catalogUnitId].Name == nil
 end
 
+function Controller:GetCurrentLevel()
+  return HelperFunctions.GetLastKeyFromTable(self.CharacterData.Levels)
+end
+
 function Controller:GetEvents()
   local retVal = {}
   for _,v in pairs(self.CharacterData.Events) do
@@ -24,6 +28,24 @@ function Controller:GetLootedMoney()
   local sum = 0
   for k,v in pairs(self.CharacterData.Levels) do
     sum = sum + v.MoneyStatistics.MoneyLooted
+  end
+  
+  return sum
+end
+
+function Controller:GetTotalMoneyGained()
+  local sum = 0
+  for k,v in pairs(self.CharacterData.Levels) do
+    sum = sum + v.MoneyStatistics.TotalMoneyGained
+  end
+  
+  return sum
+end
+
+function Controller:GetTotalMoneyLost()
+  local sum = 0
+  for k,v in pairs(self.CharacterData.Levels) do
+    sum = sum + v.MoneyStatistics.TotalMoneyLost
   end
   
   return sum
@@ -65,9 +87,7 @@ function Controller:OnDeath(timestamp, coordinates, killerCatalogUnitId, killerL
 end
 
 function Controller:OnKill(timestamp, coordinates, kill)
-  local currentLevel = HelperFunctions.GetLastKeyFromTable(self.CharacterData.Levels)
-
-  KillStatistics.AddKill(self.CharacterData.Levels[currentLevel].KillStatistics, kill)
+  KillStatistics.AddKill(self.CharacterData.Levels[self:GetCurrentLevel()].KillStatistics, kill)
   if (kill.PlayerHasTag) then 
     --print (self:GetTaggedKillsByCatalogUnitId(kill.CatalogUnitId))
     if (not Catalogs.PlayerHasKilledUnit(self.CharacterData.Catalogs, kill.CatalogUnitId)) then
@@ -98,8 +118,11 @@ function Controller:OnLevelUp(timestamp, coordinates, levelNum, totalTimePlayedA
 end
 
 function Controller:OnLootMoney(timestamp, coordinates, money)
-  local currentLevel = HelperFunctions.GetLastKeyFromTable(self.CharacterData.Levels)
-  MoneyStatistics.AddLootedMoney(self.CharacterData.Levels[currentLevel].MoneyStatistics, money)
+  MoneyStatistics.AddLootedMoney(self.CharacterData.Levels[self:GetCurrentLevel()].MoneyStatistics, money)
+end
+
+function Controller:OnMoneyChanged(timestamp, coordinates, deltaMoney)
+  MoneyStatistics.MoneyChanged(self.CharacterData.Levels[self:GetCurrentLevel()].MoneyStatistics, deltaMoney)
 end
 
 function Controller:OnQuestTurnedIn(timestamp, coordinates, questId, questTitle, xpGained, moneyGained)
@@ -113,6 +136,7 @@ function Controller:OnSpellLearned(timestamp, coordinates, spellId, spellName, s
   
   self:AddEvent(SpellLearnedEvent.New(timestamp, coordinates, spellId))
 end
+
 
 function Controller:PrintEvents()
   for _,v in pairs(self.CharacterData.Events) do

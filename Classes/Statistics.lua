@@ -58,9 +58,17 @@ MoneyStatistics = {}
 function MoneyStatistics.New()
   return {
     MoneyLooted = 0, -- int (copper)
+    TotalMoneyGained = 0, -- int (copper)
+    TotalMoneyLost = 0, -- int (copper)
   }
 end
 
 function MoneyStatistics.AddLootedMoney(ms, money) 
   ms.MoneyLooted = ms.MoneyLooted + money
+end
+
+function MoneyStatistics.MoneyChanged(ms, deltaMoney) 
+  if (deltaMoney < 0) then ms.TotalMoneyLost =  ms.TotalMoneyLost + abs(deltaMoney)
+  elseif (deltaMoney > 0) then ms.TotalMoneyGained =  ms.TotalMoneyGained + deltaMoney
+  end
 end

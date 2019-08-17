@@ -19,7 +19,7 @@ function Toggle_MainWindow()
 
     frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight");
     frame.title:SetPoint("LEFT", frame.TitleBg, "LEFT", 5, 0);
-    frame.title:SetText("AutoBiographer Test Window. Gold looted: " .. tostring(Controller:GetLootedMoney() / 10000));
+    frame.title:SetText("AutoBiographer Test Window. Gold looted: " .. tostring(Controller:GetLootedMoney() / 10000) .. ". Total Gold Gained: " .. tostring(Controller:GetTotalMoneyGained() / 10000) .. ". Total Gold Lost: " .. tostring(Controller:GetTotalMoneyLost() / 10000));
     
     --scrollframe 
     scrollframe = CreateFrame("ScrollFrame", nil, frame) 

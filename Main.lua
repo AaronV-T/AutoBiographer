@@ -2,6 +2,7 @@ AutoBiographer_Settings = nil
 
 EventManager = {
   EventHandlers = {},
+  LastPlayerMoney = nil,
   NewLevelToAddToHistory = nil,
   PlayerFlags = {
     AffectingCombat = nil,
@@ -234,7 +235,7 @@ function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
 end
 
 function EM.EventHandlers.LEARNED_SPELL_IN_TAB(self, spellId, skillInfoIndex, isGuildPerkSpell)
-  local name, rank, icon, castTime, minRange, maxRange, spellId = GetSpellInfo(spellId)
+  local name, rank, icon, castTime, minRange, maxRange, id = GetSpellInfo(spellId)
   Controller:OnSpellLearned(time(), HelperFunctions.GetCoordinatesByUnitId("player"), spellId, name, rank)
 end
 
@@ -269,6 +270,14 @@ end
 
 function EM.EventHandlers.PLAYER_LOGIN(self)
   self.PlayerGuid = UnitGUID("player") -- Player GUID Format: Player-[server ID]-[player UID]
+  
+  self.LastPlayerMoney = GetMoney()
+end
+
+function EM.EventHandlers.PLAYER_MONEY(self)
+  local currentMoney = GetMoney()
+  Controller:OnMoneyChanged(time(), HelperFunctions.GetCoordinatesByUnitId("player"), currentMoney - self.LastPlayerMoney)
+  self.LastPlayerMoney = currentMoney
 end
 
 function EM.EventHandlers.PLAYER_UNGHOST(self) -- Fired when the player is alive after being a ghost.
