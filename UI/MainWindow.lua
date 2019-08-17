@@ -1,41 +1,38 @@
+DebugWindow_Frame = nil
+EventWindow_Frame = nil
 MainWindow_Frame = nil
 
-
-function Toggle_MainWindow()
-  if (not MainWindow_Frame) then
+function Toggle_DebugWindow()
+  if (not DebugWindow_Frame) then
   
-    local events = Controller:GetEvents()
+    local debugLogs = Controller:GetLogs()
     
     --parent frame 
-    local frame = CreateFrame("Frame", "MyFrame", UIParent, "BasicFrameTemplateWithInset") 
-    frame:SetSize(750, 500) 
+    local frame = CreateFrame("Frame", "AutoBiographerDebug", MainWindow_Frame, "BasicFrameTemplateWithInset") 
+    frame:SetSize(750, 550) 
     frame:SetPoint("CENTER") 
     
     frame:SetScript("OnHide", 
       function(self)
-        MainWindow_Frame = nil 
+        DebugWindow_Frame = nil 
       end
     )
 
-    frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight");
+    frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     frame.title:SetPoint("LEFT", frame.TitleBg, "LEFT", 5, 0);
-    frame.title:SetText("AutoBiographer Test Window. Gold looted: " .. tostring(Controller:GetLootedMoney() / 10000) .. ". Total Gold Gained: " .. tostring(Controller:GetTotalMoneyGained() / 10000) .. ". Total Gold Lost: " .. tostring(Controller:GetTotalMoneyLost() / 10000));
+    frame.title:SetText("AutoBiographer Debug Window")
     
     --scrollframe 
-    scrollframe = CreateFrame("ScrollFrame", nil, frame) 
-    scrollframe:SetPoint("TOPLEFT", 10, -25) 
+    local scrollframe = CreateFrame("ScrollFrame", nil, frame) 
+    scrollframe:SetPoint("TOPLEFT", 10, -35) 
     scrollframe:SetPoint("BOTTOMRIGHT", -10, 10) 
-    local texture = scrollframe:CreateTexture() 
-    texture:SetAllPoints() 
-    texture:SetTexture(.5,.5,.5,1) 
-    frame.scrollframe = scrollframe 
+
 
     --scrollbar 
-    scrollbar = CreateFrame("Slider", nil, scrollframe, "UIPanelScrollBarTemplate") 
+    local scrollbar = CreateFrame("Slider", nil, scrollframe, "UIPanelScrollBarTemplate") 
     scrollbar:SetPoint("TOPLEFT", frame, "TOPRIGHT", 4, -16) 
     scrollbar:SetPoint("BOTTOMLEFT", frame, "BOTTOMRIGHT", 4, 16)
-    scrollbar:SetMinMaxValues(1, (#events * 20) + 20) 
-    
+    scrollbar:SetMinMaxValues(1, (#debugLogs * 20) + 20) 
     scrollbar:SetValueStep(1) 
     scrollbar.scrollStep = 1 
     scrollbar:SetValue(0) 
@@ -52,42 +49,142 @@ function Toggle_MainWindow()
 
     --content frame 
     local content = CreateFrame("Frame", nil, scrollframe) 
-    content:SetSize(128, 128) 
-    --local texture = content:CreateTexture() 
-    --texture:SetAllPoints() 
-    --texture:SetTexture("Interface\\GLUES\\MainMenu\\Glues-BlizzardLogo") 
-    --content.texture = texture 
+    content:SetSize(1, 1) 
     
+    --texts
+    local index = 0
+    for i = #debugLogs, 1, -1 do
+      local text = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+      text:SetPoint("TOPLEFT", 5, -15 * index) 
+      text:SetText(debugLogs[i])
+      index = index + 1
+    end
+    
+    scrollframe.content = content
+    scrollframe:SetScrollChild(content)
+    
+    frame.LogsUpdated = function () return end
+    
+    DebugWindow_Frame = frame
+  else
+    DebugWindow_Frame:Hide()
+    DebugWindow_Frame = nil
+  end
+end
+
+function Toggle_EventWindow()
+  if (not EventWindow_Frame) then
+  
+    local events = Controller:GetEvents()
+    
+    --parent frame 
+    local frame = CreateFrame("Frame", "AutoBiographerEvent", MainWindow_Frame, "BasicFrameTemplateWithInset") 
+    frame:SetSize(750, 550) 
+    frame:SetPoint("CENTER") 
+    
+    frame:SetScript("OnHide", 
+      function(self)
+        EventWindow_Frame = nil 
+      end
+    )
+
+    frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    frame.title:SetPoint("LEFT", frame.TitleBg, "LEFT", 5, 0);
+    frame.title:SetText("AutoBiographer Event Window")
+    
+    --scrollframe 
+    local scrollframe = CreateFrame("ScrollFrame", nil, frame) 
+    scrollframe:SetPoint("TOPLEFT", 10, -35) 
+    scrollframe:SetPoint("BOTTOMRIGHT", -10, 10) 
+
+
+    --scrollbar 
+    local scrollbar = CreateFrame("Slider", nil, scrollframe, "UIPanelScrollBarTemplate") 
+    scrollbar:SetPoint("TOPLEFT", frame, "TOPRIGHT", 4, -16) 
+    scrollbar:SetPoint("BOTTOMLEFT", frame, "BOTTOMRIGHT", 4, 16)
+    scrollbar:SetMinMaxValues(1, (#events * 20) + 20) 
+    scrollbar:SetValueStep(1) 
+    scrollbar.scrollStep = 1 
+    scrollbar:SetValue(0) 
+    scrollbar:SetWidth(16) 
+    scrollbar:SetScript("OnValueChanged",
+      function (self, value) 
+        self:GetParent():SetVerticalScroll(value) 
+      end
+    ) 
+    local scrollbg = scrollbar:CreateTexture(nil, "BACKGROUND") 
+    scrollbg:SetAllPoints(scrollbar) 
+    scrollbg:SetTexture(0, 0, 0, 0.4) 
+    frame.scrollbar = scrollbar 
+
+    --content frame 
+    local content = CreateFrame("Frame", nil, scrollframe) 
+    content:SetSize(1, 1) 
     
     --texts
     local index = 0
     for i = #events, 1, -1 do
-      local text = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight");
+      local text = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
       text:SetPoint("TOPLEFT", 5, -15 * index) 
-      text:SetText(events[i]);
+      text:SetText(events[i])
       index = index + 1
     end
     
-    scrollframe.content = content 
-
+    scrollframe.content = content
     scrollframe:SetScrollChild(content)
+    
+    EventWindow_Frame = frame
+  else
+    EventWindow_Frame:Hide()
+    EventWindow_Frame = nil
+  end
+end
 
-    ---------------------------------
-    -- Helpful Dev Code
-    ---------------------------------
-    SLASH_RELOADUI1 = "/rl"; -- new slash command for reloading UI
-    SlashCmdList.RELOADUI = ReloadUI;
+function Toggle_MainWindow()
+  if (not MainWindow_Frame) then
 
-    SLASH_FRAMESTK1 = "/fs"; -- new slash command for showing framestack tool
-    SlashCmdList.FRAMESTK = function()
-      LoadAddOn("Blizzard_DebugTools");
-      FrameStackTooltip_Toggle();
-    end
+    --parent frame 
+    local frame = CreateFrame("Frame", "AutoBiographerMain", UIParent, "BasicFrameTemplateWithInset") 
+    frame:SetSize(800, 600) 
+    frame:SetPoint("CENTER") 
+    
+    frame:SetScript("OnHide", 
+      function(self)
+        MainWindow_Frame = nil 
+      end
+    )
 
-    -- allows using left and right buttons to move through the chat 'edit' box
-    for i = 1, NUM_CHAT_WINDOWS do
-      _G["ChatFrame"..i.."EditBox"]:SetAltArrowKeyMode(false);
-    end
+    frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight");
+    frame.title:SetPoint("LEFT", frame.TitleBg, "LEFT", 5, 0);
+    frame.title:SetText("AutoBiographer Main Window")
+    
+    local eventsBtn = CreateFrame("Button", nil, frame, "GameMenuButtonTemplate");
+    eventsBtn:SetPoint("CENTER", frame, "TOP", -140, -70);
+    eventsBtn:SetSize(140, 40);
+    eventsBtn:SetText("Events");
+    eventsBtn:SetNormalFontObject("GameFontNormalLarge");
+    eventsBtn:SetHighlightFontObject("GameFontHighlightLarge");
+    eventsBtn:SetScript("OnClick", 
+      function(self)
+        Toggle_EventWindow()
+      end
+    )
+    
+    local debugBtn = CreateFrame("Button", nil, frame, "GameMenuButtonTemplate");
+    debugBtn:SetPoint("CENTER", frame, "TOP", 140, -70);
+    debugBtn:SetSize(140, 40);
+    debugBtn:SetText("Debug");
+    debugBtn:SetNormalFontObject("GameFontNormalLarge");
+    debugBtn:SetHighlightFontObject("GameFontHighlightLarge");
+    debugBtn:SetScript("OnClick", 
+      function(self)
+        Toggle_DebugWindow()
+      end
+    )
+    
+    local moneyText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    moneyText:SetPoint("TOPLEFT", 10, -100)
+    moneyText:SetText("Gold looted: " .. tostring(Controller:GetLootedMoney() / 10000) .. ". Total Gold Gained: " .. tostring(Controller:GetTotalMoneyGained() / 10000) .. ". Total Gold Lost: " .. tostring(Controller:GetTotalMoneyLost() / 10000) .. ".")
     
     MainWindow_Frame = frame
   else

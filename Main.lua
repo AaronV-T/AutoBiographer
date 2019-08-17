@@ -123,8 +123,6 @@ function EM.EventHandlers.BOSS_KILL(self, bossId, bossName)
 end
 
 function EM.EventHandlers.CHAT_MSG_MONEY(self, text, arg2, arg3, arg4, arg5)
-  --print("CHAT_MSG_MONEY. " .. tostring(arg1) .. ", " .. tostring(arg2) .. ", " .. tostring(arg3) .. ", " .. tostring(arg4) .. ", " .. tostring(arg5) .. tostring(arg6) .. ", " .. tostring(arg7) .. ", " .. tostring(arg8) .. ", " .. tostring(arg9) .. ", " .. tostring(arg10) .. tostring(arg11) .. ", " .. tostring(arg12) .. tostring(arg13) .. ", " .. tostring(arg14) .. ", " .. tostring(arg15) .. ", " .. tostring(arg16) .. ", " .. tostring(arg17))
-  
   local moneySum = 0
   
   for copperText in string.gmatch(text, "%d+%sCopper") do
@@ -195,7 +193,7 @@ function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
     else
       if (damagedUnitId ~= nil) then
         damagedUnits[destGuid].IsTapDenied = UnitIsTapDenied(damagedUnitId)
-        --print(destName .. " (" .. damagedUnitId .. ") tap denied: " .. tostring(damagedUnits[destGuid].IsTapDenied))
+        Controller:AddLog(destName .. " (" .. damagedUnitId .. ") tap denied: " .. tostring(damagedUnits[destGuid].IsTapDenied), AutoBiographerEnum.LogLevel.Verbose)
       end
     end
     
@@ -226,7 +224,7 @@ function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
   end
   
   if (deadUnit.PlayerHasDamaged or deadUnit.PlayerPetHasDamaged or weHadTag) then
-    --print (destName .. " Died.  Tagged: " .. tostring(weHadTag) .. ". FODCBPOG: " .. tostring(deadUnit.FirstObservedDamageCausedByPlayerOrGroup) .. ". ITD: "  .. tostring(deadUnit.IsTapDenied) .. ". PHD: " .. tostring(deadUnit.PlayerHasDamaged) .. ". PPHD: " .. tostring(deadUnit.PlayerPetHasDamaged).. ". GHD: "  .. tostring(deadUnit.GroupHasDamaged)  .. ". LastDmg: " .. tostring(deadUnit.LastUnitGuidWhoCausedDamage))
+    Controller:AddLog(destName .. " Died.  Tagged: " .. tostring(weHadTag) .. ". FODCBPOG: " .. tostring(deadUnit.FirstObservedDamageCausedByPlayerOrGroup) .. ". ITD: "  .. tostring(deadUnit.IsTapDenied) .. ". PHD: " .. tostring(deadUnit.PlayerHasDamaged) .. ". PPHD: " .. tostring(deadUnit.PlayerPetHasDamaged).. ". GHD: "  .. tostring(deadUnit.GroupHasDamaged)  .. ". LastDmg: " .. tostring(deadUnit.LastUnitGuidWhoCausedDamage), AutoBiographerEnum.LogLevel.Debug)
     local kill = Kill.New(deadUnit.GroupHasDamaged, deadUnit.PlayerHasDamaged or deadUnit.PlayerPetHasDamaged, IsUnitGUIDPlayerOrPlayerPet(deadUnit.LastUnitGuidWhoCausedDamage), weHadTag, HelperFunctions.GetCatalogIdFromGuid(destGuid))
     Controller:OnKill(time(), HelperFunctions.GetCoordinatesByUnitId("player"), kill)
   end
@@ -356,13 +354,13 @@ function EM:UpdatePlayerFlags()
   
   -- Special 
   if (playerWasOnTaxi and not self.PlayerFlags.OnTaxi) then
-    print("Player exited taxi.")
+    --print("Player exited taxi.")
     if (not UnitIsDeadOrGhost("player")) then 
       Controller:OnChangedZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText())
       Controller:OnChangedSubZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText(), GetSubZoneText())
     end
   elseif (playerWasOnTaxi == false and self.PlayerFlags.OnTaxi) then
-    print("Player entered taxi.")
+    --print("Player entered taxi.")
   end
 end
 
