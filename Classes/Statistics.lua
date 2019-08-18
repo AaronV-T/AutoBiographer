@@ -3,6 +3,7 @@
 AggregatedStatistics = {}
 function AggregatedStatistics.New()
   return {
+    DamageStatistics = DamageStatistics.New(),
     GatheringStatistics = nil,
     ItemStatistics = nil,
     KillStatistics = KillStatistics.New(),
@@ -12,6 +13,27 @@ function AggregatedStatistics.New()
     SpellStatistics = nil,
     TimeStatisticsByZone = nil
   }
+end
+
+-- *** DamageStatistics ***
+
+DamageStatistics = {}
+function DamageStatistics.New()
+  return {
+    DamageDealt = DamageBreakdown.New(),
+    DamageTaken = DamageBreakdown.New(),
+    HealingDoneToOthers = DamageBreakdown.New(),
+    HealingDoneToSelf = DamageBreakdown.New(),
+    HealingTaken = DamageBreakdown.New(),
+  }
+end
+
+function DamageStatistics.AddDamageDealt(ds, amount, overKill)
+  DamageBreakdown.Add(ds.DamageDealt, amount, overKill)
+end
+
+function DamageStatistics.AddDamageTaken(ds, amount, overKill)
+  DamageBreakdown.Add(ds.DamageTaken, amount, overKill)
 end
 
 -- *** KillStatistics ***

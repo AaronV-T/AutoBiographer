@@ -10,7 +10,7 @@ end
 
 function Controller:AddLog(text, logLevel)
   if (logLevel == nil) then error("Unspecified logLevel. Log Text: '" .. text .. "'") end
-
+  
   table.insert(self.Logs, { Level = logLevel, Text = tostring(text), Timestamp = time() })
   
   if (DebugWindow_Frame) then DebugWindow_Frame.LogsUpdated() end
@@ -20,8 +20,30 @@ function Controller:CatalogUnitIsIncomplete(catalogUnitId)
   return self.CharacterData.Catalogs.UnitCatalog[catalogUnitId] == nil or self.CharacterData.Catalogs.UnitCatalog[catalogUnitId].Name == nil
 end
 
-function Controller:GetCurrentLevel()
+function Controller:GetCurrentLevelNum()
   return HelperFunctions.GetLastKeyFromTable(self.CharacterData.Levels)
+end
+
+function Controller:GetCurrentLevelStatistics()
+  return self.CharacterData.Levels[self:GetCurrentLevelNum()]
+end
+
+function Controller:GetDamageOrHealing(category)
+  local amountSum = 0
+  local overkillSum = 0
+  for k,v in pairs(self.CharacterData.Levels) do
+    if (category == AutoBiographerEnum.DamageOrHealingCategory.DamageDealt) then
+      amountSum = amountSum + v.DamageStatistics.DamageDealt.Amount
+      overkillSum = overkillSum + v.DamageStatistics.DamageDealt.Over
+    elseif (category == AutoBiographerEnum.DamageOrHealingCategory.DamageTaken) then
+      amountSum = amountSum + v.DamageStatistics.DamageTaken.Amount
+      overkillSum = overkillSum + v.DamageStatistics.DamageTaken.Over
+    else
+      error("Unimplemented category: " .. category)
+    end
+  end
+  
+  return amountSum, overkillSum
 end
 
 function Controller:GetEvents()
@@ -87,7 +109,7 @@ end
 
 function Controller:OnChangedSubZone(timestamp, coordinates, zoneName, subZoneName)
   if (subZoneName == nil or subZoneName == "") then return end
-  Controller:AddLog("ChangedSubZone: " .. tostring(subZoneName) .. " (#" .. tostring(zoneName) .. ").", AutoBiographerEnum.LogLevel.Debug)
+  Controller:AddLog("ChangedSubZone: " .. tostring(subZoneName) .. " (" .. tostring(zoneName) .. ").", AutoBiographerEnum.LogLevel.Debug)
   
   if (self.CharacterData.Catalogs.SubZoneCatalog[subZoneName] == nil) then
     self.CharacterData.Catalogs.SubZoneCatalog[subZoneName] = CatalogSubZone.New(subZoneName, true, zoneName)
@@ -104,6 +126,16 @@ function Controller:OnChangedZone(timestamp, coordinates, zoneName)
   end
 end
 
+function Controller:OnDamageDealt(amount, overkill)
+  Controller:AddLog("DamageDealt: " .. tostring(amount) .. ". Over: " .. tostring(overkill), AutoBiographerEnum.LogLevel.Debug)
+  DamageStatistics.AddDamageDealt(self:GetCurrentLevelStatistics().DamageStatistics, amount, overkill)
+end
+
+function Controller:OnDamageTaken(amount, overkill)
+  Controller:AddLog("DamageTaken: " .. tostring(amount) .. ". Over: " .. tostring(overkill), AutoBiographerEnum.LogLevel.Debug)
+  DamageStatistics.AddDamageTaken(self:GetCurrentLevelStatistics().DamageStatistics, amount, overkill)
+end
+
 function Controller:OnDeath(timestamp, coordinates, killerCatalogUnitId, killerLevel)
   Controller:AddLog("Death: " .. " #" .. tostring(killerCatalogUnitId) .. ".", AutoBiographerEnum.LogLevel.Debug)
   self:AddEvent(PlayerDeathEvent.New(timestamp, coordinates, killerCatalogUnitId, killerLevel))
@@ -112,7 +144,7 @@ end
 function Controller:OnKill(timestamp, coordinates, kill)
   Controller:AddLog("Kill: " .. " #" .. tostring(kill.CatalogUnitId) .. ".", AutoBiographerEnum.LogLevel.Debug)
 
-  KillStatistics.AddKill(self.CharacterData.Levels[self:GetCurrentLevel()].KillStatistics, kill)
+  KillStatistics.AddKill(self.CharacterData.Levels[self:GetCurrentLevelNum()].KillStatistics, kill)
   if (kill.PlayerHasTag) then 
     --print (self:GetTaggedKillsByCatalogUnitId(kill.CatalogUnitId))
     if (not Catalogs.PlayerHasKilledUnit(self.CharacterData.Catalogs, kill.CatalogUnitId)) then
@@ -143,12 +175,12 @@ end
 
 function Controller:OnLootMoney(timestamp, coordinates, money)
   Controller:AddLog("LootedMoney: " .. tostring(money) .. ".", AutoBiographerEnum.LogLevel.Debug)
-  MoneyStatistics.AddLootedMoney(self.CharacterData.Levels[self:GetCurrentLevel()].MoneyStatistics, money)
+  MoneyStatistics.AddLootedMoney(self.CharacterData.Levels[self:GetCurrentLevelNum()].MoneyStatistics, money)
 end
 
 function Controller:OnMoneyChanged(timestamp, coordinates, deltaMoney)
   Controller:AddLog("MoneyChanged: " .. tostring(deltaMoney) .. ".", AutoBiographerEnum.LogLevel.Debug)
-  MoneyStatistics.MoneyChanged(self.CharacterData.Levels[self:GetCurrentLevel()].MoneyStatistics, deltaMoney)
+  MoneyStatistics.MoneyChanged(self.CharacterData.Levels[self:GetCurrentLevelNum()].MoneyStatistics, deltaMoney)
 end
 
 function Controller:OnQuestTurnedIn(timestamp, coordinates, questId, questTitle, xpGained, moneyGained)
@@ -183,4 +215,6 @@ function Controller:UpdateCatalogUnit(catalogUnit)
   else
     CatalogUnit.Update(self.CharacterData.Catalogs.UnitCatalog[catalogUnit.Id], catalogUnit.Id, catalogUnit.Class, catalogUnit.Clsfctn, catalogUnit.CFam, catalogUnit.CType, catalogUnit.Name, catalogUnit.Race, catalogUnit.Killed)
   end
+  
+  Controller:AddLog("CatalogUnit Updated: " .. CatalogUnit.ToString(self.CharacterData.Catalogs.UnitCatalog[catalogUnit.Id]) .. ".", AutoBiographerEnum.LogLevel.Debug)
 end

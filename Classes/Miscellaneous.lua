@@ -11,6 +11,21 @@ function Kill.New(groupGotAssistOrKillingBlow, playerGotAssist, playerGotKilling
   }
 end
 
+-- *** DamageBreakdown ***
+
+DamageBreakdown = {}
+function DamageBreakdown.New()
+  return {
+    Amount = 0,
+    Over = 0,
+  }
+end
+
+function DamageBreakdown.Add(db, amount, over)
+  db.Amount = db.Amount + amount
+  db.Over = db.Over + over
+end
+
 -- *** KillBreakdown ***
 
 KillBreakdown = {}

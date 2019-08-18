@@ -41,7 +41,7 @@ function Toggle_DebugWindow()
       function (self, value) 
         self:GetParent():SetVerticalScroll(value) 
       end
-    ) 
+    )
     local scrollbg = scrollbar:CreateTexture(nil, "BACKGROUND") 
     scrollbg:SetAllPoints(scrollbar) 
     scrollbg:SetTexture(0, 0, 0, 0.4) 
@@ -185,6 +185,12 @@ function Toggle_MainWindow()
     local moneyText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     moneyText:SetPoint("TOPLEFT", 10, -100)
     moneyText:SetText("Gold looted: " .. tostring(Controller:GetLootedMoney() / 10000) .. ". Total Gold Gained: " .. tostring(Controller:GetTotalMoneyGained() / 10000) .. ". Total Gold Lost: " .. tostring(Controller:GetTotalMoneyLost() / 10000) .. ".")
+    
+    local damageText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    damageText:SetPoint("TOPLEFT", 10, -115)
+    local damageDealtAmount, damageDealtOverkill = Controller:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageDealt)
+    local damageTakenAmount, damageTakenOverkill = Controller:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageTaken)
+    damageText:SetText("Damage Dealt: " .. tostring(damageDealtAmount) .. " (" .. tostring(damageDealtOverkill) .. " overkill). Damage Taken: " .. tostring(damageTakenAmount) .. " (" .. tostring(damageTakenOverkill) .. " overkill)." )
     
     MainWindow_Frame = frame
   else

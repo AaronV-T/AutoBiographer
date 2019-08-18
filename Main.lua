@@ -154,12 +154,13 @@ end
 
 function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
   local timestamp, event, hideCaster, sourceGuid, sourceName, sourceFlags, sourceRaidFlags, destGuid, destName, destFlags, destRaidflags = CombatLogGetCurrentEventInfo()
-  
+
   if (combatLogDamageEvents[event]) then
     local playerCausedThisEvent = sourceGuid == self.PlayerGuid
     local playerPetCausedThisEvent = sourceGuid == UnitGUID("pet")
     local groupMemberCausedThisEvent = IsUnitGUIDInOurPartyOrRaid(sourceGuid)
     
+    -- Get UnitIds of damager and damaged unit.
     local damagerUnitId = FindUnitIdByUnitGUID(sourceGuid)
     if (damagerUnitId ~= nil) then 
       local damagerCatalogUnitId = HelperFunctions.GetCatalogIdFromGuid(sourceGuid)
@@ -179,6 +180,25 @@ function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
       end
     end
     
+    -- Process event's damage amount.
+    if (playerCausedThisEvent or destGuid == self.PlayerGuid) then
+      if (string.find(event, "SWING") == 1) then
+        amount, overKill, school, resisted, blocked, absorbed, critical, glancing, crushing, isOffHand = select(12, CombatLogGetCurrentEventInfo())
+      elseif (string.find(event, "SPELL") == 1) then
+        spellId, spellName, spellSchool, amount, overKill, school, resisted, blocked, absorbed, critical, glancing, crushing, isOffHand = select(12, CombatLogGetCurrentEventInfo())
+      end
+      
+      if (amount) then 
+        if (not overKill or overKill == -1) then overKill = 0 end
+        
+        if (playerCausedThisEvent) then Controller:OnDamageDealt(amount, overKill) 
+        elseif (destGuid == self.PlayerGuid) then Controller:OnDamageTaken(amount, overKill) 
+        end
+      end
+      --print(event .. ": " .. tostring(amount) .. ". Over: " .. overKill)
+    end
+    
+    -- Set damage flags.
     if (damagedUnits[destGuid] == nil or unitWasOutOfCombat) then   
       local firstObservedDamageCausedByPlayerOrGroup = playerCausedThisEvent or playerPetCausedThisEvent or groupMemberCausedThisEvent
       
@@ -193,7 +213,7 @@ function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
     else
       if (damagedUnitId ~= nil) then
         damagedUnits[destGuid].IsTapDenied = UnitIsTapDenied(damagedUnitId)
-        Controller:AddLog(destName .. " (" .. damagedUnitId .. ") tap denied: " .. tostring(damagedUnits[destGuid].IsTapDenied), AutoBiographerEnum.LogLevel.Verbose)
+        --Controller:AddLog(destName .. " (" .. damagedUnitId .. ") tap denied: " .. tostring(damagedUnits[destGuid].IsTapDenied), AutoBiographerEnum.LogLevel.Verbose)
       end
     end
     
@@ -258,6 +278,10 @@ function EM.EventHandlers.PLAYER_DEAD(self)
   end
   
   Controller:OnDeath(time(), HelperFunctions.GetCoordinatesByUnitId("player"), killerCatalogUnitId, killerLevel)
+end
+
+function EM.EventHandlers.PLAYER_GUILD_UPDATE(self, arg1, arg2, arg3, arg4, arg5)
+  print("PLAYER_GUILD_UPDATE. " .. tostring(arg1) .. ", " .. tostring(arg2) .. ", " .. tostring(arg3) .. ", " .. tostring(arg4) .. ", " .. tostring(arg5))
 end
 
 function EM.EventHandlers.PLAYER_LEVEL_UP(self, newLevel, ...)

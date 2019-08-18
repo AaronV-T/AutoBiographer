@@ -1,4 +1,11 @@
 AutoBiographerEnum = {
+  DamageOrHealingCategory = {
+    DamageDealt = 0,
+    DamageTaken = 1,
+    HealingDoneToOthers = 2,
+    HealingDoneToSelf = 3,
+    HealingTaken = 4,
+  },
   EventType = {
     Battleground = 0,
     Death = 1,
@@ -19,61 +26,15 @@ AutoBiographerEnum = {
     Time = 16,
     Xp = 17
   },
-  BattlegroundEventSubType = {
-    
-  },
-  DeathEventSubType = {
-    PlayerDeath = 0
-  },
-  LevelEventSubType = {
-    LevelUp = 0
-  },
-  GatheringEventSubType = {
-    
-  },
-  GuildEventSubType = {
-    
-  },
-  InstanceEventSubType = {
-    
-  },
-  ItemEventSubType = {
-    
-  },
-  KillEventSubType = {
+  EventSubType = {
     BossKill = 0,
-    FirstKill = 1
-  },
-  MapEventSubType = {
-    SubZoneFirstVisit = 0,
-    ZoneFirstVisit = 1
-  },
-  MiscellaneousEventSubType = {
-    
-  },
-  MoneyEventSubType = {
-    
-  },
-  TradeskillEventSubType = {
-    
-  },
-  PvpEventSubType = {
-    
-  },
-  QuestEventSubType = {
-    QuestTurnIn = 0
-  },
-  SpellEventSubType = {
-    SpellLearned = 0
-  },
-  TalentEventSubType = {
-    
-  },
-  TimeEventSubType = {
-    
-  },
-  XpEventSubType = {
-    
+    FirstKill = 1,
+    LevelUp = 2,
+    PlayerDeath = 3,
+    QuestTurnIn = 4,
+    SpellLearned = 5,
+    SubZoneFirstVisit = 6,
+    ZoneFirstVisit = 7,
   },
   LogLevel = {
     Verbose = 0,
