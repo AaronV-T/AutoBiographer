@@ -192,6 +192,10 @@ function Toggle_MainWindow()
     local damageTakenAmount, damageTakenOverkill = Controller:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageTaken)
     damageText:SetText("Damage Dealt: " .. tostring(damageDealtAmount) .. " (" .. tostring(damageDealtOverkill) .. " overkill). Damage Taken: " .. tostring(damageTakenAmount) .. " (" .. tostring(damageTakenOverkill) .. " overkill)." )
     
+    local timeText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    timeText:SetPoint("TOPLEFT", 10, -130)
+    timeText:SetText("Time spent AFK: " .. tostring(Controller:GetTimeForTimeTrackingType(AutoBiographerEnum.TimeTrackingType.Afk)) .. ". Time spent in combat: " .. tostring(Controller:GetTimeForTimeTrackingType(AutoBiographerEnum.TimeTrackingType.InCombat)) .. ". Time spent on taxis: " .. tostring(Controller:GetTimeForTimeTrackingType(AutoBiographerEnum.TimeTrackingType.OnTaxi)) .. ". Time spent logged in: " .. tostring(Controller:GetTimeForTimeTrackingType(AutoBiographerEnum.TimeTrackingType.LoggedIn)) .. ".")
+    
     MainWindow_Frame = frame
   else
     MainWindow_Frame:Hide()

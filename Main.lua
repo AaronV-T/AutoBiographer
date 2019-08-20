@@ -4,9 +4,17 @@ EventManager = {
   EventHandlers = {},
   LastPlayerMoney = nil,
   NewLevelToAddToHistory = nil,
+  PersistentPlayerInfo = nil,
   PlayerFlags = {
     AffectingCombat = nil,
+    Afk = nil,
     OnTaxi = nil
+  },
+  Timestamps = {
+    EnteredArea = nil,
+    EnteredCombat = nil,
+    EnteredTaxi = nil,
+    MarkedAfk = nil,
   },
   ZoneChangedNewAreaEventHasFired = false
 }
@@ -77,9 +85,8 @@ end
 function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   if addonName ~= "AutoBiographer" then return end
 
-  if (time() > 1566259200) then 
-    message("This version of AutoBiographer is disabled on live Classic servers.")
-    return
+  if (time() > 1567123200) then 
+    message("You are using an alpha version of AutoBiographer. Please update to the latest version.")
   end
   
   if type(_G["AUTOBIOGRAPHER_SETTINGS"]) ~= "table" then
@@ -99,12 +106,20 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   if type(_G["AUTOBIOGRAPHER_LEVELS_CHAR"]) ~= "table" then
 		_G["AUTOBIOGRAPHER_LEVELS_CHAR"] = {}
 	end
+  if type(_G["AUTOBIOGRAPHER_TEMP_CHAR"]) ~= "table" then
+		_G["AUTOBIOGRAPHER_TEMP_CHAR"] = {
+      CurrentSubZone = nil,
+      CurrentZone = nil,
+    }
+	end
   
 	Controller.CharacterData = {
     Catalogs = _G["AUTOBIOGRAPHER_CATALOGS_CHAR"],
     Events = _G["AUTOBIOGRAPHER_EVENTS_CHAR"],
     Levels = _G["AUTOBIOGRAPHER_LEVELS_CHAR"]
   }
+  
+  self.PersistentPlayerInfo = _G["AUTOBIOGRAPHER_TEMP_CHAR"]
   
   local playerLevel = UnitLevel("player")
   if (Controller.CharacterData.Levels[playerLevel]) == nil then 
@@ -259,10 +274,7 @@ end
 
 function EM.EventHandlers.PLAYER_ALIVE(self) -- Fired when the player releases from death to a graveyard; or accepts a resurrect before releasing their spirit. Also fires when logging in.
   -- Upon logging in this event fires before ZONE_CHANGED_NEW_AREA and GeaRealZoneText() returns the zone of the last character logged in (or nil if you haven't logged into any other characters since launching WoW).
-  if (not self.ZoneChangedNewAreaEventHasFired or UnitOnTaxi("player")) then return end 
-  
-  Controller:OnChangedZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText())
-  Controller:OnChangedSubZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText(), GetSubZoneText())
+  if (self.ZoneChangedNewAreaEventHasFired) then self:UpdatePlayerZone() end
 end
 
 function EM.EventHandlers.PLAYER_DEAD(self)
@@ -280,6 +292,11 @@ function EM.EventHandlers.PLAYER_DEAD(self)
   Controller:OnDeath(time(), HelperFunctions.GetCoordinatesByUnitId("player"), killerCatalogUnitId, killerLevel)
 end
 
+function EM.EventHandlers.PLAYER_FLAGS_CHANGED(self, unitId, arg2, arg3, arg4, arg5)
+  if (unitId == "player") then self:UpdatePlayerFlags() end
+  --print("PLAYER_FLAGS_CHANGED. " .. tostring(arg1) .. ", " .. tostring(arg2) .. ", " .. tostring(arg3) .. ", " .. tostring(arg4) .. ", " .. tostring(arg5))
+end
+
 function EM.EventHandlers.PLAYER_GUILD_UPDATE(self, arg1, arg2, arg3, arg4, arg5)
   print("PLAYER_GUILD_UPDATE. " .. tostring(arg1) .. ", " .. tostring(arg2) .. ", " .. tostring(arg3) .. ", " .. tostring(arg4) .. ", " .. tostring(arg5))
 end
@@ -294,6 +311,13 @@ function EM.EventHandlers.PLAYER_LOGIN(self)
   self.PlayerGuid = UnitGUID("player") -- Player GUID Format: Player-[server ID]-[player UID]
   
   self.LastPlayerMoney = GetMoney()
+  self.Timestamps.EnteredArea = time()
+  self:UpdatePlayerFlags()
+end
+
+function EM.EventHandlers.PLAYER_LOGOUT(self)
+  self:UpdateTimestamps()
+  print("Plo")
 end
 
 function EM.EventHandlers.PLAYER_MONEY(self)
@@ -303,9 +327,7 @@ function EM.EventHandlers.PLAYER_MONEY(self)
 end
 
 function EM.EventHandlers.PLAYER_UNGHOST(self) -- Fired when the player is alive after being a ghost.
-  if (UnitOnTaxi("player")) then return end
-  Controller:OnChangedZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText())
-  Controller:OnChangedSubZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText(), GetSubZoneText())
+  self:UpdatePlayerZone()
 end
 
 function EM.EventHandlers.QUEST_TURNED_IN(self, questId, xpGained, moneyGained, arg4,arg5, arg6)
@@ -347,13 +369,11 @@ function EM.EventHandlers.UPDATE_MOUSEOVER_UNIT(self)
 	GameTooltip:Show()
 end
 function EM.EventHandlers.ZONE_CHANGED(self)
-  if (UnitIsDeadOrGhost("player") or UnitOnTaxi("player")) then return end
-  Controller:OnChangedSubZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText(), GetSubZoneText())
+  self:UpdatePlayerZone()
 end
 
 function EM.EventHandlers.ZONE_CHANGED_INDOORS(self)
-  if (UnitIsDeadOrGhost("player") or UnitOnTaxi("player")) then return end
-  Controller:OnChangedSubZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText(), GetSubZoneText())
+  self:UpdatePlayerZone()
 end
 
 function EM.EventHandlers.ZONE_CHANGED_NEW_AREA(self)
@@ -361,30 +381,105 @@ function EM.EventHandlers.ZONE_CHANGED_NEW_AREA(self)
     self.ZoneChangedNewAreaEventHasFired = true
   end 
   
-  if (UnitIsDeadOrGhost("player") or UnitOnTaxi("player")) then return end
-  Controller:OnChangedZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText())
-  Controller:OnChangedSubZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText(), GetSubZoneText())
+  self:UpdatePlayerZone()
 end
 
 -- *** Miscellaneous Member Functions ***
  
 function EM:UpdatePlayerFlags()
   -- 
-  local playerWasOnTaxi = self.PlayerFlags.OnTaxi
-  self.PlayerFlags.OnTaxi = UnitOnTaxi("player")
-  
   local playerWasAffectingCombat = self.PlayerFlags.AffectingCombat
   self.PlayerFlags.AffectingCombat = UnitAffectingCombat("player")
   
+  local playerWasAfk = self.PlayerFlags.Afk
+  self.PlayerFlags.Afk = UnitIsAFK("player")
+  
+  local playerWasOnTaxi = self.PlayerFlags.OnTaxi
+  self.PlayerFlags.OnTaxi = UnitOnTaxi("player")
+  
   -- Special 
-  if (playerWasOnTaxi and not self.PlayerFlags.OnTaxi) then
-    --print("Player exited taxi.")
-    if (not UnitIsDeadOrGhost("player")) then 
-      Controller:OnChangedZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText())
-      Controller:OnChangedSubZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), GetRealZoneText(), GetSubZoneText())
+  if (playerWasAffectingCombat and not self.PlayerFlags.AffectingCombat) then
+    -- Player left combat.
+    if (EM.Timestamps.EnteredCombat) then
+      Controller:AddTime(AutoBiographerEnum.TimeTrackingType.InCombat, time() - EM.Timestamps.EnteredCombat, self.PersistentPlayerInfo.CurrentZone, self.PersistentPlayerInfo.CurrentSubZone)
+    else
+      Controller:AddLog("Player left combat but there was no timestamp for entering combat.", AutoBiographerEnum.LogLevel.Warning)
     end
+    EM.Timestamps.EnteredCombat = nil
+  elseif (playerWasAffectingCombat == false and self.PlayerFlags.AffectingCombat) then
+    -- Player entered combat.
+    EM.Timestamps.EnteredCombat = time()
+  end
+  
+  if (playerWasAfk and not self.PlayerFlags.Afk) then 
+    -- Player cleared AFK.
+    if (EM.Timestamps.MarkedAfk) then
+      Controller:AddTime(AutoBiographerEnum.TimeTrackingType.Afk, time() - EM.Timestamps.MarkedAfk, self.PersistentPlayerInfo.CurrentZone, self.PersistentPlayerInfo.CurrentSubZone)
+    else
+      Controller:AddLog("Player left AFK but there was no timestamp for entering AFK.", AutoBiographerEnum.LogLevel.Warning)
+    end
+    EM.Timestamps.MarkedAfk = nil
+  elseif (playerWasAfk == false and self.PlayerFlags.Afk) then 
+    -- Player marked AFK.
+    EM.Timestamps.MarkedAfk = time()
+  end
+  
+  if (playerWasOnTaxi and not self.PlayerFlags.OnTaxi) then
+    -- Player left taxi.
+    if (EM.Timestamps.EnteredTaxi) then
+      Controller:AddTime(AutoBiographerEnum.TimeTrackingType.OnTaxi, time() - EM.Timestamps.EnteredTaxi, self.PersistentPlayerInfo.CurrentZone, self.PersistentPlayerInfo.CurrentSubZone)
+    else
+      Controller:AddLog("Player left taxi but there was no timestamp for entering taxi.", AutoBiographerEnum.LogLevel.Warning)
+    end
+    EM.Timestamps.EnteredTaxi = nil
+    
+    self:UpdatePlayerZone()
   elseif (playerWasOnTaxi == false and self.PlayerFlags.OnTaxi) then
-    --print("Player entered taxi.")
+    -- Player entered taxi.
+    EM.Timestamps.EnteredTaxi = time()
+  end
+end
+
+function EM:UpdatePlayerZone()
+  if (UnitIsDeadOrGhost("player") or UnitOnTaxi("player")) then return end
+  
+  local previousSubZone = self.PersistentPlayerInfo.CurrentSubZone
+  self.PersistentPlayerInfo.CurrentSubZone = GetSubZoneText()
+  
+  local previousZone = self.PersistentPlayerInfo.CurrentZone
+  self.PersistentPlayerInfo.CurrentZone = GetRealZoneText()
+  
+  if (previousSubZone ~= self.PersistentPlayerInfo.CurrentSubZone or previousZone ~= self.PersistentPlayerInfo.CurrentZone) then
+    self.UpdateTimestamps(previousZone, previousSubZone)
+  end
+  
+  Controller:OnChangedZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), self.PersistentPlayerInfo.CurrentZone)
+  Controller:OnChangedSubZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), self.PersistentPlayerInfo.CurrentZone, self.PersistentPlayerInfo.CurrentSubZone)
+end
+
+function EM:UpdateTimestamps(zone, subZone)
+  -- Afk
+  if (EM.Timestamps.MarkedAfk) then
+    Controller:AddTime(AutoBiographerEnum.TimeTrackingType.Afk, time() - EM.Timestamps.MarkedAfk, zone, subZone)
+    EM.Timestamps.MarkedAfk = time()
+  end
+  
+  -- In Combat
+  if (EM.Timestamps.EnteredCombat) then
+    Controller:AddTime(AutoBiographerEnum.TimeTrackingType.InCombat, time() - EM.Timestamps.EnteredCombat, zone, subZone)
+    EM.Timestamps.EnteredCombat = time()
+  end
+  
+  -- Logged In
+  if (EM.Timestamps.EnteredArea) then
+    Controller:AddTime(AutoBiographerEnum.TimeTrackingType.LoggedIn, time() - EM.Timestamps.EnteredArea, zone, subZone)
+    EM.Timestamps.EnteredArea = time()
+  end
+  
+  -- On Taxi
+  if (EM.Timestamps.EnteredTaxi) then
+    Controller:AddTime(AutoBiographerEnum.TimeTrackingType.OnTaxi, time() - EM.Timestamps.EnteredCombat, zone, subZone)
+    EM.Timestamps.EnteredTaxi = time()
   end
 end
 

@@ -11,7 +11,7 @@ function AggregatedStatistics.New()
     MoneyStatistics = MoneyStatistics.New(),
     PvpStatistics = nil,
     SpellStatistics = nil,
-    TimeStatisticsByZone = nil
+    TimeStatisticsByArea = {}, -- Dict<ZoneName-SubZoneName, TimeStatistics>
   }
 end
 
@@ -93,4 +93,22 @@ function MoneyStatistics.MoneyChanged(ms, deltaMoney)
   if (deltaMoney < 0) then ms.TotalMoneyLost =  ms.TotalMoneyLost + abs(deltaMoney)
   elseif (deltaMoney > 0) then ms.TotalMoneyGained =  ms.TotalMoneyGained + deltaMoney
   end
+end
+
+-- *** TimeStatistics ***
+
+TimeStatistics = {}
+function TimeStatistics.New()
+  return {
+    --[[TimeSpentAfk = 0,
+    TimeSpentCasting = 0,
+    TimeSpentInCombat = 0,
+    TimeSpentOnTaxi = 0,]]
+  }
+end
+
+function TimeStatistics.AddTime(ts, timeTrackingType, seconds)
+  if (ts[timeTrackingType] == nil) then ts[timeTrackingType] = 0 end
+  
+  ts[timeTrackingType] = ts[timeTrackingType] + seconds
 end

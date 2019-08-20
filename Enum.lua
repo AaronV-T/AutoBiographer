@@ -43,5 +43,12 @@ AutoBiographerEnum = {
     Warning = 3,
     Error = 4,
     Fatal = 5
-  }
+  },
+  TimeTrackingType = {
+    Afk = 0,
+    Casting = 1,
+    InCombat = 2,
+    LoggedIn = 3,
+    OnTaxi = 4,
+  },
 }

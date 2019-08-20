@@ -6,6 +6,7 @@ Controller = {
 function Controller:AddEvent(event)
   table.insert(self.CharacterData.Events, event)
   Controller:AddLog(Event.ToString(self.CharacterData.Events[#self.CharacterData.Events], self.CharacterData.Catalogs), AutoBiographerEnum.LogLevel.Debug)
+  print(Event.ToString(self.CharacterData.Events[#self.CharacterData.Events], self.CharacterData.Catalogs))
 end
 
 function Controller:AddLog(text, logLevel)
@@ -14,6 +15,13 @@ function Controller:AddLog(text, logLevel)
   table.insert(self.Logs, { Level = logLevel, Text = tostring(text), Timestamp = time() })
   
   if (DebugWindow_Frame) then DebugWindow_Frame.LogsUpdated() end
+end
+
+function Controller:AddTime(timeTrackingType, seconds, zone, subZone)
+  Controller:AddLog("Adding " .. tostring(seconds) .. " seconds of timeTrackingType " .. tostring(timeTrackingType) .. " to " .. tostring(subZone) .. " (" .. tostring(zone) .. ").", AutoBiographerEnum.LogLevel.Debug)
+  
+  local id = tostring(zone) .. "-" .. tostring(subZone)
+  TimeStatistics.AddTime(self:GetCurrentLevelStatistics().TimeStatisticsByArea, timeTrackingType, seconds)
 end
 
 function Controller:CatalogUnitIsIncomplete(catalogUnitId)
@@ -95,6 +103,17 @@ function Controller:GetTaggedKillsByCatalogUnitId(catalogUnitId)
   local sum = 0
   for k,v in pairs(self.CharacterData.Levels) do
     sum = sum + KillStatistics.GetTaggedKillsByCatalogUnitId(v.KillStatistics, catalogUnitId)
+  end
+  
+  return sum
+end
+
+function Controller:GetTimeForTimeTrackingType(timeTrackingType)
+  local sum = 0
+  for k,v in pairs(self.CharacterData.Levels) do
+    if (v.TimeStatisticsByArea[timeTrackingType]) then
+      sum = sum + v.TimeStatisticsByArea[timeTrackingType]
+    end
   end
   
   return sum
