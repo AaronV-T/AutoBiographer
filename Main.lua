@@ -8,9 +8,11 @@ EventManager = {
   PlayerFlags = {
     AffectingCombat = nil,
     Afk = nil,
+    IsDeadOrGhost = nil,
     OnTaxi = nil
   },
   Timestamps = {
+    Died = nil,
     EnteredArea = nil,
     EnteredCombat = nil,
     EnteredTaxi = nil,
@@ -354,8 +356,40 @@ function EM.EventHandlers.UNIT_HEALTH(self, unitId)
   --print(unitId .. ". " .. tostring(UnitIsTapDenied(unitId)))
 end
 
+function EM.EventHandlers.UNIT_SPELLCAST_CHANNEL_START(self, unitId, arg2, arg3, arg4, arg5)
+  --print("UNIT_SPELLCAST_CHANNEL_START. " .. unitId .. ", " .. tostring(arg2) .. ", " .. tostring(arg3) .. ", " .. tostring(arg4) .. ", " .. tostring(arg5))
+end
+
+function EM.EventHandlers.UNIT_SPELLCAST_CHANNEL_STOP(self, unitId, arg2, arg3, arg4, arg5)
+  --print("UNIT_SPELLCAST_CHANNEL_STOP. " .. unitId .. ", " .. tostring(arg2) .. ", " .. tostring(arg3) .. ", " .. tostring(arg4) .. ", " .. tostring(arg5))
+end
+
+function EM.EventHandlers.UNIT_SPELLCAST_FAILED(self, unitId, arg2, arg3, arg4, arg5)
+  --print("UNIT_SPELLCAST_FAILED. " .. unitId .. ", " .. tostring(arg2) .. ", " .. tostring(arg3) .. ", " .. tostring(arg4) .. ", " .. tostring(arg5))
+end
+
+function EM.EventHandlers.UNIT_SPELLCAST_FAILED_QUIET(self, unitId, arg2, arg3, arg4, arg5)
+  --print("UNIT_SPELLCAST_FAILED_QUIET. " .. unitId .. ", " .. tostring(arg2) .. ", " .. tostring(arg3) .. ", " .. tostring(arg4) .. ", " .. tostring(arg5))
+end
+
+function EM.EventHandlers.UNIT_SPELLCAST_INTERRUPTED(self, unitId, arg2, arg3, arg4, arg5)
+  --print("UNIT_SPELLCAST_INTERRUPTED. " .. unitId .. ", " .. tostring(arg2) .. ", " .. tostring(arg3) .. ", " .. tostring(arg4) .. ", " .. tostring(arg5))
+end
+
+function EM.EventHandlers.UNIT_SPELLCAST_START(self, unitId, arg2, arg3, arg4, arg5)
+  --print("UNIT_SPELLCAST_START. " .. unitId .. ", " .. tostring(arg2) .. ", " .. tostring(arg3) .. ", " .. tostring(arg4) .. ", " .. tostring(arg5))
+end
+
+function EM.EventHandlers.UNIT_SPELLCAST_STOP(self, unitId, arg2, arg3, arg4, arg5)
+  --print("UNIT_SPELLCAST_STOP. " .. unitId .. ", " .. tostring(arg2) .. ", " .. tostring(arg3) .. ", " .. tostring(arg4) .. ", " .. tostring(arg5))
+end
+
+function EM.EventHandlers.UNIT_SPELLCAST_SUCCEEDED(self, unitId, arg2, arg3, arg4, arg5)
+  --print("UNIT_SPELLCAST_SUCCEEDED. " .. unitId .. ", " .. tostring(arg2) .. ", " .. tostring(arg3) .. ", " .. tostring(arg4) .. ", " .. tostring(arg5))
+end
+
 function EM.EventHandlers.UNIT_TARGET(self, unitId)
-  --print ("UNIT_TARGET. " .. unitId .. ": " .. tostring(UnitGUID(unitId .. "target")))
+  
 end
 
 function EM.EventHandlers.UPDATE_MOUSEOVER_UNIT(self)
@@ -394,6 +428,9 @@ function EM:UpdatePlayerFlags()
   local playerWasAfk = self.PlayerFlags.Afk
   self.PlayerFlags.Afk = UnitIsAFK("player")
   
+  local playerWasDeadOrGhost = self.PlayerFlags.IsDeadOrGhost
+  self.PlayerFlags.IsDeadOrGhost = UnitIsDeadOrGhost("player")
+  
   local playerWasOnTaxi = self.PlayerFlags.OnTaxi
   self.PlayerFlags.OnTaxi = UnitOnTaxi("player")
   
@@ -406,8 +443,8 @@ function EM:UpdatePlayerFlags()
       Controller:AddLog("Player left combat but there was no timestamp for entering combat.", AutoBiographerEnum.LogLevel.Warning)
     end
     EM.Timestamps.EnteredCombat = nil
-  elseif (playerWasAffectingCombat == false and self.PlayerFlags.AffectingCombat) then
-    -- Player entered combat.
+  elseif (not playerWasAffectingCombat and self.PlayerFlags.AffectingCombat) then
+    -- Player entered combat or was in combat after loading UI.
     EM.Timestamps.EnteredCombat = time()
   end
   
@@ -419,9 +456,22 @@ function EM:UpdatePlayerFlags()
       Controller:AddLog("Player left AFK but there was no timestamp for entering AFK.", AutoBiographerEnum.LogLevel.Warning)
     end
     EM.Timestamps.MarkedAfk = nil
-  elseif (playerWasAfk == false and self.PlayerFlags.Afk) then 
-    -- Player marked AFK.
+  elseif (not playerWasAfk and self.PlayerFlags.Afk) then 
+    -- Player marked AFK or was AFK after loading UI.
     EM.Timestamps.MarkedAfk = time()
+  end
+  
+  if (playerWasDeadOrGhost and not self.PlayerFlags.IsDeadOrGhost) then 
+    -- Player revived.
+    if (EM.Timestamps.Died) then
+      Controller:AddTime(AutoBiographerEnum.TimeTrackingType.DeadOrGhost, time() - EM.Timestamps.Died, self.PersistentPlayerInfo.CurrentZone, self.PersistentPlayerInfo.CurrentSubZone)
+    else
+      Controller:AddLog("Player revived but there was no timestamp for dieing.", AutoBiographerEnum.LogLevel.Warning)
+    end
+    EM.Timestamps.Died = nil
+  elseif (not playerWasDeadOrGhost and self.PlayerFlags.IsDeadOrGhost) then 
+    -- Player died or was dead after loading UI
+    EM.Timestamps.Died = time()
   end
   
   if (playerWasOnTaxi and not self.PlayerFlags.OnTaxi) then
@@ -434,8 +484,8 @@ function EM:UpdatePlayerFlags()
     EM.Timestamps.EnteredTaxi = nil
     
     self:UpdatePlayerZone()
-  elseif (playerWasOnTaxi == false and self.PlayerFlags.OnTaxi) then
-    -- Player entered taxi.
+  elseif (not playerWasOnTaxi and self.PlayerFlags.OnTaxi) then
+    -- Player entered taxi or was on taxi after loading UI.
     EM.Timestamps.EnteredTaxi = time()
   end
 end
@@ -464,6 +514,12 @@ function EM:UpdateTimestamps(zone, subZone)
     EM.Timestamps.MarkedAfk = time()
   end
   
+  -- DeadOrGhost
+  if (EM.Timestamps.Died) then
+    Controller:AddTime(AutoBiographerEnum.TimeTrackingType.DeadOrGhost, time() - EM.Timestamps.Died, zone, subZone)
+    EM.Timestamps.DeadOrGhost = time()
+  end
+  
   -- In Combat
   if (EM.Timestamps.EnteredCombat) then
     Controller:AddTime(AutoBiographerEnum.TimeTrackingType.InCombat, time() - EM.Timestamps.EnteredCombat, zone, subZone)
@@ -478,7 +534,7 @@ function EM:UpdateTimestamps(zone, subZone)
   
   -- On Taxi
   if (EM.Timestamps.EnteredTaxi) then
-    Controller:AddTime(AutoBiographerEnum.TimeTrackingType.OnTaxi, time() - EM.Timestamps.EnteredCombat, zone, subZone)
+    Controller:AddTime(AutoBiographerEnum.TimeTrackingType.OnTaxi, time() - EM.Timestamps.EnteredTaxi, zone, subZone)
     EM.Timestamps.EnteredTaxi = time()
   end
 end

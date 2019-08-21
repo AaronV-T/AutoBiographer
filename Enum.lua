@@ -47,8 +47,9 @@ AutoBiographerEnum = {
   TimeTrackingType = {
     Afk = 0,
     Casting = 1,
-    InCombat = 2,
-    LoggedIn = 3,
-    OnTaxi = 4,
+    DeadOrGhost = 2,
+    InCombat = 3,
+    LoggedIn = 4,
+    OnTaxi = 5,
   },
 }
