@@ -70,6 +70,13 @@ function HF.GetLastKeyFromTable(tab)
   return keys[#keys]
 end
 
+function HF.SubtractFloats(left, right, precision)
+  if (not precision) then precision = 1 end
+  
+  local difference = left - right
+  return HF.Round(difference, precision)
+end
+
 -- Text Formatting Helpers
 
 function HF.SecondsToTimeString(totalSeconds)

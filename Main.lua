@@ -11,12 +11,13 @@ EventManager = {
     IsDeadOrGhost = nil,
     OnTaxi = nil
   },
-  Timestamps = {
+  TemporaryTimestamps = {
     Died = nil,
     EnteredArea = nil,
     EnteredCombat = nil,
     EnteredTaxi = nil,
     MarkedAfk = nil,
+    StartedCasting = nil,
   },
   ZoneChangedNewAreaEventHasFired = false
 }
@@ -313,7 +314,7 @@ function EM.EventHandlers.PLAYER_LOGIN(self)
   self.PlayerGuid = UnitGUID("player") -- Player GUID Format: Player-[server ID]-[player UID]
   
   self.LastPlayerMoney = GetMoney()
-  self.Timestamps.EnteredArea = time()
+  self.TemporaryTimestamps.EnteredArea = GetTime()
   self:UpdatePlayerFlags()
 end
 
@@ -357,34 +358,46 @@ function EM.EventHandlers.UNIT_HEALTH(self, unitId)
 end
 
 function EM.EventHandlers.UNIT_SPELLCAST_CHANNEL_START(self, unitId, arg2, arg3, arg4, arg5)
+  if (unitId ~= "player") then return end
   --print("UNIT_SPELLCAST_CHANNEL_START. " .. unitId .. ", " .. tostring(arg2) .. ", " .. tostring(arg3) .. ", " .. tostring(arg4) .. ", " .. tostring(arg5))
+  self:OnStartedCasting()
 end
 
 function EM.EventHandlers.UNIT_SPELLCAST_CHANNEL_STOP(self, unitId, arg2, arg3, arg4, arg5)
+  if (unitId ~= "player") then return end
   --print("UNIT_SPELLCAST_CHANNEL_STOP. " .. unitId .. ", " .. tostring(arg2) .. ", " .. tostring(arg3) .. ", " .. tostring(arg4) .. ", " .. tostring(arg5))
+  self:OnStoppedCasting()
 end
 
 function EM.EventHandlers.UNIT_SPELLCAST_FAILED(self, unitId, arg2, arg3, arg4, arg5)
+  if (unitId ~= "player") then return end
   --print("UNIT_SPELLCAST_FAILED. " .. unitId .. ", " .. tostring(arg2) .. ", " .. tostring(arg3) .. ", " .. tostring(arg4) .. ", " .. tostring(arg5))
 end
 
 function EM.EventHandlers.UNIT_SPELLCAST_FAILED_QUIET(self, unitId, arg2, arg3, arg4, arg5)
+  if (unitId ~= "player") then return end
   --print("UNIT_SPELLCAST_FAILED_QUIET. " .. unitId .. ", " .. tostring(arg2) .. ", " .. tostring(arg3) .. ", " .. tostring(arg4) .. ", " .. tostring(arg5))
 end
 
 function EM.EventHandlers.UNIT_SPELLCAST_INTERRUPTED(self, unitId, arg2, arg3, arg4, arg5)
+  if (unitId ~= "player") then return end
   --print("UNIT_SPELLCAST_INTERRUPTED. " .. unitId .. ", " .. tostring(arg2) .. ", " .. tostring(arg3) .. ", " .. tostring(arg4) .. ", " .. tostring(arg5))
 end
 
 function EM.EventHandlers.UNIT_SPELLCAST_START(self, unitId, arg2, arg3, arg4, arg5)
+  if (unitId ~= "player") then return end
   --print("UNIT_SPELLCAST_START. " .. unitId .. ", " .. tostring(arg2) .. ", " .. tostring(arg3) .. ", " .. tostring(arg4) .. ", " .. tostring(arg5))
+  self:OnStartedCasting()
 end
 
 function EM.EventHandlers.UNIT_SPELLCAST_STOP(self, unitId, arg2, arg3, arg4, arg5)
+  if (unitId ~= "player") then return end
   --print("UNIT_SPELLCAST_STOP. " .. unitId .. ", " .. tostring(arg2) .. ", " .. tostring(arg3) .. ", " .. tostring(arg4) .. ", " .. tostring(arg5))
+  self:OnStoppedCasting()
 end
 
 function EM.EventHandlers.UNIT_SPELLCAST_SUCCEEDED(self, unitId, arg2, arg3, arg4, arg5)
+  if (unitId ~= "player") then return end
   --print("UNIT_SPELLCAST_SUCCEEDED. " .. unitId .. ", " .. tostring(arg2) .. ", " .. tostring(arg3) .. ", " .. tostring(arg4) .. ", " .. tostring(arg5))
 end
 
@@ -419,6 +432,23 @@ function EM.EventHandlers.ZONE_CHANGED_NEW_AREA(self)
 end
 
 -- *** Miscellaneous Member Functions ***
+
+function EM:OnStartedCasting()
+  if (self.TemporaryTimestamps.StartedCasting) then
+    Controller:AddTime(AutoBiographerEnum.TimeTrackingType.Casting, HelperFunctions.SubtractFloats(GetTime(), self.TemporaryTimestamps.StartedCasting), self.PersistentPlayerInfo.CurrentZone, self.PersistentPlayerInfo.CurrentSubZone)
+  end
+  
+  self.TemporaryTimestamps.StartedCasting = GetTime()
+end 
+
+function EM:OnStoppedCasting()
+  if (self.TemporaryTimestamps.StartedCasting) then
+    Controller:AddTime(AutoBiographerEnum.TimeTrackingType.Casting, HelperFunctions.SubtractFloats(GetTime(), self.TemporaryTimestamps.StartedCasting), self.PersistentPlayerInfo.CurrentZone, self.PersistentPlayerInfo.CurrentSubZone)
+  else
+    Controller:AddLog("Player stopped casting but there was no timestamp for starting casting.", AutoBiographerEnum.LogLevel.Warning)
+  end
+  self.TemporaryTimestamps.StartedCasting = nil
+end
  
 function EM:UpdatePlayerFlags()
   -- 
@@ -437,56 +467,56 @@ function EM:UpdatePlayerFlags()
   -- Special 
   if (playerWasAffectingCombat and not self.PlayerFlags.AffectingCombat) then
     -- Player left combat.
-    if (EM.Timestamps.EnteredCombat) then
-      Controller:AddTime(AutoBiographerEnum.TimeTrackingType.InCombat, time() - EM.Timestamps.EnteredCombat, self.PersistentPlayerInfo.CurrentZone, self.PersistentPlayerInfo.CurrentSubZone)
+    if (self.TemporaryTimestamps.EnteredCombat) then
+      Controller:AddTime(AutoBiographerEnum.TimeTrackingType.InCombat, HelperFunctions.SubtractFloats(GetTime(), self.TemporaryTimestamps.EnteredCombat), self.PersistentPlayerInfo.CurrentZone, self.PersistentPlayerInfo.CurrentSubZone)
     else
       Controller:AddLog("Player left combat but there was no timestamp for entering combat.", AutoBiographerEnum.LogLevel.Warning)
     end
-    EM.Timestamps.EnteredCombat = nil
+    self.TemporaryTimestamps.EnteredCombat = nil
   elseif (not playerWasAffectingCombat and self.PlayerFlags.AffectingCombat) then
     -- Player entered combat or was in combat after loading UI.
-    EM.Timestamps.EnteredCombat = time()
+    self.TemporaryTimestamps.EnteredCombat = GetTime()
   end
   
   if (playerWasAfk and not self.PlayerFlags.Afk) then 
     -- Player cleared AFK.
-    if (EM.Timestamps.MarkedAfk) then
-      Controller:AddTime(AutoBiographerEnum.TimeTrackingType.Afk, time() - EM.Timestamps.MarkedAfk, self.PersistentPlayerInfo.CurrentZone, self.PersistentPlayerInfo.CurrentSubZone)
+    if (self.TemporaryTimestamps.MarkedAfk) then
+      Controller:AddTime(AutoBiographerEnum.TimeTrackingType.Afk, HelperFunctions.SubtractFloats(GetTime(), self.TemporaryTimestamps.MarkedAfk), self.PersistentPlayerInfo.CurrentZone, self.PersistentPlayerInfo.CurrentSubZone)
     else
       Controller:AddLog("Player left AFK but there was no timestamp for entering AFK.", AutoBiographerEnum.LogLevel.Warning)
     end
-    EM.Timestamps.MarkedAfk = nil
+    self.TemporaryTimestamps.MarkedAfk = nil
   elseif (not playerWasAfk and self.PlayerFlags.Afk) then 
     -- Player marked AFK or was AFK after loading UI.
-    EM.Timestamps.MarkedAfk = time()
+    self.TemporaryTimestamps.MarkedAfk = GetTime()
   end
   
   if (playerWasDeadOrGhost and not self.PlayerFlags.IsDeadOrGhost) then 
     -- Player revived.
-    if (EM.Timestamps.Died) then
-      Controller:AddTime(AutoBiographerEnum.TimeTrackingType.DeadOrGhost, time() - EM.Timestamps.Died, self.PersistentPlayerInfo.CurrentZone, self.PersistentPlayerInfo.CurrentSubZone)
+    if (self.TemporaryTimestamps.Died) then
+      Controller:AddTime(AutoBiographerEnum.TimeTrackingType.DeadOrGhost, HelperFunctions.SubtractFloats(GetTime(), self.TemporaryTimestamps.Died), self.PersistentPlayerInfo.CurrentZone, self.PersistentPlayerInfo.CurrentSubZone)
     else
       Controller:AddLog("Player revived but there was no timestamp for dieing.", AutoBiographerEnum.LogLevel.Warning)
     end
-    EM.Timestamps.Died = nil
+    self.TemporaryTimestamps.Died = nil
   elseif (not playerWasDeadOrGhost and self.PlayerFlags.IsDeadOrGhost) then 
     -- Player died or was dead after loading UI
-    EM.Timestamps.Died = time()
+    self.TemporaryTimestamps.Died = GetTime()
   end
   
   if (playerWasOnTaxi and not self.PlayerFlags.OnTaxi) then
     -- Player left taxi.
-    if (EM.Timestamps.EnteredTaxi) then
-      Controller:AddTime(AutoBiographerEnum.TimeTrackingType.OnTaxi, time() - EM.Timestamps.EnteredTaxi, self.PersistentPlayerInfo.CurrentZone, self.PersistentPlayerInfo.CurrentSubZone)
+    if (self.TemporaryTimestamps.EnteredTaxi) then
+      Controller:AddTime(AutoBiographerEnum.TimeTrackingType.OnTaxi, HelperFunctions.SubtractFloats(GetTime(), self.TemporaryTimestamps.EnteredTaxi), self.PersistentPlayerInfo.CurrentZone, self.PersistentPlayerInfo.CurrentSubZone)
     else
       Controller:AddLog("Player left taxi but there was no timestamp for entering taxi.", AutoBiographerEnum.LogLevel.Warning)
     end
-    EM.Timestamps.EnteredTaxi = nil
+    self.TemporaryTimestamps.EnteredTaxi = nil
     
     self:UpdatePlayerZone()
   elseif (not playerWasOnTaxi and self.PlayerFlags.OnTaxi) then
     -- Player entered taxi or was on taxi after loading UI.
-    EM.Timestamps.EnteredTaxi = time()
+    self.TemporaryTimestamps.EnteredTaxi = GetTime()
   end
 end
 
@@ -498,9 +528,9 @@ function EM:UpdatePlayerZone()
   
   local previousZone = self.PersistentPlayerInfo.CurrentZone
   self.PersistentPlayerInfo.CurrentZone = GetRealZoneText()
-  
+    
   if (previousSubZone ~= self.PersistentPlayerInfo.CurrentSubZone or previousZone ~= self.PersistentPlayerInfo.CurrentZone) then
-    self.UpdateTimestamps(previousZone, previousSubZone)
+    self:UpdateTimestamps(previousZone, previousSubZone)
   end
   
   Controller:OnChangedZone(time(), HelperFunctions.GetCoordinatesByUnitId("player"), self.PersistentPlayerInfo.CurrentZone)
@@ -509,33 +539,33 @@ end
 
 function EM:UpdateTimestamps(zone, subZone)
   -- Afk
-  if (EM.Timestamps.MarkedAfk) then
-    Controller:AddTime(AutoBiographerEnum.TimeTrackingType.Afk, time() - EM.Timestamps.MarkedAfk, zone, subZone)
-    EM.Timestamps.MarkedAfk = time()
+  if (self.TemporaryTimestamps.MarkedAfk) then
+    Controller:AddTime(AutoBiographerEnum.TimeTrackingType.Afk, HelperFunctions.SubtractFloats(GetTime(), self.TemporaryTimestamps.MarkedAfk), zone, subZone)
+    self.TemporaryTimestamps.MarkedAfk = GetTime()
   end
   
   -- DeadOrGhost
-  if (EM.Timestamps.Died) then
-    Controller:AddTime(AutoBiographerEnum.TimeTrackingType.DeadOrGhost, time() - EM.Timestamps.Died, zone, subZone)
-    EM.Timestamps.DeadOrGhost = time()
+  if (self.TemporaryTimestamps.Died) then
+    Controller:AddTime(AutoBiographerEnum.TimeTrackingType.DeadOrGhost, HelperFunctions.SubtractFloats(GetTime(), self.TemporaryTimestamps.Died), zone, subZone)
+    self.TemporaryTimestamps.DeadOrGhost = GetTime()
   end
   
   -- In Combat
-  if (EM.Timestamps.EnteredCombat) then
-    Controller:AddTime(AutoBiographerEnum.TimeTrackingType.InCombat, time() - EM.Timestamps.EnteredCombat, zone, subZone)
-    EM.Timestamps.EnteredCombat = time()
+  if (self.TemporaryTimestamps.EnteredCombat) then
+    Controller:AddTime(AutoBiographerEnum.TimeTrackingType.InCombat, HelperFunctions.SubtractFloats(GetTime(), self.TemporaryTimestamps.EnteredCombat), zone, subZone)
+    self.TemporaryTimestamps.EnteredCombat = GetTime()
   end
   
   -- Logged In
-  if (EM.Timestamps.EnteredArea) then
-    Controller:AddTime(AutoBiographerEnum.TimeTrackingType.LoggedIn, time() - EM.Timestamps.EnteredArea, zone, subZone)
-    EM.Timestamps.EnteredArea = time()
+  if (self.TemporaryTimestamps.EnteredArea) then
+    Controller:AddTime(AutoBiographerEnum.TimeTrackingType.LoggedIn, HelperFunctions.SubtractFloats(GetTime(), self.TemporaryTimestamps.EnteredArea), zone, subZone)
+    self.TemporaryTimestamps.EnteredArea = GetTime()
   end
   
   -- On Taxi
-  if (EM.Timestamps.EnteredTaxi) then
-    Controller:AddTime(AutoBiographerEnum.TimeTrackingType.OnTaxi, time() - EM.Timestamps.EnteredTaxi, zone, subZone)
-    EM.Timestamps.EnteredTaxi = time()
+  if (self.TemporaryTimestamps.EnteredTaxi) then
+    Controller:AddTime(AutoBiographerEnum.TimeTrackingType.OnTaxi, HelperFunctions.SubtractFloats(GetTime(), self.TemporaryTimestamps.EnteredTaxi), zone, subZone)
+    self.TemporaryTimestamps.EnteredTaxi = GetTime()
   end
 end
 
