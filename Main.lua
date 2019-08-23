@@ -29,12 +29,22 @@ local EM = EventManager
 local damagedUnits = {}
 
 local combatLogDamageEvents = { }
+local combatLogHealEvents = { }
 do
-    local damageEventPrefixes = { "RANGE", "SPELL", "SPELL_BUILDING", "SPELL_PERIODIC", "SWING"  }
+    local damageEventPrefixes = { "RANGE", "SPELL", "SPELL_BUILDING", "SPELL_PERIODIC", "SWING" }
     local damageEventSuffixes = { "DAMAGE", "DRAIN", "INSTAKILL", "LEECH" }
     for _, prefix in pairs(damageEventPrefixes) do
         for _, suffix in pairs(damageEventSuffixes) do
             combatLogDamageEvents[prefix .. "_" .. suffix] = true
+        end
+    end
+end
+do
+    local healEventPrefixes = { "SPELL", "SPELL_PERIODIC" }
+    local healEventSuffixes = { "HEAL" }
+    for _, prefix in pairs(healEventPrefixes) do
+        for _, suffix in pairs(healEventSuffixes) do
+            combatLogHealEvents[prefix .. "_" .. suffix] = true
         end
     end
 end
@@ -172,7 +182,7 @@ end
 
 function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
   local timestamp, event, hideCaster, sourceGuid, sourceName, sourceFlags, sourceRaidFlags, destGuid, destName, destFlags, destRaidflags = CombatLogGetCurrentEventInfo()
-
+  
   if (combatLogDamageEvents[event]) then
     local playerCausedThisEvent = sourceGuid == self.PlayerGuid
     local playerPetCausedThisEvent = sourceGuid == UnitGUID("pet")
@@ -209,11 +219,12 @@ function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
       if (amount) then 
         if (not overKill or overKill == -1) then overKill = 0 end
         
-        if (playerCausedThisEvent) then Controller:OnDamageDealt(amount, overKill) 
-        elseif (destGuid == self.PlayerGuid) then Controller:OnDamageTaken(amount, overKill) 
+        if (playerCausedThisEvent) then 
+          Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageDealt, amount, overKill)
+        elseif (destGuid == self.PlayerGuid) then 
+          Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageTaken, amount, overKill)
         end
       end
-      --print(event .. ": " .. tostring(amount) .. ". Over: " .. overKill)
     end
     
     -- Set damage flags.
@@ -245,6 +256,28 @@ function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
     damagedUnit.LastUnitGuidWhoCausedDamage = sourceGuid
     
     if (destGuid == self.PlayerGuid) then damagedUnit.LastCombatDamageTakenTimestamp = time() end
+  elseif (combatLogHealEvents[event]) then
+    -- Process event's heal amount.
+    if (sourceGuid == self.PlayerGuid or destGuid == self.PlayerGuid) then
+      spellId, spellName, spellSchool, amount, overKill, school, resisted, blocked, absorbed, critical, glancing, crushing, isOffHand = select(12, CombatLogGetCurrentEventInfo())
+      
+      if (amount) then 
+        if (not overKill or overKill == -1) then overKill = 0 end
+        
+        if (sourceGuid == self.PlayerGuid) then
+          if (destGuid == self.PlayerGuid) then
+            Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.HealingDealtToSelf, amount, overKill)
+          else
+            Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.HealingDealtToOthers, amount, overKill)
+          end
+        end
+        
+        if (destGuid == self.PlayerGuid) then
+          Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.HealingTaken, amount, overKill)
+        end
+        
+      end
+    end
   end
 
   if (event ~= "UNIT_DIED") then return end
@@ -320,7 +353,6 @@ end
 
 function EM.EventHandlers.PLAYER_LOGOUT(self)
   self:UpdateTimestamps()
-  print("Plo")
 end
 
 function EM.EventHandlers.PLAYER_MONEY(self)

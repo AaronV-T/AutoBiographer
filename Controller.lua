@@ -36,22 +36,17 @@ function Controller:GetCurrentLevelStatistics()
   return self.CharacterData.Levels[self:GetCurrentLevelNum()]
 end
 
-function Controller:GetDamageOrHealing(category)
+function Controller:GetDamageOrHealing(damageOrHealingCategory)
   local amountSum = 0
-  local overkillSum = 0
+  local overSum = 0
   for k,v in pairs(self.CharacterData.Levels) do
-    if (category == AutoBiographerEnum.DamageOrHealingCategory.DamageDealt) then
-      amountSum = amountSum + v.DamageStatistics.DamageDealt.Amount
-      overkillSum = overkillSum + v.DamageStatistics.DamageDealt.Over
-    elseif (category == AutoBiographerEnum.DamageOrHealingCategory.DamageTaken) then
-      amountSum = amountSum + v.DamageStatistics.DamageTaken.Amount
-      overkillSum = overkillSum + v.DamageStatistics.DamageTaken.Over
-    else
-      error("Unimplemented category: " .. category)
+    if (v.DamageStatistics[damageOrHealingCategory]) then
+      amountSum = amountSum + v.DamageStatistics[damageOrHealingCategory].Amount
+      overSum = overSum + v.DamageStatistics[damageOrHealingCategory].Over
     end
   end
   
-  return amountSum, overkillSum
+  return amountSum, overSum
 end
 
 function Controller:GetEvents()
@@ -145,14 +140,9 @@ function Controller:OnChangedZone(timestamp, coordinates, zoneName)
   end
 end
 
-function Controller:OnDamageDealt(amount, overkill)
-  Controller:AddLog("DamageDealt: " .. tostring(amount) .. ". Over: " .. tostring(overkill), AutoBiographerEnum.LogLevel.Debug)
-  DamageStatistics.AddDamageDealt(self:GetCurrentLevelStatistics().DamageStatistics, amount, overkill)
-end
-
-function Controller:OnDamageTaken(amount, overkill)
-  Controller:AddLog("DamageTaken: " .. tostring(amount) .. ". Over: " .. tostring(overkill), AutoBiographerEnum.LogLevel.Debug)
-  DamageStatistics.AddDamageTaken(self:GetCurrentLevelStatistics().DamageStatistics, amount, overkill)
+function Controller:OnDamageOrHealing(damageOrHealingCategory, amount, overkill)
+  Controller:AddLog("DamageOrHealingCategory: " .. tostring(damageOrHealingCategory) .. ". Amount: " .. tostring(amount) .. ", over: " .. tostring(overkill), AutoBiographerEnum.LogLevel.Debug)
+  DamageStatistics.Add(self:GetCurrentLevelStatistics().DamageStatistics, damageOrHealingCategory, amount, overkill)
 end
 
 function Controller:OnDeath(timestamp, coordinates, killerCatalogUnitId, killerLevel)

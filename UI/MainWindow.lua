@@ -192,8 +192,15 @@ function Toggle_MainWindow()
     local damageTakenAmount, damageTakenOverkill = Controller:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageTaken)
     damageText:SetText("Damage Dealt: " .. tostring(damageDealtAmount) .. " (" .. tostring(damageDealtOverkill) .. " overkill). Damage Taken: " .. tostring(damageTakenAmount) .. " (" .. tostring(damageTakenOverkill) .. " overkill)." )
     
+    local healingText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    healingText:SetPoint("TOPLEFT", 10, -130)
+    local healingOtherAmount, healingOtherOver = Controller:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.HealingDealtToOthers)
+    local healingSelfAmount, healingSelfOver = Controller:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.HealingDealtToSelf)
+    local healingTakenAmount, healingTakenOver = Controller:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.HealingTaken)
+    healingText:SetText("Healing Dealt to Others: " .. tostring(healingOtherAmount) .. " (" .. tostring(healingOtherOver) .. " over). Healing Dealt to Self: " .. tostring(healingSelfAmount) .. " (" .. tostring(healingSelfOver) .. " over). Healing Taken: " .. tostring(healingTakenAmount) .. " (" .. tostring(healingTakenOver) .. " over)." )
+    
     local timeText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    timeText:SetPoint("TOPLEFT", 10, -130)
+    timeText:SetPoint("TOPLEFT", 10, -145)
     timeText:SetText("Time spent AFK: " .. tostring(Controller:GetTimeForTimeTrackingType(AutoBiographerEnum.TimeTrackingType.Afk)) .. ". Time spent in combat: " .. tostring(Controller:GetTimeForTimeTrackingType(AutoBiographerEnum.TimeTrackingType.InCombat)) .. ". Time spent on taxis: " .. tostring(Controller:GetTimeForTimeTrackingType(AutoBiographerEnum.TimeTrackingType.OnTaxi)) .. ". Time spent logged in: " .. tostring(Controller:GetTimeForTimeTrackingType(AutoBiographerEnum.TimeTrackingType.LoggedIn)) .. ". Time spent dead: " .. tostring(Controller:GetTimeForTimeTrackingType(AutoBiographerEnum.TimeTrackingType.DeadOrGhost)) .. ". Time spent casting: " .. tostring(Controller:GetTimeForTimeTrackingType(AutoBiographerEnum.TimeTrackingType.Casting)) .. ".")
     
     MainWindow_Frame = frame

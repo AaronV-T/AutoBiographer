@@ -19,21 +19,13 @@ end
 
 DamageStatistics = {}
 function DamageStatistics.New()
-  return {
-    DamageDealt = DamageBreakdown.New(),
-    DamageTaken = DamageBreakdown.New(),
-    HealingDoneToOthers = DamageBreakdown.New(),
-    HealingDoneToSelf = DamageBreakdown.New(),
-    HealingTaken = DamageBreakdown.New(),
-  }
+  return {}
 end
 
-function DamageStatistics.AddDamageDealt(ds, amount, overKill)
-  DamageBreakdown.Add(ds.DamageDealt, amount, overKill)
-end
-
-function DamageStatistics.AddDamageTaken(ds, amount, overKill)
-  DamageBreakdown.Add(ds.DamageTaken, amount, overKill)
+function DamageStatistics.Add(ds, damageOrHealingCategory, amount, over)
+  if (ds[damageOrHealingCategory] == nil) then ds[damageOrHealingCategory] = DamageBreakdown.New() end
+  
+  DamageBreakdown.Add(ds[damageOrHealingCategory], amount, over)
 end
 
 -- *** KillStatistics ***
@@ -99,12 +91,7 @@ end
 
 TimeStatistics = {}
 function TimeStatistics.New()
-  return {
-    --[[TimeSpentAfk = 0,
-    TimeSpentCasting = 0,
-    TimeSpentInCombat = 0,
-    TimeSpentOnTaxi = 0,]]
-  }
+  return {}
 end
 
 function TimeStatistics.AddTime(ts, timeTrackingType, seconds)

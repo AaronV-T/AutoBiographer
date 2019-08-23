@@ -2,8 +2,8 @@ AutoBiographerEnum = {
   DamageOrHealingCategory = {
     DamageDealt = 0,
     DamageTaken = 1,
-    HealingDoneToOthers = 2,
-    HealingDoneToSelf = 3,
+    HealingDealtToOthers = 2,
+    HealingDealtToSelf = 3,
     HealingTaken = 4,
   },
   EventType = {
