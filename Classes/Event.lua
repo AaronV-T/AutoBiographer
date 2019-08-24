@@ -54,6 +54,10 @@ function Event.ToString(e, catalogs)
     elseif (e.SubType == AutoBiographerEnum.EventSubType.ZoneFirstVisit) then
       return timestampString .. "You entered " .. e.ZoneName .. " for the first time."
     end
+  elseif (e.Type == AutoBiographerEnum.EventType.Skill) then
+    if (e.SubType == AutoBiographerEnum.EventSubType.SkillMilestone) then
+      return timestampString .. "Your skill in " .. e.SkillName .. " increased to " .. e.SkillLevel .. "."
+    end
   elseif (e.Type == AutoBiographerEnum.EventType.Spell) then
     if (e.SubType == AutoBiographerEnum.EventSubType.SpellLearned) then
       local spellText = "spell #" .. e.SpellId
@@ -148,6 +152,15 @@ function QuestTurnInEvent.New(timestamp, coordinates, questId, questTitle, xpGai
   newInstance.QuestTitle = questTitle
   newInstance.XpGained = xpGained
   newInstance.MoneyGained = moneyGained
+  
+  return newInstance
+end
+
+SkillMilestoneEvent = {}
+function SkillMilestoneEvent.New(timestamp, coordinates, skillName, skillLevel)
+  local newInstance = WorldEvent.New(timestamp, AutoBiographerEnum.EventType.Skill, AutoBiographerEnum.EventSubType.SkillMilestone, coordinates)
+  newInstance.SkillName = skillName
+  newInstance.SkillLevel = skillLevel
   
   return newInstance
 end

@@ -14,11 +14,15 @@ The addon currently records the following events:
  - Deaths (including which unit killed you and their level).
  - First time entering a zone or subzone.
  - First time killing a unique unit.
- - Learning a new spell.
+ - Joining a guild, leaving a guild, or changing rank in a guild.
+ - Learning a spell/ability.
  - Leveling up (including the time played at level up and total time played of each level).
+ - Reaching skill milestones (75/150/225/300).
  - Turning in a quest.
  
 It also keeps track of the following statistics:
+ - Damage dealt and taken; healing dealt to self, healing dealt to self, healing taken.
+ - Time spent in each zone (broken down into time spent AFK, casting, dead, in combat, and on flights).
  - Total kills (killing blows, assists, or group killed) for each unit.
  - Money looted.
  
@@ -28,18 +32,14 @@ My focus has been logic for event and statistic recording so the UI is currently
 
 Events which I hope to include in the future:
  - Entering a battleground and the result of that battleground.
- - Joining a guild, leaving a guild, or changing rank in a guild.
  - Entering a dungeon/raid.
  - First time obtaining an item.
- - Learning and leveling up tradeskills.
  - Changing PVP rank.
  - Resetting talent points.
  
 Statistics I would like to keep track of in the future:
- - Damage dealt and taken.
  - Herbs gathered and ores mined.
- - Items bought, looted, sold, traded.
+ - Items bought, looted, sold, traded, etc.
  - Money gained/lost to auction house, vendors, trading to players, etc.
  - PVP stats (honorable kills, dishonorable kills, duels initiated and their results).
  - Spells cast.
- - Time spent AFK, casting, in combat, etc.

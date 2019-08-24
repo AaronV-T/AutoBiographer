@@ -155,8 +155,9 @@ function EM.EventHandlers.BOSS_KILL(self, bossId, bossName)
 end
 
 function EM.EventHandlers.CHAT_MSG_MONEY(self, text, arg2, arg3, arg4, arg5)
+  if (string.find(text, "You loot") ~= 1) then return end
   local moneySum = 0
-  
+
   for copperText in string.gmatch(text, "%d+%sCopper") do
     local i = 1
     for word in string.gmatch(copperText, "%S+") do
@@ -182,6 +183,29 @@ function EM.EventHandlers.CHAT_MSG_MONEY(self, text, arg2, arg3, arg4, arg5)
   end
   
   Controller:OnLootMoney(time(), HelperFunctions.GetCoordinatesByUnitId("player"), moneySum)
+end
+
+function EM.EventHandlers.CHAT_MSG_SKILL(self, text)
+  if (string.find(text, "Your skill in") ~= 1) then return end
+  
+  local skillName = nil
+  local skillLevel = nil
+  local index = 1
+  for word in string.gmatch(text, "%w+") do
+    if (index == 4) then skillName = word end
+    if (index == 8) then skillLevel = tonumber(word) end
+    index = index + 1
+  end
+  
+  if (skillName and skillLevel) then
+    Controller:OnSkillLevelIncreased(time(), HelperFunctions.GetCoordinatesByUnitId("player"), skillName, skillLevel)
+  end
+end
+
+function EM.EventHandlers.CHAT_MSG_TRADESKILLS(self, text, arg2, arg3, arg4, arg5)
+  --if (string.find(text, "You create") ~= 1) then return end
+  --print(text)
+  --print(arg2)
 end
 
 function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)

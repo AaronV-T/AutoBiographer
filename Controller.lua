@@ -222,6 +222,13 @@ function Controller:OnSpellLearned(timestamp, coordinates, spellId, spellName, s
   self:AddEvent(SpellLearnedEvent.New(timestamp, coordinates, spellId))
 end
 
+function Controller:OnSkillLevelIncreased(timestamp, coordinates, skillName, skillLevel)
+  Controller:AddLog("SkillLevelIncreased: " .. " " .. tostring(skillName) .. " (" .. tostring(skillLevel) .. ").", AutoBiographerEnum.LogLevel.Debug)
+  
+  if (skillLevel % 75 == 0) then
+    self:AddEvent(SkillMilestoneEvent.New(timestamp, coordinates, skillName, skillLevel))
+  end
+end
 
 function Controller:PrintEvents()
   for _,v in pairs(self.CharacterData.Events) do
