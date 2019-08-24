@@ -150,6 +150,11 @@ function Controller:OnDeath(timestamp, coordinates, killerCatalogUnitId, killerL
   self:AddEvent(PlayerDeathEvent.New(timestamp, coordinates, killerCatalogUnitId, killerLevel))
 end
 
+function Controller:OnJoinedGuild(timestamp, guildName)
+  Controller:AddLog("JoinedGuild: " .. " " .. tostring(guildName) .. ".", AutoBiographerEnum.LogLevel.Debug)
+  self:AddEvent(GuildJoinedEvent.New(timestamp, guildName))
+end
+
 function Controller:OnKill(timestamp, coordinates, kill)
   Controller:AddLog("Kill: " .. " #" .. tostring(kill.CatalogUnitId) .. ".", AutoBiographerEnum.LogLevel.Debug)
 
@@ -161,6 +166,16 @@ function Controller:OnKill(timestamp, coordinates, kill)
       self:AddEvent(FirstKillEvent.New(timestamp, coordinates, kill.CatalogUnitId))
     end
   end
+end
+
+function Controller:OnLeftGuild(timestamp, guildName)
+  Controller:AddLog("LeftGuild: " .. " " .. tostring(guildName) .. ".", AutoBiographerEnum.LogLevel.Debug)
+  self:AddEvent(GuildLeftEvent.New(timestamp, guildName))
+end
+
+function Controller:OnGuildRankChanged(timestamp, guildRankIndex, guildRankName)
+  Controller:AddLog("GuildRankChanged: " .. " " .. tostring(guildRankName) .. " (" .. tostring(guildRankIndex) .. ").", AutoBiographerEnum.LogLevel.Debug)
+  self:AddEvent(GuildRankChangedEvent.New(timestamp, guildRankIndex, guildRankName))
 end
 
 function Controller:OnLevelUp(timestamp, coordinates, levelNum, totalTimePlayedAtDing)

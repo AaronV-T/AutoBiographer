@@ -26,6 +26,14 @@ function Event.ToString(e, catalogs)
         return timestampString .. "You were killed by " .. unitName .. killerLevelText .. "."
       end
     end
+  elseif (e.Type == AutoBiographerEnum.EventType.Guild) then
+    if (e.SubType == AutoBiographerEnum.EventSubType.GuildJoined) then
+      return timestampString .. "You joined " .. e.GuildName.. "."
+    elseif (e.SubType == AutoBiographerEnum.EventSubType.GuildLeft) then
+      return timestampString .. "You left " .. e.GuildName.. "."
+    elseif (e.SubType == AutoBiographerEnum.EventSubType.GuildRankChanged) then
+      return timestampString .. "Your guild rank was changed to " .. e.GuildRankName.. " (" .. e.GuildRankIndex .. ")."
+    end
   elseif (e.Type == AutoBiographerEnum.EventType.Kill) then
     if (e.SubType == AutoBiographerEnum.EventSubType.BossKill) then
       return timestampString .. "You killed " .. e.BossName.. "."
@@ -59,9 +67,9 @@ function Event.ToString(e, catalogs)
     if (e.SubType == AutoBiographerEnum.EventSubType.QuestTurnIn) then
       return timestampString .. "You turned in " .. e.QuestTitle .. "."
     end
-  else
-    return timestampString .. "Event with type '" .. e.Type .. "' and subType '" .. e.SubType .. "'."
   end
+  
+  return timestampString .. "Event with type '" .. e.Type .. "' and subType '" .. e.SubType .. "'."
 end
 
 WorldEvent = {}
@@ -87,6 +95,31 @@ FirstKillEvent = {}
 function FirstKillEvent.New(timestamp, coordinates, catalogUnitId)
   local newInstance = WorldEvent.New(timestamp, AutoBiographerEnum.EventType.Kill, AutoBiographerEnum.EventSubType.FirstKill, coordinates)
   newInstance.CatalogUnitId = catalogUnitId
+  
+  return newInstance
+end
+
+GuildJoinedEvent = {}
+function GuildJoinedEvent.New(timestamp, guildName)
+  local newInstance = Event.New(timestamp, AutoBiographerEnum.EventType.Guild, AutoBiographerEnum.EventSubType.GuildJoined)
+  newInstance.GuildName = guildName
+  
+  return newInstance
+end
+
+GuildLeftEvent = {}
+function GuildLeftEvent.New(timestamp, guildName)
+  local newInstance = Event.New(timestamp, AutoBiographerEnum.EventType.Guild, AutoBiographerEnum.EventSubType.GuildLeft)
+  newInstance.GuildName = guildName
+  
+  return newInstance
+end
+
+GuildRankChangedEvent = {}
+function GuildRankChangedEvent.New(timestamp, guildRankIndex, guildRankName)
+  local newInstance = Event.New(timestamp, AutoBiographerEnum.EventType.Guild, AutoBiographerEnum.EventSubType.GuildRankChanged)
+  newInstance.GuildRankIndex = guildRankIndex
+  newInstance.GuildRankName = guildRankName
   
   return newInstance
 end

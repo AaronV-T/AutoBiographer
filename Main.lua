@@ -5,6 +5,7 @@ EventManager = {
   LastPlayerMoney = nil,
   NewLevelToAddToHistory = nil,
   PersistentPlayerInfo = nil,
+  PlayerEnteringWorldHasFired = false,
   PlayerFlags = {
     AffectingCombat = nil,
     Afk = nil,
@@ -119,10 +120,13 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   if type(_G["AUTOBIOGRAPHER_LEVELS_CHAR"]) ~= "table" then
 		_G["AUTOBIOGRAPHER_LEVELS_CHAR"] = {}
 	end
-  if type(_G["AUTOBIOGRAPHER_TEMP_CHAR"]) ~= "table" then
-		_G["AUTOBIOGRAPHER_TEMP_CHAR"] = {
+  if type(_G["AUTOBIOGRAPHER_INFO_CHAR"]) ~= "table" then
+		_G["AUTOBIOGRAPHER_INFO_CHAR"] = {
       CurrentSubZone = nil,
       CurrentZone = nil,
+      GuildName = nil,
+      GuildRankIndex = nil,
+      GuildRankName = nil,
     }
 	end
   
@@ -132,7 +136,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
     Levels = _G["AUTOBIOGRAPHER_LEVELS_CHAR"]
   }
   
-  self.PersistentPlayerInfo = _G["AUTOBIOGRAPHER_TEMP_CHAR"]
+  self.PersistentPlayerInfo = _G["AUTOBIOGRAPHER_INFO_CHAR"]
   
   local playerLevel = UnitLevel("player")
   if (Controller.CharacterData.Levels[playerLevel]) == nil then 
@@ -313,6 +317,16 @@ function EM.EventHandlers.PLAYER_ALIVE(self) -- Fired when the player releases f
   if (self.ZoneChangedNewAreaEventHasFired) then self:UpdatePlayerZone() end
 end
 
+function EM.EventHandlers.PLAYER_ENTERING_WORLD(self)
+  self.PlayerEnteringWorldHasFired = true
+
+  self.PlayerGuid = UnitGUID("player") -- Player GUID Format: Player-[server ID]-[player UID]
+  
+  self.LastPlayerMoney = GetMoney()
+  self.TemporaryTimestamps.EnteredArea = GetTime()
+  self:UpdatePlayerFlags()
+end
+
 function EM.EventHandlers.PLAYER_DEAD(self)
   local killerCatalogUnitId = nil
   local killerLevel = nil
@@ -328,13 +342,13 @@ function EM.EventHandlers.PLAYER_DEAD(self)
   Controller:OnDeath(time(), HelperFunctions.GetCoordinatesByUnitId("player"), killerCatalogUnitId, killerLevel)
 end
 
-function EM.EventHandlers.PLAYER_FLAGS_CHANGED(self, unitId, arg2, arg3, arg4, arg5)
+function EM.EventHandlers.PLAYER_FLAGS_CHANGED(self, unitId)
   if (unitId == "player") then self:UpdatePlayerFlags() end
-  --print("PLAYER_FLAGS_CHANGED. " .. tostring(arg1) .. ", " .. tostring(arg2) .. ", " .. tostring(arg3) .. ", " .. tostring(arg4) .. ", " .. tostring(arg5))
 end
 
-function EM.EventHandlers.PLAYER_GUILD_UPDATE(self, arg1, arg2, arg3, arg4, arg5)
-  print("PLAYER_GUILD_UPDATE. " .. tostring(arg1) .. ", " .. tostring(arg2) .. ", " .. tostring(arg3) .. ", " .. tostring(arg4) .. ", " .. tostring(arg5))
+function EM.EventHandlers.PLAYER_GUILD_UPDATE(self, unitId)
+  if (not self.PlayerEnteringWorldHasFired or unitId ~= "player") then return end
+  self:UpdatePlayerGuildInfo()
 end
 
 function EM.EventHandlers.PLAYER_LEVEL_UP(self, newLevel, ...)
@@ -344,11 +358,7 @@ function EM.EventHandlers.PLAYER_LEVEL_UP(self, newLevel, ...)
 end
 
 function EM.EventHandlers.PLAYER_LOGIN(self)
-  self.PlayerGuid = UnitGUID("player") -- Player GUID Format: Player-[server ID]-[player UID]
   
-  self.LastPlayerMoney = GetMoney()
-  self.TemporaryTimestamps.EnteredArea = GetTime()
-  self:UpdatePlayerFlags()
 end
 
 function EM.EventHandlers.PLAYER_LOGOUT(self)
@@ -480,6 +490,24 @@ function EM:OnStoppedCasting()
     Controller:AddLog("Player stopped casting but there was no timestamp for starting casting.", AutoBiographerEnum.LogLevel.Warning)
   end
   self.TemporaryTimestamps.StartedCasting = nil
+end
+
+function EM:UpdatePlayerGuildInfo()
+  local guildName, guildRankName, guildRankIndex = GetGuildInfo("player")
+  
+  if (self.PersistentPlayerInfo.GuildName ~= guildName) then
+    if (guildName) then
+      Controller:OnJoinedGuild(time(), guildName)
+    else
+      Controller:OnLeftGuild(time(), self.PersistentPlayerInfo.GuildName)
+    end
+  elseif (self.PersistentPlayerInfo.GuildRankIndex ~= guildRankIndex and self.PersistentPlayerInfo.GuildRankIndex and guildRankIndex) then
+    Controller:OnGuildRankChanged(time(), guildRankIndex, guildRankName)
+  end
+  
+  self.PersistentPlayerInfo.GuildName = guildName
+  self.PersistentPlayerInfo.GuildRankIndex = guildRankIndex
+  self.PersistentPlayerInfo.GuildRankName = guildRankName
 end
  
 function EM:UpdatePlayerFlags()
@@ -613,6 +641,7 @@ function EM:Clear()
   _G["AUTOBIOGRAPHER_CATALOGS_CHAR"] = nil
   _G["AUTOBIOGRAPHER_EVENTS_CHAR"] = nil
   _G["AUTOBIOGRAPHER_LEVELS_CHAR"] = nil
+  _G["AUTOBIOGRAPHER_INFO_CHAR"] = nil
   print("Data cleared. Please reload ui.")
 end
 
