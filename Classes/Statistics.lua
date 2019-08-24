@@ -5,7 +5,7 @@ function AggregatedStatistics.New()
   return {
     DamageStatistics = DamageStatistics.New(),
     GatheringStatistics = nil,
-    ItemStatistics = nil,
+    ItemStatistics = ItemStatistics.New(),
     KillStatistics = KillStatistics.New(),
     MiscellaneousStatistics = nil,
     MoneyStatistics = MoneyStatistics.New(),
@@ -26,6 +26,20 @@ function DamageStatistics.Add(ds, damageOrHealingCategory, amount, over)
   if (ds[damageOrHealingCategory] == nil) then ds[damageOrHealingCategory] = DamageBreakdown.New() end
   
   DamageBreakdown.Add(ds[damageOrHealingCategory], amount, over)
+end
+
+-- *** ItemStatistics ***
+
+ItemStatistics = {}
+function ItemStatistics.New()
+  return {}
+end
+
+function ItemStatistics.Add(is, acquisitionMethod, catalogItemId, quantity)
+  if (not is[acquisitionMethod]) then is[acquisitionMethod] = {} end
+  if (not is[acquisitionMethod][catalogItemId]) then is[acquisitionMethod][catalogItemId] = 0 end
+  
+  is[acquisitionMethod][catalogItemId] = is[acquisitionMethod][catalogItemId] + quantity
 end
 
 -- *** KillStatistics ***

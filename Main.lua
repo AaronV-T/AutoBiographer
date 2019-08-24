@@ -154,6 +154,48 @@ function EM.EventHandlers.BOSS_KILL(self, bossId, bossName)
   Controller:OnBossKill(time(), HelperFunctions.GetCoordinatesByUnitId("player"), bossId, bossName)
 end
 
+function EM.EventHandlers.CHAT_MSG_LOOT(self, text, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, arg17, arg18, arg19, arg20, arg21)
+  if (string.find(text, "You receive") ~= 1) then return end
+  
+  local acquisitionMethod = nil
+  if (string.find(text, "You receive loot") == 1) then
+    acquisitionMethod = AutoBiographerEnum.AcquisitionMethod.Loot
+  else
+    acquisitionMethod = AutoBiographerEnum.AcquisitionMethod.Other
+  end
+  
+  local id = nil
+  for idMatch in string.gmatch(text, "item:%d+") do
+    id = string.sub(idMatch, 6, #idMatch)
+  end
+  
+  if (not id) then 
+    Controller:AddLog("Unable to get itemId from text: '" .. text .. "'.", AutoBiographerEnum.LogLevel.Warning)
+    return
+  end
+
+  local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemIcon, itemSellPrice, itemClassID, itemSubClassID, bindType, expacID, itemSetID, isCraftingReagent = GetItemInfo(id)
+  if (not itemName) then
+    for nameMatch in string.gmatch(text, "%[%.+%]") do
+      itemName = string.sub(nameMatch, 2, #nameMatch - 1)
+    end
+  end
+  
+  local catalogItem = CatalogItem.New(id, itemName, itemRarity, itemLevel, itemType, itemSubType, nil)
+
+  if (Controller:CatalogItemIsIncomplete(catalogItem.Id)) then
+    Controller:UpdateCatalogItem(catalogItem)
+  end
+  
+  local quantity = 1
+  for quantityText in string.gmatch(text, "x%d+.") do
+    quantity = tonumber(string.sub(quantityText, 2, #quantityText - 1))
+  end
+  
+  Controller:OnAcquiredItem(time(), HelperFunctions.GetCoordinatesByUnitId("player"), acquisitionMethod, catalogItem, quantity)
+end
+
+
 function EM.EventHandlers.CHAT_MSG_MONEY(self, text, arg2, arg3, arg4, arg5)
   if (string.find(text, "You loot") ~= 1) then return end
   local moneySum = 0
@@ -329,6 +371,10 @@ function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
   end
   
   if (destGuid ~= self.PlayerGuid) then damagedUnits[destGuid] = nil end
+end
+
+function EM.EventHandlers.ITEM_PUSH(self, arg1, arg2, arg3)
+  --print(tostring(arg1) .. ", " .. tostring(arg2) .. ", " .. tostring(arg3))
 end
 
 function EM.EventHandlers.LEARNED_SPELL_IN_TAB(self, spellId, skillInfoIndex, isGuildPerkSpell)
@@ -672,6 +718,4 @@ end
 function EM:Test()
   local unitGuid = UnitGUID("target")
   --print(CanLootUnit(unitGuid)) -- hasLoot always false when called in UNIT_DIED combat log event, have to wait for it to register correctly
-
-  --GetQuestsCompleted() -- lists ids of every completed quest
 end

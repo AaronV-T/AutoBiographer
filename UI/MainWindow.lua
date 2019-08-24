@@ -203,6 +203,10 @@ function Toggle_MainWindow()
     timeText:SetPoint("TOPLEFT", 10, -145)
     timeText:SetText("Time spent AFK: " .. tostring(Controller:GetTimeForTimeTrackingType(AutoBiographerEnum.TimeTrackingType.Afk)) .. ". Time spent in combat: " .. tostring(Controller:GetTimeForTimeTrackingType(AutoBiographerEnum.TimeTrackingType.InCombat)) .. ". Time spent on taxis: " .. tostring(Controller:GetTimeForTimeTrackingType(AutoBiographerEnum.TimeTrackingType.OnTaxi)) .. ". Time spent logged in: " .. tostring(Controller:GetTimeForTimeTrackingType(AutoBiographerEnum.TimeTrackingType.LoggedIn)) .. ". Time spent dead: " .. tostring(Controller:GetTimeForTimeTrackingType(AutoBiographerEnum.TimeTrackingType.DeadOrGhost)) .. ". Time spent casting: " .. tostring(Controller:GetTimeForTimeTrackingType(AutoBiographerEnum.TimeTrackingType.Casting)) .. ".")
     
+    local itemText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    itemText:SetPoint("TOPLEFT", 10, -160)
+    itemText:SetText("Items looted: " .. tostring(Controller:GetItemCountForAcquisitionMethod(AutoBiographerEnum.AcquisitionMethod.Loot)) .. ". Items acquired by other means: " .. tostring(Controller:GetItemCountForAcquisitionMethod(AutoBiographerEnum.AcquisitionMethod.Other)) .. ".")
+    
     MainWindow_Frame = frame
   else
     MainWindow_Frame:Hide()

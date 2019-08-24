@@ -12,6 +12,7 @@ Unzip the downloaded `.zip` file and put the `AutoBiographer` folder into your A
 The addon currently records the following events:
  - Killing a boss.
  - Deaths (including which unit killed you and their level).
+ - First time acquiring an item.
  - First time entering a zone or subzone.
  - First time killing a unique unit.
  - Joining a guild, leaving a guild, or changing rank in a guild.
@@ -21,7 +22,8 @@ The addon currently records the following events:
  - Turning in a quest.
  
 It also keeps track of the following statistics:
- - Damage dealt and taken; healing dealt to self, healing dealt to self, healing taken.
+ - Damage dealt and taken; healing dealt to self, healing dealt to others, and healing taken.
+ - Items looted or acquired by other methods.
  - Time spent in each zone (broken down into time spent AFK, casting, dead, in combat, and on flights).
  - Total kills (killing blows, assists, or group killed) for each unit.
  - Money looted.
@@ -33,13 +35,12 @@ My focus has been logic for event and statistic recording so the UI is currently
 Events which I hope to include in the future:
  - Entering a battleground and the result of that battleground.
  - Entering a dungeon/raid.
- - First time obtaining an item.
  - Changing PVP rank.
  - Resetting talent points.
  
 Statistics I would like to keep track of in the future:
  - Herbs gathered and ores mined.
- - Items bought, looted, sold, traded, etc.
+ - Items traded, vendored, or sold at AH.
  - Money gained/lost to auction house, vendors, trading to players, etc.
  - PVP stats (honorable kills, dishonorable kills, duels initiated and their results).
  - Spells cast.

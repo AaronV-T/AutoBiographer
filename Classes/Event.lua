@@ -34,6 +34,12 @@ function Event.ToString(e, catalogs)
     elseif (e.SubType == AutoBiographerEnum.EventSubType.GuildRankChanged) then
       return timestampString .. "Your guild rank was changed to " .. e.GuildRankName.. " (" .. e.GuildRankIndex .. ")."
     end
+  elseif (e.Type == AutoBiographerEnum.EventType.Item) then
+    if (e.SubType == AutoBiographerEnum.EventSubType.FirstAcquiredItem) then
+      local itemName = "#" .. e.CatalogItemId
+      if (catalogs and catalogs.ItemCatalog and catalogs.ItemCatalog[e.CatalogItemId] and catalogs.ItemCatalog[e.CatalogItemId].Name) then itemName = catalogs.ItemCatalog[e.CatalogItemId].Name end
+      return timestampString .. "You acquired " .. itemName .. " for the first time."
+    end
   elseif (e.Type == AutoBiographerEnum.EventType.Kill) then
     if (e.SubType == AutoBiographerEnum.EventSubType.BossKill) then
       return timestampString .. "You killed " .. e.BossName.. "."
@@ -91,6 +97,14 @@ function BossKillEvent.New(timestamp, coordinates, bossId, bossName)
   local newInstance = WorldEvent.New(timestamp, AutoBiographerEnum.EventType.Kill, AutoBiographerEnum.EventSubType.BossKill, coordinates)
   newInstance.BossId = bossId
   newInstance.BossName = bossName
+  
+  return newInstance
+end
+
+FirstAcquiredItemEvent = {}
+function FirstAcquiredItemEvent.New(timestamp, coordinates, catalogItemId)
+  local newInstance = WorldEvent.New(timestamp, AutoBiographerEnum.EventType.Item, AutoBiographerEnum.EventSubType.FirstAcquiredItem, coordinates)
+  newInstance.CatalogItemId = catalogItemId
   
   return newInstance
 end

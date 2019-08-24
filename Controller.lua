@@ -24,6 +24,10 @@ function Controller:AddTime(timeTrackingType, seconds, zone, subZone)
   TimeStatistics.AddTime(self:GetCurrentLevelStatistics().TimeStatisticsByArea, timeTrackingType, seconds)
 end
 
+function Controller:CatalogItemIsIncomplete(catalogItemId)
+  return not self.CharacterData.Catalogs.ItemCatalog[catalogItemId] or not self.CharacterData.Catalogs.ItemCatalog[catalogItemId].Name or not self.CharacterData.Catalogs.ItemCatalog[catalogItemId].Rarity
+end
+
 function Controller:CatalogUnitIsIncomplete(catalogUnitId)
   return self.CharacterData.Catalogs.UnitCatalog[catalogUnitId] == nil or self.CharacterData.Catalogs.UnitCatalog[catalogUnitId].Name == nil
 end
@@ -56,6 +60,19 @@ function Controller:GetEvents()
   end
   
   return retVal
+end
+
+function Controller:GetItemCountForAcquisitionMethod(acquisitionMethod)
+  local sum = 0
+  for k,v in pairs(self.CharacterData.Levels) do
+    if (v.ItemStatistics[acquisitionMethod]) then
+      for k2,v2 in pairs(HelperFunctions.GetKeysFromTable(v.ItemStatistics[acquisitionMethod])) do
+        sum = sum + v.ItemStatistics[acquisitionMethod][v2]
+      end
+    end
+  end
+  
+  return sum
 end
 
 function Controller:GetLogs()
@@ -115,6 +132,17 @@ function Controller:GetTimeForTimeTrackingType(timeTrackingType)
 end
 
 -- *** Events ***
+
+function Controller:OnAcquiredItem(timestamp, coordinates, acquisitionMethod, catalogItem, quantity)
+  Controller:AddLog("AcquiredItem: " .. CatalogItem.ToString(catalogItem) .. ". Quantity: " .. tostring(quantity) .. ". Method: " .. tostring(acquisitionMethod) .. ".", AutoBiographerEnum.LogLevel.Debug)
+  
+  ItemStatistics.Add(self:GetCurrentLevelStatistics().ItemStatistics, acquisitionMethod, catalogItem.Id, quantity)
+  if (not Catalogs.PlayerHasAcquiredItem(self.CharacterData.Catalogs, catalogItem.Id)) then
+    catalogItem.Acquired = true
+    self:UpdateCatalogItem(catalogItem)
+    self:AddEvent(FirstAcquiredItemEvent.New(timestamp, coordinates, catalogItem.Id))
+  end
+end
 
 function Controller:OnBossKill(timestamp, coordinates, bossId, bossName)
   Controller:AddLog("BossKill: " .. tostring(bossName) .. " (#" .. tostring(bossId) .. ").", AutoBiographerEnum.LogLevel.Debug)
@@ -238,6 +266,16 @@ end
 
 function Controller:PrintLastEvent()
   print(Event.ToString(self.CharacterData.Events[#self.CharacterData.Events], self.CharacterData.Catalogs))
+end
+
+function Controller:UpdateCatalogItem(catalogItem)
+  if (not self.CharacterData.Catalogs.ItemCatalog[catalogItem.Id]) then
+    self.CharacterData.Catalogs.ItemCatalog[catalogItem.Id] = catalogItem
+  else
+    CatalogItem.Update(self.CharacterData.Catalogs.ItemCatalog[catalogItem.Id], catalogItem.Id, catalogItem.Name, catalogItem.Rarity, catalogItem.Level, catalogItem.Type, catalogItem.SubType, catalogItem.Acquired)
+  end
+  
+  Controller:AddLog("CatalogItem Updated: " .. CatalogItem.ToString(self.CharacterData.Catalogs.ItemCatalog[catalogItem.Id]) .. ".", AutoBiographerEnum.LogLevel.Debug)
 end
 
 function Controller:UpdateCatalogUnit(catalogUnit)

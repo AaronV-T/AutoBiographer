@@ -52,8 +52,6 @@ function HF.GetKeysFromTable(tab)
     keys[index] = k
   end
   
-  table.sort(keys)
-  
   return keys
 end
 
@@ -78,6 +76,12 @@ function HF.SubtractFloats(left, right, precision)
 end
 
 -- Text Formatting Helpers
+
+function HF.PrintStringAscii(text)
+  for i = 1, string.len(text) do
+    print(string.sub(text, i, i) .. ": " .. string.byte(text, i))
+  end
+end
 
 function HF.SecondsToTimeString(totalSeconds)
   if totalSeconds == nil then return "" end
