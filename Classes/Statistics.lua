@@ -5,7 +5,7 @@ function AggregatedStatistics.New()
   return {
     DamageStatistics = DamageStatistics.New(),
     GatheringStatistics = nil,
-    ItemStatistics = ItemStatistics.New(),
+    ItemStatisticsByItem = {}, -- Dict<CatalogItemId, ItemStatistics>
     KillStatistics = KillStatistics.New(),
     MiscellaneousStatistics = nil,
     MoneyStatistics = MoneyStatistics.New(),
@@ -35,11 +35,10 @@ function ItemStatistics.New()
   return {}
 end
 
-function ItemStatistics.Add(is, acquisitionMethod, catalogItemId, quantity)
-  if (not is[acquisitionMethod]) then is[acquisitionMethod] = {} end
-  if (not is[acquisitionMethod][catalogItemId]) then is[acquisitionMethod][catalogItemId] = 0 end
+function ItemStatistics.AddCount(is, acquisitionMethod, quantity)
+  if (not is[acquisitionMethod]) then is[acquisitionMethod] = 0 end
   
-  is[acquisitionMethod][catalogItemId] = is[acquisitionMethod][catalogItemId] + quantity
+  is[acquisitionMethod] = is[acquisitionMethod] + quantity
 end
 
 -- *** KillStatistics ***

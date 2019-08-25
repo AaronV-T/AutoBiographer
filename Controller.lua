@@ -67,9 +67,9 @@ end
 function Controller:GetItemCountForAcquisitionMethod(acquisitionMethod)
   local sum = 0
   for k,v in pairs(self.CharacterData.Levels) do
-    if (v.ItemStatistics[acquisitionMethod]) then
-      for k2,v2 in pairs(HelperFunctions.GetKeysFromTable(v.ItemStatistics[acquisitionMethod])) do
-        sum = sum + v.ItemStatistics[acquisitionMethod][v2]
+    for k2,v2 in pairs(HelperFunctions.GetKeysFromTable(v.ItemStatisticsByItem)) do
+      if (v.ItemStatisticsByItem[v2][acquisitionMethod]) then
+        sum = sum + v.ItemStatisticsByItem[v2][acquisitionMethod]
       end
     end
   end
@@ -127,7 +127,6 @@ function Controller:GetTimeForTimeTrackingType(timeTrackingType)
   for k,v in pairs(self.CharacterData.Levels) do
     for k2,v2 in pairs(HelperFunctions.GetKeysFromTable(v.TimeStatisticsByArea)) do
       if (v.TimeStatisticsByArea[v2][timeTrackingType]) then
-        print(v2 .. ": " .. v.TimeStatisticsByArea[v2][timeTrackingType])
         sum = sum + v.TimeStatisticsByArea[v2][timeTrackingType]
       end
     end
@@ -141,12 +140,14 @@ end
 function Controller:OnAcquiredItem(timestamp, coordinates, acquisitionMethod, catalogItem, quantity)
   Controller:AddLog("AcquiredItem: " .. CatalogItem.ToString(catalogItem) .. ". Quantity: " .. tostring(quantity) .. ". Method: " .. tostring(acquisitionMethod) .. ".", AutoBiographerEnum.LogLevel.Debug)
   
-  ItemStatistics.Add(self:GetCurrentLevelStatistics().ItemStatistics, acquisitionMethod, catalogItem.Id, quantity)
   if (not Catalogs.PlayerHasAcquiredItem(self.CharacterData.Catalogs, catalogItem.Id)) then
     catalogItem.Acquired = true
     self:UpdateCatalogItem(catalogItem)
     self:AddEvent(FirstAcquiredItemEvent.New(timestamp, coordinates, catalogItem.Id))
   end
+  
+  if (not self:GetCurrentLevelStatistics().ItemStatisticsByItem[catalogItem.Id]) then self:GetCurrentLevelStatistics().ItemStatisticsByItem[catalogItem.Id] = ItemStatistics.New() end
+  ItemStatistics.AddCount(self:GetCurrentLevelStatistics().ItemStatisticsByItem[catalogItem.Id], acquisitionMethod, quantity)
 end
 
 function Controller:OnBossKill(timestamp, coordinates, bossId, bossName)
