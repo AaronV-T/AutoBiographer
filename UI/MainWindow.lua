@@ -184,7 +184,7 @@ function Toggle_MainWindow()
     
     local moneyText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     moneyText:SetPoint("TOPLEFT", 10, -100)
-    moneyText:SetText("Gold looted: " .. tostring(Controller:GetLootedMoney() / 10000) .. ". Total Gold Gained: " .. tostring(Controller:GetTotalMoneyGained() / 10000) .. ". Total Gold Lost: " .. tostring(Controller:GetTotalMoneyLost() / 10000) .. ".")
+    moneyText:SetText("Gold Looted: " .. tostring(Controller:GetMoneyForAcquisitionMethod(AutoBiographerEnum.AcquisitionMethod.Loot) / 10000) .. ". Gold Gained from Quests: " .. tostring(Controller:GetMoneyForAcquisitionMethod(AutoBiographerEnum.AcquisitionMethod.Quest) / 10000) .. ". Total Gold Gained: " .. tostring(Controller:GetTotalMoneyGained() / 10000) .. ". Total Gold Lost: " .. tostring(Controller:GetTotalMoneyLost() / 10000) .. ".")
     
     local damageText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     damageText:SetPoint("TOPLEFT", 10, -115)

@@ -86,10 +86,12 @@ function Controller:GetLogs()
   return retVal
 end
 
-function Controller:GetLootedMoney()
+function Controller:GetMoneyForAcquisitionMethod(acquisitionMethod)
   local sum = 0
   for k,v in pairs(self.CharacterData.Levels) do
-    sum = sum + v.MoneyStatistics.MoneyLooted
+    if (v.MoneyStatistics[acquisitionMethod]) then
+      sum = sum + v.MoneyStatistics[acquisitionMethod]
+    end
   end
   
   return sum
@@ -231,14 +233,14 @@ function Controller:OnLevelUp(timestamp, coordinates, levelNum, totalTimePlayedA
   end
 end
 
-function Controller:OnLootMoney(timestamp, coordinates, money)
-  Controller:AddLog("LootedMoney: " .. tostring(money) .. ".", AutoBiographerEnum.LogLevel.Debug)
-  MoneyStatistics.AddLootedMoney(self.CharacterData.Levels[self:GetCurrentLevelNum()].MoneyStatistics, money)
+function Controller:OnGainedMoney(timestamp, coordinates, acquisitionMethod, money)
+  Controller:AddLog("GainedMoney: " .. tostring(money) .. ". Acquisition Method: " .. tostring(acquisitionMethod) .. ".", AutoBiographerEnum.LogLevel.Debug)
+  MoneyStatistics.AddMoney(self:GetCurrentLevelStatistics().MoneyStatistics, acquisitionMethod, money)
 end
 
 function Controller:OnMoneyChanged(timestamp, coordinates, deltaMoney)
   Controller:AddLog("MoneyChanged: " .. tostring(deltaMoney) .. ".", AutoBiographerEnum.LogLevel.Debug)
-  MoneyStatistics.MoneyChanged(self.CharacterData.Levels[self:GetCurrentLevelNum()].MoneyStatistics, deltaMoney)
+  MoneyStatistics.TotalMoneyChanged(self:GetCurrentLevelStatistics().MoneyStatistics, deltaMoney)
 end
 
 function Controller:OnQuestTurnedIn(timestamp, coordinates, questId, questTitle, xpGained, moneyGained)

@@ -84,17 +84,18 @@ end
 MoneyStatistics = {}
 function MoneyStatistics.New()
   return {
-    MoneyLooted = 0, -- int (copper)
-    TotalMoneyGained = 0, -- int (copper)
-    TotalMoneyLost = 0, -- int (copper)
+    TotalMoneyGained = 0,
+    TotalMoneyLost = 0,
   }
 end
 
-function MoneyStatistics.AddLootedMoney(ms, money) 
-  ms.MoneyLooted = ms.MoneyLooted + money
+function MoneyStatistics.AddMoney(ms, acquisitionMethod, money)
+  if (not ms[acquisitionMethod]) then ms[acquisitionMethod] = 0 end
+  
+  ms[acquisitionMethod] = ms[acquisitionMethod] + money
 end
 
-function MoneyStatistics.MoneyChanged(ms, deltaMoney) 
+function MoneyStatistics.TotalMoneyChanged(ms, deltaMoney) 
   if (deltaMoney < 0) then ms.TotalMoneyLost =  ms.TotalMoneyLost + abs(deltaMoney)
   elseif (deltaMoney > 0) then ms.TotalMoneyGained =  ms.TotalMoneyGained + deltaMoney
   end

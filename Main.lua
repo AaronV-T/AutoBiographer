@@ -224,7 +224,7 @@ function EM.EventHandlers.CHAT_MSG_MONEY(self, text, arg2, arg3, arg4, arg5)
     end
   end
   
-  Controller:OnLootMoney(time(), HelperFunctions.GetCoordinatesByUnitId("player"), moneySum)
+  Controller:OnGainedMoney(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.AcquisitionMethod.Loot, moneySum)
 end
 
 function EM.EventHandlers.CHAT_MSG_SKILL(self, text)
@@ -447,8 +447,12 @@ function EM.EventHandlers.PLAYER_UNGHOST(self) -- Fired when the player is alive
   self:UpdatePlayerZone()
 end
 
-function EM.EventHandlers.QUEST_TURNED_IN(self, questId, xpGained, moneyGained, arg4,arg5, arg6)
+function EM.EventHandlers.QUEST_TURNED_IN(self, questId, xpGained, moneyGained)
   Controller:OnQuestTurnedIn(time(), HelperFunctions.GetCoordinatesByUnitId("player"), questId, C_QuestLog.GetQuestInfo(questId), xpGained, moneyGained)
+  
+  if (moneyGained and moneyGained > 0) then
+    Controller:OnGainedMoney(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.AcquisitionMethod.Quest, moneyGained)
+  end
 end
 
 function EM.EventHandlers.TIME_PLAYED_MSG(self, totalTimePlayed, levelTimePlayed) 

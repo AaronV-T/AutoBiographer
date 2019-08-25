@@ -24,21 +24,19 @@ The addon currently records the following events:
 It also keeps track of the following statistics:
  - Damage dealt and taken; healing dealt to self, healing dealt to others, and healing taken.
  - Items looted or acquired by other methods.
+ - Money looted and money gained from quests.
  - Time spent in each zone (broken down into time spent AFK, casting, dead, in combat, and on flights).
  - Total kills (killing blows, assists, or group killed) for each unit.
- - Money looted.
  
-My focus has been logic for event and statistic recording so the UI is currently in a very rough state. I'll eventually get around to polishing the UI but I feel that with the release of Classic so close I want the addon to be able to start recording as many events and statistics as possible.
- 
-## Planned Features
+## Future Features
 
-Events which I hope to include in the future:
+Events:
  - Entering a battleground and the result of that battleground.
  - Entering a dungeon/raid.
  - Changing PVP rank.
  - Resetting talent points.
  
-Statistics I would like to keep track of in the future:
+Statistics:
  - Herbs gathered and ores mined.
  - Items traded, vendored, or sold at AH.
  - Money gained/lost to auction house, vendors, trading to players, etc.
