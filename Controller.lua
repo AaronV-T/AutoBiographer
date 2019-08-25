@@ -115,6 +115,15 @@ function Controller:GetTotalMoneyLost()
   return sum
 end
 
+function Controller:GetTaggedKills()
+  local sum = 0
+  for k,v in pairs(self.CharacterData.Levels) do
+    sum = sum + KillStatistics.GetTaggedKills(v.KillStatistics)
+  end
+  
+  return sum
+end
+
 function Controller:GetTaggedKillsByCatalogUnitId(catalogUnitId)
   local sum = 0
   for k,v in pairs(self.CharacterData.Levels) do

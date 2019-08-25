@@ -247,7 +247,7 @@ function EM.EventHandlers.CHAT_MSG_SKILL(self, text)
 end
 
 function EM.EventHandlers.CHAT_MSG_SYSTEM(self, arg1, arg2, arg3)
-  print(tostring(arg1) .. ", " .. tostring(arg2) .. ", " .. tostring(arg3))
+  --print(tostring(arg1) .. ", " .. tostring(arg2) .. ", " .. tostring(arg3))
 end
 
 function EM.EventHandlers.CHAT_MSG_TRADESKILLS(self, text, arg2, arg3, arg4, arg5)

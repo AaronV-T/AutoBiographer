@@ -77,19 +77,13 @@ end
 
 -- Text Formatting Helpers
 
-function HF.PrintStringAscii(text)
-  for i = 1, string.len(text) do
-    print(string.sub(text, i, i) .. ": " .. string.byte(text, i))
-  end
-end
-
 function HF.SecondsToTimeString(totalSeconds)
   if totalSeconds == nil then return "" end
 
   local days = math.floor(totalSeconds / 86400)
   local hours = math.floor(totalSeconds / 3600) % 24
   local minutes = math.floor(totalSeconds / 60) % 60
-  local seconds = totalSeconds % 60
+  local seconds = HF.Round(totalSeconds % 60)
   
   local printDays = false
   local printHours = false

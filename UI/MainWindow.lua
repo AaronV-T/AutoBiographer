@@ -158,6 +158,7 @@ function Toggle_MainWindow()
     frame.title:SetPoint("LEFT", frame.TitleBg, "LEFT", 5, 0);
     frame.title:SetText("AutoBiographer Main Window")
     
+    -- Buttons
     local eventsBtn = CreateFrame("Button", nil, frame, "GameMenuButtonTemplate");
     eventsBtn:SetPoint("CENTER", frame, "TOP", -140, -70);
     eventsBtn:SetSize(140, 40);
@@ -182,30 +183,100 @@ function Toggle_MainWindow()
       end
     )
     
-    local moneyText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    moneyText:SetPoint("TOPLEFT", 10, -100)
-    moneyText:SetText("Gold Looted: " .. tostring(Controller:GetMoneyForAcquisitionMethod(AutoBiographerEnum.AcquisitionMethod.Loot) / 10000) .. ". Gold Gained from Quests: " .. tostring(Controller:GetMoneyForAcquisitionMethod(AutoBiographerEnum.AcquisitionMethod.Quest) / 10000) .. ". Total Gold Gained: " .. tostring(Controller:GetTotalMoneyGained() / 10000) .. ". Total Gold Lost: " .. tostring(Controller:GetTotalMoneyLost() / 10000) .. ".")
+    -- Money
+    local moneyLooted = Controller:GetMoneyForAcquisitionMethod(AutoBiographerEnum.AcquisitionMethod.Loot)
+    local moneyLootedText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    moneyLootedText:SetPoint("TOPLEFT", 10, -100)
+    moneyLootedText:SetText("Money Looted: " .. GetCoinText(moneyLooted) .. ".")
     
-    local damageText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    damageText:SetPoint("TOPLEFT", 10, -115)
-    local damageDealtAmount, damageDealtOverkill = Controller:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageDealt)
-    local damageTakenAmount, damageTakenOverkill = Controller:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageTaken)
-    damageText:SetText("Damage Dealt: " .. tostring(damageDealtAmount) .. " (" .. tostring(damageDealtOverkill) .. " overkill). Damage Taken: " .. tostring(damageTakenAmount) .. " (" .. tostring(damageTakenOverkill) .. " overkill)." )
+    local moneyGainedFromQuesting = Controller:GetMoneyForAcquisitionMethod(AutoBiographerEnum.AcquisitionMethod.Quest)
+    local moneyGainedFromQuestingText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    moneyGainedFromQuestingText:SetPoint("TOPLEFT", 10, -115)
+    moneyGainedFromQuestingText:SetText("Money Gained From Quests: " .. GetCoinText(moneyGainedFromQuesting) .. ".")
     
-    local healingText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    healingText:SetPoint("TOPLEFT", 10, -130)
+    local moneyGainedFromOther = Controller:GetTotalMoneyGained() - moneyLooted - moneyGainedFromQuesting
+    local moneyOtherText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    moneyOtherText:SetPoint("TOPLEFT", 10, -130)
+    moneyOtherText:SetText("Money Gained From Other Sources: " .. GetCoinText(moneyGainedFromOther) .. ".")
+    
+    -- Damage
+    local damageDealtAmount, damageDealtOver = Controller:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageDealt)
+    local damageDealtText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    damageDealtText:SetPoint("TOPLEFT", 10, -160)
+    damageDealtText:SetText("Damage Dealt: " .. tostring(damageDealtAmount) .. " (" .. tostring(damageDealtOver) .. " over).")
+    
+    local damageTakenAmount, damageTakenOver = Controller:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageTaken)
+    local damageTakenText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    damageTakenText:SetPoint("TOPLEFT", 10, -175)
+    damageTakenText:SetText("Damage Taken: " .. tostring(damageTakenAmount) .. " (" .. tostring(damageTakenOver) .. " over).")
+    
     local healingOtherAmount, healingOtherOver = Controller:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.HealingDealtToOthers)
+    local healingOtherText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    healingOtherText:SetPoint("TOPLEFT", 10, -190)
+    healingOtherText:SetText("Healing Dealt to Others: " .. tostring(healingOtherAmount) .. " (" .. tostring(healingOtherOver) .. " over).")
+    
     local healingSelfAmount, healingSelfOver = Controller:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.HealingDealtToSelf)
+    local healingSelfText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    healingSelfText:SetPoint("TOPLEFT", 10, -205)
+    healingSelfText:SetText("Healing Dealt to Self: " .. tostring(healingSelfAmount) .. " (" .. tostring(healingSelfOver) .. " over).")
+    
     local healingTakenAmount, healingTakenOver = Controller:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.HealingTaken)
-    healingText:SetText("Healing Dealt to Others: " .. tostring(healingOtherAmount) .. " (" .. tostring(healingOtherOver) .. " over). Healing Dealt to Self: " .. tostring(healingSelfAmount) .. " (" .. tostring(healingSelfOver) .. " over). Healing Taken: " .. tostring(healingTakenAmount) .. " (" .. tostring(healingTakenOver) .. " over)." )
+    local healingTakenText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    healingTakenText:SetPoint("TOPLEFT", 10, -220)
+    healingTakenText:SetText("Healing Taken: " .. tostring(healingTakenAmount) .. " (" .. tostring(healingTakenOver) .. " over).")
     
-    local timeText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    timeText:SetPoint("TOPLEFT", 10, -145)
-    timeText:SetText("Time spent AFK: " .. tostring(Controller:GetTimeForTimeTrackingType(AutoBiographerEnum.TimeTrackingType.Afk)) .. ". Time spent in combat: " .. tostring(Controller:GetTimeForTimeTrackingType(AutoBiographerEnum.TimeTrackingType.InCombat)) .. ". Time spent on taxis: " .. tostring(Controller:GetTimeForTimeTrackingType(AutoBiographerEnum.TimeTrackingType.OnTaxi)) .. ". Time spent logged in: " .. tostring(Controller:GetTimeForTimeTrackingType(AutoBiographerEnum.TimeTrackingType.LoggedIn)) .. ". Time spent dead: " .. tostring(Controller:GetTimeForTimeTrackingType(AutoBiographerEnum.TimeTrackingType.DeadOrGhost)) .. ". Time spent casting: " .. tostring(Controller:GetTimeForTimeTrackingType(AutoBiographerEnum.TimeTrackingType.Casting)) .. ".")
+    -- Time
+    local timeSpentAfk = Controller:GetTimeForTimeTrackingType(AutoBiographerEnum.TimeTrackingType.Afk)
+    local timeSpentAfkText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    timeSpentAfkText:SetPoint("TOPLEFT", 10, -250)
+    timeSpentAfkText:SetText("Time Spent AFK: " .. HelperFunctions.SecondsToTimeString(timeSpentAfk) .. ".")
     
-    local itemText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    itemText:SetPoint("TOPLEFT", 10, -160)
-    itemText:SetText("Items Looted: " .. tostring(Controller:GetItemCountForAcquisitionMethod(AutoBiographerEnum.AcquisitionMethod.Loot)) .. ". Items Created: " .. tostring(Controller:GetItemCountForAcquisitionMethod(AutoBiographerEnum.AcquisitionMethod.Create)) .. ". Items Acquired by Other Means: "  .. tostring(Controller:GetItemCountForAcquisitionMethod(AutoBiographerEnum.AcquisitionMethod.Other)) .. ".")
+    local timeSpentCasting = Controller:GetTimeForTimeTrackingType(AutoBiographerEnum.TimeTrackingType.Casting)
+    local timeSpentCastingText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    timeSpentCastingText:SetPoint("TOPLEFT", 10, -265)
+    timeSpentCastingText:SetText("Time Spent Casting: " .. HelperFunctions.SecondsToTimeString(timeSpentCasting) .. ".")
+    
+    local timeSpentDead = Controller:GetTimeForTimeTrackingType(AutoBiographerEnum.TimeTrackingType.DeadOrGhost)
+    local timeSpentDeadText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    timeSpentDeadText:SetPoint("TOPLEFT", 10, -280)
+    timeSpentDeadText:SetText("Time Spent Dead: " .. HelperFunctions.SecondsToTimeString(timeSpentDead) .. ".")
+    
+    local timeSpentInCombat = Controller:GetTimeForTimeTrackingType(AutoBiographerEnum.TimeTrackingType.InCombat)
+    local timeSpentAfkText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    timeSpentAfkText:SetPoint("TOPLEFT", 10, -295)
+    timeSpentAfkText:SetText("Time Spent in Combat: " .. HelperFunctions.SecondsToTimeString(timeSpentInCombat) .. ".")
+    
+    local timeSpentLoggedIn = Controller:GetTimeForTimeTrackingType(AutoBiographerEnum.TimeTrackingType.LoggedIn)
+    local timeSpentLoggedInText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    timeSpentLoggedInText:SetPoint("TOPLEFT", 10, -310)
+    timeSpentLoggedInText:SetText("Time Spent Logged In: " .. HelperFunctions.SecondsToTimeString(timeSpentLoggedIn) .. ".")
+    
+    local timeSpentOnTaxi = Controller:GetTimeForTimeTrackingType(AutoBiographerEnum.TimeTrackingType.OnTaxi)
+    local timeSpentOnTaxiText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    timeSpentOnTaxiText:SetPoint("TOPLEFT", 10, -325)
+    timeSpentOnTaxiText:SetText("Time Spent on Flights: " .. HelperFunctions.SecondsToTimeString(timeSpentOnTaxi) .. ".")
+    
+    -- Items
+    local itemsCreated = Controller:GetItemCountForAcquisitionMethod(AutoBiographerEnum.AcquisitionMethod.Create)
+    local itemsCreatedText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    itemsCreatedText:SetPoint("TOPLEFT", 10, -355)
+    itemsCreatedText:SetText("Items Created: " .. tostring(itemsCreated) .. ".")
+    
+    local itemsLooted = Controller:GetItemCountForAcquisitionMethod(AutoBiographerEnum.AcquisitionMethod.Loot)
+    local itemsLootedText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    itemsLootedText:SetPoint("TOPLEFT", 10, -370)
+    itemsLootedText:SetText("Items Looted: " .. tostring(itemsLooted) .. ".")
+    
+    local itemsOther = Controller:GetItemCountForAcquisitionMethod(AutoBiographerEnum.AcquisitionMethod.Other)
+    local itemsOtherText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    itemsOtherText:SetPoint("TOPLEFT", 10, -385)
+    itemsOtherText:SetText("Other Items Acquired: " .. tostring(itemsOther) .. ".")
+    
+    -- Kills
+    local taggedKills = Controller:GetTaggedKills()
+    local taggedKillsText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    taggedKillsText:SetPoint("TOPLEFT", 10, -415)
+    taggedKillsText:SetText("Tagged Kills: " .. tostring(taggedKills) .. ".")
     
     MainWindow_Frame = frame
   else

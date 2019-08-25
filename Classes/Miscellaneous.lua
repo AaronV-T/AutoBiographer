@@ -53,15 +53,30 @@ function KillBreakdown.AddKill(kb, kill)
   end
 end
 
+function KillBreakdown.GetTotalKills(kb)
+  local sum =  0
+  for k,v in pairs(kb.PlayerKillingBlows) do
+    sum = sum + v
+  end
+  for k,v in pairs(kb.PlayerAssists) do
+    sum = sum + v
+  end
+  for k,v in pairs(kb.GroupAssistsAndKillingBlows) do
+    sum = sum + v
+  end
+  
+  return sum
+end
+
 function KillBreakdown.GetTotalKillsByCatalogUnitId(kb, catalogUnitId)
   local sum =  0
-  if (kb.PlayerKillingBlows[catalogUnitId]) ~= nil then
+  if (kb.PlayerKillingBlows[catalogUnitId]) then
     sum = sum + kb.PlayerKillingBlows[catalogUnitId]
   end
-  if (kb.PlayerAssists[catalogUnitId]) ~= nil then
+  if (kb.PlayerAssists[catalogUnitId]) then
     sum = sum + kb.PlayerAssists[catalogUnitId]
   end
-  if (kb.GroupAssistsAndKillingBlows[catalogUnitId]) ~= nil then
+  if (kb.GroupAssistsAndKillingBlows[catalogUnitId]) then
     sum = sum + kb.GroupAssistsAndKillingBlows[catalogUnitId]
   end
   
