@@ -42,10 +42,11 @@ AutoBiographerEnum = {
     ZoneFirstVisit = 12,
   },
   AcquisitionMethod = {
-    Loot = 0,
-    Other = 1,
-    Quest = 2,
-    Trade = 3,
+    Create = 0,
+    Loot = 1,
+    Other = 2,
+    Quest = 3,
+    Trade = 4,
   },
   LogLevel = {
     Verbose = 0,

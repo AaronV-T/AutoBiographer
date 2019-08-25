@@ -205,7 +205,7 @@ function Toggle_MainWindow()
     
     local itemText = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     itemText:SetPoint("TOPLEFT", 10, -160)
-    itemText:SetText("Items looted: " .. tostring(Controller:GetItemCountForAcquisitionMethod(AutoBiographerEnum.AcquisitionMethod.Loot)) .. ". Items acquired by other means: " .. tostring(Controller:GetItemCountForAcquisitionMethod(AutoBiographerEnum.AcquisitionMethod.Other)) .. ".")
+    itemText:SetText("Items Looted: " .. tostring(Controller:GetItemCountForAcquisitionMethod(AutoBiographerEnum.AcquisitionMethod.Loot)) .. ". Items Created: " .. tostring(Controller:GetItemCountForAcquisitionMethod(AutoBiographerEnum.AcquisitionMethod.Create)) .. ". Items Acquired by Other Means: "  .. tostring(Controller:GetItemCountForAcquisitionMethod(AutoBiographerEnum.AcquisitionMethod.Other)) .. ".")
     
     MainWindow_Frame = frame
   else

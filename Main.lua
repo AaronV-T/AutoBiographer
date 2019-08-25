@@ -155,10 +155,12 @@ function EM.EventHandlers.BOSS_KILL(self, bossId, bossName)
 end
 
 function EM.EventHandlers.CHAT_MSG_LOOT(self, text, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, arg17, arg18, arg19, arg20, arg21)
-  if (string.find(text, "You receive") ~= 1) then return end
+  if (string.find(text, "You") ~= 1) then return end
   
   local acquisitionMethod = nil
-  if (string.find(text, "You receive loot") == 1) then
+  if (string.find(text, "You create") == 1) then
+    acquisitionMethod = AutoBiographerEnum.AcquisitionMethod.Create
+  elseif (string.find(text, "You receive loot") == 1) then
     acquisitionMethod = AutoBiographerEnum.AcquisitionMethod.Loot
   else
     acquisitionMethod = AutoBiographerEnum.AcquisitionMethod.Other
@@ -242,6 +244,10 @@ function EM.EventHandlers.CHAT_MSG_SKILL(self, text)
   if (skillName and skillLevel) then
     Controller:OnSkillLevelIncreased(time(), HelperFunctions.GetCoordinatesByUnitId("player"), skillName, skillLevel)
   end
+end
+
+function EM.EventHandlers.CHAT_MSG_SYSTEM(self, arg1, arg2, arg3)
+  print(tostring(arg1) .. ", " .. tostring(arg2) .. ", " .. tostring(arg3))
 end
 
 function EM.EventHandlers.CHAT_MSG_TRADESKILLS(self, text, arg2, arg3, arg4, arg5)
