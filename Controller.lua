@@ -20,8 +20,10 @@ end
 function Controller:AddTime(timeTrackingType, seconds, zone, subZone)
   Controller:AddLog("Adding " .. tostring(seconds) .. " seconds of timeTrackingType " .. tostring(timeTrackingType) .. " to " .. tostring(subZone) .. " (" .. tostring(zone) .. ").", AutoBiographerEnum.LogLevel.Debug)
   
-  local id = tostring(zone) .. "-" .. tostring(subZone)
-  TimeStatistics.AddTime(self:GetCurrentLevelStatistics().TimeStatisticsByArea, timeTrackingType, seconds)
+  local areaId = tostring(zone) .. "-" .. tostring(subZone)
+  
+  if (not self:GetCurrentLevelStatistics().TimeStatisticsByArea[areaId]) then self:GetCurrentLevelStatistics().TimeStatisticsByArea[areaId] = TimeStatistics.New() end
+  TimeStatistics.AddTime(self:GetCurrentLevelStatistics().TimeStatisticsByArea[areaId], timeTrackingType, seconds)
 end
 
 function Controller:CatalogItemIsIncomplete(catalogItemId)
@@ -123,8 +125,11 @@ end
 function Controller:GetTimeForTimeTrackingType(timeTrackingType)
   local sum = 0
   for k,v in pairs(self.CharacterData.Levels) do
-    if (v.TimeStatisticsByArea[timeTrackingType]) then
-      sum = sum + v.TimeStatisticsByArea[timeTrackingType]
+    for k2,v2 in pairs(HelperFunctions.GetKeysFromTable(v.TimeStatisticsByArea)) do
+      if (v.TimeStatisticsByArea[v2][timeTrackingType]) then
+        print(v2 .. ": " .. v.TimeStatisticsByArea[v2][timeTrackingType])
+        sum = sum + v.TimeStatisticsByArea[v2][timeTrackingType]
+      end
     end
   end
   

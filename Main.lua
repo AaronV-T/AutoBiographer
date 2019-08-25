@@ -421,6 +421,10 @@ function EM.EventHandlers.PLAYER_GUILD_UPDATE(self, unitId)
   self:UpdatePlayerGuildInfo()
 end
 
+function EM.EventHandlers.PLAYER_LEAVING_WORLD(self)
+  self:UpdateTimestamps(self.PersistentPlayerInfo.CurrentZone, self.PersistentPlayerInfo.CurrentSubZone)
+end
+
 function EM.EventHandlers.PLAYER_LEVEL_UP(self, newLevel, ...)
   self.NewLevelToAddToHistory = newLevel
   
@@ -431,9 +435,7 @@ function EM.EventHandlers.PLAYER_LOGIN(self)
   
 end
 
-function EM.EventHandlers.PLAYER_LOGOUT(self)
-  self:UpdateTimestamps()
-end
+
 
 function EM.EventHandlers.PLAYER_MONEY(self)
   local currentMoney = GetMoney()
