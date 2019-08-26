@@ -15,7 +15,5 @@ function AutoBiographer_MinimapButton_DraggingFrame_OnUpdate()
 end
 
 function AutoBiographer_MinimapButton_OnClick(arg1)
-	--DEFAULT_CHAT_FRAME:AddMessage(tostring(arg1).." was clicked.")
-  --Controller:PrintEvents()
   Toggle_MainWindow()
 end

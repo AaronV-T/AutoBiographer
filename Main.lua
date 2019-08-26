@@ -1,6 +1,6 @@
 AutoBiographer_Settings = nil
 
-EventManager = {
+AutoBiographer_EventManager = {
   EventHandlers = {},
   LastPlayerMoney = nil,
   NewLevelToAddToHistory = nil,
@@ -23,7 +23,8 @@ EventManager = {
   ZoneChangedNewAreaEventHasFired = false
 }
 
-local EM = EventManager
+local EM = AutoBiographer_EventManager
+local Controller = AutoBiographer_Controller
 
 -- *** Locals ***
 

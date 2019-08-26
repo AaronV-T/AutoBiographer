@@ -1,7 +1,9 @@
-Controller = {
+AutoBiographer_Controller = {
   CharacterData = {},
   Logs = {}, 
 }
+
+local Controller = AutoBiographer_Controller
 
 function Controller:AddEvent(event)
   table.insert(self.CharacterData.Events, event)
@@ -14,7 +16,7 @@ function Controller:AddLog(text, logLevel)
   
   table.insert(self.Logs, { Level = logLevel, Text = tostring(text), Timestamp = time() })
   
-  if (DebugWindow_Frame) then DebugWindow_Frame.LogsUpdated() end
+  if (AutoBiographer_DebugWindow ) then AutoBiographer_DebugWindow.LogsUpdated() end
 end
 
 function Controller:AddTime(timeTrackingType, seconds, zone, subZone)

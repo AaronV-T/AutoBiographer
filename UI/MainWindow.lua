@@ -1,20 +1,22 @@
-DebugWindow_Frame = nil
-EventWindow_Frame = nil
-MainWindow_Frame = nil
+AutoBiographer_DebugWindow = nil
+AutoBiographer_EventWindow = nil
+AutoBiographer_MainWindow = nil
+
+local Controller = AutoBiographer_Controller
 
 function Toggle_DebugWindow()
-  if (not DebugWindow_Frame) then
+  if (not AutoBiographer_DebugWindow) then
   
     local debugLogs = Controller:GetLogs()
     
     --parent frame 
-    local frame = CreateFrame("Frame", "AutoBiographerDebug", MainWindow_Frame, "BasicFrameTemplateWithInset") 
+    local frame = CreateFrame("Frame", "AutoBiographerDebug", AutoBiographer_MainWindow, "BasicFrameTemplateWithInset") 
     frame:SetSize(750, 550) 
     frame:SetPoint("CENTER") 
     
     frame:SetScript("OnHide", 
       function(self)
-        DebugWindow_Frame = nil 
+        AutoBiographer_DebugWindow = nil 
       end
     )
 
@@ -69,26 +71,26 @@ function Toggle_DebugWindow()
     
     frame.LogsUpdated = function () return end
     
-    DebugWindow_Frame = frame
+    AutoBiographer_DebugWindow = frame
   else
-    DebugWindow_Frame:Hide()
-    DebugWindow_Frame = nil
+    AutoBiographer_DebugWindow:Hide()
+    AutoBiographer_DebugWindow = nil
   end
 end
 
 function Toggle_EventWindow()
-  if (not EventWindow_Frame) then
+  if (not AutoBiographer_EventWindow) then
   
     local events = Controller:GetEvents()
     
     --parent frame 
-    local frame = CreateFrame("Frame", "AutoBiographerEvent", MainWindow_Frame, "BasicFrameTemplateWithInset")
+    local frame = CreateFrame("Frame", "AutoBiographerEvent", AutoBiographer_MainWindow, "BasicFrameTemplateWithInset")
     frame:SetSize(750, 550) 
     frame:SetPoint("CENTER") 
     
     frame:SetScript("OnHide", 
       function(self)
-        EventWindow_Frame = nil 
+        AutoBiographer_EventWindow = nil 
       end
     )
 
@@ -276,15 +278,15 @@ function Toggle_EventWindow()
     scrollframe.content = content
     scrollframe:SetScrollChild(content)
     
-    EventWindow_Frame = frame
+    AutoBiographer_EventWindow = frame
   else
-    EventWindow_Frame:Hide()
-    EventWindow_Frame = nil
+    AutoBiographer_EventWindow:Hide()
+    AutoBiographer_EventWindow = nil
   end
 end
 
 function Toggle_MainWindow()
-  if (not MainWindow_Frame) then
+  if (not AutoBiographer_MainWindow) then
 
     --parent frame 
     local frame = CreateFrame("Frame", "AutoBiographerMain", UIParent, "BasicFrameTemplateWithInset") 
@@ -293,7 +295,7 @@ function Toggle_MainWindow()
     
     frame:SetScript("OnHide", 
       function(self)
-        MainWindow_Frame = nil 
+        AutoBiographer_MainWindow = nil 
       end
     )
 
@@ -303,7 +305,7 @@ function Toggle_MainWindow()
     
     -- Buttons
     local eventsBtn = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate");
-    eventsBtn:SetPoint("CENTER", frame, "TOP", -140, -70);
+    eventsBtn:SetPoint("CENTER", frame, "TOP", -225, -70);
     eventsBtn:SetSize(140, 40);
     eventsBtn:SetText("Events");
     eventsBtn:SetNormalFontObject("GameFontNormalLarge");
@@ -314,8 +316,22 @@ function Toggle_MainWindow()
       end
     )
     
+    local optionsBtn = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate");
+    optionsBtn:SetPoint("CENTER", frame, "TOP", -75, -70);
+    optionsBtn:SetSize(140, 40);
+    optionsBtn:SetText("Options");
+    optionsBtn:SetNormalFontObject("GameFontNormalLarge");
+    optionsBtn:SetHighlightFontObject("GameFontHighlightLarge");
+    optionsBtn:SetScript("OnClick", 
+      function(self)
+        InterfaceOptionsFrame_OpenToCategory(AutoBiographer_OptionWindow) -- Call this twice because it won't always work correcly if just called once.
+        InterfaceOptionsFrame_OpenToCategory(AutoBiographer_OptionWindow)
+        Toggle_MainWindow()
+      end
+    )
+    
     local debugBtn = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate");
-    debugBtn:SetPoint("CENTER", frame, "TOP", 140, -70);
+    debugBtn:SetPoint("CENTER", frame, "TOP", 75, -70);
     debugBtn:SetSize(140, 40);
     debugBtn:SetText("Debug");
     debugBtn:SetNormalFontObject("GameFontNormalLarge");
@@ -323,6 +339,18 @@ function Toggle_MainWindow()
     debugBtn:SetScript("OnClick", 
       function(self)
         Toggle_DebugWindow()
+      end
+    )
+    
+    local closeBtn = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate");
+    closeBtn:SetPoint("CENTER", frame, "TOP", 225, -70);
+    closeBtn:SetSize(140, 40);
+    closeBtn:SetText("Close");
+    closeBtn:SetNormalFontObject("GameFontNormalLarge");
+    closeBtn:SetHighlightFontObject("GameFontHighlightLarge");
+    closeBtn:SetScript("OnClick", 
+      function(self)
+        Toggle_MainWindow()
       end
     )
     
@@ -446,9 +474,9 @@ function Toggle_MainWindow()
     timeSpentOnTaxiText:SetPoint("TOPLEFT", 10, -530)
     timeSpentOnTaxiText:SetText("Time Spent on Flights: " .. HelperFunctions.SecondsToTimeString(timeSpentOnTaxi) .. ".")
     
-    MainWindow_Frame = frame
+    AutoBiographer_MainWindow = frame
   else
-    MainWindow_Frame:Hide()
-    MainWindow_Frame = nil
+    AutoBiographer_MainWindow:Hide()
+    AutoBiographer_MainWindow = nil
   end
 end
