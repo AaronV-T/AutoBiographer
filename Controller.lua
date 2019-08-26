@@ -6,7 +6,7 @@ Controller = {
 function Controller:AddEvent(event)
   table.insert(self.CharacterData.Events, event)
   Controller:AddLog(Event.ToString(self.CharacterData.Events[#self.CharacterData.Events], self.CharacterData.Catalogs), AutoBiographerEnum.LogLevel.Debug)
-  print(Event.ToString(self.CharacterData.Events[#self.CharacterData.Events], self.CharacterData.Catalogs))
+  --print(Event.ToString(self.CharacterData.Events[#self.CharacterData.Events], self.CharacterData.Catalogs))
 end
 
 function Controller:AddLog(text, logLevel)
@@ -172,6 +172,8 @@ end
 function Controller:OnBossKill(timestamp, coordinates, bossId, bossName)
   Controller:AddLog("BossKill: " .. tostring(bossName) .. " (#" .. tostring(bossId) .. ").", AutoBiographerEnum.LogLevel.Debug)
   self:AddEvent(BossKillEvent.New(timestamp, coordinates, bossId, bossName))
+  
+  if (AutoBiographer_Settings.Options["TakeScreenshotOnBossKill"]) then self:TakeScreenshot() end
 end
 
 function Controller:OnChangedSubZone(timestamp, coordinates, zoneName, subZoneName)
@@ -247,6 +249,9 @@ function Controller:OnLevelUp(timestamp, coordinates, levelNum, totalTimePlayedA
   
   if (timestamp) then
     self:AddEvent(LevelUpEvent.New(timestamp, coordinates, levelNum))
+    if (AutoBiographer_Settings.Options["TakeScreenshotOnLevelUp"] and levelNum > 1) then 
+      self:TakeScreenshot()
+    end
   end
 end
 
@@ -291,6 +296,11 @@ end
 
 function Controller:PrintLastEvent()
   print(Event.ToString(self.CharacterData.Events[#self.CharacterData.Events], self.CharacterData.Catalogs))
+end
+
+function Controller:TakeScreenshot()
+  Screenshot()
+  Controller:AddLog("Screenshot captured.", AutoBiographerEnum.LogLevel.Debug)
 end
 
 function Controller:UpdateCatalogItem(catalogItem)

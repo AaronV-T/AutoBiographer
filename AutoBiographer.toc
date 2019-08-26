@@ -16,3 +16,4 @@ Main.lua
 UI/MainWindow.lua
 UI/MinimapButton.lua
 UI/MinimapButton.xml
+UI/Options.lua

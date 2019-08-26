@@ -27,6 +27,9 @@ It also keeps track of the following statistics:
  - Money looted and money gained from quests.
  - Time spent in each zone (broken down into time spent AFK, casting, dead, in combat, and on flights).
  - Total kills (killing blows, assists, or group killed) for each unit.
+
+Additional Features:
+ - Automatic screenshot capturing on leveling up and killing bosses.
  
 ## Future Features
 
@@ -42,3 +45,5 @@ Statistics:
  - Money gained/lost to auction house, vendors, trading to players, etc.
  - PVP stats (honorable kills, dishonorable kills, duels initiated and their results).
  - Spells cast.
+
+ The addon's current UI was quickly thrown together and I plan to redo it.

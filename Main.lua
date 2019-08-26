@@ -99,14 +99,19 @@ end
 function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   if addonName ~= "AutoBiographer" then return end
 
-  if (time() > 1567123200) then 
+  if (time() > 1567468800) then 
     message("You are using an alpha version of AutoBiographer. Please update to the latest version.")
   end
   
   if type(_G["AUTOBIOGRAPHER_SETTINGS"]) ~= "table" then
 		_G["AUTOBIOGRAPHER_SETTINGS"] = {
-      EventDisplayFilters = {}, -- Dict <EventSubType, bool>
+      EventDisplayFilters = {}, -- Dict<EventSubType, bool>
       MinimapPos = 45,
+      Options = { -- Dict<string?, bool>
+        ShowKillCountOnUnitToolTips = true,
+        TakeScreenshotOnLevelUp = true,
+        TakeScreenshotOnBossKill = true,
+      }, 
     }
     for k,v in pairs(AutoBiographerEnum.EventSubType) do
       _G["AUTOBIOGRAPHER_SETTINGS"].EventDisplayFilters[v] = true
@@ -152,6 +157,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   end
   
   AutoBiographer_MinimapButton_Reposition()
+  AutoBiographer_OptionWindow:Initialize()
 end
 
 function EM.EventHandlers.BOSS_KILL(self, bossId, bossName)
@@ -537,7 +543,7 @@ function EM.EventHandlers.UPDATE_MOUSEOVER_UNIT(self)
   --if UnitIsPlayer("mouseover") then return end
 	local catalogUnitId = HelperFunctions.GetCatalogIdFromGuid(UnitGUID("mouseover"))
 	if not catalogUnitId then return end
-	if UnitCanAttack("player", "mouseover") then
+	if (AutoBiographer_Settings.Options["ShowKillCountOnUnitToolTips"] and UnitCanAttack("player", "mouseover")) then
 		GameTooltip:AddLine("Killed " .. tostring(Controller:GetTaggedKillsByCatalogUnitId(catalogUnitId)) .. " times.")
 	end
 
