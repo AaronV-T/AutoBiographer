@@ -3,7 +3,7 @@ AutoBiographer_OptionWindow = CreateFrame("Frame", "AutoBiographer Options", UIP
 function AutoBiographer_OptionWindow:Initialize()
   self.Header = self:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
   self.Header:SetPoint("TOPLEFT", 10, -10)
-  self.Header:SetText("AutoBiographer Options")
+  self.Header:SetText("AutoBiographer (Alpha) Options")
   
   self.cbKillCountTooltip = CreateFrame("CheckButton", nil, self, "UICheckButtonTemplate") 
   self.cbKillCountTooltip:SetPoint("LEFT", self, "TOPLEFT", 10, -50)
