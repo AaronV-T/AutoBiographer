@@ -105,8 +105,12 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   
   if type(_G["AUTOBIOGRAPHER_SETTINGS"]) ~= "table" then
 		_G["AUTOBIOGRAPHER_SETTINGS"] = {
+      EventDisplayFilters = {}, -- Dict <EventSubType, bool>
       MinimapPos = 45,
     }
+    for k,v in pairs(AutoBiographerEnum.EventSubType) do
+      _G["AUTOBIOGRAPHER_SETTINGS"].EventDisplayFilters[v] = true
+    end
 	end
   
   AutoBiographer_Settings = _G["AUTOBIOGRAPHER_SETTINGS"]
@@ -720,6 +724,8 @@ EM.Frame:SetScript("OnEvent", function(_, event, ...) EM:OnEvent(_, event, ...) 
 
 -- Test function.
 function EM:Clear() 
+  _G["AUTOBIOGRAPHER_SETTINGS"] = nil
+
   _G["AUTOBIOGRAPHER_CATALOGS_CHAR"] = nil
   _G["AUTOBIOGRAPHER_EVENTS_CHAR"] = nil
   _G["AUTOBIOGRAPHER_LEVELS_CHAR"] = nil

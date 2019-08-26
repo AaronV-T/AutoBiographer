@@ -56,12 +56,11 @@ function Controller:GetDamageOrHealing(damageOrHealingCategory)
 end
 
 function Controller:GetEvents()
-  local retVal = {}
-  for _,v in pairs(self.CharacterData.Events) do
-    table.insert(retVal, tostring(Event.ToString(v, self.CharacterData.Catalogs)))
-  end
-  
-  return retVal
+  return self.CharacterData.Events
+end
+
+function Controller:GetEventString(event)
+  return Event.ToString(event, self.CharacterData.Catalogs)
 end
 
 function Controller:GetItemCountForAcquisitionMethod(acquisitionMethod)
@@ -110,6 +109,15 @@ function Controller:GetTotalMoneyLost()
   local sum = 0
   for k,v in pairs(self.CharacterData.Levels) do
     sum = sum + v.MoneyStatistics.TotalMoneyLost
+  end
+  
+  return sum
+end
+
+function Controller:GetTaggedKillingBlows()
+  local sum = 0
+  for k,v in pairs(self.CharacterData.Levels) do
+    sum = sum + KillStatistics.GetTaggedKillingBlows(v.KillStatistics)
   end
   
   return sum

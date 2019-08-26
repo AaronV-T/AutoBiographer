@@ -53,6 +53,15 @@ function KillBreakdown.AddKill(kb, kill)
   end
 end
 
+function KillBreakdown.GetTotalKillingBlows(kb)
+  local sum =  0
+  for k,v in pairs(kb.PlayerKillingBlows) do
+    sum = sum + v
+  end
+  
+  return sum
+end
+
 function KillBreakdown.GetTotalKills(kb)
   local sum =  0
   for k,v in pairs(kb.PlayerKillingBlows) do

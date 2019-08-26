@@ -59,6 +59,10 @@ function KillStatistics.AddKill(ks, kill)
   end
 end
 
+function KillStatistics.GetTaggedKillingBlows(ks)
+  return KillBreakdown.GetTotalKillingBlows(ks.TaggedKills)
+end
+
 function KillStatistics.GetTaggedKills(ks)
   return KillBreakdown.GetTotalKills(ks.TaggedKills)
 end
