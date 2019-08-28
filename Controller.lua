@@ -175,7 +175,7 @@ function Controller:OnBossKill(timestamp, coordinates, bossId, bossName)
   Controller:AddLog("BossKill: " .. tostring(bossName) .. " (#" .. tostring(bossId) .. ").", AutoBiographerEnum.LogLevel.Debug)
   self:AddEvent(BossKillEvent.New(timestamp, coordinates, bossId, bossName))
   
-  if (AutoBiographer_Settings.Options["TakeScreenshotOnBossKill"]) then self:TakeScreenshot() end
+  if (AutoBiographer_Settings.Options["TakeScreenshotOnBossKill"]) then self:TakeScreenshot(0) end
 end
 
 function Controller:OnChangedSubZone(timestamp, coordinates, zoneName, subZoneName)
@@ -244,7 +244,7 @@ function Controller:OnLevelUp(timestamp, coordinates, levelNum, totalTimePlayedA
   local currentLevel = self.CharacterData.Levels[levelNum]
   local previousLevel = self.CharacterData.Levels[levelNum - 1]
   
-  if (previousLevel ~= nil and previousLevel.TotalTimePlayedAtDing ~= nil) then
+  if (previousLevel and previousLevel.TotalTimePlayedAtDing and currentLevel.TotalTimePlayedAtDing) then
     previousLevel.TimePlayedThisLevel = currentLevel.TotalTimePlayedAtDing - previousLevel.TotalTimePlayedAtDing
     Controller:AddLog("Time played last level = " .. HelperFunctions.SecondsToTimeString(previousLevel.TimePlayedThisLevel), AutoBiographerEnum.LogLevel.Debug)
   end
@@ -252,7 +252,7 @@ function Controller:OnLevelUp(timestamp, coordinates, levelNum, totalTimePlayedA
   if (timestamp) then
     self:AddEvent(LevelUpEvent.New(timestamp, coordinates, levelNum))
     if (AutoBiographer_Settings.Options["TakeScreenshotOnLevelUp"] and levelNum > 1) then 
-      self:TakeScreenshot()
+      self:TakeScreenshot(1.15)
     end
   end
 end
@@ -300,9 +300,13 @@ function Controller:PrintLastEvent()
   print(Event.ToString(self.CharacterData.Events[#self.CharacterData.Events], self.CharacterData.Catalogs))
 end
 
-function Controller:TakeScreenshot()
-  Screenshot()
-  Controller:AddLog("Screenshot captured.", AutoBiographerEnum.LogLevel.Debug)
+function Controller:TakeScreenshot(secondsToDelay)
+  if (not secondsToDelay) then secondsToDelay = 0 end
+
+  C_Timer.After(secondsToDelay, function()
+    Screenshot()
+    Controller:AddLog("Screenshot captured after" .. tostring(secondsToDelay) .. "s delay .", AutoBiographerEnum.LogLevel.Debug)
+  end)
 end
 
 function Controller:UpdateCatalogItem(catalogItem)

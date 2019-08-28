@@ -1,21 +1,21 @@
 # AutoBiographer
-This is an addon for WoW Classic. It is currently in development and new features are continuously being added.
+This is an addon for WoW Classic for tracking character milestones and statistics.
 
 ## Installing
 
-Unzip the downloaded `.zip` file and put the `AutoBiographer` folder into your AddOns directory (e.g. `C:\Program Files (x86)\World of Warcraft\_retail_\Interface\AddOns`).
+Unzip the downloaded `.zip` file and put the `AutoBiographer` folder into your AddOns directory (e.g. `C:\Program Files (x86)\World of Warcraft\_classic_\Interface\AddOns`).
 
 ## Features
 
 ## Current Features
 
 The addon currently records the following events:
- - Killing a boss.
- - Deaths (including which unit killed you and their level).
- - First time acquiring an item.
- - First time entering a zone or subzone.
- - First time killing a unique unit.
+ - Acquiring an item you have never before acquired.
+ - Dieing (including which unit killed you and their level).
+ - Entering a zone or subzone you have never before entered.
  - Joining a guild, leaving a guild, or changing rank in a guild.
+ - Killing a boss.
+ - Killing a unit you have never before killed.
  - Learning a spell/ability.
  - Leveling up (including the time played at level up and total time played of each level).
  - Reaching skill milestones (75/150/225/300).
@@ -37,13 +37,22 @@ Events:
  - Entering a battleground and the result of that battleground.
  - Entering a dungeon/raid.
  - Changing PVP rank.
+ - Miscellaneous events:
+   - Winning a Gurubashi Arena.
  - Resetting talent points.
  
 Statistics:
+ - Consumables used.
  - Herbs gathered and ores mined.
  - Items traded, vendored, or sold at AH.
+ - Miscellaneous stats:
+   - Flights taken.   
  - Money gained/lost to auction house, vendors, trading to players, etc.
  - PVP stats (honorable kills, dishonorable kills, duels initiated and their results).
  - Spells cast.
+ - Time spent in a party.
+ - XP from discovery, kills, and quests.
 
- The addon's current UI was quickly thrown together and I plan to redo it.
+Other Featues:
+- Showing coordinates of events on the map (these coordinates are already being recorded but just not displayed anywhere).
+- UI overhaul.

@@ -107,7 +107,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   if type(_G["AUTOBIOGRAPHER_SETTINGS"]) ~= "table" then
 		_G["AUTOBIOGRAPHER_SETTINGS"] = {
       EventDisplayFilters = {}, -- Dict<EventSubType, bool>
-      MinimapPos = 45,
+      MinimapPos = -25,
       Options = { -- Dict<string?, bool>
         ShowKillCountOnUnitToolTips = true,
         TakeScreenshotOnLevelUp = true,
@@ -210,7 +210,7 @@ end
 
 
 function EM.EventHandlers.CHAT_MSG_MONEY(self, text, arg2, arg3, arg4, arg5)
-  if (string.find(text, "You loot") ~= 1) then return end
+  if (string.find(text, "You") ~= 1) then return end
   local moneySum = 0
 
   for copperText in string.gmatch(text, "%d+%sCopper") do
