@@ -130,6 +130,13 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   if type(_G["AUTOBIOGRAPHER_LEVELS_CHAR"]) ~= "table" then
 		_G["AUTOBIOGRAPHER_LEVELS_CHAR"] = {}
 	end
+  
+  Controller.CharacterData = {
+    Catalogs = _G["AUTOBIOGRAPHER_CATALOGS_CHAR"],
+    Events = _G["AUTOBIOGRAPHER_EVENTS_CHAR"],
+    Levels = _G["AUTOBIOGRAPHER_LEVELS_CHAR"]
+  }
+  
   if type(_G["AUTOBIOGRAPHER_INFO_CHAR"]) ~= "table" then
 		_G["AUTOBIOGRAPHER_INFO_CHAR"] = {
       CurrentSubZone = nil,
@@ -137,14 +144,9 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
       GuildName = nil,
       GuildRankIndex = nil,
       GuildRankName = nil,
+      PlayerGuid = nil,
     }
 	end
-  
-	Controller.CharacterData = {
-    Catalogs = _G["AUTOBIOGRAPHER_CATALOGS_CHAR"],
-    Events = _G["AUTOBIOGRAPHER_EVENTS_CHAR"],
-    Levels = _G["AUTOBIOGRAPHER_LEVELS_CHAR"]
-  }
   
   self.PersistentPlayerInfo = _G["AUTOBIOGRAPHER_INFO_CHAR"]
   
@@ -258,7 +260,7 @@ function EM.EventHandlers.CHAT_MSG_SKILL(self, text)
 end
 
 function EM.EventHandlers.CHAT_MSG_SYSTEM(self, arg1, arg2, arg3)
-  --print(tostring(arg1) .. ", " .. tostring(arg2) .. ", " .. tostring(arg3))
+  print(tostring(arg1) .. ", " .. tostring(arg2) .. ", " .. tostring(arg3))
 end
 
 function EM.EventHandlers.CHAT_MSG_TRADESKILLS(self, text, arg2, arg3, arg4, arg5)
@@ -271,7 +273,7 @@ function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
   local timestamp, event, hideCaster, sourceGuid, sourceName, sourceFlags, sourceRaidFlags, destGuid, destName, destFlags, destRaidflags = CombatLogGetCurrentEventInfo()
   
   if (combatLogDamageEvents[event]) then
-    local playerCausedThisEvent = sourceGuid == self.PlayerGuid
+    local playerCausedThisEvent = sourceGuid == self.PersistentPlayerInfo.PlayerGuid
     local playerPetCausedThisEvent = sourceGuid == UnitGUID("pet")
     local groupMemberCausedThisEvent = IsUnitGUIDInOurPartyOrRaid(sourceGuid)
     
@@ -296,7 +298,7 @@ function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
     end
     
     -- Process event's damage amount.
-    if (playerCausedThisEvent or destGuid == self.PlayerGuid) then
+    if (playerCausedThisEvent or destGuid == self.PersistentPlayerInfo.PlayerGuid) then
       if (string.find(event, "SWING") == 1) then
         amount, overKill, school, resisted, blocked, absorbed, critical, glancing, crushing, isOffHand = select(12, CombatLogGetCurrentEventInfo())
       elseif (string.find(event, "SPELL") == 1) then
@@ -308,7 +310,7 @@ function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
         
         if (playerCausedThisEvent) then 
           Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageDealt, amount, overKill)
-        elseif (destGuid == self.PlayerGuid) then 
+        elseif (destGuid == self.PersistentPlayerInfo.PlayerGuid) then 
           Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageTaken, amount, overKill)
         end
       end
@@ -342,24 +344,24 @@ function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
     
     damagedUnit.LastUnitGuidWhoCausedDamage = sourceGuid
     
-    if (destGuid == self.PlayerGuid) then damagedUnit.LastCombatDamageTakenTimestamp = time() end
+    if (destGuid == self.PersistentPlayerInfo.PlayerGuid) then damagedUnit.LastCombatDamageTakenTimestamp = time() end
   elseif (combatLogHealEvents[event]) then
     -- Process event's heal amount.
-    if (sourceGuid == self.PlayerGuid or destGuid == self.PlayerGuid) then
+    if (sourceGuid == self.PersistentPlayerInfo.PlayerGuid or destGuid == self.PersistentPlayerInfo.PlayerGuid) then
       spellId, spellName, spellSchool, amount, overKill, school, resisted, blocked, absorbed, critical, glancing, crushing, isOffHand = select(12, CombatLogGetCurrentEventInfo())
       
       if (amount) then 
         if (not overKill or overKill == -1) then overKill = 0 end
         
-        if (sourceGuid == self.PlayerGuid) then
-          if (destGuid == self.PlayerGuid) then
+        if (sourceGuid == self.PersistentPlayerInfo.PlayerGuid) then
+          if (destGuid == self.PersistentPlayerInfo.PlayerGuid) then
             Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.HealingDealtToSelf, amount, overKill)
           else
             Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.HealingDealtToOthers, amount, overKill)
           end
         end
         
-        if (destGuid == self.PlayerGuid) then
+        if (destGuid == self.PersistentPlayerInfo.PlayerGuid) then
           Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.HealingTaken, amount, overKill)
         end
         
@@ -387,7 +389,7 @@ function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
     Controller:OnKill(time(), HelperFunctions.GetCoordinatesByUnitId("player"), kill)
   end
   
-  if (destGuid ~= self.PlayerGuid) then damagedUnits[destGuid] = nil end
+  if (destGuid ~= self.PersistentPlayerInfo.PlayerGuid) then damagedUnits[destGuid] = nil end
 end
 
 function EM.EventHandlers.ITEM_PUSH(self, arg1, arg2, arg3)
@@ -404,29 +406,39 @@ function EM.EventHandlers.PLAYER_ALIVE(self) -- Fired when the player releases f
   if (self.ZoneChangedNewAreaEventHasFired) then self:UpdatePlayerZone() end
 end
 
-function EM.EventHandlers.PLAYER_ENTERING_WORLD(self)
-  self.PlayerEnteringWorldHasFired = true
-
-  self.PlayerGuid = UnitGUID("player") -- Player GUID Format: Player-[server ID]-[player UID]
-  
-  self.LastPlayerMoney = GetMoney()
-  self.TemporaryTimestamps.EnteredArea = GetTime()
-  self:UpdatePlayerFlags()
-end
-
 function EM.EventHandlers.PLAYER_DEAD(self)
   local killerCatalogUnitId = nil
   local killerLevel = nil
-  if (damagedUnits[self.PlayerGuid] ~= nil) then
-    if (damagedUnits[self.PlayerGuid].LastCombatDamageTakenTimestamp ~= nil and time() - damagedUnits[self.PlayerGuid].LastCombatDamageTakenTimestamp < 5) then
-      killerCatalogUnitId = HelperFunctions.GetCatalogIdFromGuid(damagedUnits[self.PlayerGuid].LastUnitGuidWhoCausedDamage)
+  if (damagedUnits[self.PersistentPlayerInfo.PlayerGuid] ~= nil) then
+    if (damagedUnits[self.PersistentPlayerInfo.PlayerGuid].LastCombatDamageTakenTimestamp ~= nil and time() - damagedUnits[self.PersistentPlayerInfo.PlayerGuid].LastCombatDamageTakenTimestamp < 5) then
+      killerCatalogUnitId = HelperFunctions.GetCatalogIdFromGuid(damagedUnits[self.PersistentPlayerInfo.PlayerGuid].LastUnitGuidWhoCausedDamage)
       
-      local killerUnitId = FindUnitIdByUnitGUID(damagedUnits[self.PlayerGuid].LastUnitGuidWhoCausedDamage)
+      local killerUnitId = FindUnitIdByUnitGUID(damagedUnits[self.PersistentPlayerInfo.PlayerGuid].LastUnitGuidWhoCausedDamage)
       if (killerUnitId ~= nil) then killerLevel = UnitLevel(killerUnitId) end
     end
   end
   
   Controller:OnDeath(time(), HelperFunctions.GetCoordinatesByUnitId("player"), killerCatalogUnitId, killerLevel)
+end
+
+function EM.EventHandlers.PLAYER_ENTERING_WORLD(self)
+  self.PlayerEnteringWorldHasFired = true
+
+  if (not self.PersistentPlayerInfo.PlayerGuid) then
+    -- This is probably the first time this character has logged in while using the addon.
+    self.PersistentPlayerInfo.PlayerGuid = UnitGUID("player")
+  elseif (self.PersistentPlayerInfo.PlayerGuid ~= UnitGUID("player")) then
+    -- The character was probably deleted and a new character was made with the same name.
+    AutoBiographer_ConfirmWindow.New("You seemed to have deleted and remade\na character with the same name.\nAutoBiographer needs to\ndelete its stored data for " .. UnitName("player") .. ".", 
+      function(confirmed)
+        if (confirmed) then self:ClearCharacterData(true, false) end
+      end
+    )
+  end
+  
+  self.LastPlayerMoney = GetMoney()
+  self.TemporaryTimestamps.EnteredArea = GetTime()
+  self:UpdatePlayerFlags()
 end
 
 function EM.EventHandlers.PLAYER_FLAGS_CHANGED(self, unitId)
@@ -729,15 +741,36 @@ for eventName,_ in pairs(EM.EventHandlers) do
 end
 EM.Frame:SetScript("OnEvent", function(_, event, ...) EM:OnEvent(_, event, ...) end)
 
--- Test function.
-function EM:Clear() 
-  _G["AUTOBIOGRAPHER_SETTINGS"] = nil
+-- Test functions.
+function EM:ClearAllData(doNotRequireConfirmation, doNotReloadUI) 
+  local func = function(confirmed)
+    if (not confirmed) then return end
+    _G["AUTOBIOGRAPHER_SETTINGS"] = nil
+    self:ClearCharacterData(true, doNotReloadUI)
+  end
+  
+  if (doNotRequireConfirmation) then
+    func(true)
+  else
+    AutoBiographer_ConfirmWindow.New("Clear character and global data?", func)
+  end
+end
 
-  _G["AUTOBIOGRAPHER_CATALOGS_CHAR"] = nil
-  _G["AUTOBIOGRAPHER_EVENTS_CHAR"] = nil
-  _G["AUTOBIOGRAPHER_LEVELS_CHAR"] = nil
-  _G["AUTOBIOGRAPHER_INFO_CHAR"] = nil
-  print("Data cleared. Please reload ui.")
+function EM:ClearCharacterData(doNotRequireConfirmation, doNotReloadUI) 
+  local clearFunc = function(confirmed)
+    if (not confirmed) then return end
+    _G["AUTOBIOGRAPHER_CATALOGS_CHAR"] = nil
+    _G["AUTOBIOGRAPHER_EVENTS_CHAR"] = nil
+    _G["AUTOBIOGRAPHER_LEVELS_CHAR"] = nil
+    _G["AUTOBIOGRAPHER_INFO_CHAR"] = nil
+    if (not doNotReloadUI) then ReloadUI() end
+  end
+  print(doNotRequireConfirmation)
+  if (doNotRequireConfirmation) then
+    clearFunc(true)
+  else
+    AutoBiographer_ConfirmWindow.New("Clear character data?", clearFunc)
+  end
 end
 
 function EM:Test()
