@@ -111,7 +111,7 @@ end
 function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   if addonName ~= "AutoBiographer" then return end
 
-  if (time() > 1567468800) then 
+  if (time() > 1569888000) then 
     message("You are using an alpha version of AutoBiographer. Please update to the latest version.")
   end
   
