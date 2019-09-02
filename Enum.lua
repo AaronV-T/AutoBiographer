@@ -5,6 +5,8 @@ AutoBiographerEnum = {
     HealingDealtToOthers = 2,
     HealingDealtToSelf = 3,
     HealingTaken = 4,
+    PetDamageDealt = 5,
+    PetDamageTaken = 6,
   },
   EventType = {
     Battleground = 0,
@@ -56,6 +58,15 @@ AutoBiographerEnum = {
     Error = 4,
     Fatal = 5
   },
+  OtherPlayerTrackingType = {
+    DuelsLostToPlayer = 0,
+    DuelsWonAgainstPlayer = 1,
+    TimeSpentGroupedWithPlayer = 2,
+  },
+  SpellTrackingType = {
+    StartedCasting = 0,
+    SuccessfullyCast = 1,
+  },
   TimeTrackingType = {
     Afk = 0,
     Casting = 1,
@@ -63,5 +74,6 @@ AutoBiographerEnum = {
     InCombat = 3,
     LoggedIn = 4,
     OnTaxi = 5,
+    InParty = 6,
   },
 }

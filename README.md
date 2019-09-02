@@ -23,9 +23,12 @@ The addon currently records the following events:
  
 It also keeps track of the following statistics:
  - Damage dealt and taken; healing dealt to self, healing dealt to others, and healing taken.
+ - Duels won and lost to each player.
  - Items looted or acquired by other methods.
  - Money looted and money gained from quests.
- - Time spent in each zone (broken down into time spent AFK, casting, dead, in combat, and on flights).
+ - Spells started casting and spells successfully cast.
+ - Time spent in each zone (broken down into time spent AFK, casting, dead, in combat, in groups, and on flights).
+ - Time spent in a group with each player you've grouped with.
  - Total kills (killing blows, assists, or group killed) for each unit.
 
 Additional Features:
@@ -48,9 +51,7 @@ Statistics:
  - Miscellaneous stats:
    - Flights taken.   
  - Money gained/lost to auction house, vendors, trading to players, etc.
- - PVP stats (honorable kills, dishonorable kills, duels initiated and their results).
- - Spells cast.
- - Time spent in a party.
+ - PVP stats (honorable kills, dishonorable kills).
  - XP from discovery, kills, and quests.
 
 Other Featues:

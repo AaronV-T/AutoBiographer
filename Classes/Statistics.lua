@@ -9,8 +9,9 @@ function AggregatedStatistics.New()
     KillStatistics = KillStatistics.New(),
     MiscellaneousStatistics = nil,
     MoneyStatistics = MoneyStatistics.New(),
+    OtherPlayerStatisticsByOtherPlayer = {}, -- Dict<CatalogUnitId, PlayerStatistics>
     PvpStatistics = nil,
-    SpellStatistics = nil,
+    SpellStatisticsBySpell = {}, -- Dict<CatalogSpellId, SpellStatistics>
     TimeStatisticsByArea = {}, -- Dict<ZoneName-SubZoneName, TimeStatistics>
   }
 end
@@ -107,6 +108,32 @@ function MoneyStatistics.TotalMoneyChanged(ms, deltaMoney)
   if (deltaMoney < 0) then ms.TotalMoneyLost =  ms.TotalMoneyLost + abs(deltaMoney)
   elseif (deltaMoney > 0) then ms.TotalMoneyGained =  ms.TotalMoneyGained + deltaMoney
   end
+end
+
+-- *** OtherPlayerStatistics ***
+
+OtherPlayerStatistics = {}
+function OtherPlayerStatistics.New()
+  return {}
+end
+
+function OtherPlayerStatistics.Add(ops, otherPlayerTrackingType, sum)
+  if (not ops[otherPlayerTrackingType]) then ops[otherPlayerTrackingType] = 0 end
+  
+  ops[otherPlayerTrackingType] = ops[otherPlayerTrackingType] + sum
+end
+
+-- *** SpellStatistics ***
+
+SpellStatistics = {}
+function SpellStatistics.New()
+  return {}
+end
+
+function SpellStatistics.Increment(ss, spellTrackingType)
+  if (not ss[spellTrackingType]) then ss[spellTrackingType] = 0 end
+  
+  ss[spellTrackingType] = ss[spellTrackingType] + 1
 end
 
 -- *** TimeStatistics ***

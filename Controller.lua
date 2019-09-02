@@ -19,6 +19,17 @@ function Controller:AddLog(text, logLevel)
   if (AutoBiographer_DebugWindow ) then AutoBiographer_DebugWindow.LogsUpdated() end
 end
 
+function Controller:AddOtherPlayerInGroupTime(otherPlayerGuid, seconds)
+  Controller:AddLog("AddOtherPlayerInGroupTime: " .. " #" .. tostring(otherPlayerGuid) .. ", " .. tostring(seconds) .. " seconds.", AutoBiographerEnum.LogLevel.Debug)
+  if (not otherPlayerGuid) then
+    Controller:AddLog("otherPlayerGuid was nil.", AutoBiographerEnum.LogLevel.Error)
+    return
+  end
+  
+  if (not self:GetCurrentLevelStatistics().OtherPlayerStatisticsByOtherPlayer[otherPlayerGuid]) then self:GetCurrentLevelStatistics().OtherPlayerStatisticsByOtherPlayer[otherPlayerGuid] = OtherPlayerStatistics.New() end
+  OtherPlayerStatistics.Add(self:GetCurrentLevelStatistics().OtherPlayerStatisticsByOtherPlayer[otherPlayerGuid], AutoBiographerEnum.OtherPlayerTrackingType.TimeSpentGroupedWithPlayer, seconds)
+end
+
 function Controller:AddTime(timeTrackingType, seconds, zone, subZone)
   Controller:AddLog("Adding " .. tostring(seconds) .. " seconds of timeTrackingType " .. tostring(timeTrackingType) .. " to " .. tostring(subZone) .. " (" .. tostring(zone) .. ").", AutoBiographerEnum.LogLevel.Debug)
   
@@ -92,6 +103,32 @@ function Controller:GetMoneyForAcquisitionMethod(acquisitionMethod)
   for k,v in pairs(self.CharacterData.Levels) do
     if (v.MoneyStatistics[acquisitionMethod]) then
       sum = sum + v.MoneyStatistics[acquisitionMethod]
+    end
+  end
+  
+  return sum
+end
+
+function Controller:GetOtherPlayerStatByOtherPlayerTrackingType(otherPlayerTrackingType)
+  local sum = 0
+  for k,v in pairs(self.CharacterData.Levels) do
+    for k2,v2 in pairs(v.OtherPlayerStatisticsByOtherPlayer) do
+      if (v2[otherPlayerTrackingType]) then
+        sum = sum + v2[otherPlayerTrackingType]
+      end
+    end
+  end
+  
+  return sum
+end
+
+function Controller:GetSpellCountBySpellTrackingType(spellTrackingType)
+  local sum = 0
+  for k,v in pairs(self.CharacterData.Levels) do
+    for k2,v2 in pairs(v.SpellStatisticsBySpell) do
+      if (v2[spellTrackingType]) then
+        sum = sum + v2[spellTrackingType]
+      end
     end
   end
   
@@ -207,6 +244,38 @@ function Controller:OnDeath(timestamp, coordinates, killerCatalogUnitId, killerL
   self:AddEvent(PlayerDeathEvent.New(timestamp, coordinates, killerCatalogUnitId, killerLevel))
 end
 
+function Controller:OnDuelLost(timestamp, coordinates, winnerCatalogUnitId, winnerName)
+  Controller:AddLog("DuelLost: " .. " #" .. tostring(winnerCatalogUnitId) .. " (" .. winnerName .. ").", AutoBiographerEnum.LogLevel.Debug)
+  if (not winnerCatalogUnitId) then
+    Controller:AddLog("winnerCatalogUnitId was nil.", AutoBiographerEnum.LogLevel.Error)
+    return
+  end
+  
+  if (not self:GetCurrentLevelStatistics().OtherPlayerStatisticsByOtherPlayer[winnerCatalogUnitId]) then self:GetCurrentLevelStatistics().OtherPlayerStatisticsByOtherPlayer[winnerCatalogUnitId] = OtherPlayerStatistics.New() end
+  OtherPlayerStatistics.Add(self:GetCurrentLevelStatistics().OtherPlayerStatisticsByOtherPlayer[winnerCatalogUnitId], AutoBiographerEnum.OtherPlayerTrackingType.DuelsWonAgainstPlayer, 1)
+end
+
+function Controller:OnDuelWon(timestamp, coordinates, loserCatalogUnitId, loserName)
+  Controller:AddLog("DuelWon: " .. " #" .. tostring(loserCatalogUnitId) .. " (" .. loserName .. ").", AutoBiographerEnum.LogLevel.Debug)
+  if (not loserCatalogUnitId) then
+    Controller:AddLog("loserCatalogUnitId was nil.", AutoBiographerEnum.LogLevel.Error)
+    return
+  end
+  
+  if (not self:GetCurrentLevelStatistics().OtherPlayerStatisticsByOtherPlayer[loserCatalogUnitId]) then self:GetCurrentLevelStatistics().OtherPlayerStatisticsByOtherPlayer[loserCatalogUnitId] = OtherPlayerStatistics.New() end
+  OtherPlayerStatistics.Add(self:GetCurrentLevelStatistics().OtherPlayerStatisticsByOtherPlayer[loserCatalogUnitId], AutoBiographerEnum.OtherPlayerTrackingType.DuelsLostToPlayer, 1)
+end
+
+function Controller:OnGainedMoney(timestamp, coordinates, acquisitionMethod, money)
+  Controller:AddLog("GainedMoney: " .. tostring(money) .. ". Acquisition Method: " .. tostring(acquisitionMethod) .. ".", AutoBiographerEnum.LogLevel.Debug)
+  MoneyStatistics.AddMoney(self:GetCurrentLevelStatistics().MoneyStatistics, acquisitionMethod, money)
+end
+
+function Controller:OnGuildRankChanged(timestamp, guildRankIndex, guildRankName)
+  Controller:AddLog("GuildRankChanged: " .. " " .. tostring(guildRankName) .. " (" .. tostring(guildRankIndex) .. ").", AutoBiographerEnum.LogLevel.Debug)
+  self:AddEvent(GuildRankChangedEvent.New(timestamp, guildRankIndex, guildRankName))
+end
+
 function Controller:OnJoinedGuild(timestamp, guildName)
   Controller:AddLog("JoinedGuild: " .. " " .. tostring(guildName) .. ".", AutoBiographerEnum.LogLevel.Debug)
   self:AddEvent(GuildJoinedEvent.New(timestamp, guildName))
@@ -228,11 +297,6 @@ end
 function Controller:OnLeftGuild(timestamp, guildName)
   Controller:AddLog("LeftGuild: " .. " " .. tostring(guildName) .. ".", AutoBiographerEnum.LogLevel.Debug)
   self:AddEvent(GuildLeftEvent.New(timestamp, guildName))
-end
-
-function Controller:OnGuildRankChanged(timestamp, guildRankIndex, guildRankName)
-  Controller:AddLog("GuildRankChanged: " .. " " .. tostring(guildRankName) .. " (" .. tostring(guildRankIndex) .. ").", AutoBiographerEnum.LogLevel.Debug)
-  self:AddEvent(GuildRankChangedEvent.New(timestamp, guildRankIndex, guildRankName))
 end
 
 function Controller:OnLevelUp(timestamp, coordinates, levelNum, totalTimePlayedAtDing)
@@ -257,11 +321,6 @@ function Controller:OnLevelUp(timestamp, coordinates, levelNum, totalTimePlayedA
   end
 end
 
-function Controller:OnGainedMoney(timestamp, coordinates, acquisitionMethod, money)
-  Controller:AddLog("GainedMoney: " .. tostring(money) .. ". Acquisition Method: " .. tostring(acquisitionMethod) .. ".", AutoBiographerEnum.LogLevel.Debug)
-  MoneyStatistics.AddMoney(self:GetCurrentLevelStatistics().MoneyStatistics, acquisitionMethod, money)
-end
-
 function Controller:OnMoneyChanged(timestamp, coordinates, deltaMoney)
   Controller:AddLog("MoneyChanged: " .. tostring(deltaMoney) .. ".", AutoBiographerEnum.LogLevel.Debug)
   MoneyStatistics.TotalMoneyChanged(self:GetCurrentLevelStatistics().MoneyStatistics, deltaMoney)
@@ -275,11 +334,33 @@ end
 function Controller:OnSpellLearned(timestamp, coordinates, spellId, spellName, spellRank)
   Controller:AddLog("SpellLearned: " .. tostring(spellName) .. " (#" .. tostring(spellId) .. "), " .. tostring(spellRank) .. ".", AutoBiographerEnum.LogLevel.Debug)
 
-  if (self.CharacterData.Catalogs.SpellCatalog[spellId] == nil) then
+  if (not self.CharacterData.Catalogs.SpellCatalog[spellId]) then
     self.CharacterData.Catalogs.SpellCatalog[spellId] = CatalogSpell.New(spellId, spellName, spellRank)
   end
   
   self:AddEvent(SpellLearnedEvent.New(timestamp, coordinates, spellId))
+end
+
+function Controller:OnSpellStartedCasting(timestamp, coordinates, spellId, spellName, spellRank)
+  Controller:AddLog("SpellStartedCasting: " .. tostring(spellName) .. " (#" .. tostring(spellId) .. "), " .. tostring(spellRank) .. ".", AutoBiographerEnum.LogLevel.Debug)
+
+  if (not self.CharacterData.Catalogs.SpellCatalog[spellId]) then
+    self.CharacterData.Catalogs.SpellCatalog[spellId] = CatalogSpell.New(spellId, spellName, spellRank)
+  end
+  
+   if (not self:GetCurrentLevelStatistics().SpellStatisticsBySpell[spellId]) then self:GetCurrentLevelStatistics().SpellStatisticsBySpell[spellId] = SpellStatistics.New() end
+   SpellStatistics.Increment(self:GetCurrentLevelStatistics().SpellStatisticsBySpell[spellId], AutoBiographerEnum.SpellTrackingType.StartedCasting)
+end
+
+function Controller:OnSpellSuccessfullyCast(timestamp, coordinates, spellId, spellName, spellRank)
+  Controller:AddLog("SpellSuccessfullyCast: " .. tostring(spellName) .. " (#" .. tostring(spellId) .. "), " .. tostring(spellRank) .. ".", AutoBiographerEnum.LogLevel.Debug)
+
+  if (not self.CharacterData.Catalogs.SpellCatalog[spellId]) then
+    self.CharacterData.Catalogs.SpellCatalog[spellId] = CatalogSpell.New(spellId, spellName, spellRank)
+  end
+  
+   if (not self:GetCurrentLevelStatistics().SpellStatisticsBySpell[spellId]) then self:GetCurrentLevelStatistics().SpellStatisticsBySpell[spellId] = SpellStatistics.New() end
+   SpellStatistics.Increment(self:GetCurrentLevelStatistics().SpellStatisticsBySpell[spellId], AutoBiographerEnum.SpellTrackingType.SuccessfullyCast)
 end
 
 function Controller:OnSkillLevelIncreased(timestamp, coordinates, skillName, skillLevel)

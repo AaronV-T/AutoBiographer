@@ -6,9 +6,11 @@ AutoBiographer_EventManager = {
   NewLevelToAddToHistory = nil,
   PersistentPlayerInfo = nil,
   PlayerEnteringWorldHasFired = false,
+  PlayerName = nil,
   PlayerFlags = {
     AffectingCombat = nil,
     Afk = nil,
+    InParty = nil,
     IsDeadOrGhost = nil,
     OnTaxi = nil
   },
@@ -17,7 +19,9 @@ AutoBiographer_EventManager = {
     EnteredArea = nil,
     EnteredCombat = nil,
     EnteredTaxi = nil,
+    JoinedParty = nil,
     MarkedAfk = nil,
+    OtherPlayerJoinedGroup = {}, -- Dict<UnitGuid, TempTimestamp>
     StartedCasting = nil,
   },
   ZoneChangedNewAreaEventHasFired = false
@@ -65,6 +69,13 @@ for i = 1, 50 do
 end
 for i = 1, #validUnitIds do
 	validUnitIds[#validUnitIds + 1] = validUnitIds[i] .. "target"
+end
+
+local function FindUnitGUIDByUnitName(unitName)
+	for i = 1, #validUnitIds do
+    if (UnitName(validUnitIds[i]) == unitName) then return UnitGUID(validUnitIds[i]) end
+	end
+	return nil
 end
 
 local function FindUnitIdByUnitGUID(unitGuid)
@@ -141,6 +152,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
 		_G["AUTOBIOGRAPHER_INFO_CHAR"] = {
       CurrentSubZone = nil,
       CurrentZone = nil,
+      DatabaseVersion = 1,
       GuildName = nil,
       GuildRankIndex = nil,
       GuildRankName = nil,
@@ -150,9 +162,15 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   
   self.PersistentPlayerInfo = _G["AUTOBIOGRAPHER_INFO_CHAR"]
   
+  -- Database Migrations
+  if (not self.PersistentPlayerInfo.DatabaseVersion or self.PersistentPlayerInfo.DatabaseVersion < AutoBiographer_MigrationManager:GetLatestDatabaseVersion()) then
+    AutoBiographer_MigrationManager:RunMigrations(self.PersistentPlayerInfo.DatabaseVersion, EM, Controller)
+  end
+  
+  --
   local playerLevel = UnitLevel("player")
-  if (Controller.CharacterData.Levels[playerLevel]) == nil then 
-    if (playerLevel == 1 and UnitXP("player")) == 0 then
+  if (not Controller.CharacterData.Levels[playerLevel]) then 
+    if (playerLevel == 1 and UnitXP("player") == 0) then
       Controller:OnLevelUp(time(), nil, playerLevel, 0)
     else 
       Controller:OnLevelUp(nil, nil, playerLevel)
@@ -259,8 +277,24 @@ function EM.EventHandlers.CHAT_MSG_SKILL(self, text)
   end
 end
 
-function EM.EventHandlers.CHAT_MSG_SYSTEM(self, arg1, arg2, arg3)
-  print(tostring(arg1) .. ", " .. tostring(arg2) .. ", " .. tostring(arg3))
+function EM.EventHandlers.CHAT_MSG_SYSTEM(self, text)
+  if (string.find(text, self.PlayerName .. " has defeated %w+ in a duel") == 1 or string.find(text, "%w+ has fled from " .. self.PlayerName .. " in a duel") == 1) then
+    -- Player won a duel.
+    local splitText = HelperFunctions.SplitString(text)
+    local defeatedPlayerName = nil
+    if (string.find(text, "defeated")) then defeatedPlayerName = splitText[4]
+    else defeatedPlayerName = splitText[1] end
+    
+    Controller:OnDuelWon(time(), HelperFunctions.GetCoordinatesByUnitId("player"), HelperFunctions.GetCatalogIdFromGuid(FindUnitGUIDByUnitName(defeatedPlayerName)), defeatedPlayerName)
+  elseif (string.find(text, "%w+ has defeated " .. self.PlayerName .. " in a duel") == 1 or string.find(text, self.PlayerName .. " has fled from %w+ in a duel") == 1) then
+    -- Player lost a duel.
+    local splitText = HelperFunctions.SplitString(text)
+    local winningPlayerName = nil
+    if (string.find(text, "defeated")) then winningPlayerName = splitText[1]
+    else winningPlayerName = splitText[5] end
+    
+    Controller:OnDuelLost(time(), HelperFunctions.GetCoordinatesByUnitId("player"), HelperFunctions.GetCatalogIdFromGuid(FindUnitGUIDByUnitName(winningPlayerName)), winningPlayerName)
+  end
 end
 
 function EM.EventHandlers.CHAT_MSG_TRADESKILLS(self, text, arg2, arg3, arg4, arg5)
@@ -297,8 +331,8 @@ function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
       end
     end
     
-    -- Process event's damage amount.
-    if (playerCausedThisEvent or destGuid == self.PersistentPlayerInfo.PlayerGuid) then
+    -- Process event's damage amount if the damage was dealt or taken by the player or his pet.
+    if (playerCausedThisEvent or destGuid == self.PersistentPlayerInfo.PlayerGuid or playerPetCausedThisEvent or destGuid == UnitGUID("pet")) then
       if (string.find(event, "SWING") == 1) then
         amount, overKill, school, resisted, blocked, absorbed, critical, glancing, crushing, isOffHand = select(12, CombatLogGetCurrentEventInfo())
       elseif (string.find(event, "SPELL") == 1) then
@@ -312,6 +346,10 @@ function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
           Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageDealt, amount, overKill)
         elseif (destGuid == self.PersistentPlayerInfo.PlayerGuid) then 
           Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageTaken, amount, overKill)
+        elseif (playerPetCausedThisEvent) then 
+          Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.PetDamageDealt, amount, overKill)
+        elseif (destGuid == UnitGUID("pet")) then 
+          Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.PetDamageTaken, amount, overKill)  
         end
       end
     end
@@ -392,6 +430,11 @@ function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
   if (destGuid ~= self.PersistentPlayerInfo.PlayerGuid) then damagedUnits[destGuid] = nil end
 end
 
+function EM.EventHandlers.GROUP_ROSTER_UPDATE(self)
+  self:UpdateGroupMemberInfo()
+end
+
+
 function EM.EventHandlers.ITEM_PUSH(self, arg1, arg2, arg3)
   --print(tostring(arg1) .. ", " .. tostring(arg2) .. ", " .. tostring(arg3))
 end
@@ -437,7 +480,9 @@ function EM.EventHandlers.PLAYER_ENTERING_WORLD(self)
   end
   
   self.LastPlayerMoney = GetMoney()
+  self.PlayerName = UnitName("player")
   self.TemporaryTimestamps.EnteredArea = GetTime()
+  self:UpdateGroupMemberInfo()
   self:UpdatePlayerFlags()
 end
 
@@ -504,7 +549,7 @@ function EM.EventHandlers.UNIT_HEALTH(self, unitId)
   --print(unitId .. ". " .. tostring(UnitIsTapDenied(unitId)))
 end
 
-function EM.EventHandlers.UNIT_SPELLCAST_CHANNEL_START(self, unitId, arg2, arg3, arg4, arg5)
+function EM.EventHandlers.UNIT_SPELLCAST_CHANNEL_START(self, unitId, castId, spellId, arg4, arg5)
   if (unitId ~= "player") then return end
   --print("UNIT_SPELLCAST_CHANNEL_START. " .. unitId .. ", " .. tostring(arg2) .. ", " .. tostring(arg3) .. ", " .. tostring(arg4) .. ", " .. tostring(arg5))
   self:OnStartedCasting()
@@ -531,10 +576,11 @@ function EM.EventHandlers.UNIT_SPELLCAST_INTERRUPTED(self, unitId, arg2, arg3, a
   --print("UNIT_SPELLCAST_INTERRUPTED. " .. unitId .. ", " .. tostring(arg2) .. ", " .. tostring(arg3) .. ", " .. tostring(arg4) .. ", " .. tostring(arg5))
 end
 
-function EM.EventHandlers.UNIT_SPELLCAST_START(self, unitId, arg2, arg3, arg4, arg5)
+function EM.EventHandlers.UNIT_SPELLCAST_START(self, unitId, castId, spellId)
   if (unitId ~= "player") then return end
   --print("UNIT_SPELLCAST_START. " .. unitId .. ", " .. tostring(arg2) .. ", " .. tostring(arg3) .. ", " .. tostring(arg4) .. ", " .. tostring(arg5))
-  self:OnStartedCasting()
+
+  self:OnStartedCasting(spellId)
 end
 
 function EM.EventHandlers.UNIT_SPELLCAST_STOP(self, unitId, arg2, arg3, arg4, arg5)
@@ -543,9 +589,12 @@ function EM.EventHandlers.UNIT_SPELLCAST_STOP(self, unitId, arg2, arg3, arg4, ar
   self:OnStoppedCasting()
 end
 
-function EM.EventHandlers.UNIT_SPELLCAST_SUCCEEDED(self, unitId, arg2, arg3, arg4, arg5)
+function EM.EventHandlers.UNIT_SPELLCAST_SUCCEEDED(self, unitId, castId, spellId)
   if (unitId ~= "player") then return end
   --print("UNIT_SPELLCAST_SUCCEEDED. " .. unitId .. ", " .. tostring(arg2) .. ", " .. tostring(arg3) .. ", " .. tostring(arg4) .. ", " .. tostring(arg5))
+  
+  local name, rank, icon, castTime, minRange, maxRange, id = GetSpellInfo(spellId)
+  Controller:OnSpellSuccessfullyCast(time(), HelperFunctions.GetCoordinatesByUnitId("player"), spellId, name, rank)
 end
 
 function EM.EventHandlers.UNIT_TARGET(self, unitId)
@@ -580,12 +629,15 @@ end
 
 -- *** Miscellaneous Member Functions ***
 
-function EM:OnStartedCasting()
+function EM:OnStartedCasting(spellId)
   if (self.TemporaryTimestamps.StartedCasting) then
     Controller:AddTime(AutoBiographerEnum.TimeTrackingType.Casting, HelperFunctions.SubtractFloats(GetTime(), self.TemporaryTimestamps.StartedCasting), self.PersistentPlayerInfo.CurrentZone, self.PersistentPlayerInfo.CurrentSubZone)
   end
   
   self.TemporaryTimestamps.StartedCasting = GetTime()
+  
+  local name, rank, icon, castTime, minRange, maxRange, id = GetSpellInfo(spellId)
+  Controller:OnSpellStartedCasting(time(), HelperFunctions.GetCoordinatesByUnitId("player"), spellId, name, rank)
 end 
 
 function EM:OnStoppedCasting()
@@ -595,6 +647,39 @@ function EM:OnStoppedCasting()
     Controller:AddLog("Player stopped casting but there was no timestamp for starting casting.", AutoBiographerEnum.LogLevel.Warning)
   end
   self.TemporaryTimestamps.StartedCasting = nil
+end
+
+function EM:UpdateGroupMemberInfo()
+  -- Populate list of unit GUIDs in player's party/raid.
+  local unitGuidsInGroup = {}
+  for i = 1, 4 do
+    local guid = UnitGUID("party" .. i)
+    if (guid and guid ~= self.PersistentPlayerInfo.PlayerGuid) then
+      unitGuidsInGroup[guid] = true
+    end
+  end
+  
+  for i = 1, 40 do
+    local guid = UnitGUID("raid" .. i)
+    if (guid and guid ~= self.PersistentPlayerInfo.PlayerGuid) then
+      unitGuidsInGroup[guid] = true
+    end
+  end
+  
+  -- Save current timestamp for every unit in group.
+  for k,v in pairs(unitGuidsInGroup) do
+    if (not self.TemporaryTimestamps.OtherPlayerJoinedGroup[k]) then
+      self.TemporaryTimestamps.OtherPlayerJoinedGroup[k] = GetTime()
+    end
+  end
+  
+  -- Add time in group for every unit that left the group.
+  for k,v in pairs(self.TemporaryTimestamps.OtherPlayerJoinedGroup) do
+    if (not unitGuidsInGroup[k]) then
+      Controller:AddOtherPlayerInGroupTime(HelperFunctions.GetCatalogIdFromGuid(k), HelperFunctions.SubtractFloats(GetTime(), v))
+      self.TemporaryTimestamps.OtherPlayerJoinedGroup[k] = nil
+    end
+  end
 end
 
 function EM:UpdatePlayerGuildInfo()
@@ -625,6 +710,9 @@ function EM:UpdatePlayerFlags()
   
   local playerWasDeadOrGhost = self.PlayerFlags.IsDeadOrGhost
   self.PlayerFlags.IsDeadOrGhost = UnitIsDeadOrGhost("player")
+  
+  local playerWasInParty = self.PlayerFlags.InParty
+  self.PlayerFlags.InParty = UnitInParty("player")
   
   local playerWasOnTaxi = self.PlayerFlags.OnTaxi
   self.PlayerFlags.OnTaxi = UnitOnTaxi("player")
@@ -667,6 +755,19 @@ function EM:UpdatePlayerFlags()
   elseif (not playerWasDeadOrGhost and self.PlayerFlags.IsDeadOrGhost) then 
     -- Player died or was dead after loading UI
     self.TemporaryTimestamps.Died = GetTime()
+  end
+  
+  if (playerWasInParty and not self.PlayerFlags.InParty) then
+    -- Player left party.
+    if (self.TemporaryTimestamps.JoinedParty) then
+      Controller:AddTime(AutoBiographerEnum.TimeTrackingType.InParty, HelperFunctions.SubtractFloats(GetTime(), self.TemporaryTimestamps.JoinedParty), self.PersistentPlayerInfo.CurrentZone, self.PersistentPlayerInfo.CurrentSubZone)
+    else
+      Controller:AddLog("Player left party but there was no timestamp for joining a party.", AutoBiographerEnum.LogLevel.Warning)
+    end
+    self.TemporaryTimestamps.JoinedParty = nil
+  elseif (not playerWasInParty and self.PlayerFlags.InParty) then 
+    -- Player joined party.
+    self.TemporaryTimestamps.JoinedParty = GetTime()
   end
   
   if (playerWasOnTaxi and not self.PlayerFlags.OnTaxi) then
@@ -721,6 +822,12 @@ function EM:UpdateTimestamps(zone, subZone)
     self.TemporaryTimestamps.EnteredCombat = GetTime()
   end
   
+  -- In Party
+  if (self.TemporaryTimestamps.JoinedParty) then
+    Controller:AddTime(AutoBiographerEnum.TimeTrackingType.InParty, HelperFunctions.SubtractFloats(GetTime(), self.TemporaryTimestamps.JoinedParty), zone, subZone)
+    self.TemporaryTimestamps.JoinedParty = GetTime()
+  end
+  
   -- Logged In
   if (self.TemporaryTimestamps.EnteredArea) then
     Controller:AddTime(AutoBiographerEnum.TimeTrackingType.LoggedIn, HelperFunctions.SubtractFloats(GetTime(), self.TemporaryTimestamps.EnteredArea), zone, subZone)
@@ -731,6 +838,12 @@ function EM:UpdateTimestamps(zone, subZone)
   if (self.TemporaryTimestamps.EnteredTaxi) then
     Controller:AddTime(AutoBiographerEnum.TimeTrackingType.OnTaxi, HelperFunctions.SubtractFloats(GetTime(), self.TemporaryTimestamps.EnteredTaxi), zone, subZone)
     self.TemporaryTimestamps.EnteredTaxi = GetTime()
+  end
+  
+  -- Other Players in Group
+  for k,v in pairs(self.TemporaryTimestamps.OtherPlayerJoinedGroup) do
+    Controller:AddOtherPlayerInGroupTime(HelperFunctions.GetCatalogIdFromGuid(k), HelperFunctions.SubtractFloats(GetTime(), v))
+    self.TemporaryTimestamps.OtherPlayerJoinedGroup[k] = GetTime()
   end
 end
 
@@ -774,6 +887,7 @@ function EM:ClearCharacterData(doNotRequireConfirmation, doNotReloadUI)
 end
 
 function EM:Test()
-  local unitGuid = UnitGUID("target")
   --print(CanLootUnit(unitGuid)) -- hasLoot always false when called in UNIT_DIED combat log event, have to wait for it to register correctly
+  
+  
 end

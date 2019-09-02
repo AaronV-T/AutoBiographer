@@ -13,6 +13,7 @@ Controller.lua
 Enum.lua
 HelperFunctions.lua
 Main.lua
+Migrations.lua
 UI/ConfirmWindow.lua
 UI/MainWindow.lua
 UI/MinimapButton.lua

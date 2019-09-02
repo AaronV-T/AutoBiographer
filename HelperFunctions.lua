@@ -3,15 +3,10 @@ local HF = HelperFunctions
 
 
 function HF.GetCatalogIdFromGuid(guid)
-  if guid == nil then return nil end
+  if (not guid) then return nil end
 
-  local index = 0
-  local splitGuid = {}
-  for text in string.gmatch(guid, "[%w|%d]+") do
-    index = index + 1
-    splitGuid[index] = text
-  end
-   
+  local splitGuid = HF.SplitString(guid)
+  
   if splitGuid[1] == "Player" then return splitGuid[2] .. "-" .. splitGuid[3] -- serverID-playerUID
   elseif splitGuid[1] == "Creature" or "Pet" then return tonumber(splitGuid[6]) -- ID
   else error("Unsupported GUID: " .. guid)
@@ -40,6 +35,17 @@ function HF.Round(number, precision)
   number = number * factor
   number = math.floor(number + 0.5)
   return number / factor
+end
+
+function HF.SplitString(str)
+  local index = 0
+  local splitString = {}
+  for text in string.gmatch(str, "[%w|%d]+") do
+    index = index + 1
+    splitString[index] = text
+  end
+  
+  return splitString
 end
 
 function HF.GetKeysFromTable(tab)
