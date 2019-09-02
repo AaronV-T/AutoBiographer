@@ -791,6 +791,9 @@ function EM:UpdatePlayerZone()
   
   local previousSubZone = self.PersistentPlayerInfo.CurrentSubZone
   self.PersistentPlayerInfo.CurrentSubZone = GetSubZoneText()
+  if (not self.PersistentPlayerInfo.CurrentSubZone or self.PersistentPlayerInfo.CurrentSubZone == "") then
+    self.PersistentPlayerInfo.CurrentSubZone = GetMinimapZoneText()
+  end
   
   local previousZone = self.PersistentPlayerInfo.CurrentZone
   self.PersistentPlayerInfo.CurrentZone = GetRealZoneText()
