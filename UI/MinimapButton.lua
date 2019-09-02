@@ -17,3 +17,15 @@ end
 function AutoBiographer_MinimapButton_OnClick(arg1)
   Toggle_MainWindow()
 end
+
+function AutoBiographer_MinimapButton_OnEnter()
+  GameTooltip_SetDefaultAnchor(GameTooltip, UIParent)
+  GameTooltip:ClearAllPoints();
+  GameTooltip:SetPoint("TOPRIGHT", AutoBiographer_MinimapButton, "BOTTOMRIGHT", 0, 0)
+  GameTooltip:SetText("AutoBiographer")
+  GameTooltip:Show()
+end
+
+function AutoBiographer_MinimapButton_OnLeave()
+  GameTooltip:Hide()
+end

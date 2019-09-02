@@ -60,6 +60,12 @@
 			<OnClick>
 				AutoBiographer_MinimapButton_OnClick()
 			</OnClick>
+      <OnEnter>
+        AutoBiographer_MinimapButton_OnEnter()
+      </OnEnter>
+      <OnLeave>
+        AutoBiographer_MinimapButton_OnLeave()
+      </OnLeave>
 		</Scripts>
 	</Button>
 </Ui>
