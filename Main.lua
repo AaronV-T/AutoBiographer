@@ -121,6 +121,8 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
       MinimapPos = -25,
       Options = { -- Dict<string?, bool>
         ShowKillCountOnUnitToolTips = true,
+        ShowMinimapButton = true,
+        ShowTimePlayedOnLevelUp = true,
         TakeScreenshotOnLevelUp = true,
         TakeScreenshotOnBossKill = true,
       }, 
@@ -178,6 +180,9 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   end
   
   AutoBiographer_MinimapButton_Reposition()
+  if (AutoBiographer_Settings.Options["ShowMinimapButton"] == false) then AutoBiographer_MinimapButton:Hide()
+  else AutoBiographer_MinimapButton:Show() end
+  
   AutoBiographer_OptionWindow:Initialize()
 end
 
@@ -502,6 +507,12 @@ end
 function EM.EventHandlers.PLAYER_LEVEL_UP(self, newLevel, ...)
   self.NewLevelToAddToHistory = newLevel
   
+  if (AutoBiographer_Settings.Options["ShowTimePlayedOnLevelUp"] == false) then
+    for i = 1, 10 do 
+      _G["ChatFrame" .. i]:UnregisterEvent("TIME_PLAYED_MSG")
+    end
+  end
+  
   RequestTimePlayed()
 end
 
@@ -530,6 +541,12 @@ function EM.EventHandlers.QUEST_TURNED_IN(self, questId, xpGained, moneyGained)
 end
 
 function EM.EventHandlers.TIME_PLAYED_MSG(self, totalTimePlayed, levelTimePlayed) 
+  if (AutoBiographer_Settings.Options["ShowTimePlayedOnLevelUp"] == false) then
+    for i = 1, 10 do 
+      _G["ChatFrame" .. i]:RegisterEvent("TIME_PLAYED_MSG")
+    end
+  end
+
   if self.NewLevelToAddToHistory ~= nil then
     Controller:OnLevelUp(time(), HelperFunctions.GetCoordinatesByUnitId("player"), self.NewLevelToAddToHistory, totalTimePlayed)
     self.NewLevelToAddToHistory = nil
@@ -552,7 +569,7 @@ end
 function EM.EventHandlers.UNIT_SPELLCAST_CHANNEL_START(self, unitId, castId, spellId, arg4, arg5)
   if (unitId ~= "player") then return end
   --print("UNIT_SPELLCAST_CHANNEL_START. " .. unitId .. ", " .. tostring(arg2) .. ", " .. tostring(arg3) .. ", " .. tostring(arg4) .. ", " .. tostring(arg5))
-  self:OnStartedCasting()
+  self:OnStartedCasting(spellId)
 end
 
 function EM.EventHandlers.UNIT_SPELLCAST_CHANNEL_STOP(self, unitId, arg2, arg3, arg4, arg5)
@@ -892,5 +909,12 @@ end
 function EM:Test()
   --print(CanLootUnit(unitGuid)) -- hasLoot always false when called in UNIT_DIED combat log event, have to wait for it to register correctly
   
+  if (AutoBiographer_Settings.Options["ShowTimePlayedOnLevelUp"] == false) then
+    for i = 1, 10 do 
+      _G["ChatFrame" .. i]:UnregisterEvent("TIME_PLAYED_MSG")
+    end
+  end
+  
+  RequestTimePlayed()
   
 end

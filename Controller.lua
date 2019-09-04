@@ -90,12 +90,7 @@ function Controller:GetItemCountForAcquisitionMethod(acquisitionMethod)
 end
 
 function Controller:GetLogs()
-  local retVal = {}
-  for _,v in pairs(self.Logs) do
-    table.insert(retVal, v.Text )
-  end
-  
-  return retVal
+  return self.Logs
 end
 
 function Controller:GetMoneyForAcquisitionMethod(acquisitionMethod)
@@ -343,7 +338,11 @@ end
 
 function Controller:OnSpellStartedCasting(timestamp, coordinates, spellId, spellName, spellRank)
   Controller:AddLog("SpellStartedCasting: " .. tostring(spellName) .. " (#" .. tostring(spellId) .. "), " .. tostring(spellRank) .. ".", AutoBiographerEnum.LogLevel.Debug)
-
+  if (not spellId) then
+    Controller:AddLog("spellId was nil.", AutoBiographerEnum.LogLevel.Error)
+    return
+  end
+  
   if (not self.CharacterData.Catalogs.SpellCatalog[spellId]) then
     self.CharacterData.Catalogs.SpellCatalog[spellId] = CatalogSpell.New(spellId, spellName, spellRank)
   end
@@ -354,7 +353,11 @@ end
 
 function Controller:OnSpellSuccessfullyCast(timestamp, coordinates, spellId, spellName, spellRank)
   Controller:AddLog("SpellSuccessfullyCast: " .. tostring(spellName) .. " (#" .. tostring(spellId) .. "), " .. tostring(spellRank) .. ".", AutoBiographerEnum.LogLevel.Debug)
-
+  if (not spellId) then
+    Controller:AddLog("spellId was nil.", AutoBiographerEnum.LogLevel.Error)
+    return
+  end
+  
   if (not self.CharacterData.Catalogs.SpellCatalog[spellId]) then
     self.CharacterData.Catalogs.SpellCatalog[spellId] = CatalogSpell.New(spellId, spellName, spellRank)
   end

@@ -60,9 +60,18 @@ function Toggle_DebugWindow()
     --texts
     local index = 0
     for i = #debugLogs, 1, -1 do
-      local text = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+      local font = "GameFontWhite"
+      if (debugLogs[i].Level == AutoBiographerEnum.LogLevel.Verbose) then font = "GameFontDisable"
+      elseif (debugLogs[i].Level == AutoBiographerEnum.LogLevel.Debug) then font = "GameFontDisable"
+      elseif (debugLogs[i].Level == AutoBiographerEnum.LogLevel.Information) then font = "GameFontWhite"
+      elseif (debugLogs[i].Level == AutoBiographerEnum.LogLevel.Warning) then font = "GameFontNormal"
+      elseif (debugLogs[i].Level == AutoBiographerEnum.LogLevel.Error) then font = "GameFontRed"
+      elseif (debugLogs[i].Level == AutoBiographerEnum.LogLevel.Fatal) then font = "GameFontRed"
+      end
+      
+      local text = content:CreateFontString(nil, "OVERLAY", font)
       text:SetPoint("TOPLEFT", 5, -15 * index) 
-      text:SetText(debugLogs[i])
+      text:SetText(debugLogs[i].Text)
       index = index + 1
     end
     

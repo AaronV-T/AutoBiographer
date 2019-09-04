@@ -23,6 +23,18 @@ function AutoBiographer_OptionWindow:Initialize()
   self.fsScreenshotOnBossKill:SetPoint("LEFT", self, "TOPLEFT", 40, -110)
   self.fsScreenshotOnBossKill:SetText("Take a screenshot on boss kills.")
   
+  self.cbShowMinimapButton = CreateFrame("CheckButton", nil, self, "UICheckButtonTemplate") 
+  self.cbShowMinimapButton:SetPoint("LEFT", self, "TOPLEFT", 10, -140)
+  self.fsShowMinimapButton = self:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  self.fsShowMinimapButton:SetPoint("LEFT", self, "TOPLEFT", 40, -140)
+  self.fsShowMinimapButton:SetText("Show button on the minimap.")
+  
+  self.cbShowTimePlayedOnLevelUp = CreateFrame("CheckButton", nil, self, "UICheckButtonTemplate") 
+  self.cbShowTimePlayedOnLevelUp:SetPoint("LEFT", self, "TOPLEFT", 10, -170)
+  self.fsShowTimePlayedOnLevelUp = self:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  self.fsShowTimePlayedOnLevelUp:SetPoint("LEFT", self, "TOPLEFT", 40, -170)
+  self.fsShowTimePlayedOnLevelUp:SetText("Show time played upon leveling up.")
+  
   self:LoadOptions()
 end
 
@@ -30,12 +42,19 @@ function AutoBiographer_OptionWindow:LoadOptions()
   self.cbKillCountTooltip:SetChecked(AutoBiographer_Settings.Options["ShowKillCountOnUnitToolTips"])
   self.cbScreenshotOnLevelUp:SetChecked(AutoBiographer_Settings.Options["TakeScreenshotOnLevelUp"])
   self.cbScreenshotOnBossKill:SetChecked(AutoBiographer_Settings.Options["TakeScreenshotOnBossKill"])
+  self.cbShowMinimapButton:SetChecked(AutoBiographer_Settings.Options["ShowMinimapButton"])
+  self.cbShowTimePlayedOnLevelUp:SetChecked(AutoBiographer_Settings.Options["ShowTimePlayedOnLevelUp"])
 end
 
 function AutoBiographer_OptionWindow:SaveOptions()
   AutoBiographer_Settings.Options["ShowKillCountOnUnitToolTips"] = self.cbKillCountTooltip:GetChecked()
   AutoBiographer_Settings.Options["TakeScreenshotOnLevelUp"] = self.cbScreenshotOnLevelUp:GetChecked()
   AutoBiographer_Settings.Options["TakeScreenshotOnBossKill"] = self.cbScreenshotOnBossKill:GetChecked()
+  AutoBiographer_Settings.Options["ShowMinimapButton"] = self.cbShowMinimapButton:GetChecked()
+  AutoBiographer_Settings.Options["ShowTimePlayedOnLevelUp"] = self.cbShowTimePlayedOnLevelUp:GetChecked()
+  
+  if (AutoBiographer_Settings.Options["ShowMinimapButton"] == false) then AutoBiographer_MinimapButton:Hide()
+  else AutoBiographer_MinimapButton:Show() end
 end
 
 AutoBiographer_OptionWindow.name = "AutoBiographer"

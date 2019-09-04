@@ -46,3 +46,13 @@ table.insert(MM.Migrations,
     end
   )
 )
+
+table.insert(MM.Migrations, 
+  AutoBiographer_Migration:New(
+    2,
+    function(eventManager, controller)
+      if (not AutoBiographer_Settings.Options["ShowMinimapButton"]) then AutoBiographer_Settings.Options["ShowMinimapButton"] = true end
+      if (not AutoBiographer_Settings.Options["ShowTimePlayedOnLevelUp"]) then AutoBiographer_Settings.Options["ShowTimePlayedOnLevelUp"] = true end
+    end
+  )
+)
