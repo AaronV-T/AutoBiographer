@@ -40,8 +40,8 @@ table.insert(MM.Migrations,
     1,
     function(eventManager, controller)
       for k,v in pairs(controller.CharacterData.Levels) do
-        if (not v.OtherPlayerStatisticsByOtherPlayer) then v.OtherPlayerStatisticsByOtherPlayer = {} end
-        if (not v.SpellStatisticsBySpell) then v.SpellStatisticsBySpell = {} end
+        if (v.OtherPlayerStatisticsByOtherPlayer == nil) then v.OtherPlayerStatisticsByOtherPlayer = {} end
+        if (v.SpellStatisticsBySpell == nil) then v.SpellStatisticsBySpell = {} end
       end
     end
   )
@@ -51,8 +51,19 @@ table.insert(MM.Migrations,
   AutoBiographer_Migration:New(
     2,
     function(eventManager, controller)
-      if (not AutoBiographer_Settings.Options["ShowMinimapButton"]) then AutoBiographer_Settings.Options["ShowMinimapButton"] = true end
-      if (not AutoBiographer_Settings.Options["ShowTimePlayedOnLevelUp"]) then AutoBiographer_Settings.Options["ShowTimePlayedOnLevelUp"] = true end
+      if (AutoBiographer_Settings.Options["ShowMinimapButton"] == nil) then AutoBiographer_Settings.Options["ShowMinimapButton"] = true end
+      if (AutoBiographer_Settings.Options["ShowTimePlayedOnLevelUp"] == nil) then AutoBiographer_Settings.Options["ShowTimePlayedOnLevelUp"] = true end
+    end
+  )
+)
+
+table.insert(MM.Migrations, 
+  AutoBiographer_Migration:New(
+    3,
+    function(eventManager, controller)
+      for k,v in pairs(controller.CharacterData.Levels) do
+        if (v.ExperienceStatistics == nil) then v.ExperienceStatistics = ExperienceStatistics.New() end
+      end
     end
   )
 )

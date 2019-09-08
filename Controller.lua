@@ -76,6 +76,17 @@ function Controller:GetEventString(event)
   return Event.ToString(event, self.CharacterData.Catalogs)
 end
 
+function Controller:GetExperienceByExperienceTrackingType(experienceTrackingType)
+  local sum = 0
+  for k,v in pairs(self.CharacterData.Levels) do
+    if (v.ExperienceStatistics[experienceTrackingType]) then
+      sum = sum + v.ExperienceStatistics[experienceTrackingType]
+    end
+  end
+  
+  return sum
+end
+
 function Controller:GetItemCountForAcquisitionMethod(acquisitionMethod)
   local sum = 0
   for k,v in pairs(self.CharacterData.Levels) do
@@ -259,6 +270,11 @@ function Controller:OnDuelWon(timestamp, coordinates, loserCatalogUnitId, loserN
   
   if (not self:GetCurrentLevelStatistics().OtherPlayerStatisticsByOtherPlayer[loserCatalogUnitId]) then self:GetCurrentLevelStatistics().OtherPlayerStatisticsByOtherPlayer[loserCatalogUnitId] = OtherPlayerStatistics.New() end
   OtherPlayerStatistics.Add(self:GetCurrentLevelStatistics().OtherPlayerStatisticsByOtherPlayer[loserCatalogUnitId], AutoBiographerEnum.OtherPlayerTrackingType.DuelsLostToPlayer, 1)
+end
+
+function Controller:OnGainedExperience(timestamp, coordinates, experienceTrackingType, amount)
+  Controller:AddLog("GainedExperience: " .. tostring(amount) .. ". Experience Tracking Type: " .. tostring(experienceTrackingType) .. ".", AutoBiographerEnum.LogLevel.Debug)
+  ExperienceStatistics.AddExperience(self:GetCurrentLevelStatistics().ExperienceStatistics, experienceTrackingType, amount)
 end
 
 function Controller:OnGainedMoney(timestamp, coordinates, acquisitionMethod, money)

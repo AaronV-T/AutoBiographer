@@ -154,7 +154,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
 		_G["AUTOBIOGRAPHER_INFO_CHAR"] = {
       CurrentSubZone = nil,
       CurrentZone = nil,
-      DatabaseVersion = 1,
+      DatabaseVersion = 3,
       GuildName = nil,
       GuildRankIndex = nil,
       GuildRankName = nil,
@@ -188,6 +188,18 @@ end
 
 function EM.EventHandlers.BOSS_KILL(self, bossId, bossName)
   Controller:OnBossKill(time(), HelperFunctions.GetCoordinatesByUnitId("player"), bossId, bossName)
+end
+
+function EM.EventHandlers.CHAT_MSG_COMBAT_XP_GAIN(self, text)
+  local mobName, xpGainedFromKill = string.match(text, "(.+) dies, you gain (%d+) experience")
+  local xpGainedFromGroupBonus = string.match(text, "+(%d+) group bonus")
+  local xpGainedFromRestedBonus = string.match(text, "+(%d+) exp Rested bonus")
+  local xpLostToRaidPenalty = string.match(text, "-(%d+) raid penalty")
+  
+  if (xpGainedFromKill) then Controller:OnGainedExperience(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.ExperienceTrackingType.Kill, tonumber(xpGainedFromKill)) end
+  if (xpGainedFromGroupBonus) then Controller:OnGainedExperience(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.ExperienceTrackingType.GroupBonus, tonumber(xpGainedFromGroupBonus)) end
+  if (xpGainedFromRestedBonus) then Controller:OnGainedExperience(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.ExperienceTrackingType.RestedBonus, tonumber(xpGainedFromRestedBonus)) end
+  if (xpLostToRaidPenalty) then Controller:OnGainedExperience(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.ExperienceTrackingType.RaidPenalty, tonumber(xpLostToRaidPenalty)) end
 end
 
 function EM.EventHandlers.CHAT_MSG_LOOT(self, text, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, arg17, arg18, arg19, arg20, arg21)
@@ -299,6 +311,11 @@ function EM.EventHandlers.CHAT_MSG_SYSTEM(self, text)
     else winningPlayerName = splitText[5] end
     
     Controller:OnDuelLost(time(), HelperFunctions.GetCoordinatesByUnitId("player"), HelperFunctions.GetCatalogIdFromGuid(FindUnitGUIDByUnitName(winningPlayerName)), winningPlayerName)
+  elseif (string.find(text, "Discovered .+") == 1) then
+    -- Player discovered a new area.
+    local area, xpGainedFromDiscovery = string.match(text, "Discovered (.+): (%d+) experience gained")
+    
+    if (xpGainedFromDiscovery) then Controller:OnGainedExperience(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.ExperienceTrackingType.Discovery, tonumber(xpGainedFromDiscovery)) end
   end
 end
 
@@ -537,6 +554,10 @@ function EM.EventHandlers.QUEST_TURNED_IN(self, questId, xpGained, moneyGained)
   
   if (moneyGained and moneyGained > 0) then
     Controller:OnGainedMoney(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.AcquisitionMethod.Quest, moneyGained)
+  end
+  
+  if (xpGained and xpGained > 0) then
+    Controller:OnGainedExperience(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.ExperienceTrackingType.Quest, xpGained)
   end
 end
 
@@ -908,13 +929,5 @@ end
 
 function EM:Test()
   --print(CanLootUnit(unitGuid)) -- hasLoot always false when called in UNIT_DIED combat log event, have to wait for it to register correctly
-  
-  if (AutoBiographer_Settings.Options["ShowTimePlayedOnLevelUp"] == false) then
-    for i = 1, 10 do 
-      _G["ChatFrame" .. i]:UnregisterEvent("TIME_PLAYED_MSG")
-    end
-  end
-  
-  RequestTimePlayed()
   
 end

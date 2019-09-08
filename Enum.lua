@@ -1,4 +1,11 @@
 AutoBiographerEnum = {
+  AcquisitionMethod = {
+    Create = 0,
+    Loot = 1,
+    Other = 2,
+    Quest = 3,
+    Trade = 4,
+  },
   DamageOrHealingCategory = {
     DamageDealt = 0,
     DamageTaken = 1,
@@ -43,12 +50,13 @@ AutoBiographerEnum = {
     SubZoneFirstVisit = 11,
     ZoneFirstVisit = 12,
   },
-  AcquisitionMethod = {
-    Create = 0,
-    Loot = 1,
-    Other = 2,
-    Quest = 3,
-    Trade = 4,
+  ExperienceTrackingType = {
+    Discovery = 0,
+    Kill = 1,
+    GroupBonus = 2,
+    RaidPenalty = 3,
+    RestedBonus = 4,
+    Quest = 5,
   },
   LogLevel = {
     Verbose = 0,
