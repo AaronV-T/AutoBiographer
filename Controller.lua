@@ -214,11 +214,14 @@ function Controller:OnAcquiredItem(timestamp, coordinates, acquisitionMethod, ca
   ItemStatistics.AddCount(self:GetCurrentLevelStatistics().ItemStatisticsByItem[catalogItem.Id], acquisitionMethod, quantity)
 end
 
-function Controller:OnBossKill(timestamp, coordinates, bossId, bossName)
+function Controller:OnBossKill(timestamp, coordinates, bossId, bossName, hasKilledBossBefore)
   Controller:AddLog("BossKill: " .. tostring(bossName) .. " (#" .. tostring(bossId) .. ").", AutoBiographerEnum.LogLevel.Debug)
+  
   self:AddEvent(BossKillEvent.New(timestamp, coordinates, bossId, bossName))
   
-  if (AutoBiographer_Settings.Options["TakeScreenshotOnBossKill"]) then self:TakeScreenshot(0) end
+  if (AutoBiographer_Settings.Options["TakeScreenshotOnBossKill"] and (not AutoBiographer_Settings.Options["TakeScreenshotOnlyOnFirstBossKill"] or not hasKilledBossBefore)) then
+    self:TakeScreenshot(0.35)
+  end
 end
 
 function Controller:OnChangedSubZone(timestamp, coordinates, zoneName, subZoneName)
@@ -297,10 +300,15 @@ function Controller:OnKill(timestamp, coordinates, kill)
 
   KillStatistics.AddKill(self.CharacterData.Levels[self:GetCurrentLevelNum()].KillStatistics, kill)
   if (kill.PlayerHasTag) then 
-    --print (self:GetTaggedKillsByCatalogUnitId(kill.CatalogUnitId))
+    local hasKilledUnitBefore = true
     if (not Catalogs.PlayerHasKilledUnit(self.CharacterData.Catalogs, kill.CatalogUnitId)) then
+      hasKilledUnitBefore = false
       self:UpdateCatalogUnit(CatalogUnit.New(kill.CatalogUnitId, nil, nil, nil, nil, nil, nil, true))
       self:AddEvent(FirstKillEvent.New(timestamp, coordinates, kill.CatalogUnitId))
+    end
+    
+    if (BossDatabase[kill.CatalogUnitId]) then
+      Controller:OnBossKill(time(), HelperFunctions.GetCoordinatesByUnitId("player"), kill.CatalogUnitId, self.CharacterData.Catalogs.UnitCatalog[kill.CatalogUnitId].Name, hasKilledUnitBefore)
     end
   end
 end
@@ -340,6 +348,11 @@ end
 function Controller:OnQuestTurnedIn(timestamp, coordinates, questId, questTitle, xpGained, moneyGained)
   Controller:AddLog("QuestTurnedIn: " .. tostring(questTitle) .. " (#" .. tostring(questId) .. "), " .. tostring(xpGained) .. ", " .. tostring(moneyGained) .. ".", AutoBiographerEnum.LogLevel.Debug)
   self:AddEvent(QuestTurnInEvent.New(timestamp, coordinates, questId, questTitle, xpGained, moneyGained))
+end
+
+function Controller:OnReputationLevelChanged(timestamp, coordinates, faction, reputationLevel)
+  Controller:AddLog("ReputationLevelChanged: " .. tostring(faction) .. ", " .. tostring(reputationLevel) .. ".", AutoBiographerEnum.LogLevel.Debug)
+  self:AddEvent(ReputationLevelChangedEvent.New(timestamp, coordinates, faction, reputationLevel))
 end
 
 function Controller:OnSpellLearned(timestamp, coordinates, spellId, spellName, spellRank)

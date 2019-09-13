@@ -60,6 +60,10 @@ function Event.ToString(e, catalogs)
     elseif (e.SubType == AutoBiographerEnum.EventSubType.ZoneFirstVisit) then
       return timestampString .. "You entered " .. e.ZoneName .. " for the first time."
     end
+  elseif (e.Type == AutoBiographerEnum.EventType.Reputation) then
+    if (e.SubType == AutoBiographerEnum.EventSubType.ReputationLevelChanged) then
+      return timestampString .. "Your became " .. e.ReputationLevel .. " with " .. e.Faction .. "."
+    end
   elseif (e.Type == AutoBiographerEnum.EventType.Skill) then
     if (e.SubType == AutoBiographerEnum.EventSubType.SkillMilestone) then
       return timestampString .. "Your skill in " .. e.SkillName .. " increased to " .. e.SkillLevel .. "."
@@ -166,6 +170,15 @@ function QuestTurnInEvent.New(timestamp, coordinates, questId, questTitle, xpGai
   newInstance.QuestTitle = questTitle
   newInstance.XpGained = xpGained
   newInstance.MoneyGained = moneyGained
+  
+  return newInstance
+end
+
+ReputationLevelChangedEvent = {}
+function ReputationLevelChangedEvent.New(timestamp, coordinates, faction, reputationLevel)
+  local newInstance = WorldEvent.New(timestamp, AutoBiographerEnum.EventType.Reputation, AutoBiographerEnum.EventSubType.ReputationLevelChanged, coordinates)
+  newInstance.Faction = faction
+  newInstance.ReputationLevel = reputationLevel
   
   return newInstance
 end

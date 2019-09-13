@@ -10,6 +10,7 @@ Classes/Event.lua
 Classes/Miscellaneous.lua
 Classes/Statistics.lua
 Controller.lua
+Databases.lua
 Enum.lua
 HelperFunctions.lua
 Main.lua

@@ -110,7 +110,7 @@ end
 
 function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   if addonName ~= "AutoBiographer" then return end
-
+  
   if (time() > 1569888000) then 
     message("You are using an alpha version of AutoBiographer. Please update to the latest version.")
   end
@@ -123,8 +123,9 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
         ShowKillCountOnUnitToolTips = true,
         ShowMinimapButton = true,
         ShowTimePlayedOnLevelUp = true,
-        TakeScreenshotOnLevelUp = true,
         TakeScreenshotOnBossKill = true,
+        TakeScreenshotOnLevelUp = true,
+        TakeScreenshotOnlyOnFirstBossKill = true,
       }, 
     }
     for k,v in pairs(AutoBiographerEnum.EventSubType) do
@@ -187,6 +188,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
 end
 
 function EM.EventHandlers.BOSS_KILL(self, bossId, bossName)
+  print("BOSS_KILL")
   Controller:OnBossKill(time(), HelperFunctions.GetCoordinatesByUnitId("player"), bossId, bossName)
 end
 
@@ -316,6 +318,11 @@ function EM.EventHandlers.CHAT_MSG_SYSTEM(self, text)
     local area, xpGainedFromDiscovery = string.match(text, "Discovered (.+): (%d+) experience gained")
     
     if (xpGainedFromDiscovery) then Controller:OnGainedExperience(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.ExperienceTrackingType.Discovery, tonumber(xpGainedFromDiscovery)) end
+  elseif (string.find(text, "You are now .+ with .+") == 1) then
+    -- Player reached a new reputation level with a faction.
+    local reputationLevel, faction = string.match(text, "You are now (.+) with (.+)%.")
+    
+    if (faction and reputationLevel) then Controller:OnReputationLevelChanged(time(), HelperFunctions.GetCoordinatesByUnitId("player"), faction, reputationLevel) end
   end
 end
 

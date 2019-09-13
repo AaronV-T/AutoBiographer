@@ -61,6 +61,8 @@ table.insert(MM.Migrations,
   AutoBiographer_Migration:New(
     3,
     function(eventManager, controller)
+      if (AutoBiographer_Settings.Options["TakeScreenshotOnlyOnFirstBossKill"] == nil) then AutoBiographer_Settings.Options["TakeScreenshotOnlyOnFirstBossKill"] = true end
+      
       for k,v in pairs(controller.CharacterData.Levels) do
         if (v.ExperienceStatistics == nil) then v.ExperienceStatistics = ExperienceStatistics.New() end
       end

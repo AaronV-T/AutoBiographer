@@ -33,7 +33,8 @@ AutoBiographerEnum = {
     Spell = 14,
     Talent = 15,
     Time = 16,
-    Xp = 17
+    Xp = 17,
+    Reputation = 18,
   },
   EventSubType = {
     BossKill = 0,
@@ -49,6 +50,7 @@ AutoBiographerEnum = {
     SpellLearned = 10,
     SubZoneFirstVisit = 11,
     ZoneFirstVisit = 12,
+    ReputationLevelChanged = 13,
   },
   ExperienceTrackingType = {
     Discovery = 0,
