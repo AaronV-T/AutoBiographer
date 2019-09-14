@@ -48,9 +48,9 @@ function HF.SplitString(str)
   return splitString
 end
 
-function HF.GetKeysFromTable(tab)
-  if tab == nil then return nil end
-
+function HF.GetKeysFromTable(tab, sort)
+  if (not tab) then return nil end
+  
   local keys = {}
   local index = 0
   for k,v in pairs(tab) do
@@ -58,7 +58,23 @@ function HF.GetKeysFromTable(tab)
     keys[index] = k
   end
   
+  if (sort) then table.sort(tab) end
+  
   return keys
+end
+
+function HF.GetKeysFromTableReverse(tab, sort)
+  if (not tab) then return nil end
+  
+  local keys = HF.GetKeysFromTable(tab)
+  local reverseKeys = {}
+  local index = 0
+  for i = #keys, 1, -1 do
+    index = index + 1
+    reverseKeys[index] = keys[i]
+  end
+  
+  return reverseKeys
 end
 
 function HF.PrintKeysAndValuesFromTable(tab)

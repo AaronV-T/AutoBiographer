@@ -10,7 +10,7 @@
 		</Anchors>
 		<Layers>
 			<Layer level="BACKGROUND">
-				<Texture name="AutoBiographer_MinimapButton_Icon" file="Interface\Icons\INV_Misc_QuestionMark">
+				<Texture name="AutoBiographer_MinimapButton_Icon" file="Interface\Icons\inv_misc_note_05">
 					<Size>
 						<AbsDimension x="21" y="21"/>
 					</Size>

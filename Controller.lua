@@ -55,13 +55,15 @@ function Controller:GetCurrentLevelStatistics()
   return self.CharacterData.Levels[self:GetCurrentLevelNum()]
 end
 
-function Controller:GetDamageOrHealing(damageOrHealingCategory)
+function Controller:GetDamageOrHealing(damageOrHealingCategory, minLevel, maxLevel)
   local amountSum = 0
   local overSum = 0
   for k,v in pairs(self.CharacterData.Levels) do
-    if (v.DamageStatistics[damageOrHealingCategory]) then
-      amountSum = amountSum + v.DamageStatistics[damageOrHealingCategory].Amount
-      overSum = overSum + v.DamageStatistics[damageOrHealingCategory].Over
+    if (k >= minLevel and k <= maxLevel) then
+      if (v.DamageStatistics[damageOrHealingCategory]) then
+        amountSum = amountSum + v.DamageStatistics[damageOrHealingCategory].Amount
+        overSum = overSum + v.DamageStatistics[damageOrHealingCategory].Over
+      end
     end
   end
   
@@ -76,23 +78,27 @@ function Controller:GetEventString(event)
   return Event.ToString(event, self.CharacterData.Catalogs)
 end
 
-function Controller:GetExperienceByExperienceTrackingType(experienceTrackingType)
+function Controller:GetExperienceByExperienceTrackingType(experienceTrackingType, minLevel, maxLevel)
   local sum = 0
   for k,v in pairs(self.CharacterData.Levels) do
-    if (v.ExperienceStatistics[experienceTrackingType]) then
-      sum = sum + v.ExperienceStatistics[experienceTrackingType]
+    if (k >= minLevel and k <= maxLevel) then
+      if (v.ExperienceStatistics[experienceTrackingType]) then
+        sum = sum + v.ExperienceStatistics[experienceTrackingType]
+      end
     end
   end
   
   return sum
 end
 
-function Controller:GetItemCountForAcquisitionMethod(acquisitionMethod)
+function Controller:GetItemCountForAcquisitionMethod(acquisitionMethod, minLevel, maxLevel)
   local sum = 0
   for k,v in pairs(self.CharacterData.Levels) do
-    for k2,v2 in pairs(HelperFunctions.GetKeysFromTable(v.ItemStatisticsByItem)) do
-      if (v.ItemStatisticsByItem[v2][acquisitionMethod]) then
-        sum = sum + v.ItemStatisticsByItem[v2][acquisitionMethod]
+    if (k >= minLevel and k <= maxLevel) then
+      for k2,v2 in pairs(v.ItemStatisticsByItem) do
+        if (v2[acquisitionMethod]) then
+          sum = sum + v2[acquisitionMethod]
+        end
       end
     end
   end
@@ -104,23 +110,12 @@ function Controller:GetLogs()
   return self.Logs
 end
 
-function Controller:GetMoneyForAcquisitionMethod(acquisitionMethod)
+function Controller:GetMoneyForAcquisitionMethod(acquisitionMethod, minLevel, maxLevel)
   local sum = 0
   for k,v in pairs(self.CharacterData.Levels) do
-    if (v.MoneyStatistics[acquisitionMethod]) then
-      sum = sum + v.MoneyStatistics[acquisitionMethod]
-    end
-  end
-  
-  return sum
-end
-
-function Controller:GetOtherPlayerStatByOtherPlayerTrackingType(otherPlayerTrackingType)
-  local sum = 0
-  for k,v in pairs(self.CharacterData.Levels) do
-    for k2,v2 in pairs(v.OtherPlayerStatisticsByOtherPlayer) do
-      if (v2[otherPlayerTrackingType]) then
-        sum = sum + v2[otherPlayerTrackingType]
+    if (k >= minLevel and k <= maxLevel) then
+      if (v.MoneyStatistics[acquisitionMethod]) then
+        sum = sum + v.MoneyStatistics[acquisitionMethod]
       end
     end
   end
@@ -128,12 +123,14 @@ function Controller:GetOtherPlayerStatByOtherPlayerTrackingType(otherPlayerTrack
   return sum
 end
 
-function Controller:GetSpellCountBySpellTrackingType(spellTrackingType)
+function Controller:GetOtherPlayerStatByOtherPlayerTrackingType(otherPlayerTrackingType, minLevel, maxLevel)
   local sum = 0
   for k,v in pairs(self.CharacterData.Levels) do
-    for k2,v2 in pairs(v.SpellStatisticsBySpell) do
-      if (v2[spellTrackingType]) then
-        sum = sum + v2[spellTrackingType]
+    if (k >= minLevel and k <= maxLevel) then
+      for k2,v2 in pairs(v.OtherPlayerStatisticsByOtherPlayer) do
+        if (v2[otherPlayerTrackingType]) then
+          sum = sum + v2[otherPlayerTrackingType]
+        end
       end
     end
   end
@@ -141,57 +138,84 @@ function Controller:GetSpellCountBySpellTrackingType(spellTrackingType)
   return sum
 end
 
-function Controller:GetTotalMoneyGained()
+function Controller:GetSpellCountBySpellTrackingType(spellTrackingType, minLevel, maxLevel)
   local sum = 0
   for k,v in pairs(self.CharacterData.Levels) do
-    sum = sum + v.MoneyStatistics.TotalMoneyGained
+    if (k >= minLevel and k <= maxLevel) then
+      for k2,v2 in pairs(v.SpellStatisticsBySpell) do
+        if (v2[spellTrackingType]) then
+          sum = sum + v2[spellTrackingType]
+        end
+      end
+    end
   end
   
   return sum
 end
 
-function Controller:GetTotalMoneyLost()
+function Controller:GetTotalMoneyGained(minLevel, maxLevel)
   local sum = 0
   for k,v in pairs(self.CharacterData.Levels) do
-    sum = sum + v.MoneyStatistics.TotalMoneyLost
+    if (k >= minLevel and k <= maxLevel) then
+      sum = sum + v.MoneyStatistics.TotalMoneyGained
+    end
   end
   
   return sum
 end
 
-function Controller:GetTaggedKillingBlows()
+function Controller:GetTotalMoneyLost(minLevel, maxLevel)
   local sum = 0
   for k,v in pairs(self.CharacterData.Levels) do
-    sum = sum + KillStatistics.GetTaggedKillingBlows(v.KillStatistics)
+    if (k >= minLevel and k <= maxLevel) then
+      sum = sum + v.MoneyStatistics.TotalMoneyLost
+    end
   end
   
   return sum
 end
 
-function Controller:GetTaggedKills()
+function Controller:GetTaggedKillingBlows(minLevel, maxLevel)
   local sum = 0
   for k,v in pairs(self.CharacterData.Levels) do
-    sum = sum + KillStatistics.GetTaggedKills(v.KillStatistics)
+    if (k >= minLevel and k <= maxLevel) then
+      sum = sum + KillStatistics.GetTaggedKillingBlows(v.KillStatistics)
+    end
   end
   
   return sum
 end
 
-function Controller:GetTaggedKillsByCatalogUnitId(catalogUnitId)
+function Controller:GetTaggedKills(minLevel, maxLevel)
   local sum = 0
   for k,v in pairs(self.CharacterData.Levels) do
-    sum = sum + KillStatistics.GetTaggedKillsByCatalogUnitId(v.KillStatistics, catalogUnitId)
+    if (k >= minLevel and k <= maxLevel) then
+      sum = sum + KillStatistics.GetTaggedKills(v.KillStatistics)
+    end
   end
   
   return sum
 end
 
-function Controller:GetTimeForTimeTrackingType(timeTrackingType)
+function Controller:GetTaggedKillsByCatalogUnitId(catalogUnitId, minLevel, maxLevel)
   local sum = 0
   for k,v in pairs(self.CharacterData.Levels) do
-    for k2,v2 in pairs(HelperFunctions.GetKeysFromTable(v.TimeStatisticsByArea)) do
-      if (v.TimeStatisticsByArea[v2][timeTrackingType]) then
-        sum = sum + v.TimeStatisticsByArea[v2][timeTrackingType]
+    if (k >= minLevel and k <= maxLevel) then
+      sum = sum + KillStatistics.GetTaggedKillsByCatalogUnitId(v.KillStatistics, catalogUnitId)
+    end
+  end
+  
+  return sum
+end
+
+function Controller:GetTimeForTimeTrackingType(timeTrackingType, minLevel, maxLevel)
+  local sum = 0
+  for k,v in pairs(self.CharacterData.Levels) do
+    if (k >= minLevel and k <= maxLevel) then
+      for k2,v2 in pairs(v.TimeStatisticsByArea) do
+        if (v2[timeTrackingType]) then
+          sum = sum + v2[timeTrackingType]
+        end
       end
     end
   end

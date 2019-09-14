@@ -15,7 +15,7 @@ function AutoBiographer_MinimapButton_DraggingFrame_OnUpdate()
 end
 
 function AutoBiographer_MinimapButton_OnClick(arg1)
-  Toggle_MainWindow()
+  AutoBiographer_MainWindow:Toggle()
 end
 
 function AutoBiographer_MinimapButton_OnEnter()
