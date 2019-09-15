@@ -208,6 +208,17 @@ function Controller:GetTaggedKillsByCatalogUnitId(catalogUnitId, minLevel, maxLe
   return sum
 end
 
+function Controller:GetTotalKillingBlowsByCatalogUnitId(catalogUnitId, minLevel, maxLevel)
+  local sum = 0
+  for k,v in pairs(self.CharacterData.Levels) do
+    if (k >= minLevel and k <= maxLevel) then
+      sum = sum + KillStatistics.GetTotalKillingBlowsByCatalogUnitId(v.KillStatistics, catalogUnitId)
+    end
+  end
+  
+  return sum
+end
+
 function Controller:GetTimeForTimeTrackingType(timeTrackingType, minLevel, maxLevel)
   local sum = 0
   for k,v in pairs(self.CharacterData.Levels) do

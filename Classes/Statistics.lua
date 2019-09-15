@@ -86,6 +86,20 @@ function KillStatistics.GetTaggedKillsByCatalogUnitId(ks, catalogUnitId)
   return KillBreakdown.GetTotalKillsByCatalogUnitId(ks.TaggedKills, catalogUnitId)
 end
 
+function KillStatistics.GetTotalKillingBlowsByCatalogUnitId(ks, catalogUnitId)
+  local sum = 0
+  
+  if (ks.TaggedKills.PlayerKillingBlows[catalogUnitId]) then
+    sum = sum + ks.TaggedKills.PlayerKillingBlows[catalogUnitId]
+  end
+  
+  if (ks.UntaggedKills.PlayerKillingBlows[catalogUnitId]) then
+    sum = sum + ks.UntaggedKills.PlayerKillingBlows[catalogUnitId]
+  end
+  
+  return sum
+end
+
 function KillStatistics.GetTotalKillsByCatalogUnitId(ks, unitId)
   return KillBreakdown.GetTotalKillsByCatalogUnitId(ks.UntaggedKills, unitId) + KillBreakdown.GetTotalKillsByCatalogUnitId(ks.TaggedKills, unitId)
 end

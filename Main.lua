@@ -647,11 +647,14 @@ function EM.EventHandlers.UNIT_TARGET(self, unitId)
 end
 
 function EM.EventHandlers.UPDATE_MOUSEOVER_UNIT(self)
-  --if UnitIsPlayer("mouseover") then return end
 	local catalogUnitId = HelperFunctions.GetCatalogIdFromGuid(UnitGUID("mouseover"))
 	if not catalogUnitId then return end
 	if (AutoBiographer_Settings.Options["ShowKillCountOnUnitToolTips"] and UnitCanAttack("player", "mouseover")) then
-		GameTooltip:AddLine("Killed " .. tostring(Controller:GetTaggedKillsByCatalogUnitId(catalogUnitId)) .. " times.")
+    if (UnitIsPlayer("mouseover")) then
+      GameTooltip:AddLine("Killed " .. tostring(Controller:GetTotalKillingBlowsByCatalogUnitId(catalogUnitId, 1, 9999)) .. " times.")
+    else
+      GameTooltip:AddLine("Killed " .. tostring(Controller:GetTaggedKillsByCatalogUnitId(catalogUnitId, 1, 9999)) .. " times.")
+    end
 	end
 
 	GameTooltip:Show()
@@ -936,5 +939,4 @@ end
 
 function EM:Test()
   --print(CanLootUnit(unitGuid)) -- hasLoot always false when called in UNIT_DIED combat log event, have to wait for it to register correctly
-  
 end
