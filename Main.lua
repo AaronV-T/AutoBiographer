@@ -120,6 +120,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
       EventDisplayFilters = {}, -- Dict<EventSubType, bool>
       MinimapPos = -25,
       Options = { -- Dict<string?, bool>
+        EnableDebugLogging = false,
         ShowKillCountOnUnitToolTips = true,
         ShowMinimapButton = true,
         ShowTimePlayedOnLevelUp = true,
@@ -297,6 +298,8 @@ function EM.EventHandlers.CHAT_MSG_SKILL(self, text)
 end
 
 function EM.EventHandlers.CHAT_MSG_SYSTEM(self, text)
+  if (not self.PlayerEnteringWorldHasFired) then return end
+
   if (string.find(text, self.PlayerName .. " has defeated %w+ in a duel") == 1 or string.find(text, "%w+ has fled from " .. self.PlayerName .. " in a duel") == 1) then
     -- Player won a duel.
     local splitText = HelperFunctions.SplitString(text)
@@ -398,7 +401,7 @@ function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
     else
       if (damagedUnitId ~= nil) then
         damagedUnits[destGuid].IsTapDenied = UnitIsTapDenied(damagedUnitId)
-        --Controller:AddLog(destName .. " (" .. damagedUnitId .. ") tap denied: " .. tostring(damagedUnits[destGuid].IsTapDenied), AutoBiographerEnum.LogLevel.Verbose)
+        --if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog(destName .. " (" .. damagedUnitId .. ") tap denied: " .. tostring(damagedUnits[destGuid].IsTapDenied), AutoBiographerEnum.LogLevel.Verbose) end
       end
     end
     
@@ -451,7 +454,7 @@ function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
   end
   
   if (deadUnit.PlayerHasDamaged or deadUnit.PlayerPetHasDamaged or weHadTag) then
-    Controller:AddLog(destName .. " Died.  Tagged: " .. tostring(weHadTag) .. ". FODCBPOG: " .. tostring(deadUnit.FirstObservedDamageCausedByPlayerOrGroup) .. ". ITD: "  .. tostring(deadUnit.IsTapDenied) .. ". PHD: " .. tostring(deadUnit.PlayerHasDamaged) .. ". PPHD: " .. tostring(deadUnit.PlayerPetHasDamaged).. ". GHD: "  .. tostring(deadUnit.GroupHasDamaged)  .. ". LastDmg: " .. tostring(deadUnit.LastUnitGuidWhoCausedDamage), AutoBiographerEnum.LogLevel.Debug)
+    if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog(destName .. " Died.  Tagged: " .. tostring(weHadTag) .. ". FODCBPOG: " .. tostring(deadUnit.FirstObservedDamageCausedByPlayerOrGroup) .. ". ITD: "  .. tostring(deadUnit.IsTapDenied) .. ". PHD: " .. tostring(deadUnit.PlayerHasDamaged) .. ". PPHD: " .. tostring(deadUnit.PlayerPetHasDamaged).. ". GHD: "  .. tostring(deadUnit.GroupHasDamaged)  .. ". LastDmg: " .. tostring(deadUnit.LastUnitGuidWhoCausedDamage), AutoBiographerEnum.LogLevel.Debug) end
     local kill = Kill.New(deadUnit.GroupHasDamaged, deadUnit.PlayerHasDamaged or deadUnit.PlayerPetHasDamaged, IsUnitGUIDPlayerOrPlayerPet(deadUnit.LastUnitGuidWhoCausedDamage), weHadTag, HelperFunctions.GetCatalogIdFromGuid(destGuid))
     Controller:OnKill(time(), HelperFunctions.GetCoordinatesByUnitId("player"), kill)
   end
@@ -529,6 +532,7 @@ function EM.EventHandlers.PLAYER_LEAVING_WORLD(self)
 end
 
 function EM.EventHandlers.PLAYER_LEVEL_UP(self, newLevel, ...)
+  self:UpdateTimestamps(self.PersistentPlayerInfo.CurrentZone, self.PersistentPlayerInfo.CurrentSubZone)
   self.NewLevelToAddToHistory = newLevel
   
   if (AutoBiographer_Settings.Options["ShowTimePlayedOnLevelUp"] == false) then
@@ -939,4 +943,9 @@ end
 
 function EM:Test()
   --print(CanLootUnit(unitGuid)) -- hasLoot always false when called in UNIT_DIED combat log event, have to wait for it to register correctly
+  local start = GetTimePreciseSec()
+  for i = 1, 100000 do
+    Controller:AddLog("Test" .. i, AutoBiographerEnum.LogLevel.Debug)
+  end
+  print(HelperFunctions.SubtractFloats(GetTimePreciseSec(), start))
 end

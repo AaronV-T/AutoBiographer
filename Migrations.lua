@@ -61,6 +61,7 @@ table.insert(MM.Migrations,
   AutoBiographer_Migration:New(
     3,
     function(eventManager, controller)
+      if (AutoBiographer_Settings.Options["EnableDebugLogging"] == nil) then AutoBiographer_Settings.Options["EnableDebugLogging"] = false end
       if (AutoBiographer_Settings.Options["TakeScreenshotOnlyOnFirstBossKill"] == nil) then AutoBiographer_Settings.Options["TakeScreenshotOnlyOnFirstBossKill"] = true end
       
       for k,v in pairs(controller.CharacterData.Levels) do

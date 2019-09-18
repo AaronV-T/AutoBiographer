@@ -114,7 +114,7 @@ function Toggle_DebugWindow()
     
     --texts
     local index = 0
-    for i = #debugLogs, 1, -1 do
+    for i = debugLogs.LastIndex, debugLogs.FirstIndex, -1 do
       local font = "GameFontWhite"
       if (debugLogs[i].Level == AutoBiographerEnum.LogLevel.Verbose) then font = "GameFontDisable"
       elseif (debugLogs[i].Level == AutoBiographerEnum.LogLevel.Debug) then font = "GameFontDisable"

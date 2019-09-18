@@ -41,10 +41,17 @@ function AutoBiographer_OptionWindow:Initialize()
   self.fsShowTimePlayedOnLevelUp:SetPoint("LEFT", self, "TOPLEFT", 40, -200)
   self.fsShowTimePlayedOnLevelUp:SetText("Show time played upon leveling up.")
   
+  self.cbEnableDebugLogging = CreateFrame("CheckButton", nil, self, "UICheckButtonTemplate") 
+  self.cbEnableDebugLogging:SetPoint("LEFT", self, "TOPLEFT", 10, -230)
+  self.fsEnableDebugLogging = self:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  self.fsEnableDebugLogging:SetPoint("LEFT", self, "TOPLEFT", 40, -230)
+  self.fsEnableDebugLogging:SetText("Enable debug logging (this can negatively affect performance).")
+  
   self:LoadOptions()
 end
 
 function AutoBiographer_OptionWindow:LoadOptions()
+  self.cbEnableDebugLogging:SetChecked(AutoBiographer_Settings.Options["EnableDebugLogging"])
   self.cbKillCountTooltip:SetChecked(AutoBiographer_Settings.Options["ShowKillCountOnUnitToolTips"])
   self.cbScreenshotOnLevelUp:SetChecked(AutoBiographer_Settings.Options["TakeScreenshotOnLevelUp"])
   self.cbScreenshotOnBossKill:SetChecked(AutoBiographer_Settings.Options["TakeScreenshotOnBossKill"])
@@ -54,6 +61,7 @@ function AutoBiographer_OptionWindow:LoadOptions()
 end
 
 function AutoBiographer_OptionWindow:SaveOptions()
+  AutoBiographer_Settings.Options["EnableDebugLogging"] = self.cbEnableDebugLogging:GetChecked()
   AutoBiographer_Settings.Options["ShowKillCountOnUnitToolTips"] = self.cbKillCountTooltip:GetChecked()
   AutoBiographer_Settings.Options["TakeScreenshotOnLevelUp"] = self.cbScreenshotOnLevelUp:GetChecked()
   AutoBiographer_Settings.Options["TakeScreenshotOnBossKill"] = self.cbScreenshotOnBossKill:GetChecked()
