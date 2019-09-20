@@ -426,7 +426,7 @@ function AutoBiographer_MainWindow:Update()
   )
   
   -- Dropdown
-  local dropdown = CreateFrame("Frame", "WPDemoDropDown", content, "UIDropDownMenuTemplate")
+  local dropdown = CreateFrame("Frame", nil, content, "UIDropDownMenuTemplate")
   dropdown:SetSize(100, 25)
   dropdown:SetPoint("LEFT", content, "TOP", -dropdown:GetWidth(), -65)
   
@@ -438,33 +438,49 @@ function AutoBiographer_MainWindow:Update()
   local dropdownOnClick = function(self, arg1, arg2, checked)
     AutoBiographer_MainWindow.DropdownText = self.value
     
-    if (not arg1) then
-      AutoBiographer_MainWindow.DisplayMaxLevel = 9999
-      AutoBiographer_MainWindow.DisplayMinLevel = 1
-    else
-      AutoBiographer_MainWindow.DisplayMaxLevel = arg1
-      AutoBiographer_MainWindow.DisplayMinLevel = arg1
-    end
+    AutoBiographer_MainWindow.DisplayMinLevel = arg1
+    AutoBiographer_MainWindow.DisplayMaxLevel = arg2
     
     AutoBiographer_MainWindow:Clear()
     AutoBiographer_MainWindow:Update()
   end
   
   UIDropDownMenu_Initialize(dropdown, function(self, level, menuList)
-   local info = UIDropDownMenu_CreateInfo()
-   info.func = dropdownOnClick
+    local info = UIDropDownMenu_CreateInfo()
+    info.func = dropdownOnClick
    
-   info.text, info.arg1 = "Total", nil
-   UIDropDownMenu_AddButton(info)
-   
-   for k,v in pairs(HelperFunctions.GetKeysFromTableReverse(Controller.CharacterData.Levels)) do
-     info.text, info.arg1 = "Level " .. v, v
-     UIDropDownMenu_AddButton(info)
-   end
+    if (not level or level == 1) then
+      info.text, info.arg1, info.arg2 = "Total", 1, 9999
+      UIDropDownMenu_AddButton(info)
+      
+      for i = 0, 5 do
+        local includeThisRange = false
+        for j = 1, 10 do
+          if (Controller.CharacterData.Levels[(i * 10) + j]) then includeThisRange = true end
+        end
+        
+        if (includeThisRange) then
+          info.arg1 = (i * 10) + 1
+          info.arg2 = (i * 10) + 10
+          info.text = "Levels " .. info.arg1 .. " - " .. info.arg2
+          info.menuList = i
+          info.hasArrow = true
+          UIDropDownMenu_AddButton(info)
+        end
+      end
+    else
+      for i = 1, 10 do
+        info.arg1 = (menuList * 10) + i
+        info.arg2 = info.arg1
+        info.text = "Level " .. info.arg1
+        
+        if (Controller.CharacterData.Levels[info.arg1]) then UIDropDownMenu_AddButton(info, level) end
+      end
+    end
   end)
   
   -- Header Stuff
-  if (self.DisplayMinLevel == self.DisplayMaxLevel and Controller.CharacterData.Levels[self.DisplayMinLevel].TimePlayedThisLevel) then
+  if (self.DisplayMinLevel == self.DisplayMaxLevel and Controller.CharacterData.Levels[self.DisplayMinLevel] and Controller.CharacterData.Levels[self.DisplayMinLevel].TimePlayedThisLevel) then
     local timePlayedThisLevelFS = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     timePlayedThisLevelFS:SetPoint("LEFT", content, "TOP", 50, -65)
     timePlayedThisLevelFS:SetText("Time played this level: " .. HelperFunctions.SecondsToTimeString(Controller.CharacterData.Levels[self.DisplayMinLevel].TimePlayedThisLevel))
