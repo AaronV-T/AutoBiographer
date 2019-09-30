@@ -111,8 +111,8 @@ end
 function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   if addonName ~= "AutoBiographer" then return end
   
-  if (time() > 1569888000) then 
-    message("You are using an alpha version of AutoBiographer. Please update to the latest version.")
+  if (time() > 1572566400) then 
+    print("You are using an beta version of AutoBiographer. Please update to the latest version.")
   end
   
   if type(_G["AUTOBIOGRAPHER_SETTINGS"]) ~= "table" then
@@ -484,8 +484,8 @@ end
 function EM.EventHandlers.PLAYER_DEAD(self)
   local killerCatalogUnitId = nil
   local killerLevel = nil
-  if (damagedUnits[self.PersistentPlayerInfo.PlayerGuid] ~= nil) then
-    if (damagedUnits[self.PersistentPlayerInfo.PlayerGuid].LastCombatDamageTakenTimestamp ~= nil and time() - damagedUnits[self.PersistentPlayerInfo.PlayerGuid].LastCombatDamageTakenTimestamp < 5) then
+  if (damagedUnits[self.PersistentPlayerInfo.PlayerGuid]) then
+    if (damagedUnits[self.PersistentPlayerInfo.PlayerGuid].LastCombatDamageTakenTimestamp and time() - damagedUnits[self.PersistentPlayerInfo.PlayerGuid].LastCombatDamageTakenTimestamp < 5) then
       killerCatalogUnitId = HelperFunctions.GetCatalogIdFromGuid(damagedUnits[self.PersistentPlayerInfo.PlayerGuid].LastUnitGuidWhoCausedDamage)
       
       local killerUnitId = FindUnitIdByUnitGUID(damagedUnits[self.PersistentPlayerInfo.PlayerGuid].LastUnitGuidWhoCausedDamage)
@@ -943,9 +943,17 @@ end
 
 function EM:Test()
   --print(CanLootUnit(unitGuid)) -- hasLoot always false when called in UNIT_DIED combat log event, have to wait for it to register correctly
-  local start = GetTimePreciseSec()
-  for i = 1, 100000 do
+  --[[local count = 100000
+  local start = nil
+  
+  start = GetTimePreciseSec()
+  for i = 1, count do
     Controller:AddLog("Test" .. i, AutoBiographerEnum.LogLevel.Debug)
   end
-  print(HelperFunctions.SubtractFloats(GetTimePreciseSec(), start))
+  print("Added " .. count .. " debug logs in " .. HelperFunctions.SubtractFloats(GetTimePreciseSec(), start) .. " seconds.")]]
+  for i = 1, UnitLevel("player") do
+    if (Controller.CharacterData.Levels[i]) then 
+      print(i .. ": " .. tostring(Controller.CharacterData.Levels[i].TotalTimePlayedAtDing))
+    end
+  end
 end

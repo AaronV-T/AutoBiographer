@@ -11,6 +11,7 @@ Unzip the downloaded `.zip` file and put the `AutoBiographer` folder into your A
 
 The addon currently records the following events:
  - Acquiring an item you have never before acquired.
+ - Changing reputation level with a faction.
  - Dieing (including which unit killed you and their level).
  - Entering a zone or subzone you have never before entered.
  - Joining a guild, leaving a guild, or changing rank in a guild.
@@ -18,8 +19,9 @@ The addon currently records the following events:
  - Killing a unit you have never before killed.
  - Learning a spell/ability.
  - Leveling up (including the time played at level up and total time played of each level).
- - Reaching skill milestones (75/150/225/300).
+ - Reaching a skill milestone (75/150/225/300).
  - Turning in a quest.
+ - XP from discovery, kills, and quests.
  
 It also keeps track of the following statistics:
  - Damage dealt and taken; healing dealt to self, healing dealt to others, and healing taken.
@@ -52,7 +54,7 @@ Statistics:
    - Flights taken.   
  - Money gained/lost to auction house, vendors, trading to players, etc.
  - PVP stats (honorable kills, dishonorable kills).
- - XP from discovery, kills, and quests.
+ 
 
 Other Featues:
 - Showing coordinates of events on the map (these coordinates are already being recorded but just not displayed anywhere).

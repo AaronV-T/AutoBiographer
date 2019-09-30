@@ -376,7 +376,7 @@ function AutoBiographer_MainWindow:Update()
   
   -- Buttons
   local eventsBtn = CreateFrame("Button", nil, content, "UIPanelButtonTemplate");
-  eventsBtn:SetPoint("CENTER", content, "TOP", -225, -25);
+  eventsBtn:SetPoint("CENTER", content, "TOP", -150, -25);
   eventsBtn:SetSize(140, 40);
   eventsBtn:SetText("Events");
   eventsBtn:SetNormalFontObject("GameFontNormalLarge");
@@ -388,7 +388,7 @@ function AutoBiographer_MainWindow:Update()
   )
   
   local optionsBtn = CreateFrame("Button", nil, content, "UIPanelButtonTemplate");
-  optionsBtn:SetPoint("CENTER", content, "TOP", -75, -25);
+  optionsBtn:SetPoint("CENTER", content, "TOP", 0, -25);
   optionsBtn:SetSize(140, 40);
   optionsBtn:SetText("Options");
   optionsBtn:SetNormalFontObject("GameFontNormalLarge");
@@ -402,7 +402,7 @@ function AutoBiographer_MainWindow:Update()
   )
   
   local debugBtn = CreateFrame("Button", nil, content, "UIPanelButtonTemplate");
-  debugBtn:SetPoint("CENTER", content, "TOP", 75, -25);
+  debugBtn:SetPoint("CENTER", content, "TOP", 150, -25);
   debugBtn:SetSize(140, 40);
   debugBtn:SetText("Debug");
   debugBtn:SetNormalFontObject("GameFontNormalLarge");
@@ -410,18 +410,6 @@ function AutoBiographer_MainWindow:Update()
   debugBtn:SetScript("OnClick", 
     function(self)
       Toggle_DebugWindow()
-    end
-  )
-  
-  local closeBtn = CreateFrame("Button", nil, content, "UIPanelButtonTemplate");
-  closeBtn:SetPoint("CENTER", content, "TOP", 225, -25)
-  closeBtn:SetSize(140, 40);
-  closeBtn:SetText("Close");
-  closeBtn:SetNormalFontObject("GameFontNormalLarge");
-  closeBtn:SetHighlightFontObject("GameFontHighlightLarge");
-  closeBtn:SetScript("OnClick", 
-    function(self)
-      AutoBiographer_MainWindow:Hide()
     end
   )
   
