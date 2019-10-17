@@ -4,6 +4,11 @@ function AutoBiographer_ConfirmWindow.New(message, callback)
   window:SetSize(350, 250) 
   window:SetPoint("CENTER") 
   
+  if (not window:IsVisible()) then
+    window:Hide()
+    return
+  end
+  
   window.Confirmed = false
   
   window:SetScript("OnHide", 

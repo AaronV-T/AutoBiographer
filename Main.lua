@@ -111,10 +111,6 @@ end
 function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   if addonName ~= "AutoBiographer" then return end
   
-  if (time() > 1572566400) then 
-    print("You are using an beta version of AutoBiographer. Please update to the latest version.")
-  end
-  
   if type(_G["AUTOBIOGRAPHER_SETTINGS"]) ~= "table" then
 		_G["AUTOBIOGRAPHER_SETTINGS"] = {
       EventDisplayFilters = {}, -- Dict<EventSubType, bool>
@@ -504,9 +500,20 @@ function EM.EventHandlers.PLAYER_ENTERING_WORLD(self)
     self.PersistentPlayerInfo.PlayerGuid = UnitGUID("player")
   elseif (self.PersistentPlayerInfo.PlayerGuid ~= UnitGUID("player")) then
     -- The character was probably deleted and a new character was made with the same name.
-    AutoBiographer_ConfirmWindow.New("You seemed to have deleted and remade\na character with the same name.\nAutoBiographer needs to\ndelete its stored data for " .. UnitName("player") .. ".", 
-      function(confirmed)
-        if (confirmed) then self:ClearCharacterData(true, false) end
+    AutoBiographer_ConfirmWindow.New("If you have deleted and remade a\ncharacter with the same name, click accept\nand AutoBiographer will\ndelete its stored data for " .. UnitName("player") .. ".", 
+      function(deleteConfirmed)
+        if (deleteConfirmed) then
+          self:ClearCharacterData(true, false)
+          self:UpdatePlayerZone()
+        else
+          AutoBiographer_ConfirmWindow.New("If you have transferred your character\nto a new realm, click accept\nand AutoBiographer will\nkeep its stored data for " .. UnitName("player") .. ".", 
+            function(transferConfirmed)
+              if (transferConfirmed) then
+                self.PersistentPlayerInfo.PlayerGuid = UnitGUID("player")
+              end
+            end
+          )
+        end
       end
     )
   end
