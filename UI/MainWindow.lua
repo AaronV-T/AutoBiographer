@@ -1,3 +1,5 @@
+local HF = HelperFunctions
+
 local function AutoBiographer_InitializeMainWindow()
   --parent frame 
   local frame = CreateFrame("Frame", "AutoBiographerMain", UIParent, "BasicFrameTemplateWithInset") 
@@ -471,7 +473,7 @@ function AutoBiographer_MainWindow:Update()
   if (self.DisplayMinLevel == self.DisplayMaxLevel and Controller.CharacterData.Levels[self.DisplayMinLevel] and Controller.CharacterData.Levels[self.DisplayMinLevel].TimePlayedThisLevel) then
     local timePlayedThisLevelFS = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     timePlayedThisLevelFS:SetPoint("LEFT", content, "TOP", 50, -65)
-    timePlayedThisLevelFS:SetText("Time played this level: " .. HelperFunctions.SecondsToTimeString(Controller.CharacterData.Levels[self.DisplayMinLevel].TimePlayedThisLevel))
+    timePlayedThisLevelFS:SetText("Time played this level: " .. HF.SecondsToTimeString(Controller.CharacterData.Levels[self.DisplayMinLevel].TimePlayedThisLevel))
   end
   
   local topPoint = -65
@@ -484,7 +486,7 @@ function AutoBiographer_MainWindow:Update()
   
   local damageDealtAmount, damageDealtOver = Controller:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageDealt, self.DisplayMinLevel, self.DisplayMaxLevel)
   local petDamageDealtAmount, petDamageDealtOver = Controller:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.PetDamageDealt, self.DisplayMinLevel, self.DisplayMaxLevel)
-  local damageDealtText = "Damage Dealt: " .. tostring(damageDealtAmount) .. " (" .. tostring(damageDealtOver) .. " over)."
+  local damageDealtText = "Damage Dealt: " .. HF.CommaValue(damageDealtAmount) .. " (" .. HF.CommaValue(damageDealtOver) .. " over)."
   if (petDamageDealtAmount > 0) then damageDealtText = damageDealtText .. " Pet Damage Dealt: " .. tostring(petDamageDealtAmount) .. " (" .. tostring(petDamageDealtOver) .. " over)." end
   local damageDealtFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   topPoint = topPoint - 20
@@ -493,8 +495,8 @@ function AutoBiographer_MainWindow:Update()
   
   local damageTakenAmount, damageTakenOver = Controller:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageTaken, self.DisplayMinLevel, self.DisplayMaxLevel)
   local petDamageTakenAmount, petDamageTakenOver = Controller:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.PetDamageTaken, self.DisplayMinLevel, self.DisplayMaxLevel)
-  local damageTakenText = "Damage Taken: " .. tostring(damageTakenAmount) .. " (" .. tostring(damageTakenOver) .. " over)."
-  if (petDamageTakenAmount > 0) then damageTakenText = damageTakenText .. " Pet Damage Taken: " .. tostring(petDamageTakenAmount) .. " (" .. tostring(petDamageTakenOver) .. " over)." end
+  local damageTakenText = "Damage Taken: " .. HF.CommaValue(damageTakenAmount) .. " (" .. HF.CommaValue(damageTakenOver) .. " over)."
+  if (petDamageTakenAmount > 0) then damageTakenText = damageTakenText .. " Pet Damage Taken: " .. HF.CommaValue(petDamageTakenAmount) .. " (" .. HF.CommaValue(petDamageTakenOver) .. " over)." end
   local damageTakenFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   topPoint = topPoint - 15
   damageTakenFs:SetPoint("TOPLEFT", 10, topPoint)
@@ -504,19 +506,19 @@ function AutoBiographer_MainWindow:Update()
   local healingOtherFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   topPoint = topPoint - 15
   healingOtherFs:SetPoint("TOPLEFT", 10, topPoint)
-  healingOtherFs:SetText("Healing Dealt to Others: " .. tostring(healingOtherAmount) .. " (" .. tostring(healingOtherOver) .. " over).")
+  healingOtherFs:SetText("Healing Dealt to Others: " .. HF.CommaValue(healingOtherAmount) .. " (" .. HF.CommaValue(healingOtherOver) .. " over).")
   
   local healingSelfAmount, healingSelfOver = Controller:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.HealingDealtToSelf, self.DisplayMinLevel, self.DisplayMaxLevel)
   local healingSelfFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   topPoint = topPoint - 15
   healingSelfFs:SetPoint("TOPLEFT", 10, topPoint)
-  healingSelfFs:SetText("Healing Dealt to Self: " .. tostring(healingSelfAmount) .. " (" .. tostring(healingSelfOver) .. " over).")
+  healingSelfFs:SetText("Healing Dealt to Self: " .. HF.CommaValue(healingSelfAmount) .. " (" .. HF.CommaValue(healingSelfOver) .. " over).")
   
   local healingTakenAmount, healingTakenOver = Controller:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.HealingTaken, self.DisplayMinLevel, self.DisplayMaxLevel)
   local healingTakenFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   topPoint = topPoint - 15
   healingTakenFs:SetPoint("TOPLEFT", 10, topPoint)
-  healingTakenFs:SetText("Healing Taken: " .. tostring(healingTakenAmount) .. " (" .. tostring(healingTakenOver) .. " over).")
+  healingTakenFs:SetText("Healing Taken: " .. HF.CommaValue(healingTakenAmount) .. " (" .. HF.CommaValue(healingTakenOver) .. " over).")
   
   -- Experience
   local experienceHeaderFs = content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
@@ -528,37 +530,37 @@ function AutoBiographer_MainWindow:Update()
   local experienceFromKillsFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   topPoint = topPoint - 20
   experienceFromKillsFs:SetPoint("TOPLEFT", 10, topPoint)
-  experienceFromKillsFs:SetText("Experience From Kills: " .. tostring(experienceFromKills) .. ".")
+  experienceFromKillsFs:SetText("Experience From Kills: " .. HF.CommaValue(experienceFromKills) .. ".")
       
   local experienceFromRestedBonus = Controller:GetExperienceByExperienceTrackingType(AutoBiographerEnum.ExperienceTrackingType.RestedBonus, self.DisplayMinLevel, self.DisplayMaxLevel)
   local experienceFromRestedBonusFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   topPoint = topPoint - 15
   experienceFromRestedBonusFs:SetPoint("TOPLEFT", 20, topPoint)
-  experienceFromRestedBonusFs:SetText("Experience From Rested Bonus: " .. tostring(experienceFromRestedBonus) .. ".")
+  experienceFromRestedBonusFs:SetText("Experience From Rested Bonus: " .. HF.CommaValue(experienceFromRestedBonus) .. ".")
   
   local experienceFromGroupBonus = Controller:GetExperienceByExperienceTrackingType(AutoBiographerEnum.ExperienceTrackingType.GroupBonus, self.DisplayMinLevel, self.DisplayMaxLevel)
   local experienceFromGroupBonusFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   topPoint = topPoint - 15
   experienceFromGroupBonusFs:SetPoint("TOPLEFT", 20, topPoint)
-  experienceFromGroupBonusFs:SetText("Experience From Group Bonus: " .. tostring(experienceFromGroupBonus) .. ".")
+  experienceFromGroupBonusFs:SetText("Experience From Group Bonus: " .. HF.CommaValue(experienceFromGroupBonus) .. ".")
   
   local experienceLostToRaidPenalty = Controller:GetExperienceByExperienceTrackingType(AutoBiographerEnum.ExperienceTrackingType.RaidPenalty, self.DisplayMinLevel, self.DisplayMaxLevel)
   local experienceLostToRaidPenaltyFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   topPoint = topPoint - 15
   experienceLostToRaidPenaltyFs:SetPoint("TOPLEFT", 20, topPoint)
-  experienceLostToRaidPenaltyFs:SetText("Experience Lost To Raid Penalty: " .. tostring(experienceLostToRaidPenalty) .. ".")
+  experienceLostToRaidPenaltyFs:SetText("Experience Lost To Raid Penalty: " .. HF.CommaValue(experienceLostToRaidPenalty) .. ".")
   
   local experienceFromQuests = Controller:GetExperienceByExperienceTrackingType(AutoBiographerEnum.ExperienceTrackingType.Quest, self.DisplayMinLevel, self.DisplayMaxLevel)
   local experienceFromQuestsFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   topPoint = topPoint - 15
   experienceFromQuestsFs:SetPoint("TOPLEFT", 10, topPoint)
-  experienceFromQuestsFs:SetText("Experience From Quests: " .. tostring(experienceFromQuests) .. ".")
+  experienceFromQuestsFs:SetText("Experience From Quests: " .. HF.CommaValue(experienceFromQuests) .. ".")
   
   local experienceFromDiscovery = Controller:GetExperienceByExperienceTrackingType(AutoBiographerEnum.ExperienceTrackingType.Discovery, self.DisplayMinLevel, self.DisplayMaxLevel)
   local experienceFromDiscoveryFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   topPoint = topPoint - 15
   experienceFromDiscoveryFs:SetPoint("TOPLEFT", 10, topPoint)
-  experienceFromDiscoveryFs:SetText("Experience From Discovery: " .. tostring(experienceFromDiscovery) .. ".")
+  experienceFromDiscoveryFs:SetText("Experience From Discovery: " .. HF.CommaValue(experienceFromDiscovery) .. ".")
   
   -- Items
   local itemsHeaderFs = content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
@@ -570,19 +572,19 @@ function AutoBiographer_MainWindow:Update()
   local itemsCreatedFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   topPoint = topPoint - 20
   itemsCreatedFs:SetPoint("TOPLEFT", 10, topPoint)
-  itemsCreatedFs:SetText("Items Created: " .. tostring(itemsCreated) .. ".")
+  itemsCreatedFs:SetText("Items Created: " .. HF.CommaValue(itemsCreated) .. ".")
   
   local itemsLooted = Controller:GetItemCountForAcquisitionMethod(AutoBiographerEnum.AcquisitionMethod.Loot, self.DisplayMinLevel, self.DisplayMaxLevel)
   local itemsLootedFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   topPoint = topPoint - 15
   itemsLootedFs:SetPoint("TOPLEFT", 10, topPoint)
-  itemsLootedFs:SetText("Items Looted: " .. tostring(itemsLooted) .. ".")
+  itemsLootedFs:SetText("Items Looted: " .. HF.CommaValue(itemsLooted) .. ".")
   
   local itemsOther = Controller:GetItemCountForAcquisitionMethod(AutoBiographerEnum.AcquisitionMethod.Other, self.DisplayMinLevel, self.DisplayMaxLevel)
   local itemsOtherFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   topPoint = topPoint - 15
   itemsOtherFs:SetPoint("TOPLEFT", 10, topPoint)
-  itemsOtherFs:SetText("Other Items Acquired: " .. tostring(itemsOther) .. ".")
+  itemsOtherFs:SetText("Other Items Acquired: " .. HF.CommaValue(itemsOther) .. ".")
   
   -- Kills
   local killsHeaderFs = content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
@@ -594,13 +596,13 @@ function AutoBiographer_MainWindow:Update()
   local taggedKillingBlowsFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   topPoint = topPoint - 20
   taggedKillingBlowsFs:SetPoint("TOPLEFT", 10, topPoint)
-  taggedKillingBlowsFs:SetText("Tagged Killing Blows: " .. tostring(taggedKillingBlows) .. ".")
+  taggedKillingBlowsFs:SetText("Tagged Killing Blows: " .. HF.CommaValue(taggedKillingBlows) .. ".")
   
   local otherTaggedKills = Controller:GetTaggedKills(self.DisplayMinLevel, self.DisplayMaxLevel) - taggedKillingBlows
   local otherTaggedKillsFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   topPoint = topPoint - 15
   otherTaggedKillsFs:SetPoint("TOPLEFT", 10, topPoint)
-  otherTaggedKillsFs:SetText("Other Tagged Kills: " .. tostring(otherTaggedKills) .. ".")
+  otherTaggedKillsFs:SetText("Other Tagged Kills: " .. HF.CommaValue(otherTaggedKills) .. ".")
   
   -- Miscellaneous
   local miscellaneousHeaderFs = content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
@@ -612,7 +614,7 @@ function AutoBiographer_MainWindow:Update()
   local playerDeathsFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   topPoint = topPoint - 20
   playerDeathsFs:SetPoint("TOPLEFT", 10, topPoint)
-  playerDeathsFs:SetText("Player Deaths: " .. playerDeaths .. ".")
+  playerDeathsFs:SetText("Player Deaths: " .. HF.CommaValue(playerDeaths) .. ".")
 
   -- Money
   local moneyHeaderFs = content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
@@ -649,13 +651,13 @@ function AutoBiographer_MainWindow:Update()
   local duelsWonFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   topPoint = topPoint - 15
   duelsWonFs:SetPoint("TOPLEFT", 10, topPoint)
-  duelsWonFs:SetText("Duels Won: " .. tostring(duelsWon) .. ".")
+  duelsWonFs:SetText("Duels Won: " .. HF.CommaValue(duelsWon) .. ".")
   
   local duelsLost = Controller:GetOtherPlayerStatByOtherPlayerTrackingType(AutoBiographerEnum.OtherPlayerTrackingType.DuelsWonAgainstPlayer, self.DisplayMinLevel, self.DisplayMaxLevel)
   local duelsLostFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   topPoint = topPoint - 15
   duelsLostFs:SetPoint("TOPLEFT", 10, topPoint)
-  duelsLostFs:SetText("Duels Lost: " .. tostring(duelsLost) .. ".")
+  duelsLostFs:SetText("Duels Lost: " .. HF.CommaValue(duelsLost) .. ".")
   
   -- Spells
   local spellsHeaderFs = content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
@@ -667,13 +669,13 @@ function AutoBiographer_MainWindow:Update()
   local spellsStartedCastingFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   topPoint = topPoint - 20
   spellsStartedCastingFs:SetPoint("TOPLEFT", 10, topPoint)
-  spellsStartedCastingFs:SetText("Spells Started Casting: " .. tostring(spellsStartedCasting) .. ".")
+  spellsStartedCastingFs:SetText("Spells Started Casting: " .. HF.CommaValue(spellsStartedCasting) .. ".")
   
   local spellsSuccessfullyCast = Controller:GetSpellCountBySpellTrackingType(AutoBiographerEnum.SpellTrackingType.SuccessfullyCast, self.DisplayMinLevel, self.DisplayMaxLevel)
   local spellsSuccessfullyCastFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   topPoint = topPoint - 15
   spellsSuccessfullyCastFs:SetPoint("TOPLEFT", 10, topPoint)
-  spellsSuccessfullyCastFs:SetText("Spells Successfully Cast: " .. tostring(spellsSuccessfullyCast) .. ".")
+  spellsSuccessfullyCastFs:SetText("Spells Successfully Cast: " .. HF.CommaValue(spellsSuccessfullyCast) .. ".")
   
   -- Time
   local timeHeaderFs = content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
@@ -685,43 +687,43 @@ function AutoBiographer_MainWindow:Update()
   local timeSpentAfkFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   topPoint = topPoint - 20
   timeSpentAfkFs:SetPoint("TOPLEFT", 10, topPoint)
-  timeSpentAfkFs:SetText("Time Spent AFK: " .. HelperFunctions.SecondsToTimeString(timeSpentAfk) .. ".")
+  timeSpentAfkFs:SetText("Time Spent AFK: " .. HF.SecondsToTimeString(timeSpentAfk) .. ".")
   
   local timeSpentCasting = Controller:GetTimeForTimeTrackingType(AutoBiographerEnum.TimeTrackingType.Casting, self.DisplayMinLevel, self.DisplayMaxLevel)
   local timeSpentCastingFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   topPoint = topPoint - 15
   timeSpentCastingFs:SetPoint("TOPLEFT", 10, topPoint)
-  timeSpentCastingFs:SetText("Time Spent Casting: " .. HelperFunctions.SecondsToTimeString(timeSpentCasting) .. ".")
+  timeSpentCastingFs:SetText("Time Spent Casting: " .. HF.SecondsToTimeString(timeSpentCasting) .. ".")
   
   local timeSpentDead = Controller:GetTimeForTimeTrackingType(AutoBiographerEnum.TimeTrackingType.DeadOrGhost, self.DisplayMinLevel, self.DisplayMaxLevel)
   local timeSpentDeadFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   topPoint = topPoint - 15
   timeSpentDeadFs:SetPoint("TOPLEFT", 10, topPoint)
-  timeSpentDeadFs:SetText("Time Spent Dead: " .. HelperFunctions.SecondsToTimeString(timeSpentDead) .. ".")
+  timeSpentDeadFs:SetText("Time Spent Dead: " .. HF.SecondsToTimeString(timeSpentDead) .. ".")
   
   local timeSpentInCombat = Controller:GetTimeForTimeTrackingType(AutoBiographerEnum.TimeTrackingType.InCombat, self.DisplayMinLevel, self.DisplayMaxLevel)
   local timeSpentInCombatFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   topPoint = topPoint - 15
   timeSpentInCombatFs:SetPoint("TOPLEFT", 10, topPoint)
-  timeSpentInCombatFs:SetText("Time Spent in Combat: " .. HelperFunctions.SecondsToTimeString(timeSpentInCombat) .. ".")
+  timeSpentInCombatFs:SetText("Time Spent in Combat: " .. HF.SecondsToTimeString(timeSpentInCombat) .. ".")
   
   local timeSpentInGroup = Controller:GetTimeForTimeTrackingType(AutoBiographerEnum.TimeTrackingType.InParty, self.DisplayMinLevel, self.DisplayMaxLevel)
   local timeSpentInGroupFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   topPoint = topPoint - 15
   timeSpentInGroupFs:SetPoint("TOPLEFT", 10, topPoint)
-  timeSpentInGroupFs:SetText("Time Spent in Group: " .. HelperFunctions.SecondsToTimeString(timeSpentInGroup) .. ".")
+  timeSpentInGroupFs:SetText("Time Spent in Group: " .. HF.SecondsToTimeString(timeSpentInGroup) .. ".")
   
   local timeSpentLoggedIn = Controller:GetTimeForTimeTrackingType(AutoBiographerEnum.TimeTrackingType.LoggedIn, self.DisplayMinLevel, self.DisplayMaxLevel)
   local timeSpentLoggedInFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   topPoint = topPoint - 15
   timeSpentLoggedInFs:SetPoint("TOPLEFT", 10, topPoint)
-  timeSpentLoggedInFs:SetText("Time Spent Logged In: " .. HelperFunctions.SecondsToTimeString(timeSpentLoggedIn) .. ".")
+  timeSpentLoggedInFs:SetText("Time Spent Logged In: " .. HF.SecondsToTimeString(timeSpentLoggedIn) .. ".")
   
   local timeSpentOnTaxi = Controller:GetTimeForTimeTrackingType(AutoBiographerEnum.TimeTrackingType.OnTaxi, self.DisplayMinLevel, self.DisplayMaxLevel)
   local timeSpentOnTaxiFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   topPoint = topPoint - 15
   timeSpentOnTaxiFs:SetPoint("TOPLEFT", 10, topPoint)
-  timeSpentOnTaxiFs:SetText("Time Spent on Flights: " .. HelperFunctions.SecondsToTimeString(timeSpentOnTaxi) .. ".")
+  timeSpentOnTaxiFs:SetText("Time Spent on Flights: " .. HF.SecondsToTimeString(timeSpentOnTaxi) .. ".")
   
   self.Scrollframe.Content = content
   self.Scrollframe:SetScrollChild(content)

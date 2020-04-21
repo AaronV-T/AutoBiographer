@@ -66,7 +66,7 @@ end
 function HF.GetKeysFromTableReverse(tab, sort)
   if (not tab) then return nil end
   
-  local keys = HF.GetKeysFromTable(tab)
+  local keys = HF.GetKeysFromTable(tab, sort)
   local reverseKeys = {}
   local index = 0
   for i = #keys, 1, -1 do
@@ -86,7 +86,7 @@ function HF.PrintKeysAndValuesFromTable(tab)
 end
 
 function HF.GetLastKeyFromTable(tab)
-  local keys = HF.GetKeysFromTable(tab)
+  local keys = HF.GetKeysFromTable(tab, true)
   return keys[#keys]
 end
 
@@ -98,6 +98,11 @@ function HF.SubtractFloats(left, right, precision)
 end
 
 -- Text Formatting Helpers
+
+function HF.CommaValue(n) -- credit http://richard.warburton.it
+	local left,num,right = string.match(n,'^([^%d]*%d)(%d*)(.-)$')
+	return left..(num:reverse():gsub('(%d%d%d)','%1,'):reverse())..right
+end
 
 function HF.SecondsToTimeString(totalSeconds)
   if totalSeconds == nil then return "" end
