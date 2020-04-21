@@ -68,6 +68,9 @@ AutoBiographerEnum = {
     Error = 4,
     Fatal = 5
   },
+  MiscellaneousTrackingType = {
+    PlayerDeaths = 0,
+  },
   OtherPlayerTrackingType = {
     DuelsLostToPlayer = 0,
     DuelsWonAgainstPlayer = 1,

@@ -8,7 +8,7 @@ function AggregatedStatistics.New()
     GatheringStatistics = nil,
     ItemStatisticsByItem = {}, -- Dict<CatalogItemId, ItemStatistics>
     KillStatistics = KillStatistics.New(),
-    MiscellaneousStatistics = nil,
+    MiscellaneousStatistics = MiscellaneousStatistics.New(),
     MoneyStatistics = MoneyStatistics.New(),
     OtherPlayerStatisticsByOtherPlayer = {}, -- Dict<CatalogUnitId, PlayerStatistics>
     PvpStatistics = nil,
@@ -114,6 +114,19 @@ function LevelStatistics.New(levelNum, totalTimePlayedAtDing, timePlayedThisLeve
   newInstance.TimePlayedThisLevel = timePlayedThisLevel -- int (seconds)
 
   return newInstance
+end
+
+-- *** MiscellaneousStatistics ***
+
+MiscellaneousStatistics = {}
+function MiscellaneousStatistics.New()
+  return {}
+end
+
+function MiscellaneousStatistics.Add(ms, miscellaneousTrackingType, value)
+  if (ms[miscellaneousTrackingType] == nil) then ms[miscellaneousTrackingType] = 0 end
+  
+  ms[miscellaneousTrackingType] = ms[miscellaneousTrackingType] + value
 end
 
 -- *** MoneyStatistics ***

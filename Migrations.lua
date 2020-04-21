@@ -70,3 +70,30 @@ table.insert(MM.Migrations,
     end
   )
 )
+
+table.insert(MM.Migrations, 
+  AutoBiographer_Migration:New(
+    4,
+    function(eventManager, controller)
+      -- Create MiscellaneousStatistics for each level.
+      for k,v in pairs(controller.CharacterData.Levels) do
+        if (v.MiscellaneousStatistics == nil) then v.MiscellaneousStatistics = MiscellaneousStatistics.New() end
+      end
+
+      -- Populate each level's MiscellaneousStatistics with death count.
+      local levelNum = HelperFunctions.GetKeysFromTable(controller.CharacterData.Levels, true)[1]
+
+      for i = 1, #controller.CharacterData.Events do
+        local event = controller.CharacterData.Events[i]
+
+        if (event.Type == AutoBiographerEnum.EventType.Level and event.SubType == AutoBiographerEnum.EventSubType.LevelUp) then
+          levelNum = event.LevelNum
+        end
+
+        if (event.Type == AutoBiographerEnum.EventType.Death and event.SubType == AutoBiographerEnum.EventSubType.PlayerDeath) then
+          MiscellaneousStatistics.Add(controller.CharacterData.Levels[levelNum].MiscellaneousStatistics, AutoBiographerEnum.MiscellaneousTrackingType.PlayerDeaths, 1)
+        end
+      end
+    end
+  )
+)

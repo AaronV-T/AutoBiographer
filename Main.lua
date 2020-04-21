@@ -152,7 +152,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
 		_G["AUTOBIOGRAPHER_INFO_CHAR"] = {
       CurrentSubZone = nil,
       CurrentZone = nil,
-      DatabaseVersion = 3,
+      DatabaseVersion = 4,
       GuildName = nil,
       GuildRankIndex = nil,
       GuildRankName = nil,
@@ -949,18 +949,24 @@ function EM:ClearCharacterData(doNotRequireConfirmation, doNotReloadUI)
 end
 
 function EM:Test()
-  --print(CanLootUnit(unitGuid)) -- hasLoot always false when called in UNIT_DIED combat log event, have to wait for it to register correctly
-  --[[local count = 100000
-  local start = nil
-  
-  start = GetTimePreciseSec()
-  for i = 1, count do
-    Controller:AddLog("Test" .. i, AutoBiographerEnum.LogLevel.Debug)
-  end
-  print("Added " .. count .. " debug logs in " .. HelperFunctions.SubtractFloats(GetTimePreciseSec(), start) .. " seconds.")]]
-  for i = 1, UnitLevel("player") do
-    if (Controller.CharacterData.Levels[i]) then 
-      print(i .. ": " .. tostring(Controller.CharacterData.Levels[i].TotalTimePlayedAtDing))
+  print(#Controller.CharacterData.Events)
+
+  local levelNum = HelperFunctions.GetKeysFromTable(Controller.CharacterData.Levels, true)[1]
+  local deaths = {}
+  deaths[levelNum] = 0
+
+  for i = 1, #Controller.CharacterData.Events do
+    local event = Controller.CharacterData.Events[i]
+
+    if (event.Type == AutoBiographerEnum.EventType.Level and event.SubType == AutoBiographerEnum.EventSubType.LevelUp) then
+      levelNum = event.LevelNum
+      deaths[levelNum] = 0
+    end
+
+    if (event.Type == AutoBiographerEnum.EventType.Death and event.SubType == AutoBiographerEnum.EventSubType.PlayerDeath) then
+      deaths[levelNum] = deaths[levelNum] + 1
     end
   end
+
+  HelperFunctions.PrintKeysAndValuesFromTable(deaths)
 end

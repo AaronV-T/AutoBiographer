@@ -58,7 +58,7 @@ function HF.GetKeysFromTable(tab, sort)
     keys[index] = k
   end
   
-  if (sort) then table.sort(tab) end
+  if (sort) then table.sort(keys) end
   
   return keys
 end

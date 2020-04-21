@@ -62,7 +62,7 @@ function Event.ToString(e, catalogs)
     end
   elseif (e.Type == AutoBiographerEnum.EventType.Reputation) then
     if (e.SubType == AutoBiographerEnum.EventSubType.ReputationLevelChanged) then
-      return timestampString .. "Your became " .. e.ReputationLevel .. " with " .. e.Faction .. "."
+      return timestampString .. "You became " .. e.ReputationLevel .. " with " .. e.Faction .. "."
     end
   elseif (e.Type == AutoBiographerEnum.EventType.Skill) then
     if (e.SubType == AutoBiographerEnum.EventSubType.SkillMilestone) then

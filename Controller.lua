@@ -122,6 +122,19 @@ function Controller:GetLogs()
   return self.Logs
 end
 
+function Controller:GetMiscellaneousStatByMiscellaneousTrackingType(miscellaneousTrackingType, minLevel, maxLevel)
+  local sum = 0
+  for k,v in pairs(self.CharacterData.Levels) do
+    if (k >= minLevel and k <= maxLevel) then
+      if (v.MiscellaneousStatistics[miscellaneousTrackingType]) then
+        sum = sum + v.MiscellaneousStatistics[miscellaneousTrackingType]
+      end
+    end
+  end
+  
+  return sum
+end
+
 function Controller:GetMoneyForAcquisitionMethod(acquisitionMethod, minLevel, maxLevel)
   local sum = 0
   for k,v in pairs(self.CharacterData.Levels) do
@@ -298,6 +311,7 @@ end
 function Controller:OnDeath(timestamp, coordinates, killerCatalogUnitId, killerLevel)
   if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog("Death: " .. " #" .. tostring(killerCatalogUnitId) .. ".", AutoBiographerEnum.LogLevel.Debug) end
   self:AddEvent(PlayerDeathEvent.New(timestamp, coordinates, killerCatalogUnitId, killerLevel))
+  MiscellaneousStatistics.Add(self:GetCurrentLevelStatistics().MiscellaneousStatistics, AutoBiographerEnum.MiscellaneousTrackingType.PlayerDeaths, 1)
 end
 
 function Controller:OnDuelLost(timestamp, coordinates, winnerCatalogUnitId, winnerName)
