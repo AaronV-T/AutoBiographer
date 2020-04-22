@@ -75,6 +75,25 @@ table.insert(MM.Migrations,
   AutoBiographer_Migration:New(
     4,
     function(eventManager, controller)
+      -- Delete erroneous death events for pet classes.
+      local playerClass, englishClass = UnitClass("player")
+      if (englishClass == "HUNTER" or englishClass == "WARLOCK") then
+        local lastDeathTimestamp = nil
+        local indexesToDelete = {}
+        for i = 1, #controller.CharacterData.Events do
+          local event = controller.CharacterData.Events[i]
+
+          if (event.Type == AutoBiographerEnum.EventType.Death or event.SubType == AutoBiographerEnum.EventSubType.PlayerDeath) then
+            if (lastDeathTimestamp and (event.Timestamp - lastDeathTimestamp < 10)) then 
+              indexesToDelete[i] = true
+            end
+            lastDeathTimestamp = event.Timestamp
+          end        
+        end
+        HelperFunctions.RemoveElementsFromArrayAtIndexes(controller.CharacterData.Events, indexesToDelete)
+        controller:AddLog("Deleted " .. #HelperFunctions.GetKeysFromTable(indexesToDelete) .. " duplicate death events.", AutoBiographerEnum.LogLevel.Information)
+      end
+
       -- Create MiscellaneousStatistics for each level.
       for k,v in pairs(controller.CharacterData.Levels) do
         if (v.MiscellaneousStatistics == nil) then v.MiscellaneousStatistics = MiscellaneousStatistics.New() end
@@ -82,7 +101,6 @@ table.insert(MM.Migrations,
 
       -- Populate each level's MiscellaneousStatistics with death count.
       local levelNum = HelperFunctions.GetKeysFromTable(controller.CharacterData.Levels, true)[1]
-
       for i = 1, #controller.CharacterData.Events do
         local event = controller.CharacterData.Events[i]
 

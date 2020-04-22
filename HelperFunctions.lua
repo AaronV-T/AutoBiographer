@@ -27,6 +27,29 @@ end
 
 -- Lua Helpers
 
+function HF.RemoveElementsFromArrayAtIndexes(array, indexesToRemove)
+  local originalLength = #array
+
+  -- Delete entries in the array.
+  for i = 1, originalLength do
+    if (indexesToRemove[i]) then
+      array[i] = nil
+    end
+  end
+
+  -- Compact the array.
+  local j = 0
+  for i = 1, originalLength do
+    if (array[i] ~= nil) then
+      j = j + 1
+      array[j] = array[i]
+    end
+  end
+  for i = j + 1, originalLength do
+    array[i] = nil
+  end
+end
+
 function HF.Round(number, precision)
   if (not precision) then precision = 0 end
   

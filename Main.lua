@@ -2,6 +2,7 @@ AutoBiographer_Settings = nil
 
 AutoBiographer_EventManager = {
   EventHandlers = {},
+  LastPlayerDeadEventTimestamp = nil,
   LastPlayerMoney = nil,
   NewLevelToAddToHistory = nil,
   PersistentPlayerInfo = nil,
@@ -14,7 +15,7 @@ AutoBiographer_EventManager = {
     IsDeadOrGhost = nil,
     OnTaxi = nil
   },
-  TemporaryTimestamps = {
+  TemporaryTimestamps = { -- These are specifically for time tracking.
     Died = nil,
     EnteredArea = nil,
     EnteredCombat = nil,
@@ -473,11 +474,26 @@ function EM.EventHandlers.LEARNED_SPELL_IN_TAB(self, spellId, skillInfoIndex, is
 end
 
 function EM.EventHandlers.PLAYER_ALIVE(self) -- Fired when the player releases from death to a graveyard; or accepts a resurrect before releasing their spirit. Also fires when logging in.
-  -- Upon logging in this event fires before ZONE_CHANGED_NEW_AREA and GeaRealZoneText() returns the zone of the last character logged in (or nil if you haven't logged into any other characters since launching WoW).
+  -- Upon logging in this event fires before ZONE_CHANGED_NEW_AREA and GetRealZoneText() returns the zone of the last character logged in (or nil if you haven't logged into any other characters since launching WoW).
   if (self.ZoneChangedNewAreaEventHasFired) then self:UpdatePlayerZone() end
 end
 
 function EM.EventHandlers.PLAYER_DEAD(self)
+  local thisPlayerDeadEventTimestamp = GetTime()
+  local lastPlayerDeadEventTimestamp = self.LastPlayerDeadEventTimestamp
+  self.LastPlayerDeadEventTimestamp = thisPlayerDeadEventTimestamp
+
+  -- This event can fire when the pet is dismissed while the player is dead.
+  -- If self.PlayerFlags.IsDeadOrGhost is false then we know that the player actually died. If true, this event most likely is erroneous (because this event should fire before we update the PlayerFlags values but that isn't guaranteed).
+  -- If the pet is alive when the player died, the 2nd event will be fired very quickly. If the pet was dead when the player died, the 2nd event can take quite up to 20 seconds to fire.
+  local playerClass, englishClass = UnitClass("player")
+  if ((englishClass == "HUNTER" or englishClass == "WARLOCK") and
+      self.PlayerFlags.IsDeadOrGhost and
+      lastPlayerDeadEventTimestamp and (thisPlayerDeadEventTimestamp - lastPlayerDeadEventTimestamp < 20)) then
+    Controller:AddLog("Ignoring this PLAYER_DEAD event.", AutoBiographerEnum.LogLevel.Debug)
+    return
+  end
+
   local killerCatalogUnitId = nil
   local killerLevel = nil
   if (damagedUnits[self.PersistentPlayerInfo.PlayerGuid]) then
@@ -949,24 +965,5 @@ function EM:ClearCharacterData(doNotRequireConfirmation, doNotReloadUI)
 end
 
 function EM:Test()
-  print(#Controller.CharacterData.Events)
 
-  local levelNum = HelperFunctions.GetKeysFromTable(Controller.CharacterData.Levels, true)[1]
-  local deaths = {}
-  deaths[levelNum] = 0
-
-  for i = 1, #Controller.CharacterData.Events do
-    local event = Controller.CharacterData.Events[i]
-
-    if (event.Type == AutoBiographerEnum.EventType.Level and event.SubType == AutoBiographerEnum.EventSubType.LevelUp) then
-      levelNum = event.LevelNum
-      deaths[levelNum] = 0
-    end
-
-    if (event.Type == AutoBiographerEnum.EventType.Death and event.SubType == AutoBiographerEnum.EventSubType.PlayerDeath) then
-      deaths[levelNum] = deaths[levelNum] + 1
-    end
-  end
-
-  HelperFunctions.PrintKeysAndValuesFromTable(deaths)
 end
