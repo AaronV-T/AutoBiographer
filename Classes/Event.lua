@@ -42,7 +42,7 @@ function Event.ToString(e, catalogs)
     end
   elseif (e.Type == AutoBiographerEnum.EventType.Kill) then
     if (e.SubType == AutoBiographerEnum.EventSubType.BossKill) then
-      return timestampString .. "You killed " .. e.BossName.. "."
+      return timestampString .. "You defeated " .. e.BossName.. "."
     elseif (e.SubType == AutoBiographerEnum.EventSubType.FirstKill) then
       local unitName = "#" .. e.CatalogUnitId
       if (catalogs ~= nil and catalogs.UnitCatalog ~= nil and catalogs.UnitCatalog[e.CatalogUnitId] ~= nil and catalogs.UnitCatalog[e.CatalogUnitId].Name ~= nil) then unitName = catalogs.UnitCatalog[e.CatalogUnitId].Name end

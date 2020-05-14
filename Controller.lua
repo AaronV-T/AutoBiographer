@@ -277,6 +277,33 @@ end
 function Controller:OnBossKill(timestamp, coordinates, bossId, bossName, hasKilledBossBefore)
   if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog("BossKill: " .. tostring(bossName) .. " (#" .. tostring(bossId) .. ").", AutoBiographerEnum.LogLevel.Debug) end
   
+  local catalogUnit = self.CharacterData.Catalogs.UnitCatalog[bossId]
+  local isFromRegularKillEvent = catalogUnit ~= nil and catalogUnit.Name == bossName
+
+  local matchingBossKillEvent = nil
+  local matchingEventIndex = #self.CharacterData.Events
+  while (matchingBossKillEvent == nil and timestamp - self.CharacterData.Events[matchingEventIndex].Timestamp < 2) do
+    local event = self.CharacterData.Events[matchingEventIndex]
+    if (event.Type == AutoBiographerEnum.EventType.Kill and event.SubType == AutoBiographerEnum.EventSubType.BossKill and event.BossName == bossName) then 
+      matchingBossKillEvent = event
+    else
+      matchingEventIndex = matchingEventIndex - 1
+    end
+  end
+
+  if (matchingBossKillEvent ~= nil) then
+    if (isFromRegularKillEvent) then
+      Controller:AddLog("This is a regular unit kill and I found a matching boss kill event from an actual boss. Returning.", AutoBiographerEnum.LogLevel.Debug)
+      return
+    else
+      Controller:AddLog("This is a boss unit kill and I found a matching boss kill event from a regular unit. Deleting other event.", AutoBiographerEnum.LogLevel.Debug)
+      local indexesToDelete = {}
+      indexesToDelete[matchingEventIndex] = true
+      HelperFunctions.RemoveElementsFromArrayAtIndexes(self.CharacterData.Events, indexesToDelete)
+      hasKilledBossBefore = true
+    end
+  end
+
   self:AddEvent(BossKillEvent.New(timestamp, coordinates, bossId, bossName))
   
   if (AutoBiographer_Settings.Options["TakeScreenshotOnBossKill"] and (not AutoBiographer_Settings.Options["TakeScreenshotOnlyOnFirstBossKill"] or not hasKilledBossBefore)) then
@@ -481,6 +508,16 @@ function Controller:TakeScreenshot(secondsToDelay)
     Screenshot()
     if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog("Screenshot captured after" .. tostring(secondsToDelay) .. "s delay .", AutoBiographerEnum.LogLevel.Debug) end
   end)
+end
+
+function Controller:UpdateCatalogBoss(catalogBoss)
+  if (self.CharacterData.Catalogs.BossCatalog[catalogBoss.Id] == nil) then
+    self.CharacterData.Catalogs.BossCatalog[catalogBoss.Id] = catalogBoss
+  else
+    CatalogBoss.Update(self.CharacterData.Catalogs.BossCatalog[catalogBoss.Id], catalogBoss.Id, catalogBoss.Name, catalogBoss.Killed)
+  end
+  
+  if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog("CatalogBoss Updated: " .. CatalogBoss.ToString(self.CharacterData.Catalogs.BossCatalog[catalogBoss.Id]) .. ".", AutoBiographerEnum.LogLevel.Debug) end
 end
 
 function Controller:UpdateCatalogItem(catalogItem)

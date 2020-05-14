@@ -25,6 +25,7 @@ The addon currently records the following events:
  
 It also keeps track of the following statistics:
  - Damage dealt and taken; healing dealt to self, healing dealt to others, and healing taken.
+ - Deaths
  - Duels won and lost to each player.
  - Items looted or acquired by other methods.
  - Money looted and money gained from quests.

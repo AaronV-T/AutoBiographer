@@ -115,3 +115,51 @@ table.insert(MM.Migrations,
     end
   )
 )
+
+table.insert(MM.Migrations, 
+  AutoBiographer_Migration:New(
+    5,
+    function(eventManager, controller)
+      -- Create BossCatalog.
+      if (controller.CharacterData.Catalogs.BossCatalog == nil) then controller.CharacterData.Catalogs.BossCatalog = {} end
+      
+      -- Delete duplicate boss kill events and update BossCatalog.
+      local indexesToDelete = {}
+      for i = 1, #controller.CharacterData.Events do
+        local event = controller.CharacterData.Events[i]
+
+        if (event.Type == AutoBiographerEnum.EventType.Kill and event.SubType == AutoBiographerEnum.EventSubType.BossKill) then
+          local catalogUnit = controller.CharacterData.Catalogs.UnitCatalog[event.BossId]
+          local isFromRegularKillEvent = catalogUnit ~= nil and catalogUnit.Name == event.BossName
+
+          if (not isFromRegularKillEvent) then
+            if (not Catalogs.PlayerHasKilledBoss(controller.CharacterData.Catalogs, event.BossId)) then
+              controller:UpdateCatalogBoss(CatalogBoss.New(event.BossId, event.BossName, true))
+            end
+          end
+
+          local matchingBossKillEvent = nil
+          local otherEventIndex = i - 1
+          while (matchingBossKillEvent == nil and event.Timestamp - controller.CharacterData.Events[otherEventIndex].Timestamp < 2) do
+            local otherEvent = controller.CharacterData.Events[otherEventIndex]
+            if (otherEvent.Type == AutoBiographerEnum.EventType.Kill and otherEvent.SubType == AutoBiographerEnum.EventSubType.BossKill and otherEvent.BossName == event.BossName) then 
+              matchingBossKillEvent = otherEvent
+            else
+              otherEventIndex = otherEventIndex - 1
+            end
+          end
+
+          if (matchingBossKillEvent ~= nil) then
+            if (isFromRegularKillEvent) then
+              indexesToDelete[i] = true
+            else
+              indexesToDelete[otherEventIndex] = true
+            end
+          end
+        end
+      end
+      HelperFunctions.RemoveElementsFromArrayAtIndexes(controller.CharacterData.Events, indexesToDelete)
+      controller:AddLog("Deleted " .. #HelperFunctions.GetKeysFromTable(indexesToDelete) .. " duplicate boss kill events.", AutoBiographerEnum.LogLevel.Information)
+    end
+  )
+)

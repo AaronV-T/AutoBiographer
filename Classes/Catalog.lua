@@ -3,7 +3,8 @@
 Catalogs = {}
 function Catalogs.New()
   return {
-    ItemCatalog = {}, -- Dict<CatalogItemId, CatalogSubZone>
+    BossCatalog = {}, -- Dict<CatalogBossId, CatalogBoss>
+    ItemCatalog = {}, -- Dict<CatalogItemId, CatalogItem>
     SubZoneCatalog = {}, -- Dict<CatalogSubZoneName, CatalogSubZone>
     SpellCatalog = {}, -- Dict<CatalogSpellId, CatalogSpell>
     UnitCatalog = {}, -- Dict<CatalogUnitId, CatalogUnit>
@@ -16,6 +17,11 @@ function Catalogs.PlayerHasAcquiredItem(catalogs, catalogItemId)
   return catalogItem and catalogItem.Acquired
 end
 
+function Catalogs.PlayerHasKilledBoss(catalogs, catalogBossId)
+  local catalogBoss = catalogs.BossCatalog[catalogBossId]
+  return catalogBoss ~= nil and catalogBoss.Killed
+end
+
 function Catalogs.PlayerHasKilledUnit(catalogs, catalogUnitId)
   local catalogUnit = catalogs.UnitCatalog[catalogUnitId]
   return catalogUnit ~= nil and catalogUnit.Killed
@@ -25,6 +31,27 @@ function Catalogs.PrintUnitCatalog(catalogs)
   for k,v in pairs(catalogs.UnitCatalog) do
     print(CatalogUnit.ToString(v))
   end
+end
+
+-- *** CatalogBoss ***
+
+CatalogBoss = {}
+function CatalogBoss.New(id, name, playerHasKilled)
+  return {
+    Id = id,
+    Name = name,
+    Killed = playerHasKilled
+  }
+end
+
+function CatalogBoss.ToString(cb)
+  return tostring(cb.Id) .. ", " .. tostring(cb.Name) .. ", " .. tostring(cb.Killed)
+end
+
+function CatalogBoss.Update(cb, id, name, playerHasKilled)
+  if (id ~= nil) then cb.Id = id end
+  if (name ~= nil) then cb.Name = name end
+  if (playerHasKilled ~= nil) then cb.Killed = playerHasKilled end
 end
 
 -- *** CatalogItem ***

@@ -153,7 +153,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
 		_G["AUTOBIOGRAPHER_INFO_CHAR"] = {
       CurrentSubZone = nil,
       CurrentZone = nil,
-      DatabaseVersion = 4,
+      DatabaseVersion = 5,
       GuildName = nil,
       GuildRankIndex = nil,
       GuildRankName = nil,
@@ -186,8 +186,13 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
 end
 
 function EM.EventHandlers.BOSS_KILL(self, bossId, bossName)
-  print("BOSS_KILL")
-  Controller:OnBossKill(time(), HelperFunctions.GetCoordinatesByUnitId("player"), bossId, bossName)
+  local hasKilledBossBefore = true
+  if (not Catalogs.PlayerHasKilledBoss(Controller.CharacterData.Catalogs, bossId)) then
+    hasKilledBossBefore = false
+    Controller:UpdateCatalogBoss(CatalogBoss.New(bossId, bossName, true))
+  end
+
+  Controller:OnBossKill(time(), HelperFunctions.GetCoordinatesByUnitId("player"), bossId, bossName, hasKilledBossBefore)
 end
 
 function EM.EventHandlers.CHAT_MSG_COMBAT_XP_GAIN(self, text)
@@ -965,5 +970,8 @@ function EM:ClearCharacterData(doNotRequireConfirmation, doNotReloadUI)
 end
 
 function EM:Test()
+  local kill = Kill.New(true, true, true, true, 10184)
+  Controller:OnKill(time(), HelperFunctions.GetCoordinatesByUnitId("player"), kill)
 
+  self.EventHandlers.BOSS_KILL(self, 1084, "Onyxia")
 end
