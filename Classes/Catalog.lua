@@ -86,7 +86,7 @@ end
 -- *** CatalogUnit ***
 
 CatalogUnit = {}
-function CatalogUnit.New(id, class, classification, creatureFamily, creatureType, name, race, playerHasKilled)
+function CatalogUnit.New(id, class, classification, creatureFamily, creatureType, name, race, playerHasKilled, unitType)
   return {
     Id = id,
     Class = class,
@@ -95,15 +95,16 @@ function CatalogUnit.New(id, class, classification, creatureFamily, creatureType
     CType = creatureType,
     Name = name,
     Race = race,
-    Killed = playerHasKilled
+    Killed = playerHasKilled,
+    UType = unitType
   }
 end
 
 function CatalogUnit.ToString(cu)
-  return tostring(cu.Id) .. ", " .. tostring(cu.Name) .. ", "  .. tostring(cu.Class) .. ", " .. tostring(cu.Clsfctn) .. ", " .. tostring(cu.CType) .. ", " .. tostring(cu.CFam) .. ", " .. tostring(cu.Race) .. ", " .. tostring(cu.Killed)
+  return tostring(cu.Id) .. ", " .. tostring(cu.Name) .. ", "  .. tostring(cu.Class) .. ", " .. tostring(cu.Clsfctn) .. ", " .. tostring(cu.CType) .. ", " .. tostring(cu.CFam) .. ", " .. tostring(cu.Race) .. ", " .. tostring(cu.Killed) .. ", " .. tostring(cu.UType)
 end
 
-function CatalogUnit.Update(cu, id, class, classification, creatureFamily, creatureType, name, race, playerHasKilled)
+function CatalogUnit.Update(cu, id, class, classification, creatureFamily, creatureType, name, race, playerHasKilled, unitType)
   if (id ~= nil) then cu.Id = id end
   if (class ~= nil) then cu.Class = class end
   if (classification ~= nil) then cu.Clsfctn = classification end
@@ -112,6 +113,7 @@ function CatalogUnit.Update(cu, id, class, classification, creatureFamily, creat
   if (name ~= nil) then cu.Name = name end
   if (race ~= nil) then cu.Race = race end
   if (playerHasKilled ~= nil) then cu.Killed = playerHasKilled end
+  if (unitType ~= nil) then cu.UType = unitType end
 end
 
 -- *** CatalogSpell ***

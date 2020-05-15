@@ -8,7 +8,8 @@ function HF.GetCatalogIdFromGuid(guid)
   local splitGuid = HF.SplitString(guid)
   
   if splitGuid[1] == "Player" then return splitGuid[2] .. "-" .. splitGuid[3] -- serverID-playerUID
-  elseif splitGuid[1] == "Creature" or "Pet" then return tonumber(splitGuid[6]) -- ID
+  elseif splitGuid[1] == "Pet" then return "pet" .. splitGuid[6] -- petID
+  elseif splitGuid[1] == "Creature" then return tonumber(splitGuid[6]) -- ID
   else error("Unsupported GUID: " .. guid)
   end
 end
@@ -23,6 +24,16 @@ function HF.GetCoordinatesByUnitId(unitId)
   if (position == nil) then return nil end
   
   return Coordinates.New(mapId, HF.Round(position.x * 100, 2), HF.Round(position.y * 100, 2))
+end
+
+function HF.GetUnitTypeFromCatalogUnitId(cuid)
+  if (string.match(cuid, "%w+%-%w+")) then
+    return AutoBiographerEnum.UnitType.Player
+  elseif (string.match(cuid, "pet%d+")) then
+    return AutoBiographerEnum.UnitType.Pet
+  else
+    return AutoBiographerEnum.UnitType.Creature
+  end
 end
 
 -- Lua Helpers

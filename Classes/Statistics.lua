@@ -4,6 +4,7 @@ AggregatedStatistics = {}
 function AggregatedStatistics.New()
   return {
     DamageStatistics = DamageStatistics.New(),
+    DeathStatistics = DeathStatistics.New(),
     ExperienceStatistics = ExperienceStatistics.New(),
     GatheringStatistics = nil,
     ItemStatisticsByItem = {}, -- Dict<CatalogItemId, ItemStatistics>
@@ -28,6 +29,19 @@ function DamageStatistics.Add(ds, damageOrHealingCategory, amount, over)
   if (ds[damageOrHealingCategory] == nil) then ds[damageOrHealingCategory] = DamageBreakdown.New() end
   
   DamageBreakdown.Add(ds[damageOrHealingCategory], amount, over)
+end
+
+-- *** DeathStatistics ***
+
+DeathStatistics = {}
+function DeathStatistics.New()
+  return {}
+end
+
+function DeathStatistics.Increment(ds, deathTrackingType)
+  if (ds[deathTrackingType] == nil) then ds[deathTrackingType] = 0 end
+  
+  ds[deathTrackingType] = ds[deathTrackingType] + 1
 end
 
 -- *** ExperienceStatistics ***

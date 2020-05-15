@@ -520,6 +520,42 @@ function AutoBiographer_MainWindow:Update()
   healingTakenFs:SetPoint("TOPLEFT", 10, topPoint)
   healingTakenFs:SetText("Healing Taken: " .. HF.CommaValue(healingTakenAmount) .. " (" .. HF.CommaValue(healingTakenOver) .. " over).")
   
+  -- Deaths
+  local deathsHeaderFs = content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+  topPoint = topPoint - 30
+  deathsHeaderFs:SetPoint("TOPLEFT", 10, topPoint)
+  deathsHeaderFs:SetText("Deaths")
+
+  local deathsToCreatures = Controller:GetDeathsByDeathTrackingType(AutoBiographerEnum.DeathTrackingType.DeathToCreature, self.DisplayMinLevel, self.DisplayMaxLevel)
+  local deathsToEnvironment = Controller:GetDeathsByDeathTrackingType(AutoBiographerEnum.DeathTrackingType.DeathToEnvironment, self.DisplayMinLevel, self.DisplayMaxLevel)
+  local deathsToPets = Controller:GetDeathsByDeathTrackingType(AutoBiographerEnum.DeathTrackingType.DeathToPet, self.DisplayMinLevel, self.DisplayMaxLevel)
+  local deathsToPlayers = Controller:GetDeathsByDeathTrackingType(AutoBiographerEnum.DeathTrackingType.DeathToPlayer, self.DisplayMinLevel, self.DisplayMaxLevel)
+  local totalDeaths = deathsToCreatures + deathsToEnvironment + deathsToPets + deathsToPlayers
+  local totalDeathsFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  topPoint = topPoint - 20
+  totalDeathsFs:SetPoint("TOPLEFT", 10, topPoint)
+  totalDeathsFs:SetText("Total Deaths: " .. HF.CommaValue(totalDeaths) .. ".")
+
+  local deathsToCreaturesFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  topPoint = topPoint - 15
+  deathsToCreaturesFs:SetPoint("TOPLEFT", 20, topPoint)
+  deathsToCreaturesFs:SetText("Deaths to Creatures: " .. HF.CommaValue(deathsToCreatures) .. ".")
+
+  local deathsToEnvironmentFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  topPoint = topPoint - 15
+  deathsToEnvironmentFs:SetPoint("TOPLEFT", 20, topPoint)
+  deathsToEnvironmentFs:SetText("Deaths to Environment: " .. HF.CommaValue(deathsToEnvironment) .. ".")
+
+  local deathsToPetsFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  topPoint = topPoint - 15
+  deathsToPetsFs:SetPoint("TOPLEFT", 20, topPoint)
+  deathsToPetsFs:SetText("Deaths to Pets: " .. HF.CommaValue(deathsToPets) .. ".")
+
+  local deathsToPlayersFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  topPoint = topPoint - 15
+  deathsToPlayersFs:SetPoint("TOPLEFT", 20, topPoint)
+  deathsToPlayersFs:SetText("Deaths to Players: " .. HF.CommaValue(deathsToPlayers) .. ".")
+
   -- Experience
   local experienceHeaderFs = content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
   topPoint = topPoint - 30
@@ -603,18 +639,6 @@ function AutoBiographer_MainWindow:Update()
   topPoint = topPoint - 15
   otherTaggedKillsFs:SetPoint("TOPLEFT", 10, topPoint)
   otherTaggedKillsFs:SetText("Other Tagged Kills: " .. HF.CommaValue(otherTaggedKills) .. ".")
-  
-  -- Miscellaneous
-  local miscellaneousHeaderFs = content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-  topPoint = topPoint - 30
-  miscellaneousHeaderFs:SetPoint("TOPLEFT", 10, topPoint)
-  miscellaneousHeaderFs:SetText("Miscellaneous")
-
-  local playerDeaths = Controller:GetMiscellaneousStatByMiscellaneousTrackingType(AutoBiographerEnum.MiscellaneousTrackingType.PlayerDeaths, self.DisplayMinLevel, self.DisplayMaxLevel)
-  local playerDeathsFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-  topPoint = topPoint - 20
-  playerDeathsFs:SetPoint("TOPLEFT", 10, topPoint)
-  playerDeathsFs:SetText("Player Deaths: " .. HF.CommaValue(playerDeaths) .. ".")
 
   -- Money
   local moneyHeaderFs = content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")

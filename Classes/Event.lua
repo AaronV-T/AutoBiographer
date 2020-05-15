@@ -16,7 +16,14 @@ function Event.ToString(e, catalogs)
         return timestampString .. "You died."
       else
         local unitName = "#" .. e.KillerCuid
-        if (catalogs ~= nil and catalogs.UnitCatalog ~= nil and catalogs.UnitCatalog[e.KillerCuid] ~= nil and catalogs.UnitCatalog[e.KillerCuid].Name ~= nil) then unitName = catalogs.UnitCatalog[e.KillerCuid].Name end
+        if (catalogs ~= nil and catalogs.UnitCatalog ~= nil and catalogs.UnitCatalog[e.KillerCuid] ~= nil) then
+          if (catalogs.UnitCatalog[e.KillerCuid].UType ~= nil and catalogs.UnitCatalog[e.KillerCuid].UType == AutoBiographerEnum.UnitType.Pet) then
+            unitName = "a pet"
+          elseif (catalogs.UnitCatalog[e.KillerCuid].Name ~= nil) then
+            unitName = catalogs.UnitCatalog[e.KillerCuid].Name
+          end  
+        end 
+
         local killerLevelText = ""
         if (e.KillerLevel ~= nil) then 
           local killerLevel = e.KillerLevel

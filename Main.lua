@@ -153,7 +153,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
 		_G["AUTOBIOGRAPHER_INFO_CHAR"] = {
       CurrentSubZone = nil,
       CurrentZone = nil,
-      DatabaseVersion = 5,
+      DatabaseVersion = 6,
       GuildName = nil,
       GuildRankIndex = nil,
       GuildRankName = nil,
@@ -350,7 +350,7 @@ function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
     if (damagerUnitId ~= nil) then 
       local damagerCatalogUnitId = HelperFunctions.GetCatalogIdFromGuid(sourceGuid)
       if (Controller:CatalogUnitIsIncomplete(damagerCatalogUnitId)) then
-        Controller:UpdateCatalogUnit(CatalogUnit.New(damagerCatalogUnitId, UnitClass(damagerUnitId), UnitClassification(damagerUnitId), UnitCreatureFamily(damagerUnitId), UnitCreatureType(damagerUnitId), UnitName(damagerUnitId), UnitRace(damagerUnitId)))
+        Controller:UpdateCatalogUnit(CatalogUnit.New(damagerCatalogUnitId, UnitClass(damagerUnitId), UnitClassification(damagerUnitId), UnitCreatureFamily(damagerUnitId), UnitCreatureType(damagerUnitId), UnitName(damagerUnitId), UnitRace(damagerUnitId), nil, HelperFunctions.GetUnitTypeFromCatalogUnitId(damagerCatalogUnitId)))
       end
     end
     
@@ -361,7 +361,7 @@ function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
       
       local damagedCatalogUnitId = HelperFunctions.GetCatalogIdFromGuid(destGuid)
       if (Controller:CatalogUnitIsIncomplete(damagedCatalogUnitId)) then
-        Controller:UpdateCatalogUnit(CatalogUnit.New(damagedCatalogUnitId, UnitClass(damagedUnitId), UnitClassification(damagedUnitId), UnitCreatureFamily(damagedUnitId), UnitCreatureType(damagedUnitId), UnitName(damagedUnitId), UnitRace(damagedUnitId)))
+        Controller:UpdateCatalogUnit(CatalogUnit.New(damagedCatalogUnitId, UnitClass(damagedUnitId), UnitClassification(damagedUnitId), UnitCreatureFamily(damagedUnitId), UnitCreatureType(damagedUnitId), UnitName(damagedUnitId), UnitRace(damagedUnitId), nil, HelperFunctions.GetUnitTypeFromCatalogUnitId(damagedCatalogUnitId)))
       end
     end
     
@@ -970,8 +970,5 @@ function EM:ClearCharacterData(doNotRequireConfirmation, doNotReloadUI)
 end
 
 function EM:Test()
-  local kill = Kill.New(true, true, true, true, 10184)
-  Controller:OnKill(time(), HelperFunctions.GetCoordinatesByUnitId("player"), kill)
 
-  self.EventHandlers.BOSS_KILL(self, 1084, "Onyxia")
 end

@@ -163,3 +163,49 @@ table.insert(MM.Migrations,
     end
   )
 )
+
+table.insert(MM.Migrations, 
+  AutoBiographer_Migration:New(
+    6,
+    function(eventManager, controller)
+      -- Update UnitCatalog with unit types.
+      for k,v in pairs(controller.CharacterData.Catalogs.UnitCatalog) do
+        if (v.UType == nil) then
+          v.UType = HelperFunctions.GetUnitTypeFromCatalogUnitId(v.Id)
+
+          if (v.UType == AutoBiographerEnum.UnitType.Player) then v.Killed = nil end -- A bug was setting the player units Killed field.
+        end
+      end
+
+      -- Create DeathStatistics for each level.
+      for k,v in pairs(controller.CharacterData.Levels) do
+        if (v.DeathStatistics == nil) then v.DeathStatistics = DeathStatistics.New() end
+        v.MiscellaneousStatistics[AutoBiographerEnum.MiscellaneousTrackingType.PlayerDeaths] = nil
+      end
+
+      -- Populate each level's DeathStatistics.
+      local levelNum = HelperFunctions.GetKeysFromTable(controller.CharacterData.Levels, true)[1]
+      for i = 1, #controller.CharacterData.Events do
+        local event = controller.CharacterData.Events[i]
+
+        if (event.Type == AutoBiographerEnum.EventType.Level and event.SubType == AutoBiographerEnum.EventSubType.LevelUp) then
+          levelNum = event.LevelNum
+        elseif (event.Type == AutoBiographerEnum.EventType.Death and event.SubType == AutoBiographerEnum.EventSubType.PlayerDeath) then
+          local deathTrackingType
+
+          if (event.KillerCuid == nil) then 
+            deathTrackingType = AutoBiographerEnum.DeathTrackingType.DeathToEnvironment
+          elseif (HelperFunctions.GetUnitTypeFromCatalogUnitId(event.KillerCuid) == AutoBiographerEnum.UnitType.Creature) then
+            deathTrackingType = AutoBiographerEnum.DeathTrackingType.DeathToCreature
+          elseif (HelperFunctions.GetUnitTypeFromCatalogUnitId(event.KillerCuid) == AutoBiographerEnum.UnitType.Pet) then
+            deathTrackingType = AutoBiographerEnum.DeathTrackingType.DeathToPet
+          elseif (HelperFunctions.GetUnitTypeFromCatalogUnitId(event.KillerCuid) == AutoBiographerEnum.UnitType.Player) then
+            deathTrackingType = AutoBiographerEnum.DeathTrackingType.DeathToPlayer
+          end
+          
+          DeathStatistics.Increment(controller.CharacterData.Levels[levelNum].DeathStatistics, deathTrackingType)
+        end
+      end
+    end
+  )
+)

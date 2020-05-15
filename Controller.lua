@@ -82,6 +82,19 @@ function Controller:GetDamageOrHealing(damageOrHealingCategory, minLevel, maxLev
   return amountSum, overSum
 end
 
+function Controller:GetDeathsByDeathTrackingType(deathTrackingType, minLevel, maxLevel)
+  local sum = 0
+  for k,v in pairs(self.CharacterData.Levels) do
+    if (k >= minLevel and k <= maxLevel) then
+      if (v.DeathStatistics[deathTrackingType]) then
+        sum = sum + v.DeathStatistics[deathTrackingType]
+      end
+    end
+  end
+  
+  return sum
+end
+
 function Controller:GetEvents()
   return self.CharacterData.Events
 end
@@ -338,7 +351,19 @@ end
 function Controller:OnDeath(timestamp, coordinates, killerCatalogUnitId, killerLevel)
   if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog("Death: " .. " #" .. tostring(killerCatalogUnitId) .. ".", AutoBiographerEnum.LogLevel.Debug) end
   self:AddEvent(PlayerDeathEvent.New(timestamp, coordinates, killerCatalogUnitId, killerLevel))
-  MiscellaneousStatistics.Add(self:GetCurrentLevelStatistics().MiscellaneousStatistics, AutoBiographerEnum.MiscellaneousTrackingType.PlayerDeaths, 1)
+
+  local deathTrackingType
+  if (killerCatalogUnitId == nil) then 
+    deathTrackingType = AutoBiographerEnum.DeathTrackingType.DeathToEnvironment
+  elseif (HelperFunctions.GetUnitTypeFromCatalogUnitId(killerCatalogUnitId) == AutoBiographerEnum.UnitType.Creature) then
+    deathTrackingType = AutoBiographerEnum.DeathTrackingType.DeathToCreature
+  elseif (HelperFunctions.GetUnitTypeFromCatalogUnitId(killerCatalogUnitId) == AutoBiographerEnum.UnitType.Pet) then
+    deathTrackingType = AutoBiographerEnum.DeathTrackingType.DeathToPet
+  elseif (HelperFunctions.GetUnitTypeFromCatalogUnitId(killerCatalogUnitId) == AutoBiographerEnum.UnitType.Player) then
+    deathTrackingType = AutoBiographerEnum.DeathTrackingType.DeathToPlayer
+  end
+  
+  DeathStatistics.Increment(self:GetCurrentLevelStatistics().DeathStatistics, deathTrackingType)
 end
 
 function Controller:OnDuelLost(timestamp, coordinates, winnerCatalogUnitId, winnerName)
@@ -391,8 +416,11 @@ function Controller:OnKill(timestamp, coordinates, kill)
     local hasKilledUnitBefore = true
     if (not Catalogs.PlayerHasKilledUnit(self.CharacterData.Catalogs, kill.CatalogUnitId)) then
       hasKilledUnitBefore = false
-      self:UpdateCatalogUnit(CatalogUnit.New(kill.CatalogUnitId, nil, nil, nil, nil, nil, nil, true))
-      self:AddEvent(FirstKillEvent.New(timestamp, coordinates, kill.CatalogUnitId))
+      self:UpdateCatalogUnit(CatalogUnit.New(kill.CatalogUnitId, nil, nil, nil, nil, nil, nil, true, nil))
+      
+      if (self.CharacterData.Catalogs.UnitCatalog[kill.CatalogUnitId].UType == AutoBiographerEnum.UnitType.Creature) then
+        self:AddEvent(FirstKillEvent.New(timestamp, coordinates, kill.CatalogUnitId))
+      end
     end
     
     if (BossDatabase[kill.CatalogUnitId]) then
@@ -534,7 +562,7 @@ function Controller:UpdateCatalogUnit(catalogUnit)
   if (self.CharacterData.Catalogs.UnitCatalog[catalogUnit.Id] == nil) then
     self.CharacterData.Catalogs.UnitCatalog[catalogUnit.Id] = catalogUnit
   else
-    CatalogUnit.Update(self.CharacterData.Catalogs.UnitCatalog[catalogUnit.Id], catalogUnit.Id, catalogUnit.Class, catalogUnit.Clsfctn, catalogUnit.CFam, catalogUnit.CType, catalogUnit.Name, catalogUnit.Race, catalogUnit.Killed)
+    CatalogUnit.Update(self.CharacterData.Catalogs.UnitCatalog[catalogUnit.Id], catalogUnit.Id, catalogUnit.Class, catalogUnit.Clsfctn, catalogUnit.CFam, catalogUnit.CType, catalogUnit.Name, catalogUnit.Race, catalogUnit.Killed, catalogUnit.UType)
   end
   
   if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog("CatalogUnit Updated: " .. CatalogUnit.ToString(self.CharacterData.Catalogs.UnitCatalog[catalogUnit.Id]) .. ".", AutoBiographerEnum.LogLevel.Debug) end

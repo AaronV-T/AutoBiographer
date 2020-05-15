@@ -15,6 +15,12 @@ AutoBiographerEnum = {
     PetDamageDealt = 5,
     PetDamageTaken = 6,
   },
+  DeathTrackingType = {
+    DeathToCreature = 0,
+    DeathToEnvironment = 1,
+    DeathToPet = 2,
+    DeathToPlayer = 3,
+  },
   EventType = {
     Battleground = 0,
     Death = 1,
@@ -69,7 +75,7 @@ AutoBiographerEnum = {
     Fatal = 5
   },
   MiscellaneousTrackingType = {
-    PlayerDeaths = 0,
+    PlayerDeaths = 0, -- Deprecated
   },
   OtherPlayerTrackingType = {
     DuelsLostToPlayer = 0,
@@ -89,4 +95,9 @@ AutoBiographerEnum = {
     OnTaxi = 5,
     InParty = 6,
   },
+  UnitType = {
+    Creature = 0,
+    Pet = 1,
+    Player = 2
+  }
 }

@@ -25,7 +25,7 @@ The addon currently records the following events:
  
 It also keeps track of the following statistics:
  - Damage dealt and taken; healing dealt to self, healing dealt to others, and healing taken.
- - Deaths
+ - Deaths by creatures, environment, pets, and other players.
  - Duels won and lost to each player.
  - Items looted or acquired by other methods.
  - Money looted and money gained from quests.
@@ -51,10 +51,12 @@ Statistics:
  - Consumables used.
  - Herbs gathered and ores mined.
  - Items traded, vendored, or sold at AH.
+ - Messages sent and received.
  - Miscellaneous stats:
    - Flights taken.   
  - Money gained/lost to auction house, vendors, trading to players, etc.
  - PVP stats (honorable kills, dishonorable kills).
+ - Rolls.
  
 
 Other Featues:
