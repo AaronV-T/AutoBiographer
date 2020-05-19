@@ -320,7 +320,7 @@ function Controller:OnBossKill(timestamp, coordinates, bossId, bossName, hasKill
   self:AddEvent(BossKillEvent.New(timestamp, coordinates, bossId, bossName))
   
   if (AutoBiographer_Settings.Options["TakeScreenshotOnBossKill"] and (not AutoBiographer_Settings.Options["TakeScreenshotOnlyOnFirstBossKill"] or not hasKilledBossBefore)) then
-    self:TakeScreenshot(0.35)
+    self:TakeScreenshot(0.5)
   end
 end
 
