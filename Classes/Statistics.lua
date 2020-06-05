@@ -64,10 +64,10 @@ function ItemStatistics.New()
   return {}
 end
 
-function ItemStatistics.AddCount(is, acquisitionMethod, quantity)
-  if (not is[acquisitionMethod]) then is[acquisitionMethod] = 0 end
+function ItemStatistics.AddCount(is, itemAcquisitionMethod, quantity)
+  if (not is[itemAcquisitionMethod]) then is[itemAcquisitionMethod] = 0 end
   
-  is[acquisitionMethod] = is[acquisitionMethod] + quantity
+  is[itemAcquisitionMethod] = is[itemAcquisitionMethod] + quantity
 end
 
 -- *** KillStatistics ***
@@ -153,10 +153,10 @@ function MoneyStatistics.New()
   }
 end
 
-function MoneyStatistics.AddMoney(ms, acquisitionMethod, money)
-  if (not ms[acquisitionMethod]) then ms[acquisitionMethod] = 0 end
+function MoneyStatistics.AddMoney(ms, moneyAcquisitionMethod, money)
+  if (not ms[moneyAcquisitionMethod]) then ms[moneyAcquisitionMethod] = 0 end
   
-  ms[acquisitionMethod] = ms[acquisitionMethod] + money
+  ms[moneyAcquisitionMethod] = ms[moneyAcquisitionMethod] + money
 end
 
 function MoneyStatistics.TotalMoneyChanged(ms, deltaMoney) 

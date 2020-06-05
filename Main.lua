@@ -1,9 +1,15 @@
 AutoBiographer_Settings = nil
 
 AutoBiographer_EventManager = {
+  AuctionHouseIsOpen = nil,
   EventHandlers = {},
   LastPlayerDeadEventTimestamp = nil,
   LastPlayerMoney = nil,
+  MailboxIsOpen = nil,
+  MailboxMessages = nil,
+  MailboxUpdatesRunning = 0,
+  MailInboxUpdatedAfterOpen = nil,
+  MerchantIsOpen = nil,
   NewLevelToAddToHistory = nil,
   PersistentPlayerInfo = nil,
   PlayerEnteringWorldHasFired = false,
@@ -195,6 +201,14 @@ function EM.EventHandlers.BOSS_KILL(self, bossId, bossName)
   Controller:OnBossKill(time(), HelperFunctions.GetCoordinatesByUnitId("player"), bossId, bossName, hasKilledBossBefore)
 end
 
+function EM.EventHandlers.AUCTION_HOUSE_CLOSED(self, arg1, arg2)
+  self.AuctionHouseIsOpen = false
+end
+
+function EM.EventHandlers.AUCTION_HOUSE_SHOW(self, arg1, arg2)
+  self.AuctionHouseIsOpen = true
+end
+
 function EM.EventHandlers.CHAT_MSG_COMBAT_XP_GAIN(self, text)
   local mobName, xpGainedFromKill = string.match(text, "(.+) dies, you gain (%d+) experience")
   local xpGainedFromGroupBonus = string.match(text, "+(%d+) group bonus")
@@ -210,13 +224,13 @@ end
 function EM.EventHandlers.CHAT_MSG_LOOT(self, text, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, arg17, arg18, arg19, arg20, arg21)
   if (string.find(text, "You") ~= 1) then return end
   
-  local acquisitionMethod = nil
+  local itemAcquisitionMethod = nil
   if (string.find(text, "You create") == 1) then
-    acquisitionMethod = AutoBiographerEnum.AcquisitionMethod.Create
+    itemAcquisitionMethod = AutoBiographerEnum.ItemAcquisitionMethod.Create
   elseif (string.find(text, "You receive loot") == 1) then
-    acquisitionMethod = AutoBiographerEnum.AcquisitionMethod.Loot
+    itemAcquisitionMethod = AutoBiographerEnum.ItemAcquisitionMethod.Loot
   else
-    acquisitionMethod = AutoBiographerEnum.AcquisitionMethod.Other
+    itemAcquisitionMethod = AutoBiographerEnum.ItemAcquisitionMethod.Other
   end
   
   local id = nil
@@ -247,7 +261,7 @@ function EM.EventHandlers.CHAT_MSG_LOOT(self, text, arg2, arg3, arg4, arg5, arg6
     quantity = tonumber(string.sub(quantityText, 2, #quantityText - 1))
   end
   
-  Controller:OnAcquiredItem(time(), HelperFunctions.GetCoordinatesByUnitId("player"), acquisitionMethod, catalogItem, quantity)
+  Controller:OnAcquiredItem(time(), HelperFunctions.GetCoordinatesByUnitId("player"), itemAcquisitionMethod, catalogItem, quantity)
 end
 
 
@@ -279,7 +293,7 @@ function EM.EventHandlers.CHAT_MSG_MONEY(self, text, arg2, arg3, arg4, arg5)
     end
   end
   
-  Controller:OnGainedMoney(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.AcquisitionMethod.Loot, moneySum)
+  Controller:OnGainedMoney(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.MoneyAcquisitionMethod.Loot, moneySum)
 end
 
 function EM.EventHandlers.CHAT_MSG_SKILL(self, text)
@@ -478,6 +492,41 @@ function EM.EventHandlers.LEARNED_SPELL_IN_TAB(self, spellId, skillInfoIndex, is
   Controller:OnSpellLearned(time(), HelperFunctions.GetCoordinatesByUnitId("player"), spellId, name, rank)
 end
 
+function EM.EventHandlers.MAIL_CLOSED(self, arg1, arg2)
+  self.MailboxIsOpen = false
+  self.MailboxMessages = nil
+  self.MailInboxUpdatedAfterOpen = nil
+end
+
+function EM.EventHandlers.MAIL_SHOW(self, arg1, arg2)
+  self.MailboxIsOpen = true
+  self.MailboxMessages = {}
+  self.MailInboxUpdatedAfterOpen = false
+end
+
+function EM.EventHandlers.MAIL_INBOX_UPDATE(self, arg1, arg2)
+  --print("MAIL_INBOX_UPDATE: " .. tostring(arg1) .. ", " .. tostring(arg2))
+  if (self.MailInboxUpdatedAfterOpen) then return end
+  self.MailInboxUpdatedAfterOpen = true
+
+  self:UpdateMailboxMessages()
+end
+
+function EM.EventHandlers.UPDATE_PENDING_MAIL(self, arg1, arg2)
+  --print("UPDATE_PENDING_MAIL: " .. tostring(arg1) .. ", " .. tostring(arg2))
+  if (not self.MailboxIsOpen) then return end
+
+  self:UpdateMailboxMessages()
+end
+
+function EM.EventHandlers.MERCHANT_CLOSED(self, arg1, arg2)
+  self.MerchantIsOpen = false
+end
+
+function EM.EventHandlers.MERCHANT_SHOW(self, arg1, arg2)
+  self.MerchantIsOpen = true
+end
+
 function EM.EventHandlers.PLAYER_ALIVE(self) -- Fired when the player releases from death to a graveyard; or accepts a resurrect before releasing their spirit. Also fires when logging in.
   -- Upon logging in this event fires before ZONE_CHANGED_NEW_AREA and GetRealZoneText() returns the zone of the last character logged in (or nil if you haven't logged into any other characters since launching WoW).
   if (self.ZoneChangedNewAreaEventHasFired) then self:UpdatePlayerZone() end
@@ -576,11 +625,44 @@ function EM.EventHandlers.PLAYER_LOGIN(self)
   
 end
 
-
-
 function EM.EventHandlers.PLAYER_MONEY(self)
   local currentMoney = GetMoney()
-  Controller:OnMoneyChanged(time(), HelperFunctions.GetCoordinatesByUnitId("player"), currentMoney - self.LastPlayerMoney)
+  local deltaMoney = currentMoney - self.LastPlayerMoney
+  --print("PLAYER_MONEY. Delta: " .. tostring(deltaMoney))
+  
+  if (self.AuctionHouseIsOpen) then
+  elseif (self.MailboxIsOpen and deltaMoney > 0) then
+    for i = 1, #self.MailboxMessages do
+      local message = self.MailboxMessages[i]
+      if (message.money and message.money == deltaMoney and not message.moneyIsAssumedTaken) then
+        --print("Message match: " .. tostring(i) .. ", " .. message.sender)
+        if (message.isFromAuctionHouse) then
+          if (message.auctionHouseMessageType == AutoBiographerEnum.AuctionHouseMessageType.Outbid) then
+            Controller:OnGainedMoney(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.MoneyAcquisitionMethod.AuctionHouseOutbid, deltaMoney)
+          elseif (message.auctionHouseMessageType == AutoBiographerEnum.AuctionHouseMessageType.Sold) then
+            Controller:OnGainedMoney(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.MoneyAcquisitionMethod.AuctionHouseDepositReturn, message.auctionDeposit)
+            Controller:OnGainedMoney(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.MoneyAcquisitionMethod.AuctionHouseSale, deltaMoney - message.auctionDeposit)
+          end
+        elseif (message.isCodPayment) then
+          -- This is the payment for a COD mail message.
+          Controller:OnGainedMoney(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.MoneyAcquisitionMethod.MailCod, deltaMoney)
+        else
+          -- This is a direct mail message.
+          Controller:OnGainedMoney(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.MoneyAcquisitionMethod.Mail, deltaMoney)
+        end
+
+        message.moneyIsAssumedTaken = true
+        break
+      end
+    end
+  elseif (self.MerchantIsOpen) then
+    if (deltaMoney > 0) then
+      Controller:OnGainedMoney(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.MoneyAcquisitionMethod.Merchant, deltaMoney)
+    end
+  end
+  
+  
+  Controller:OnMoneyChanged(time(), HelperFunctions.GetCoordinatesByUnitId("player"), deltaMoney)
   self.LastPlayerMoney = currentMoney
 end
 
@@ -592,7 +674,7 @@ function EM.EventHandlers.QUEST_TURNED_IN(self, questId, xpGained, moneyGained)
   Controller:OnQuestTurnedIn(time(), HelperFunctions.GetCoordinatesByUnitId("player"), questId, C_QuestLog.GetQuestInfo(questId), xpGained, moneyGained)
   
   if (moneyGained and moneyGained > 0) then
-    Controller:OnGainedMoney(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.AcquisitionMethod.Quest, moneyGained)
+    Controller:OnGainedMoney(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.MoneyAcquisitionMethod.Quest, moneyGained)
   end
   
   if (xpGained and xpGained > 0) then
@@ -760,6 +842,61 @@ function EM:UpdateGroupMemberInfo()
       self.TemporaryTimestamps.OtherPlayerJoinedGroup[k] = nil
     end
   end
+end
+
+function EM:UpdateMailboxMessages() 
+  --print ("Start UpdateMailboxMessages")
+  self.MailboxUpdatesRunning = self.MailboxUpdatesRunning + 1
+
+  local mailboxMessages = {}
+
+  local _, totalItems = GetInboxNumItems()
+  for i = 1, totalItems do
+    local _, _, sender, subject, money, codAmount, _, _, _, _, _, _, _ = GetInboxHeaderInfo(i)
+    local _, _, _, _, isInvoice = GetInboxText(i)
+
+    local message = {
+      money = money,
+      sender = sender
+    }
+ 
+    if (sender and string.find(sender, "Auction House")) then
+      message.isFromAuctionHouse = true
+
+      invoiceType, itemName, playerName, bid, buyout, deposit, consignment = GetInboxInvoiceInfo(i)
+
+      if (invoiceType == nil) then
+        if (string.find(subject, "Auction cancelled") ~= nil) then
+          message.auctionHouseMessageType = AutoBiographerEnum.AuctionHouseMessageType.Canceled
+        elseif (string.find(subject, "Auction expired") ~= nil) then
+          message.auctionHouseMessageType = AutoBiographerEnum.AuctionHouseMessageType.Expired
+        elseif (string.find(subject, "Outbid on") ~= nil) then
+          message.auctionHouseMessageType = AutoBiographerEnum.AuctionHouseMessageType.Outbid
+        end
+      else
+        if (invoiceType == "buyer") then
+          message.auctionHouseMessageType = AutoBiographerEnum.AuctionHouseMessageType.Bought
+        elseif (invoiceType == "seller") then
+          message.auctionHouseMessageType = AutoBiographerEnum.AuctionHouseMessageType.Sold
+        end
+
+        message.auctionSalePrice = math.max(tonumber(bid), tonumber(buyout))
+        message.auctionDeposit = tonumber(deposit)
+      end
+    elseif (subject and string.find(subject, "COD Payment:")) then
+      message.isCodPayment = true
+    end
+    
+    table.insert(mailboxMessages, message)
+  end
+
+  if (self.MailboxUpdatesRunning == 1) then
+    --print ("Set MailboxMessages")
+    self.MailboxMessages = mailboxMessages
+  end
+
+  self.MailboxUpdatesRunning = self.MailboxUpdatesRunning - 1
+  --print ("End UpdateMailboxMessages")
 end
 
 function EM:UpdatePlayerGuildInfo()

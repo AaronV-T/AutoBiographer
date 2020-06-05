@@ -25,7 +25,7 @@ local function AutoBiographer_InitializeMainWindow()
   frame.Scrollframe.Scrollbar = CreateFrame("Slider", nil, frame.Scrollframe, "UIPanelScrollBarTemplate") 
   frame.Scrollframe.Scrollbar:SetPoint("TOPLEFT", frame, "TOPRIGHT", -25, -45) 
   frame.Scrollframe.Scrollbar:SetPoint("BOTTOMLEFT", frame, "BOTTOMRIGHT", -25, 22)
-  frame.Scrollframe.Scrollbar:SetMinMaxValues(1, 335) 
+  frame.Scrollframe.Scrollbar:SetMinMaxValues(1, 395) 
   frame.Scrollframe.Scrollbar:SetValueStep(1) 
   frame.Scrollframe.Scrollbar.scrollStep = 1 
   frame.Scrollframe.Scrollbar:SetValue(0) 
@@ -604,19 +604,19 @@ function AutoBiographer_MainWindow:Update()
   itemsHeaderFs:SetPoint("TOPLEFT", 10, topPoint)
   itemsHeaderFs:SetText("Items")
   
-  local itemsCreated = Controller:GetItemCountForAcquisitionMethod(AutoBiographerEnum.AcquisitionMethod.Create, self.DisplayMinLevel, self.DisplayMaxLevel)
+  local itemsCreated = Controller:GetItemCountForAcquisitionMethod(AutoBiographerEnum.ItemAcquisitionMethod.Create, self.DisplayMinLevel, self.DisplayMaxLevel)
   local itemsCreatedFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   topPoint = topPoint - 20
   itemsCreatedFs:SetPoint("TOPLEFT", 10, topPoint)
   itemsCreatedFs:SetText("Items Created: " .. HF.CommaValue(itemsCreated) .. ".")
   
-  local itemsLooted = Controller:GetItemCountForAcquisitionMethod(AutoBiographerEnum.AcquisitionMethod.Loot, self.DisplayMinLevel, self.DisplayMaxLevel)
+  local itemsLooted = Controller:GetItemCountForAcquisitionMethod(AutoBiographerEnum.ItemAcquisitionMethod.Loot, self.DisplayMinLevel, self.DisplayMaxLevel)
   local itemsLootedFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   topPoint = topPoint - 15
   itemsLootedFs:SetPoint("TOPLEFT", 10, topPoint)
   itemsLootedFs:SetText("Items Looted: " .. HF.CommaValue(itemsLooted) .. ".")
   
-  local itemsOther = Controller:GetItemCountForAcquisitionMethod(AutoBiographerEnum.AcquisitionMethod.Other, self.DisplayMinLevel, self.DisplayMaxLevel)
+  local itemsOther = Controller:GetItemCountForAcquisitionMethod(AutoBiographerEnum.ItemAcquisitionMethod.Other, self.DisplayMinLevel, self.DisplayMaxLevel)
   local itemsOtherFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   topPoint = topPoint - 15
   itemsOtherFs:SetPoint("TOPLEFT", 10, topPoint)
@@ -646,19 +646,47 @@ function AutoBiographer_MainWindow:Update()
   moneyHeaderFs:SetPoint("TOPLEFT", 10, topPoint)
   moneyHeaderFs:SetText("Money")
   
-  local moneyLooted = Controller:GetMoneyForAcquisitionMethod(AutoBiographerEnum.AcquisitionMethod.Loot, self.DisplayMinLevel, self.DisplayMaxLevel)
-  local moneyLootedFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  local moneyGainedFromAuctionHouseSales = Controller:GetMoneyForAcquisitionMethod(AutoBiographerEnum.MoneyAcquisitionMethod.AuctionHouseSale, self.DisplayMinLevel, self.DisplayMaxLevel)
+  local moneyGainedFromAuctionHouseSalesFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   topPoint = topPoint - 20
-  moneyLootedFs:SetPoint("TOPLEFT", 10, topPoint)
-  moneyLootedFs:SetText("Money Looted: " .. GetCoinText(moneyLooted) .. ".")
+  moneyGainedFromAuctionHouseSalesFs:SetPoint("TOPLEFT", 10, topPoint)
+  moneyGainedFromAuctionHouseSalesFs:SetText("Money Gained from Auction House: " .. GetCoinText(moneyGainedFromAuctionHouseSales) .. ".")
+
+  local moneyGainedFromLoot = Controller:GetMoneyForAcquisitionMethod(AutoBiographerEnum.MoneyAcquisitionMethod.Loot, self.DisplayMinLevel, self.DisplayMaxLevel)
+  local moneyGainedFromLootFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  topPoint = topPoint - 15
+  moneyGainedFromLootFs:SetPoint("TOPLEFT", 10, topPoint)
+  moneyGainedFromLootFs:SetText("Money Looted: " .. GetCoinText(moneyGainedFromLoot) .. ".")
   
-  local moneyGainedFromQuesting = Controller:GetMoneyForAcquisitionMethod(AutoBiographerEnum.AcquisitionMethod.Quest, self.DisplayMinLevel, self.DisplayMaxLevel)
+  local moneyGainedFromMail = Controller:GetMoneyForAcquisitionMethod(AutoBiographerEnum.MoneyAcquisitionMethod.Mail, self.DisplayMinLevel, self.DisplayMaxLevel)
+  local moneyGainedFromMailFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  topPoint = topPoint - 15
+  moneyGainedFromMailFs:SetPoint("TOPLEFT", 10, topPoint)
+  moneyGainedFromMailFs:SetText("Money Gained From Mail (Direct): " .. GetCoinText(moneyGainedFromMail) .. ".")
+
+  local moneyGainedFromMailCod = Controller:GetMoneyForAcquisitionMethod(AutoBiographerEnum.MoneyAcquisitionMethod.MailCod, self.DisplayMinLevel, self.DisplayMaxLevel)
+  local moneyGainedFromMailCodFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  topPoint = topPoint - 15
+  moneyGainedFromMailCodFs:SetPoint("TOPLEFT", 10, topPoint)
+  moneyGainedFromMailCodFs:SetText("Money Gained From Mail (COD): " .. GetCoinText(moneyGainedFromMailCod) .. ".")
+
+  local moneyGainedFromMerchants = Controller:GetMoneyForAcquisitionMethod(AutoBiographerEnum.MoneyAcquisitionMethod.Merchant, self.DisplayMinLevel, self.DisplayMaxLevel)
+  local moneyGainedFromMerchantsFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  topPoint = topPoint - 15
+  moneyGainedFromMerchantsFs:SetPoint("TOPLEFT", 10, topPoint)
+  moneyGainedFromMerchantsFs:SetText("Money Gained From Merchants: " .. GetCoinText(moneyGainedFromMerchants) .. ".")
+  
+  local moneyGainedFromQuesting = Controller:GetMoneyForAcquisitionMethod(AutoBiographerEnum.MoneyAcquisitionMethod.Quest, self.DisplayMinLevel, self.DisplayMaxLevel)
   local moneyGainedFromQuestingFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   topPoint = topPoint - 15
   moneyGainedFromQuestingFs:SetPoint("TOPLEFT", 10, topPoint)
   moneyGainedFromQuestingFs:SetText("Money Gained From Quests: " .. GetCoinText(moneyGainedFromQuesting) .. ".")
   
-  local moneyGainedFromOther = Controller:GetTotalMoneyGained(self.DisplayMinLevel, self.DisplayMaxLevel) - moneyLooted - moneyGainedFromQuesting
+  local moneyGainedFromAuctionHouseDepositReturns = Controller:GetMoneyForAcquisitionMethod(AutoBiographerEnum.MoneyAcquisitionMethod.AuctionHouseDepositReturn, self.DisplayMinLevel, self.DisplayMaxLevel)
+  local moneyGainedFromAuctionHouseOutbids = Controller:GetMoneyForAcquisitionMethod(AutoBiographerEnum.MoneyAcquisitionMethod.AuctionHouseOutbid, self.DisplayMinLevel, self.DisplayMaxLevel)
+  local moneyGainedFromOther = Controller:GetTotalMoneyGained(self.DisplayMinLevel, self.DisplayMaxLevel) - moneyGainedFromAuctionHouseDepositReturns -
+    moneyGainedFromAuctionHouseOutbids - moneyGainedFromAuctionHouseSales - moneyGainedFromLoot - moneyGainedFromMail - moneyGainedFromMailCod - moneyGainedFromMerchants -
+    moneyGainedFromQuesting
   if (moneyGainedFromOther < 0) then moneyGainedFromOther = 0 end -- This should not ever happen.
   local moneyOtherFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   topPoint = topPoint - 15

@@ -1,10 +1,10 @@
 AutoBiographerEnum = {
-  AcquisitionMethod = {
-    Create = 0,
-    Loot = 1,
-    Other = 2,
-    Quest = 3,
-    Trade = 4,
+  AuctionHouseMessageType = {
+    Bought = 0,
+    Canceled = 1,
+    Expired = 2,
+    Outbid = 3,
+    Sold = 4,
   },
   DamageOrHealingCategory = {
     DamageDealt = 0,
@@ -66,6 +66,17 @@ AutoBiographerEnum = {
     RestedBonus = 4,
     Quest = 5,
   },
+  ItemAcquisitionMethod = {
+    Create = 0,
+    Loot = 1,
+    Other = 2,
+    Quest = 3,
+    Trade = 4,
+    AuctionHouse = 5,
+    Mail = 6,
+    MailCod = 7,
+    Merchant = 8,
+  },
   LogLevel = {
     Verbose = 0,
     Debug = 1,
@@ -76,6 +87,18 @@ AutoBiographerEnum = {
   },
   MiscellaneousTrackingType = {
     PlayerDeaths = 0, -- Deprecated
+  },
+  MoneyAcquisitionMethod = {
+    AuctionHouseSale = 0,
+    Loot = 1,
+    Other = 2,
+    Quest = 3,
+    Trade = 4,
+    AuctionHouseDepositReturn = 5,
+    AuctionHouseOutbid = 6,
+    Mail = 7,
+    MailCod = 8,
+    Merchant = 9,
   },
   OtherPlayerTrackingType = {
     DuelsLostToPlayer = 0,

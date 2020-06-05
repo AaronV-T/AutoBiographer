@@ -116,13 +116,13 @@ function Controller:GetExperienceByExperienceTrackingType(experienceTrackingType
   return sum
 end
 
-function Controller:GetItemCountForAcquisitionMethod(acquisitionMethod, minLevel, maxLevel)
+function Controller:GetItemCountForAcquisitionMethod(itemAcquisitionMethod, minLevel, maxLevel)
   local sum = 0
   for k,v in pairs(self.CharacterData.Levels) do
     if (k >= minLevel and k <= maxLevel) then
       for k2,v2 in pairs(v.ItemStatisticsByItem) do
-        if (v2[acquisitionMethod]) then
-          sum = sum + v2[acquisitionMethod]
+        if (v2[itemAcquisitionMethod]) then
+          sum = sum + v2[itemAcquisitionMethod]
         end
       end
     end
@@ -148,12 +148,12 @@ function Controller:GetMiscellaneousStatByMiscellaneousTrackingType(miscellaneou
   return sum
 end
 
-function Controller:GetMoneyForAcquisitionMethod(acquisitionMethod, minLevel, maxLevel)
+function Controller:GetMoneyForAcquisitionMethod(moneyAcquisitionMethod, minLevel, maxLevel)
   local sum = 0
   for k,v in pairs(self.CharacterData.Levels) do
     if (k >= minLevel and k <= maxLevel) then
-      if (v.MoneyStatistics[acquisitionMethod]) then
-        sum = sum + v.MoneyStatistics[acquisitionMethod]
+      if (v.MoneyStatistics[moneyAcquisitionMethod]) then
+        sum = sum + v.MoneyStatistics[moneyAcquisitionMethod]
       end
     end
   end
@@ -274,8 +274,8 @@ end
 
 -- *** Events ***
 
-function Controller:OnAcquiredItem(timestamp, coordinates, acquisitionMethod, catalogItem, quantity)
-  if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog("AcquiredItem: " .. CatalogItem.ToString(catalogItem) .. ". Quantity: " .. tostring(quantity) .. ". Method: " .. tostring(acquisitionMethod) .. ".", AutoBiographerEnum.LogLevel.Debug) end
+function Controller:OnAcquiredItem(timestamp, coordinates, itemAcquisitionMethod, catalogItem, quantity)
+  if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog("AcquiredItem: " .. CatalogItem.ToString(catalogItem) .. ". Quantity: " .. tostring(quantity) .. ". Method: " .. tostring(itemAcquisitionMethod) .. ".", AutoBiographerEnum.LogLevel.Debug) end
   
   if (not Catalogs.PlayerHasAcquiredItem(self.CharacterData.Catalogs, catalogItem.Id)) then
     catalogItem.Acquired = true
@@ -284,7 +284,7 @@ function Controller:OnAcquiredItem(timestamp, coordinates, acquisitionMethod, ca
   end
   
   if (not self:GetCurrentLevelStatistics().ItemStatisticsByItem[catalogItem.Id]) then self:GetCurrentLevelStatistics().ItemStatisticsByItem[catalogItem.Id] = ItemStatistics.New() end
-  ItemStatistics.AddCount(self:GetCurrentLevelStatistics().ItemStatisticsByItem[catalogItem.Id], acquisitionMethod, quantity)
+  ItemStatistics.AddCount(self:GetCurrentLevelStatistics().ItemStatisticsByItem[catalogItem.Id], itemAcquisitionMethod, quantity)
 end
 
 function Controller:OnBossKill(timestamp, coordinates, bossId, bossName, hasKilledBossBefore)
@@ -393,9 +393,9 @@ function Controller:OnGainedExperience(timestamp, coordinates, experienceTrackin
   ExperienceStatistics.AddExperience(self:GetCurrentLevelStatistics().ExperienceStatistics, experienceTrackingType, amount)
 end
 
-function Controller:OnGainedMoney(timestamp, coordinates, acquisitionMethod, money)
-  if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog("GainedMoney: " .. tostring(money) .. ". Acquisition Method: " .. tostring(acquisitionMethod) .. ".", AutoBiographerEnum.LogLevel.Debug) end
-  MoneyStatistics.AddMoney(self:GetCurrentLevelStatistics().MoneyStatistics, acquisitionMethod, money)
+function Controller:OnGainedMoney(timestamp, coordinates, moneyAcquisitionMethod, money)
+  if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog("GainedMoney: " .. tostring(money) .. ". Acquisition Method: " .. tostring(moneyAcquisitionMethod) .. ".", AutoBiographerEnum.LogLevel.Debug) end
+  MoneyStatistics.AddMoney(self:GetCurrentLevelStatistics().MoneyStatistics, moneyAcquisitionMethod, money)
 end
 
 function Controller:OnGuildRankChanged(timestamp, guildRankIndex, guildRankName)
