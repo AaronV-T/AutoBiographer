@@ -31,6 +31,7 @@ AutoBiographer_EventManager = {
     OtherPlayerJoinedGroup = {}, -- Dict<UnitGuid, TempTimestamp>
     StartedCasting = nil,
   },
+  TradeInfo = nil,
   ZoneChangedNewAreaEventHasFired = false
 }
 
@@ -659,6 +660,19 @@ function EM.EventHandlers.PLAYER_MONEY(self)
     if (deltaMoney > 0) then
       Controller:OnGainedMoney(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.MoneyAcquisitionMethod.Merchant, deltaMoney)
     end
+  elseif (self.TradeInfo and not self.TradeInfo.Canceled and self.TradeInfo.Closed and GetTime() - self.TradeInfo.ClosedTimestamp < 1) then
+    local tradeDeltaMoney = 0
+    if (self.TradeInfo.OtherPlayerTradeMoney) then tradeDeltaMoney = tradeDeltaMoney + self.TradeInfo.OtherPlayerTradeMoney end
+    if (self.TradeInfo.PlayerTradeMoney) then tradeDeltaMoney = tradeDeltaMoney - self.TradeInfo.PlayerTradeMoney end
+
+    if (tradeDeltaMoney == deltaMoney) then
+      if (deltaMoney > 0) then
+        Controller:OnGainedMoney(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.MoneyAcquisitionMethod.Trade, deltaMoney)
+      end
+
+      self.TradeInfo.OtherPlayerTradeMoney = 0
+      self.TradeInfo.PlayerTradeMoney = 0
+    end
   end
   
   
@@ -693,6 +707,27 @@ function EM.EventHandlers.TIME_PLAYED_MSG(self, totalTimePlayed, levelTimePlayed
     Controller:OnLevelUp(time(), HelperFunctions.GetCoordinatesByUnitId("player"), self.NewLevelToAddToHistory, totalTimePlayed)
     self.NewLevelToAddToHistory = nil
   end
+end
+
+function EM.EventHandlers.TRADE_ACCEPT_UPDATE(self, playerAccepts, otherPlayerAccepts)
+  --print("TRADE_ACCEPT_UPDATE, " .. tostring(playerAccepts) .. ", " .. tostring(otherPlayerAccepts))
+  self.TradeInfo.OtherPlayerTradeMoney = tonumber(GetTargetTradeMoney())
+  self.TradeInfo.PlayerTradeMoney = tonumber(GetPlayerTradeMoney())
+end
+
+function EM.EventHandlers.TRADE_CLOSED(self)
+  --print("TRADE_CLOSED")
+  self.TradeInfo.Closed = true
+  self.TradeInfo.ClosedTimestamp = GetTime()
+end
+
+function EM.EventHandlers.TRADE_REQUEST_CANCEL(self)
+  --print("TRADE_REQUEST_CANCEL")
+  self.TradeInfo.Canceled = true
+end
+
+function EM.EventHandlers.TRADE_SHOW(self)
+  self.TradeInfo = {}
 end
 
 function EM.EventHandlers.UNIT_COMBAT(self, unitId, action, ind, dmg, dmgType)

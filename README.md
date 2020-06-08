@@ -28,7 +28,7 @@ It also keeps track of the following statistics:
  - Deaths by creatures, environment, pets, and other players.
  - Duels won and lost to each player.
  - Items looted or acquired by other methods.
- - Money looted and money gained from quests.
+ - Money gained from auction house, looting, mail, merchants, quests, and trade.
  - Spells started casting and spells successfully cast.
  - Time spent in each zone (broken down into time spent AFK, casting, dead, in combat, in groups, and on flights).
  - Time spent in a group with each player you've grouped with.
@@ -54,7 +54,7 @@ Statistics:
  - Messages sent and received.
  - Miscellaneous stats:
    - Flights taken.   
- - Money gained/lost to auction house, vendors, trading to players, etc.
+ - Money lost to auction house, vendors, trading to players, etc.
  - PVP stats (honorable kills, dishonorable kills).
  - Rolls.
  

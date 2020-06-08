@@ -25,7 +25,7 @@ local function AutoBiographer_InitializeMainWindow()
   frame.Scrollframe.Scrollbar = CreateFrame("Slider", nil, frame.Scrollframe, "UIPanelScrollBarTemplate") 
   frame.Scrollframe.Scrollbar:SetPoint("TOPLEFT", frame, "TOPRIGHT", -25, -45) 
   frame.Scrollframe.Scrollbar:SetPoint("BOTTOMLEFT", frame, "BOTTOMRIGHT", -25, 22)
-  frame.Scrollframe.Scrollbar:SetMinMaxValues(1, 395) 
+  frame.Scrollframe.Scrollbar:SetMinMaxValues(1, 410) 
   frame.Scrollframe.Scrollbar:SetValueStep(1) 
   frame.Scrollframe.Scrollbar.scrollStep = 1 
   frame.Scrollframe.Scrollbar:SetValue(0) 
@@ -681,12 +681,18 @@ function AutoBiographer_MainWindow:Update()
   topPoint = topPoint - 15
   moneyGainedFromQuestingFs:SetPoint("TOPLEFT", 10, topPoint)
   moneyGainedFromQuestingFs:SetText("Money Gained From Quests: " .. GetCoinText(moneyGainedFromQuesting) .. ".")
+
+  local moneyGainedFromTrade = Controller:GetMoneyForAcquisitionMethod(AutoBiographerEnum.MoneyAcquisitionMethod.Trade, self.DisplayMinLevel, self.DisplayMaxLevel)
+  local moneyGainedFromTradeFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  topPoint = topPoint - 15
+  moneyGainedFromTradeFs:SetPoint("TOPLEFT", 10, topPoint)
+  moneyGainedFromTradeFs:SetText("Money Gained From Trade: " .. GetCoinText(moneyGainedFromTrade) .. ".")
   
   local moneyGainedFromAuctionHouseDepositReturns = Controller:GetMoneyForAcquisitionMethod(AutoBiographerEnum.MoneyAcquisitionMethod.AuctionHouseDepositReturn, self.DisplayMinLevel, self.DisplayMaxLevel)
   local moneyGainedFromAuctionHouseOutbids = Controller:GetMoneyForAcquisitionMethod(AutoBiographerEnum.MoneyAcquisitionMethod.AuctionHouseOutbid, self.DisplayMinLevel, self.DisplayMaxLevel)
   local moneyGainedFromOther = Controller:GetTotalMoneyGained(self.DisplayMinLevel, self.DisplayMaxLevel) - moneyGainedFromAuctionHouseDepositReturns -
     moneyGainedFromAuctionHouseOutbids - moneyGainedFromAuctionHouseSales - moneyGainedFromLoot - moneyGainedFromMail - moneyGainedFromMailCod - moneyGainedFromMerchants -
-    moneyGainedFromQuesting
+    moneyGainedFromQuesting - moneyGainedFromTrade
   if (moneyGainedFromOther < 0) then moneyGainedFromOther = 0 end -- This should not ever happen.
   local moneyOtherFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   topPoint = topPoint - 15
