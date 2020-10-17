@@ -711,18 +711,24 @@ end
 
 function EM.EventHandlers.TRADE_ACCEPT_UPDATE(self, playerAccepts, otherPlayerAccepts)
   --print("TRADE_ACCEPT_UPDATE, " .. tostring(playerAccepts) .. ", " .. tostring(otherPlayerAccepts))
+  if (self.TradeInfo == nil) then return end
+
   self.TradeInfo.OtherPlayerTradeMoney = tonumber(GetTargetTradeMoney())
   self.TradeInfo.PlayerTradeMoney = tonumber(GetPlayerTradeMoney())
 end
 
 function EM.EventHandlers.TRADE_CLOSED(self)
   --print("TRADE_CLOSED")
+  if (self.TradeInfo == nil) then return end
+
   self.TradeInfo.Closed = true
   self.TradeInfo.ClosedTimestamp = GetTime()
 end
 
 function EM.EventHandlers.TRADE_REQUEST_CANCEL(self)
   --print("TRADE_REQUEST_CANCEL")
+  if (self.TradeInfo == nil) then return end
+
   self.TradeInfo.Canceled = true
 end
 
