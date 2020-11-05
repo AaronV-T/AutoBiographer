@@ -633,28 +633,195 @@ function EM.EventHandlers.PLAYER_MONEY(self)
   
   if (self.AuctionHouseIsOpen) then
   elseif (self.MailboxIsOpen and deltaMoney > 0) then
+    local moneyAllocatedToMail = false
     for i = 1, #self.MailboxMessages do
       local message = self.MailboxMessages[i]
-      if (message.money and message.money == deltaMoney and not message.moneyIsAssumedTaken) then
-        --print("Message match: " .. tostring(i) .. ", " .. message.sender)
-        if (message.isFromAuctionHouse) then
-          if (message.auctionHouseMessageType == AutoBiographerEnum.AuctionHouseMessageType.Outbid) then
-            Controller:OnGainedMoney(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.MoneyAcquisitionMethod.AuctionHouseOutbid, deltaMoney)
-          elseif (message.auctionHouseMessageType == AutoBiographerEnum.AuctionHouseMessageType.Sold) then
-            Controller:OnGainedMoney(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.MoneyAcquisitionMethod.AuctionHouseDepositReturn, message.auctionDeposit)
-            Controller:OnGainedMoney(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.MoneyAcquisitionMethod.AuctionHouseSale, deltaMoney - message.auctionDeposit)
-          end
-        elseif (message.isCodPayment) then
-          -- This is the payment for a COD mail message.
-          Controller:OnGainedMoney(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.MoneyAcquisitionMethod.MailCod, deltaMoney)
-        else
-          -- This is a direct mail message.
-          Controller:OnGainedMoney(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.MoneyAcquisitionMethod.Mail, deltaMoney)
-        end
-
-        message.moneyIsAssumedTaken = true
+      if (not message.moneyIsAssumedTaken and message.money and message.money == deltaMoney) then
+        self:MailMoneyTaken(message)
+        moneyAllocatedToMail = true
         break
       end
+    end -- for i
+
+    if (not moneyAllocatedToMail) then
+      for i = 1, #self.MailboxMessages do
+        local message1 = self.MailboxMessages[i]
+        if (not message1.moneyIsAssumedTaken and message1.money) then
+          for j = i + 1, #self.MailboxMessages do
+            local message2 = self.MailboxMessages[j]
+            if (not message2.moneyIsAssumedTaken and message2.money and (message1.money + message2.money == deltaMoney)) then
+              self:MailMoneyTaken(message1)
+              self:MailMoneyTaken(message2)
+              moneyAllocatedToMail = true
+              break
+            end
+          end -- for j
+
+          if (moneyAllocatedToMail) then break end
+        end
+      end -- for i
+    end
+
+    if (not moneyAllocatedToMail) then
+      for i = 1, #self.MailboxMessages do
+        local message1 = self.MailboxMessages[i]
+        if (not message1.moneyIsAssumedTaken and message1.money) then
+          for j = i + 1, #self.MailboxMessages do
+            local message2 = self.MailboxMessages[j]
+            if (not message2.moneyIsAssumedTaken and message2.money) then
+              for k = j + 1, #self.MailboxMessages do
+                local message3 = self.MailboxMessages[k]
+                if (not message3.moneyIsAssumedTaken and message3.money and (message1.money + message2.money + message3.money == deltaMoney)) then
+                  self:MailMoneyTaken(message1)
+                  self:MailMoneyTaken(message2)
+                  self:MailMoneyTaken(message3)
+                  moneyAllocatedToMail = true
+                  break
+                end
+              end -- for k
+
+              if (moneyAllocatedToMail) then break end
+            end
+          end -- for j
+
+          if (moneyAllocatedToMail) then break end
+        end
+      end -- for i
+    end
+
+    if (not moneyAllocatedToMail) then
+      for i = 1, #self.MailboxMessages do
+        local message1 = self.MailboxMessages[i]
+        if (not message1.moneyIsAssumedTaken and message1.money) then
+          for j = i + 1, #self.MailboxMessages do
+            local message2 = self.MailboxMessages[j]
+            if (not message2.moneyIsAssumedTaken and message2.money) then
+              for k = j + 1, #self.MailboxMessages do
+                local message3 = self.MailboxMessages[k]
+                if (not message3.moneyIsAssumedTaken and message3.money) then
+                  for l = k + 1, #self.MailboxMessages do
+                    local message4 = self.MailboxMessages[l]
+                    if (not message4.moneyIsAssumedTaken and message4.money and (message1.money + message2.money + message3.money + message4.money == deltaMoney)) then
+                      self:MailMoneyTaken(message1)
+                      self:MailMoneyTaken(message2)
+                      self:MailMoneyTaken(message3)
+                      self:MailMoneyTaken(message4)
+                      moneyAllocatedToMail = true
+                      break
+                    end
+                  end -- for l
+
+                  if (moneyAllocatedToMail) then break end
+                end
+              end -- for k
+
+              if (moneyAllocatedToMail) then break end
+            end
+          end -- for j
+
+          if (moneyAllocatedToMail) then break end
+        end
+      end -- for i
+    end
+
+    if (not moneyAllocatedToMail) then
+      for i = 1, #self.MailboxMessages do
+        local message1 = self.MailboxMessages[i]
+        if (not message1.moneyIsAssumedTaken and message1.money) then
+          for j = i + 1, #self.MailboxMessages do
+            local message2 = self.MailboxMessages[j]
+            if (not message2.moneyIsAssumedTaken and message2.money) then
+              for k = j + 1, #self.MailboxMessages do
+                local message3 = self.MailboxMessages[k]
+                if (not message3.moneyIsAssumedTaken and message3.money) then
+                  for l = k + 1, #self.MailboxMessages do
+                    local message4 = self.MailboxMessages[l]
+                    if (not message4.moneyIsAssumedTaken and message4.money) then
+                      for m = l + 1, #self.MailboxMessages do
+                        local message5 = self.MailboxMessages[m]
+                        if (not message5.moneyIsAssumedTaken and message5.money and
+                            (message1.money + message2.money + message3.money + message4.money + message5.money == deltaMoney)) then
+                          self:MailMoneyTaken(message1)
+                          self:MailMoneyTaken(message2)
+                          self:MailMoneyTaken(message3)
+                          self:MailMoneyTaken(message4)
+                          self:MailMoneyTaken(message5)
+                          moneyAllocatedToMail = true
+                          break
+                        end
+                      end -- for m
+
+                      if (moneyAllocatedToMail) then break end
+                    end
+                  end -- for l
+
+                  if (moneyAllocatedToMail) then break end
+                end
+              end -- for k
+
+              if (moneyAllocatedToMail) then break end
+            end
+          end -- for j
+
+          if (moneyAllocatedToMail) then break end
+        end
+      end -- for i
+    end
+
+    if (not moneyAllocatedToMail) then
+      for i = 1, #self.MailboxMessages do
+        local message1 = self.MailboxMessages[i]
+        if (not message1.moneyIsAssumedTaken and message1.money) then
+          for j = i + 1, #self.MailboxMessages do
+            local message2 = self.MailboxMessages[j]
+            if (not message2.moneyIsAssumedTaken and message2.money) then
+              for k = j + 1, #self.MailboxMessages do
+                local message3 = self.MailboxMessages[k]
+                if (not message3.moneyIsAssumedTaken and message3.money) then
+                  for l = k + 1, #self.MailboxMessages do
+                    local message4 = self.MailboxMessages[l]
+                    if (not message4.moneyIsAssumedTaken and message4.money) then
+                      for m = l + 1, #self.MailboxMessages do
+                        local message5 = self.MailboxMessages[m]
+                        if (not message5.moneyIsAssumedTaken and message5.money) then
+                          for n = m + 1, #self.MailboxMessages do
+                            local message6 = self.MailboxMessages[n]
+                            if (not message6.moneyIsAssumedTaken and message6.money and
+                                (message1.money + message2.money + message3.money + message4.money + message5.money + message6.money == deltaMoney)) then
+                              self:MailMoneyTaken(message1)
+                              self:MailMoneyTaken(message2)
+                              self:MailMoneyTaken(message3)
+                              self:MailMoneyTaken(message4)
+                              self:MailMoneyTaken(message5)
+                              self:MailMoneyTaken(message6)
+                              moneyAllocatedToMail = true
+                              break
+                            end
+                          end -- for n
+
+                          if (moneyAllocatedToMail) then break end
+                        end
+                      end -- for m
+
+                      if (moneyAllocatedToMail) then break end
+                    end
+                  end -- for l
+
+                  if (moneyAllocatedToMail) then break end
+                end
+              end -- for k
+
+              if (moneyAllocatedToMail) then break end
+            end
+          end -- for j
+
+          if (moneyAllocatedToMail) then break end
+        end
+      end -- for i
+    end
+
+    if (not moneyAllocatedToMail) then
+      print("Money change did not match six messages.")
     end
   elseif (self.MerchantIsOpen) then
     if (deltaMoney > 0) then
@@ -674,7 +841,6 @@ function EM.EventHandlers.PLAYER_MONEY(self)
       self.TradeInfo.PlayerTradeMoney = 0
     end
   end
-  
   
   Controller:OnMoneyChanged(time(), HelperFunctions.GetCoordinatesByUnitId("player"), deltaMoney)
   self.LastPlayerMoney = currentMoney
@@ -831,6 +997,26 @@ function EM.EventHandlers.ZONE_CHANGED_NEW_AREA(self)
 end
 
 -- *** Miscellaneous Member Functions ***
+
+function EM:MailMoneyTaken(message)
+  --print("Message match: " .. message.sender)
+  if (message.isFromAuctionHouse) then
+    if (message.auctionHouseMessageType == AutoBiographerEnum.AuctionHouseMessageType.Outbid) then
+      Controller:OnGainedMoney(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.MoneyAcquisitionMethod.AuctionHouseOutbid, message.money)
+    elseif (message.auctionHouseMessageType == AutoBiographerEnum.AuctionHouseMessageType.Sold) then
+      Controller:OnGainedMoney(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.MoneyAcquisitionMethod.AuctionHouseDepositReturn, message.auctionDeposit)
+      Controller:OnGainedMoney(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.MoneyAcquisitionMethod.AuctionHouseSale, message.money - message.auctionDeposit)
+    end
+  elseif (message.isCodPayment) then
+    -- This is the payment for a COD mail message.
+    Controller:OnGainedMoney(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.MoneyAcquisitionMethod.MailCod, message.money)
+  else
+    -- This is a direct mail message.
+    Controller:OnGainedMoney(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.MoneyAcquisitionMethod.Mail, message.money)
+  end
+
+  message.moneyIsAssumedTaken = true
+end
 
 function EM:OnStartedCasting(spellId)
   if (self.TemporaryTimestamps.StartedCasting) then
