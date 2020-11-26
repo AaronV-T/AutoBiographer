@@ -59,6 +59,23 @@ function Controller:CatalogUnitIsIncomplete(catalogUnitId)
   return self.CharacterData.Catalogs.UnitCatalog[catalogUnitId] == nil or self.CharacterData.Catalogs.UnitCatalog[catalogUnitId].Name == nil
 end
 
+function Controller:GetBattlegroundStatsByBattlegroundId(battlegroundId, minLevel, maxLevel)
+  local joined = 0
+  local losses = 0
+  local wins = 0
+  for k,v in pairs(self.CharacterData.Levels) do
+    if (k >= minLevel and k <= maxLevel) then
+      if (v.BattlegroundStatistics[battlegroundId]) then
+        joined = joined + v.BattlegroundStatistics[battlegroundId].joined
+        losses = losses + v.BattlegroundStatistics[battlegroundId].losses
+        wins = wins + v.BattlegroundStatistics[battlegroundId].wins
+      end
+    end
+  end
+  
+  return joined, losses, wins
+end
+
 function Controller:GetCurrentLevelNum()
   return HelperFunctions.GetLastKeyFromTable(self.CharacterData.Levels)
 end
@@ -285,6 +302,25 @@ function Controller:OnAcquiredItem(timestamp, coordinates, itemAcquisitionMethod
   
   if (not self:GetCurrentLevelStatistics().ItemStatisticsByItem[catalogItem.Id]) then self:GetCurrentLevelStatistics().ItemStatisticsByItem[catalogItem.Id] = ItemStatistics.New() end
   ItemStatistics.AddCount(self:GetCurrentLevelStatistics().ItemStatisticsByItem[catalogItem.Id], itemAcquisitionMethod, quantity)
+end
+
+function Controller:OnBattlegroundFinished(timestamp, battlegroundId, playerWon)
+  if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog("BattlegroundFinished: " .. tostring(battlegroundId) .. ", " .. tostring(playerWon) .. ".", AutoBiographerEnum.LogLevel.Debug) end
+  
+  if (playerWon) then
+    self:AddEvent(BattlegroundWonEvent.New(timestamp, battlegroundId))
+    BattlegroundStatistics.IncrementWins(self:GetCurrentLevelStatistics().BattlegroundStatistics, battlegroundId)
+  else
+    self:AddEvent(BattlegroundLostEvent.New(timestamp, battlegroundId))
+    BattlegroundStatistics.IncrementLosses(self:GetCurrentLevelStatistics().BattlegroundStatistics, battlegroundId)
+  end
+end
+
+function Controller:OnBattlegroundJoined(timestamp, battlegroundId)
+  if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog("BattlegroundJoined: " .. tostring(battlegroundId) .. ".", AutoBiographerEnum.LogLevel.Debug) end
+  
+  self:AddEvent(BattlegroundJoinedEvent.New(timestamp, battlegroundId))
+  BattlegroundStatistics.IncrementJoined(self:GetCurrentLevelStatistics().BattlegroundStatistics, battlegroundId)
 end
 
 function Controller:OnBossKill(timestamp, coordinates, bossId, bossName, hasKilledBossBefore)

@@ -14,6 +14,7 @@ The addon currently records the following events:
  - Changing reputation level with a faction.
  - Dieing (including which unit killed you and their level).
  - Entering a zone or subzone you have never before entered.
+ - Joining a battleground, losing a battleground, or winning a battleground.
  - Joining a guild, leaving a guild, or changing rank in a guild.
  - Killing a boss.
  - Killing a unit you have never before killed.
@@ -21,9 +22,9 @@ The addon currently records the following events:
  - Leveling up (including the time played at level up and total time played of each level).
  - Reaching a skill milestone (75/150/225/300).
  - Turning in a quest.
- - XP from discovery, kills, and quests.
  
 It also keeps track of the following statistics:
+ - Battleground results.
  - Damage dealt and taken; healing dealt to self, healing dealt to others, and healing taken.
  - Deaths by creatures, environment, pets, and other players.
  - Duels won and lost to each player.
@@ -33,18 +34,14 @@ It also keeps track of the following statistics:
  - Time spent in each zone (broken down into time spent AFK, casting, dead, in combat, in groups, and on flights).
  - Time spent in a group with each player you've grouped with.
  - Total kills (killing blows, assists, or group killed) for each unit.
+ - XP from discovery, kills, and quests.
 
 Additional Features:
  - Automatic screenshot capturing on leveling up and killing bosses.
  
-## Future Features
+## Possible Future Features
 
 Events:
- - Entering a battleground and the result of that battleground.
- - Entering a dungeon/raid.
- - Changing PVP rank.
- - Miscellaneous events:
-   - Winning a Gurubashi Arena.
  - Resetting talent points.
  
 Statistics:

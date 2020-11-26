@@ -3,6 +3,7 @@
 AggregatedStatistics = {}
 function AggregatedStatistics.New()
   return {
+    BattlegroundStatistics = BattlegroundStatistics.New(),
     DamageStatistics = DamageStatistics.New(),
     DeathStatistics = DeathStatistics.New(),
     ExperienceStatistics = ExperienceStatistics.New(),
@@ -16,6 +17,38 @@ function AggregatedStatistics.New()
     SpellStatisticsBySpell = {}, -- Dict<CatalogSpellId, SpellStatistics>
     TimeStatisticsByArea = {}, -- Dict<ZoneName-SubZoneName, TimeStatistics>
   }
+end
+
+-- *** BattlegroundStatistics ***
+
+BattlegroundStatistics = {}
+function BattlegroundStatistics.New()
+  return {}
+end
+
+function BattlegroundStatistics.EnsureCreated(bs, battlegroundId)
+  if (bs[battlegroundId] == nil) then
+    bs[battlegroundId] = {
+      joined = 0,
+      losses = 0,
+      wins = 0
+    }
+  end
+end
+  
+function BattlegroundStatistics.IncrementJoined(bs, battlegroundId)
+  BattlegroundStatistics.EnsureCreated(bs, battlegroundId)
+  bs[battlegroundId].joined = bs[battlegroundId].joined + 1
+end
+
+function BattlegroundStatistics.IncrementLosses(bs, battlegroundId)
+  BattlegroundStatistics.EnsureCreated(bs, battlegroundId)
+  bs[battlegroundId].losses = bs[battlegroundId].losses + 1
+end
+
+function BattlegroundStatistics.IncrementWins(bs, battlegroundId)
+  BattlegroundStatistics.EnsureCreated(bs, battlegroundId)
+  bs[battlegroundId].wins = bs[battlegroundId].wins + 1
 end
 
 -- *** DamageStatistics ***

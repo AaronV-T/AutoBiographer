@@ -1,7 +1,7 @@
 ## Interface: 11305
-## Title: AutoBiographer 0.4.8 Beta
+## Title: AutoBiographer 0.4.9 Beta
 ## Author: Tollski
-## Version: 0.4.8
+## Version: 0.4.9
 ## SavedVariables: AUTOBIOGRAPHER_SETTINGS
 ## SavedVariablesPerCharacter: AUTOBIOGRAPHER_CATALOGS_CHAR, AUTOBIOGRAPHER_EVENTS_CHAR, AUTOBIOGRAPHER_INFO_CHAR, AUTOBIOGRAPHER_LEVELS_CHAR
 

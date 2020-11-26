@@ -158,9 +158,10 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   
   if type(_G["AUTOBIOGRAPHER_INFO_CHAR"]) ~= "table" then
 		_G["AUTOBIOGRAPHER_INFO_CHAR"] = {
+      BattlegroundStatuses = {},
       CurrentSubZone = nil,
       CurrentZone = nil,
-      DatabaseVersion = 6,
+      DatabaseVersion = 7,
       GuildName = nil,
       GuildRankIndex = nil,
       GuildRankName = nil,
@@ -862,6 +863,58 @@ function EM.EventHandlers.QUEST_TURNED_IN(self, questId, xpGained, moneyGained)
   end
 end
 
+function EM.EventHandlers.UPDATE_BATTLEFIELD_STATUS(self, battleFieldIndex)
+  local status, mapName, instanceID, minlevel, maxlevel, teamSize, registeredMatch = GetBattlefieldStatus(battleFieldIndex)
+  if (status == nil or status == "error") then
+    return
+  end
+  
+  -- Get the battleground's ID (Note: GetBattlegroundInfo is not a reliable function and should be avoided).
+  local bgId = nil
+  for k,v in pairs(BattlegroundDatabase) do
+    if (v == mapName) then
+      bgId = k
+    end
+  end
+
+  if (bgId == nil) then
+    return
+  end
+
+  -- If the status isn't "active": save status and return.
+  if (status ~= "active") then
+    self.PersistentPlayerInfo.BattlegroundStatuses[bgId] = status
+    return
+  end
+
+  -- If the last status for this battleground was "finished": return.
+  if (self.PersistentPlayerInfo.BattlegroundStatuses[bgId] == "finished") then
+    return
+  end
+
+  -- If the last status for this battleground was "confirm": the player must have just joined the battleground.
+  if (self.PersistentPlayerInfo.BattlegroundStatuses[bgId] == "confirm") then
+    Controller:OnBattlegroundJoined(time(), bgId)
+  end
+
+  -- If the match isn't over: save status and return.
+  local winner = GetBattlefieldWinner()
+  if (winner == nil) then
+    self.PersistentPlayerInfo.BattlegroundStatuses[bgId] = status
+    return
+  end
+
+  -- The match just ended.
+  local playerWon = false
+  local englishFaction, localizedFaction = UnitFactionGroup("player")
+  if ((winner == 0 and englishFaction == "Horde") or (winner == 1 and englishFaction == "Alliance")) then
+    playerWon = true
+  end
+
+  Controller:OnBattlegroundFinished(time(), bgId, playerWon)
+  self.PersistentPlayerInfo.BattlegroundStatuses[bgId] = "finished"
+end
+
 function EM.EventHandlers.TIME_PLAYED_MSG(self, totalTimePlayed, levelTimePlayed) 
   if (AutoBiographer_Settings.Options["ShowTimePlayedOnLevelUp"] == false) then
     for i = 1, 10 do 
@@ -1334,5 +1387,5 @@ function EM:ClearCharacterData(doNotRequireConfirmation, doNotReloadUI)
 end
 
 function EM:Test()
-  
+  print(self.PersistentPlayerInfo.BattlegroundStatuses[2])
 end

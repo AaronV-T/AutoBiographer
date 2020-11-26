@@ -57,6 +57,9 @@ AutoBiographerEnum = {
     SubZoneFirstVisit = 11,
     ZoneFirstVisit = 12,
     ReputationLevelChanged = 13,
+    BattlegroundJoined = 14,
+    BattlegroundLost = 15,
+    BattlegroundWon = 16,
   },
   ExperienceTrackingType = {
     Discovery = 0,

@@ -1,3 +1,9 @@
+BattlegroundDatabase = {
+  [1] = "Alterac Valley",
+  [2] = "Warsong Gulch",
+  [3] = "Arathi Basin",
+}
+
 BossDatabase = {
   -- Blackfathom Deeps
   [4887] = "Ghamoo-ra",

@@ -10,7 +10,15 @@ end
 function Event.ToString(e, catalogs)
   local timestampString = HelperFunctions.TimestampToDateString(e.Timestamp) .. ": "
 
-  if (e.Type == AutoBiographerEnum.EventType.Death) then
+  if (e.Type == AutoBiographerEnum.EventType.Battleground) then
+    if (e.SubType == AutoBiographerEnum.EventSubType.BattlegroundJoined) then
+      return timestampString .. "You joined " .. BattlegroundDatabase[e.BattlegroundId] .. "."
+    elseif (e.SubType == AutoBiographerEnum.EventSubType.BattlegroundLost) then
+      return timestampString .. "You lost " .. BattlegroundDatabase[e.BattlegroundId] .. "."
+    elseif (e.SubType == AutoBiographerEnum.EventSubType.BattlegroundWon) then
+      return timestampString .. "You won " .. BattlegroundDatabase[e.BattlegroundId] .. "."
+    end
+  elseif (e.Type == AutoBiographerEnum.EventType.Death) then
     if (e.SubType == AutoBiographerEnum.EventSubType.PlayerDeath) then
       if (e.KillerCuid == nil) then
         return timestampString .. "You died."
@@ -104,6 +112,30 @@ function WorldEvent.New(timestamp, type, subType, coordinates)
 end
 
 -- *** Concrete Events ***
+
+BattlegroundJoinedEvent = {}
+function BattlegroundJoinedEvent.New(timestamp, battlegroundId)
+  local newInstance = Event.New(timestamp, AutoBiographerEnum.EventType.Battleground, AutoBiographerEnum.EventSubType.BattlegroundJoined)
+  newInstance.BattlegroundId = battlegroundId
+  
+  return newInstance
+end
+
+BattlegroundLostEvent = {}
+function BattlegroundLostEvent.New(timestamp, battlegroundId)
+  local newInstance = Event.New(timestamp, AutoBiographerEnum.EventType.Battleground, AutoBiographerEnum.EventSubType.BattlegroundLost)
+  newInstance.BattlegroundId = battlegroundId
+  
+  return newInstance
+end
+
+BattlegroundWonEvent = {}
+function BattlegroundWonEvent.New(timestamp, battlegroundId)
+  local newInstance = Event.New(timestamp, AutoBiographerEnum.EventType.Battleground, AutoBiographerEnum.EventSubType.BattlegroundWon)
+  newInstance.BattlegroundId = battlegroundId
+  
+  return newInstance
+end
 
 BossKillEvent = {}
 function BossKillEvent.New(timestamp, coordinates, bossId, bossName)
