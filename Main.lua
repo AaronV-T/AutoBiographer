@@ -1133,7 +1133,6 @@ function EM:UpdateMailboxMessages()
   local _, totalItems = GetInboxNumItems()
   for i = 1, totalItems do
     local _, _, sender, subject, money, codAmount, _, _, _, _, _, _, _ = GetInboxHeaderInfo(i)
-    local _, _, _, _, isInvoice = GetInboxText(i)
 
     local message = {
       money = money,
