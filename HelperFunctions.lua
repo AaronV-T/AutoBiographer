@@ -7,7 +7,8 @@ function HF.GetCatalogIdFromGuid(guid)
 
   local splitGuid = HF.SplitString(guid)
   
-  if splitGuid[1] == "Player" then return splitGuid[2] .. "-" .. splitGuid[3] -- serverID-playerUID
+  if splitGuid[1] == "GameObject" then return "go" .. splitGuid[6] -- goID
+  elseif splitGuid[1] == "Player" then return splitGuid[2] .. "-" .. splitGuid[3] -- serverID-playerUID
   elseif splitGuid[1] == "Pet" then return "pet" .. splitGuid[6] -- petID
   elseif splitGuid[1] == "Creature" then return tonumber(splitGuid[6]) -- ID
   else error("Unsupported GUID: " .. guid)

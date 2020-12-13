@@ -1386,5 +1386,5 @@ function EM:ClearCharacterData(doNotRequireConfirmation, doNotReloadUI)
 end
 
 function EM:Test()
-  print(self.PersistentPlayerInfo.BattlegroundStatuses[2])
+  print(HelperFunctions.GetCatalogIdFromGuid("GameObject-0-4380-533-11441-181544-000050305B"))
 end
