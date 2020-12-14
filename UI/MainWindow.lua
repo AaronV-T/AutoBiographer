@@ -25,7 +25,7 @@ local function AutoBiographer_InitializeMainWindow()
   frame.Scrollframe.Scrollbar = CreateFrame("Slider", nil, frame.Scrollframe, "UIPanelScrollBarTemplate") 
   frame.Scrollframe.Scrollbar:SetPoint("TOPLEFT", frame, "TOPRIGHT", -25, -45) 
   frame.Scrollframe.Scrollbar:SetPoint("BOTTOMLEFT", frame, "BOTTOMRIGHT", -25, 22)
-  frame.Scrollframe.Scrollbar:SetMinMaxValues(1, 490) 
+  frame.Scrollframe.Scrollbar:SetMinMaxValues(1, 510) 
   frame.Scrollframe.Scrollbar:SetValueStep(1) 
   frame.Scrollframe.Scrollbar.scrollStep = 1 
   frame.Scrollframe.Scrollbar:SetValue(0) 
@@ -581,9 +581,10 @@ function AutoBiographer_MainWindow:Update()
 
   local deathsToCreatures = Controller:GetDeathsByDeathTrackingType(AutoBiographerEnum.DeathTrackingType.DeathToCreature, self.DisplayMinLevel, self.DisplayMaxLevel)
   local deathsToEnvironment = Controller:GetDeathsByDeathTrackingType(AutoBiographerEnum.DeathTrackingType.DeathToEnvironment, self.DisplayMinLevel, self.DisplayMaxLevel)
+  local deathsToGameObjects = Controller:GetDeathsByDeathTrackingType(AutoBiographerEnum.DeathTrackingType.DeathToGameObject, self.DisplayMinLevel, self.DisplayMaxLevel)
   local deathsToPets = Controller:GetDeathsByDeathTrackingType(AutoBiographerEnum.DeathTrackingType.DeathToPet, self.DisplayMinLevel, self.DisplayMaxLevel)
   local deathsToPlayers = Controller:GetDeathsByDeathTrackingType(AutoBiographerEnum.DeathTrackingType.DeathToPlayer, self.DisplayMinLevel, self.DisplayMaxLevel)
-  local totalDeaths = deathsToCreatures + deathsToEnvironment + deathsToPets + deathsToPlayers
+  local totalDeaths = deathsToCreatures + deathsToEnvironment + deathsToGameObjects + deathsToPets + deathsToPlayers
   local totalDeathsFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   topPoint = topPoint - 20
   totalDeathsFs:SetPoint("TOPLEFT", 10, topPoint)
@@ -598,6 +599,11 @@ function AutoBiographer_MainWindow:Update()
   topPoint = topPoint - 15
   deathsToEnvironmentFs:SetPoint("TOPLEFT", 20, topPoint)
   deathsToEnvironmentFs:SetText("Deaths to Environment: " .. HF.CommaValue(deathsToEnvironment) .. ".")
+
+  local deathsToGameObjectsFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  topPoint = topPoint - 15
+  deathsToGameObjectsFs:SetPoint("TOPLEFT", 20, topPoint)
+  deathsToGameObjectsFs:SetText("Deaths to Game Objects: " .. HF.CommaValue(deathsToGameObjects) .. ".")
 
   local deathsToPetsFs = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   topPoint = topPoint - 15

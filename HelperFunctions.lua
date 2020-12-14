@@ -28,7 +28,9 @@ function HF.GetCoordinatesByUnitId(unitId)
 end
 
 function HF.GetUnitTypeFromCatalogUnitId(cuid)
-  if (string.match(cuid, "%w+%-%w+")) then
+  if (string.match(cuid, "go%d+")) then
+    return AutoBiographerEnum.UnitType.GameObject
+  elseif (string.match(cuid, "%w+%-%w+")) then
     return AutoBiographerEnum.UnitType.Player
   elseif (string.match(cuid, "pet%d+")) then
     return AutoBiographerEnum.UnitType.Pet

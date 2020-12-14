@@ -393,6 +393,8 @@ function Controller:OnDeath(timestamp, coordinates, killerCatalogUnitId, killerL
     deathTrackingType = AutoBiographerEnum.DeathTrackingType.DeathToEnvironment
   elseif (HelperFunctions.GetUnitTypeFromCatalogUnitId(killerCatalogUnitId) == AutoBiographerEnum.UnitType.Creature) then
     deathTrackingType = AutoBiographerEnum.DeathTrackingType.DeathToCreature
+  elseif (HelperFunctions.GetUnitTypeFromCatalogUnitId(killerCatalogUnitId) == AutoBiographerEnum.UnitType.GameObject) then
+    deathTrackingType = AutoBiographerEnum.DeathTrackingType.DeathToGameObject
   elseif (HelperFunctions.GetUnitTypeFromCatalogUnitId(killerCatalogUnitId) == AutoBiographerEnum.UnitType.Pet) then
     deathTrackingType = AutoBiographerEnum.DeathTrackingType.DeathToPet
   elseif (HelperFunctions.GetUnitTypeFromCatalogUnitId(killerCatalogUnitId) == AutoBiographerEnum.UnitType.Player) then

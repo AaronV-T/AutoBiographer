@@ -1386,5 +1386,6 @@ function EM:ClearCharacterData(doNotRequireConfirmation, doNotReloadUI)
 end
 
 function EM:Test()
-  print(HelperFunctions.GetCatalogIdFromGuid("GameObject-0-4380-533-11441-181544-000050305B"))
+  --print(HelperFunctions.GetCatalogIdFromGuid("GameObject-0-4380-533-11441-181544-000050305B"))
+  --Controller:OnDeath(time(), nil, "go181544", nil)
 end
