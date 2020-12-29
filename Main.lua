@@ -514,7 +514,7 @@ function EM.EventHandlers.MAIL_INBOX_UPDATE(self, arg1, arg2)
   self:UpdateMailboxMessages()
 end
 
-function EM.EventHandlers.UPDATE_PENDING_MAIL(self, arg1, arg2)
+function EM.EventHandlers.UPDATE_PENDING_MAIL(self, arg1, arg2) -- Fired when receiving new mail or sometimes when reading/opening mail.
   --print("UPDATE_PENDING_MAIL: " .. tostring(arg1) .. ", " .. tostring(arg2))
   if (not self.MailboxIsOpen) then return end
 
@@ -631,7 +631,7 @@ function EM.EventHandlers.PLAYER_MONEY(self)
   local currentMoney = GetMoney()
   local deltaMoney = currentMoney - self.LastPlayerMoney
   --print("PLAYER_MONEY. Delta: " .. tostring(deltaMoney))
-  
+
   if (self.AuctionHouseIsOpen) then
   elseif (self.MailboxIsOpen and deltaMoney > 0) then
     local moneyAllocatedToMail = false
@@ -1169,9 +1169,13 @@ function EM:UpdateMailboxMessages()
     table.insert(mailboxMessages, message)
   end
 
+  -- If this is the only mailbox update currently running.
   if (self.MailboxUpdatesRunning == 1) then
-    --print ("Set MailboxMessages")
-    self.MailboxMessages = mailboxMessages
+    -- Compare existing messages with messages from this update.
+    if (not self.MailboxMessages or #self.MailboxMessages < #mailboxMessages) then
+      --print ("Set MailboxMessages")
+      self.MailboxMessages = mailboxMessages
+    end
   end
 
   self.MailboxUpdatesRunning = self.MailboxUpdatesRunning - 1
