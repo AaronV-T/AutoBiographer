@@ -301,14 +301,8 @@ end
 function EM.EventHandlers.CHAT_MSG_SKILL(self, text)
   if (string.find(text, "Your skill in") ~= 1) then return end
   
-  local skillName = nil
-  local skillLevel = nil
-  local index = 1
-  for word in string.gmatch(text, "%w+") do
-    if (index == 4) then skillName = word end
-    if (index == 8) then skillLevel = tonumber(word) end
-    index = index + 1
-  end
+  local skillName, skillLevel = string.match(text, "Your skill in (.+) has increased to (%d+).")
+  print(tostring(skillName) .. ", " .. tostring(skillLevel))
   
   if (skillName and skillLevel) then
     Controller:OnSkillLevelIncreased(time(), HelperFunctions.GetCoordinatesByUnitId("player"), skillName, skillLevel)
