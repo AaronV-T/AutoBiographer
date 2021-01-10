@@ -38,10 +38,10 @@ AutoBiographer_EventManager = {
 local EM = AutoBiographer_EventManager
 local Controller = AutoBiographer_Controller
 
--- Slash command
+-- Slash Commands
 
-SLASH_AB1 = '/ab'
-function SlashCmdList.AB()
+SLASH_AUTOBIOGRAPHER1, SLASH_AUTOBIOGRAPHER2 = "/autobiographer", "/ab"
+function SlashCmdList.AUTOBIOGRAPHER()
   AutoBiographer_MainWindow:Toggle()
 end
 
