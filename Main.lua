@@ -38,6 +38,13 @@ AutoBiographer_EventManager = {
 local EM = AutoBiographer_EventManager
 local Controller = AutoBiographer_Controller
 
+-- Slash command
+
+SLASH_AB1 = '/ab'
+function SlashCmdList.AB()
+  AutoBiographer_MainWindow:Toggle()
+end
+
 -- *** Locals ***
 
 local damagedUnits = {}
