@@ -6,16 +6,36 @@ local function AutoBiographer_InitializeMainWindow()
   frame:SetSize(800, 600) 
   frame:SetPoint("CENTER") 
   
-  frame:SetScript("OnHide", 
-    function(self)
-      self:Clear()
+  frame:SetMovable(true)
+  frame:EnableMouse(true)
+
+  frame:SetScript("OnHide", function(self)
+    if (self.isMoving) then
+      self:StopMovingOrSizing();
+      self.isMoving = false;
     end
-  )
+
+    self:Clear()
+  end)
+
+  frame:SetScript("OnMouseDown", function(self, button)
+    if (button == "LeftButton" and not self.isMoving) then
+     self:StartMoving();
+     self.isMoving = true;
+    end
+  end)
+
+  frame:SetScript("OnMouseUp", function(self, button)
+    if (button == "LeftButton" and self.isMoving) then
+     self:StopMovingOrSizing();
+     self.isMoving = false;
+    end
+  end)
   
   frame.Title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight");
   frame.Title:SetPoint("LEFT", frame.TitleBg, "LEFT", 5, 0);
   frame.Title:SetText("AutoBiographer Main Window")
-  
+
    --scrollframe 
   frame.Scrollframe = CreateFrame("ScrollFrame", nil, frame) 
   frame.Scrollframe:SetPoint("TOPLEFT", 10, -25) 
@@ -75,12 +95,32 @@ function Toggle_DebugWindow()
     local frame = CreateFrame("Frame", "AutoBiographerDebug", parentFame, "BasicFrameTemplate") 
     frame:SetSize(750, 585) 
     frame:SetPoint("CENTER") 
-    
-    frame:SetScript("OnHide", 
-      function(self)
-        AutoBiographer_DebugWindow = nil 
+
+    frame:SetMovable(true)
+    frame:EnableMouse(true)
+
+    frame:SetScript("OnHide", function(self)
+      if (self.isMoving) then
+        self:StopMovingOrSizing();
+        self.isMoving = false;
       end
-    )
+
+      AutoBiographer_DebugWindow = nil 
+    end)
+
+    frame:SetScript("OnMouseDown", function(self, button)
+      if (button == "LeftButton" and not self.isMoving) then
+        self:StartMoving();
+        self.isMoving = true;
+      end
+    end)
+
+    frame:SetScript("OnMouseUp", function(self, button)
+      if (button == "LeftButton" and self.isMoving) then
+        self:StopMovingOrSizing();
+        self.isMoving = false;
+      end
+    end)
 
     frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     frame.title:SetPoint("LEFT", frame.TitleBg, "LEFT", 5, 0);
@@ -162,11 +202,31 @@ function Toggle_EventWindow()
     frame:SetSize(750, 585) 
     frame:SetPoint("CENTER") 
     
-    frame:SetScript("OnHide", 
-      function(self)
-        AutoBiographer_EventWindow = nil 
+    frame:SetMovable(true)
+    frame:EnableMouse(true)
+
+    frame:SetScript("OnHide", function(self)
+      if (self.isMoving) then
+        self:StopMovingOrSizing();
+        self.isMoving = false;
       end
-    )
+
+      AutoBiographer_EventWindow = nil 
+    end)
+    
+    frame:SetScript("OnMouseDown", function(self, button)
+      if (button == "LeftButton" and not self.isMoving) then
+        self:StartMoving();
+        self.isMoving = true;
+      end
+    end)
+
+    frame:SetScript("OnMouseUp", function(self, button)
+      if (button == "LeftButton" and self.isMoving) then
+        self:StopMovingOrSizing();
+        self.isMoving = false;
+      end
+    end)
 
     frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     frame.title:SetPoint("LEFT", frame.TitleBg, "LEFT", 5, 0);
