@@ -312,6 +312,15 @@ function AutoBiographer_EventWindow:Initialize()
   scrollbg:SetAllPoints(frame.SubFrame.ScrollFrame.Scrollbar) 
   scrollbg:SetTexture(0, 0, 0, 0.4) 
 
+   --content frame
+   self.SubFrame.ScrollFrame.Content = CreateFrame("Frame", nil, self.SubFrame.ScrollFrame)
+   self.SubFrame.ScrollFrame.Content:SetSize(1, 1)
+   self.SubFrame.ScrollFrame.Content.FontStringsPool = {
+     Allocated = {},
+     UnAllocated = {},
+   }
+   self.SubFrame.ScrollFrame:SetScrollChild(self.SubFrame.ScrollFrame.Content)
+
   frame.Toggle = function(self)
     if (self:IsVisible()) then
       self:Hide()
@@ -379,7 +388,7 @@ function AutoBiographer_MainWindow:Initialize()
       self:GetParent():SetVerticalScroll(value) 
     end
   )
-  
+
   frame.Clear = function(self)
     if (self.ScrollFrame.Content) then
       self.ScrollFrame.Content:Hide()
@@ -432,30 +441,35 @@ function AutoBiographer_DebugWindow:Update()
 end
 
 function AutoBiographer_EventWindow:Update()
-  if (self.SubFrame.ScrollFrame.Content) then self.SubFrame.ScrollFrame.Content:Hide() end
-  --content frame
-  self.SubFrame.ScrollFrame.Content = CreateFrame("Frame", nil, self.SubFrame.ScrollFrame) 
-  self.SubFrame.ScrollFrame.Content:SetSize(1, 1) 
-  
+  -- Release previous font strings.
+  for i = 1, #self.SubFrame.ScrollFrame.Content.FontStringsPool.Allocated, 1 do
+    local fs = self.SubFrame.ScrollFrame.Content.FontStringsPool.Allocated[i]
+    fs:Hide()
+    fs:SetText("")
+    table.insert(self.SubFrame.ScrollFrame.Content.FontStringsPool.UnAllocated, fs)
+  end
+  self.SubFrame.ScrollFrame.Content.FontStringsPool.Allocated = {}
+
   local events = Controller:GetEvents()
 
-  --texts
-  local index = 0
   for i = 1, #events, 1 do
     if (AutoBiographer_Settings.EventDisplayFilters[events[i].SubType]) then
-      local text = self.SubFrame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-      text:SetPoint("TOPLEFT", 5, -15 * index) 
-      text:SetText(Controller:GetEventString(events[i]))
-      index = index + 1
+      local fs = table.remove(self.SubFrame.ScrollFrame.Content.FontStringsPool.UnAllocated)
+      if (not fs) then
+        fs = self.SubFrame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+      end
+      
+      fs:SetPoint("TOPLEFT", 5, -15 * #self.SubFrame.ScrollFrame.Content.FontStringsPool.Allocated) 
+      fs:SetText(Controller:GetEventString(events[i]))
+      fs:Show()
+      table.insert(self.SubFrame.ScrollFrame.Content.FontStringsPool.Allocated, fs)
     end
   end
   
-  local scrollbarMaxValue = (index * 15) - self.SubFrame.ScrollFrame:GetHeight();
+  local scrollbarMaxValue = (#self.SubFrame.ScrollFrame.Content.FontStringsPool.Allocated * 15) - self.SubFrame.ScrollFrame:GetHeight();
   if (scrollbarMaxValue <= 0) then scrollbarMaxValue = 1 end
   self.SubFrame.ScrollFrame.Scrollbar:SetMinMaxValues(1, scrollbarMaxValue)
   self.SubFrame.ScrollFrame.Scrollbar:SetValue(scrollbarMaxValue)
-  
-  self.SubFrame.ScrollFrame:SetScrollChild(self.SubFrame.ScrollFrame.Content)
 end
 
 function AutoBiographer_MainWindow:Update()
