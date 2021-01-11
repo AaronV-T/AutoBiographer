@@ -197,7 +197,10 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   if (AutoBiographer_Settings.Options["ShowMinimapButton"] == false) then AutoBiographer_MinimapButton:Hide()
   else AutoBiographer_MinimapButton:Show() end
   
+  AutoBiographer_DebugWindow:Initialize()
+  AutoBiographer_EventWindow:Initialize()
   AutoBiographer_OptionWindow:Initialize()
+  AutoBiographer_MainWindow:Initialize()
 end
 
 function EM.EventHandlers.BOSS_KILL(self, bossId, bossName)

@@ -1,37 +1,41 @@
 local Controller = AutoBiographer_Controller
 local HF = HelperFunctions
 
-function AutoBiographer_CreateDebugWindow()
-  --parent frames
-  local parentFame = CreateFrame("Frame", "", AutoBiographer_MainWindow)
-  parentFame:SetSize(750, 585) 
-  parentFame:SetPoint("CENTER") 
-  
-  local frame = CreateFrame("Frame", "AutoBiographerDebug", parentFame, "BasicFrameTemplate") 
-  frame:SetSize(750, 585) 
-  frame:SetPoint("CENTER") 
+AutoBiographer_MainWindow = CreateFrame("Frame", "AutoBiographerMain", UIParent, "BasicFrameTemplateWithInset")
+AutoBiographer_DebugWindow = CreateFrame("Frame", "AutoBiographerDebug", AutoBiographer_MainWindow, "BasicFrameTemplate")
+
+-- For some reason the event window needs a parent frame in order to properly show over the main window.
+local eventParent = CreateFrame("Frame", "AutoBiographerEventParent", AutoBiographer_MainWindow)
+eventParent:SetSize(750, 585)
+eventParent:SetPoint("CENTER")
+AutoBiographer_EventWindow = CreateFrame("Frame", "AutoBiographerEvent", eventParent, "BasicFrameTemplate")
+
+function AutoBiographer_DebugWindow:Initialize()
+  local frame = self
+  frame:SetSize(750, 585)
+  frame:SetPoint("CENTER")
 
   frame:SetMovable(true)
   frame:EnableMouse(true)
 
   frame:SetScript("OnHide", function(self)
     if (self.isMoving) then
-      self:StopMovingOrSizing();
-      self.isMoving = false;
+      self:StopMovingOrSizing()
+      self.isMoving = false
     end
   end)
 
   frame:SetScript("OnMouseDown", function(self, button)
     if (button == "LeftButton" and not self.isMoving) then
-      self:StartMoving();
-      self.isMoving = true;
+      self:StartMoving()
+      self.isMoving = true
     end
   end)
 
   frame:SetScript("OnMouseUp", function(self, button)
     if (button == "LeftButton" and self.isMoving) then
-      self:StopMovingOrSizing();
-      self.isMoving = false;
+      self:StopMovingOrSizing()
+      self.isMoving = false
     end
   end)
 
@@ -46,13 +50,13 @@ function AutoBiographer_CreateDebugWindow()
 
   --scrollbar 
   frame.ScrollFrame.Scrollbar = CreateFrame("Slider", nil, frame.ScrollFrame, "UIPanelScrollBarTemplate") 
-  frame.ScrollFrame.Scrollbar:SetPoint("TOPLEFT", frame, "TOPRIGHT", -25, -40) 
+  frame.ScrollFrame.Scrollbar:SetPoint("TOPLEFT", frame, "TOPRIGHT", -25, -40)
   frame.ScrollFrame.Scrollbar:SetPoint("BOTTOMLEFT", frame, "BOTTOMRIGHT", -25, 22)
   frame.ScrollFrame.Scrollbar:SetMinMaxValues(1, 1)
-  frame.ScrollFrame.Scrollbar:SetValueStep(1) 
-  frame.ScrollFrame.Scrollbar.scrollStep = 1 
-  frame.ScrollFrame.Scrollbar:SetValue(0) 
-  frame.ScrollFrame.Scrollbar:SetWidth(16) 
+  frame.ScrollFrame.Scrollbar:SetValueStep(1)
+  frame.ScrollFrame.Scrollbar.scrollStep = 15
+  frame.ScrollFrame.Scrollbar:SetValue(0)
+  frame.ScrollFrame.Scrollbar:SetWidth(16)
   frame.ScrollFrame.Scrollbar:SetScript("OnValueChanged",
     function (self, value) 
       self:GetParent():SetVerticalScroll(value) 
@@ -87,9 +91,242 @@ function AutoBiographer_CreateDebugWindow()
   return frame
 end
 
-function AutoBiographer_CreateMainWindow()
-  --parent frame 
-  local frame = CreateFrame("Frame", "AutoBiographerMain", UIParent, "BasicFrameTemplateWithInset") 
+function AutoBiographer_EventWindow:Initialize()
+  local frame = self
+  frame:SetSize(750, 585) 
+  frame:SetPoint("CENTER") 
+  
+  frame:SetMovable(true)
+  frame:EnableMouse(true)
+
+  frame:SetScript("OnHide", function(self)
+    if (self.isMoving) then
+      self:StopMovingOrSizing()
+      self.isMoving = false
+    end
+  end)
+
+  frame:SetScript("OnMouseDown", function(self, button)
+    if (button == "LeftButton" and not self.isMoving) then
+      self:StartMoving()
+      self.isMoving = true
+    end
+  end)
+
+  frame:SetScript("OnMouseUp", function(self, button)
+    if (button == "LeftButton" and self.isMoving) then
+      self:StopMovingOrSizing()
+      self.isMoving = false
+    end
+  end)
+
+  frame.Title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  frame.Title:SetPoint("LEFT", frame.TitleBg, "LEFT", 5, 0);
+  frame.Title:SetText("AutoBiographer Event Window")
+  
+  frame.SubFrame = CreateFrame("Frame", "AutoBiographerEventSub", frame)
+  frame.SubFrame:SetPoint("TOPLEFT", 10, -25) 
+  frame.SubFrame:SetPoint("BOTTOMRIGHT", -10, 10) 
+  
+  -- Filter Check Boxes
+  local leftPoint = -300
+  local fsBattleground = frame.SubFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  fsBattleground:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -15)
+  fsBattleground:SetText("Battle\nground")
+  local cbBattleground= CreateFrame("CheckButton", nil, frame.SubFrame, "UICheckButtonTemplate") 
+  cbBattleground:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -40)
+  cbBattleground:SetChecked(AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.BattlegroundJoined])
+  cbBattleground:SetScript("OnClick", function(self, event, arg1)
+    AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.BattlegroundJoined] = self:GetChecked()
+    AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.BattlegroundLost] = self:GetChecked()
+    AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.BattlegroundWon] = self:GetChecked()
+    frame:Update()
+  end)
+
+  leftPoint = leftPoint + 50
+  local fsBossKill = frame.SubFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  fsBossKill:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -15)
+  fsBossKill:SetText("Boss\nKill")
+  local cbBossKill= CreateFrame("CheckButton", nil, frame.SubFrame, "UICheckButtonTemplate") 
+  cbBossKill:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -40)
+  cbBossKill:SetChecked(AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.BossKill])
+  cbBossKill:SetScript("OnClick", function(self, event, arg1)
+    AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.BossKill] = self:GetChecked()
+    frame:Update()
+  end)
+  
+  leftPoint = leftPoint + 50
+  local fsFirstAcquiredItem = frame.SubFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  fsFirstAcquiredItem:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -15) 
+  fsFirstAcquiredItem:SetText("First\nItem")
+  local cbFirstAcquiredItem = CreateFrame("CheckButton", nil, frame.SubFrame, "UICheckButtonTemplate") 
+  cbFirstAcquiredItem:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -40)
+  cbFirstAcquiredItem:SetChecked(AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.FirstAcquiredItem])
+  cbFirstAcquiredItem:SetScript("OnClick", function(self, event, arg1)
+    AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.FirstAcquiredItem] = self:GetChecked()
+    frame:Update()
+  end)
+  
+  leftPoint = leftPoint + 50
+  local fsFirstKill = frame.SubFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  fsFirstKill:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -15)
+  fsFirstKill:SetText("First\nKill")
+  local cbFirstKill = CreateFrame("CheckButton", nil, frame.SubFrame, "UICheckButtonTemplate") 
+  cbFirstKill:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -40)
+  cbFirstKill:SetChecked(AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.FirstKill])
+  cbFirstKill:SetScript("OnClick", function(self, event, arg1)
+    AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.FirstKill] = self:GetChecked()
+    frame:Update()
+  end)
+  
+  leftPoint = leftPoint + 50
+  local fsGuild = frame.SubFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  fsGuild:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -15)
+  fsGuild:SetText("Guild")
+  local cbGuild = CreateFrame("CheckButton", nil, frame.SubFrame, "UICheckButtonTemplate") 
+  cbGuild:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -40)
+  cbGuild:SetChecked(AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.GuildJoined])
+  cbGuild:SetScript("OnClick", function(self, event, arg1)
+    AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.GuildJoined] = self:GetChecked()
+    AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.GuildLeft] = self:GetChecked()
+    AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.GuildRankChanged] = self:GetChecked()
+    frame:Update()
+  end)
+  
+  leftPoint = leftPoint + 50
+  local fsLevelUp = frame.SubFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  fsLevelUp:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -15)
+  fsLevelUp:SetText("Level\nUp")
+  local cbLevelUp= CreateFrame("CheckButton", nil, frame.SubFrame, "UICheckButtonTemplate") 
+  cbLevelUp:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -40)
+  cbLevelUp:SetChecked(AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.LevelUp])
+  cbLevelUp:SetScript("OnClick", function(self, event, arg1)
+    AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.LevelUp] = self:GetChecked()
+    frame:Update()
+  end)
+  
+  leftPoint = leftPoint + 50
+  local fsPlayerDeath = frame.SubFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  fsPlayerDeath:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -15)
+  fsPlayerDeath:SetText("Player\nDeath")
+  local cbPlayerDeath = CreateFrame("CheckButton", nil, frame.SubFrame, "UICheckButtonTemplate") 
+  cbPlayerDeath:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -40)
+  cbPlayerDeath:SetChecked(AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.PlayerDeath])
+  cbPlayerDeath:SetScript("OnClick", function(self, event, arg1)
+    AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.PlayerDeath] = self:GetChecked()
+    frame:Update()
+  end)
+  
+  leftPoint = leftPoint + 50
+  local fsQuestTurnIn = frame.SubFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  fsQuestTurnIn:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -15)
+  fsQuestTurnIn:SetText("Quest")
+  local cbQuestTurnIn = CreateFrame("CheckButton", nil, frame.SubFrame, "UICheckButtonTemplate") 
+  cbQuestTurnIn:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -40)
+  cbQuestTurnIn:SetChecked(AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.QuestTurnIn])
+  cbQuestTurnIn:SetScript("OnClick", function(self, event, arg1)
+    AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.QuestTurnIn] = self:GetChecked()
+    frame:Update()
+  end)
+  
+  leftPoint = leftPoint + 50
+  local fsReputationLevelChanged = frame.SubFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  fsReputationLevelChanged:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -15)
+  fsReputationLevelChanged:SetText("Rep\nChanged")
+  local cbReputationLevelChanged= CreateFrame("CheckButton", nil, frame.SubFrame, "UICheckButtonTemplate") 
+  cbReputationLevelChanged:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -40)
+  cbReputationLevelChanged:SetChecked(AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.ReputationLevelChanged])
+  cbReputationLevelChanged:SetScript("OnClick", function(self, event, arg1)
+    AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.ReputationLevelChanged] = self:GetChecked()
+    frame:Update()
+  end)
+  
+  leftPoint = leftPoint + 50
+  local fsSkillMilestone = frame.SubFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  fsSkillMilestone:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -15)
+  fsSkillMilestone:SetText("Skill")
+  local cbSkillMilestone = CreateFrame("CheckButton", nil, frame.SubFrame, "UICheckButtonTemplate") 
+  cbSkillMilestone:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -40)
+  cbSkillMilestone:SetChecked(AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.SkillMilestone])
+  cbSkillMilestone:SetScript("OnClick", function(self, event, arg1)
+    AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.SkillMilestone] = self:GetChecked()
+    frame:Update()
+  end)
+  
+  leftPoint = leftPoint + 50
+  local fsSpellLearned = frame.SubFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  fsSpellLearned:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -15)
+  fsSpellLearned:SetText("Spell")
+  local cbSpellLearned= CreateFrame("CheckButton", nil, frame.SubFrame, "UICheckButtonTemplate") 
+  cbSpellLearned:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -40)
+  cbSpellLearned:SetChecked(AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.SpellLearned])
+  cbSpellLearned:SetScript("OnClick", function(self, event, arg1)
+    AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.SpellLearned] = self:GetChecked()
+    frame:Update()
+  end)
+  
+  leftPoint = leftPoint + 50
+  local fsSubZoneFirstVisit = frame.SubFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  fsSubZoneFirstVisit:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -15)
+  fsSubZoneFirstVisit:SetText("Sub\nZone")
+  local cbSubZoneFirstVisit = CreateFrame("CheckButton", nil, frame.SubFrame, "UICheckButtonTemplate") 
+  cbSubZoneFirstVisit:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -40)
+  cbSubZoneFirstVisit:SetChecked(AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.SubZoneFirstVisit])
+  cbSubZoneFirstVisit:SetScript("OnClick", function(self, event, arg1)
+    AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.SubZoneFirstVisit] = self:GetChecked()
+    frame:Update()
+  end)
+  
+  leftPoint = leftPoint + 50
+  local fsZoneFirstVisit = frame.SubFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  fsZoneFirstVisit:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -15)
+  fsZoneFirstVisit:SetText("Zone")
+  local cbZoneFirstVisit = CreateFrame("CheckButton", nil, frame.SubFrame, "UICheckButtonTemplate") 
+  cbZoneFirstVisit:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -40)
+  cbZoneFirstVisit:SetChecked(AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.ZoneFirstVisit])
+  cbZoneFirstVisit:SetScript("OnClick", function(self, event, arg1)
+    AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.ZoneFirstVisit] = self:GetChecked()
+    frame:Update()
+  end)
+  
+  --scrollframe 
+  frame.SubFrame.ScrollFrame = CreateFrame("ScrollFrame", nil, frame.SubFrame) 
+  frame.SubFrame.ScrollFrame:SetPoint("TOPLEFT", 10, -65) 
+  frame.SubFrame.ScrollFrame:SetPoint("BOTTOMRIGHT", -10, 10) 
+
+  --scrollbar 
+  frame.SubFrame.ScrollFrame.Scrollbar = CreateFrame("Slider", nil, frame.SubFrame.ScrollFrame, "UIPanelScrollBarTemplate")
+  frame.SubFrame.ScrollFrame.Scrollbar:SetPoint("TOPLEFT", frame.SubFrame, "TOPRIGHT", -15, -17)
+  frame.SubFrame.ScrollFrame.Scrollbar:SetPoint("BOTTOMLEFT", frame.SubFrame, "BOTTOMRIGHT", -15, 12)
+  frame.SubFrame.ScrollFrame.Scrollbar:SetMinMaxValues(1, 1)
+  frame.SubFrame.ScrollFrame.Scrollbar:SetValueStep(1)
+  frame.SubFrame.ScrollFrame.Scrollbar.scrollStep = 15
+  frame.SubFrame.ScrollFrame.Scrollbar:SetValue(0)
+  frame.SubFrame.ScrollFrame.Scrollbar:SetWidth(16)
+  frame.SubFrame.ScrollFrame.Scrollbar:SetScript("OnValueChanged",
+    function (self, value) 
+      self:GetParent():SetVerticalScroll(value) 
+    end
+  ) 
+  local scrollbg = frame.SubFrame.ScrollFrame.Scrollbar:CreateTexture(nil, "BACKGROUND") 
+  scrollbg:SetAllPoints(frame.SubFrame.ScrollFrame.Scrollbar) 
+  scrollbg:SetTexture(0, 0, 0, 0.4) 
+
+  frame.Toggle = function(self)
+    if (self:IsVisible()) then
+      self:Hide()
+    else
+      self:Update()
+      self:Show()
+    end
+  end
+
+  frame:Hide()
+  return frame
+end
+
+function AutoBiographer_MainWindow:Initialize()
+  local frame = self
   frame:SetSize(800, 600) 
   frame:SetPoint("CENTER") 
   
@@ -98,8 +335,8 @@ function AutoBiographer_CreateMainWindow()
 
   frame:SetScript("OnHide", function(self)
     if (self.isMoving) then
-      self:StopMovingOrSizing();
-      self.isMoving = false;
+      self:StopMovingOrSizing()
+      self.isMoving = false
     end
 
     self:Clear()
@@ -107,15 +344,15 @@ function AutoBiographer_CreateMainWindow()
 
   frame:SetScript("OnMouseDown", function(self, button)
     if (button == "LeftButton" and not self.isMoving) then
-     self:StartMoving();
-     self.isMoving = true;
+     self:StartMoving()
+     self.isMoving = true
     end
   end)
 
   frame:SetScript("OnMouseUp", function(self, button)
     if (button == "LeftButton" and self.isMoving) then
-     self:StopMovingOrSizing();
-     self.isMoving = false;
+     self:StopMovingOrSizing()
+     self.isMoving = false
     end
   end)
   
@@ -129,14 +366,14 @@ function AutoBiographer_CreateMainWindow()
   frame.ScrollFrame:SetPoint("BOTTOMRIGHT", -10, 10) 
 
   --scrollbar 
-  frame.ScrollFrame.Scrollbar = CreateFrame("Slider", nil, frame.ScrollFrame, "UIPanelScrollBarTemplate") 
-  frame.ScrollFrame.Scrollbar:SetPoint("TOPLEFT", frame, "TOPRIGHT", -25, -45) 
+  frame.ScrollFrame.Scrollbar = CreateFrame("Slider", nil, frame.ScrollFrame, "UIPanelScrollBarTemplate")
+  frame.ScrollFrame.Scrollbar:SetPoint("TOPLEFT", frame, "TOPRIGHT", -25, -45)
   frame.ScrollFrame.Scrollbar:SetPoint("BOTTOMLEFT", frame, "BOTTOMRIGHT", -25, 22)
-  frame.ScrollFrame.Scrollbar:SetMinMaxValues(1, 510) 
-  frame.ScrollFrame.Scrollbar:SetValueStep(1) 
-  frame.ScrollFrame.Scrollbar.scrollStep = 1 
-  frame.ScrollFrame.Scrollbar:SetValue(0) 
-  frame.ScrollFrame.Scrollbar:SetWidth(16) 
+  frame.ScrollFrame.Scrollbar:SetMinMaxValues(1, 510)
+  frame.ScrollFrame.Scrollbar:SetValueStep(1)
+  frame.ScrollFrame.Scrollbar.scrollStep = 15
+  frame.ScrollFrame.Scrollbar:SetValue(0)
+  frame.ScrollFrame.Scrollbar:SetWidth(16)
   frame.ScrollFrame.Scrollbar:SetScript("OnValueChanged",
     function (self, value) 
       self:GetParent():SetVerticalScroll(value) 
@@ -161,277 +398,6 @@ function AutoBiographer_CreateMainWindow()
   
   frame:Hide()
   return frame
-end
-
-AutoBiographer_MainWindow = AutoBiographer_CreateMainWindow() -- This should be first so that it is under the other windows.
-AutoBiographer_DebugWindow = AutoBiographer_CreateDebugWindow()
-AutoBiographer_EventWindow = nil
-
-function Toggle_EventWindow()
-  if (not AutoBiographer_EventWindow) then
-  
-    local events = Controller:GetEvents()
-    
-    --parent frames
-    local parentFame = CreateFrame("Frame", "", AutoBiographer_MainWindow)
-    parentFame:SetSize(750, 585) 
-    parentFame:SetPoint("CENTER") 
-    
-    local frame = CreateFrame("Frame", "AutoBiographerEvent", parentFame, "BasicFrameTemplate")
-    frame:SetSize(750, 585) 
-    frame:SetPoint("CENTER") 
-    
-    frame:SetMovable(true)
-    frame:EnableMouse(true)
-
-    frame:SetScript("OnHide", function(self)
-      if (self.isMoving) then
-        self:StopMovingOrSizing();
-        self.isMoving = false;
-      end
-
-      AutoBiographer_EventWindow = nil 
-    end)
-
-    frame:SetScript("OnMouseDown", function(self, button)
-      if (button == "LeftButton" and not self.isMoving) then
-        self:StartMoving();
-        self.isMoving = true;
-      end
-    end)
-
-    frame:SetScript("OnMouseUp", function(self, button)
-      if (button == "LeftButton" and self.isMoving) then
-        self:StopMovingOrSizing();
-        self.isMoving = false;
-      end
-    end)
-
-    frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    frame.title:SetPoint("LEFT", frame.TitleBg, "LEFT", 5, 0);
-    frame.title:SetText("AutoBiographer Event Window")
-    
-    local subFrame = CreateFrame("Frame", "AutoBiographerEvent", frame)
-    subFrame:SetPoint("TOPLEFT", 10, -25) 
-    subFrame:SetPoint("BOTTOMRIGHT", -10, 10) 
-    
-    subFrame.RepopulateContent = function(self)
-      Toggle_EventWindow()
-      Toggle_EventWindow()
-    end
-    
-    -- Filter Check Boxes
-    local leftPoint = -300
-    local fsBattleground = subFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    fsBattleground:SetPoint("CENTER", subFrame, "TOP", leftPoint, -15)
-    fsBattleground:SetText("Battle\nground")
-    local cbBattleground= CreateFrame("CheckButton", nil, subFrame, "UICheckButtonTemplate") 
-    cbBattleground:SetPoint("CENTER", subFrame, "TOP", leftPoint, -40)
-    cbBattleground:SetChecked(AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.BattlegroundJoined])
-    cbBattleground:SetScript("OnClick", function(self, event, arg1)
-      AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.BattlegroundJoined] = self:GetChecked()
-      AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.BattlegroundLost] = self:GetChecked()
-      AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.BattlegroundWon] = self:GetChecked()
-      subFrame:RepopulateContent()
-    end)
-
-    leftPoint = leftPoint + 50
-    local fsBossKill = subFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    fsBossKill:SetPoint("CENTER", subFrame, "TOP", leftPoint, -15)
-    fsBossKill:SetText("Boss\nKill")
-    local cbBossKill= CreateFrame("CheckButton", nil, subFrame, "UICheckButtonTemplate") 
-    cbBossKill:SetPoint("CENTER", subFrame, "TOP", leftPoint, -40)
-    cbBossKill:SetChecked(AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.BossKill])
-    cbBossKill:SetScript("OnClick", function(self, event, arg1)
-      AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.BossKill] = self:GetChecked()
-      subFrame:RepopulateContent()
-    end)
-    
-    leftPoint = leftPoint + 50
-    local fsFirstAcquiredItem = subFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    fsFirstAcquiredItem:SetPoint("CENTER", subFrame, "TOP", leftPoint, -15) 
-    fsFirstAcquiredItem:SetText("First\nItem")
-    local cbFirstAcquiredItem = CreateFrame("CheckButton", nil, subFrame, "UICheckButtonTemplate") 
-    cbFirstAcquiredItem:SetPoint("CENTER", subFrame, "TOP", leftPoint, -40)
-    cbFirstAcquiredItem:SetChecked(AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.FirstAcquiredItem])
-    cbFirstAcquiredItem:SetScript("OnClick", function(self, event, arg1)
-      AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.FirstAcquiredItem] = self:GetChecked()
-      subFrame:RepopulateContent()
-    end)
-    
-    leftPoint = leftPoint + 50
-    local fsFirstKill = subFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    fsFirstKill:SetPoint("CENTER", subFrame, "TOP", leftPoint, -15)
-    fsFirstKill:SetText("First\nKill")
-    local cbFirstKill = CreateFrame("CheckButton", nil, subFrame, "UICheckButtonTemplate") 
-    cbFirstKill:SetPoint("CENTER", subFrame, "TOP", leftPoint, -40)
-    cbFirstKill:SetChecked(AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.FirstKill])
-    cbFirstKill:SetScript("OnClick", function(self, event, arg1)
-      AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.FirstKill] = self:GetChecked()
-      subFrame:RepopulateContent()
-    end)
-    
-    leftPoint = leftPoint + 50
-    local fsGuild = subFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    fsGuild:SetPoint("CENTER", subFrame, "TOP", leftPoint, -15)
-    fsGuild:SetText("Guild")
-    local cbGuild = CreateFrame("CheckButton", nil, subFrame, "UICheckButtonTemplate") 
-    cbGuild:SetPoint("CENTER", subFrame, "TOP", leftPoint, -40)
-    cbGuild:SetChecked(AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.GuildJoined])
-    cbGuild:SetScript("OnClick", function(self, event, arg1)
-      AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.GuildJoined] = self:GetChecked()
-      AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.GuildLeft] = self:GetChecked()
-      AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.GuildRankChanged] = self:GetChecked()
-      subFrame:RepopulateContent()
-    end)
-    
-    leftPoint = leftPoint + 50
-    local fsLevelUp = subFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    fsLevelUp:SetPoint("CENTER", subFrame, "TOP", leftPoint, -15)
-    fsLevelUp:SetText("Level\nUp")
-    local cbLevelUp= CreateFrame("CheckButton", nil, subFrame, "UICheckButtonTemplate") 
-    cbLevelUp:SetPoint("CENTER", subFrame, "TOP", leftPoint, -40)
-    cbLevelUp:SetChecked(AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.LevelUp])
-    cbLevelUp:SetScript("OnClick", function(self, event, arg1)
-      AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.LevelUp] = self:GetChecked()
-      subFrame:RepopulateContent()
-    end)
-    
-    leftPoint = leftPoint + 50
-    local fsPlayerDeath = subFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    fsPlayerDeath:SetPoint("CENTER", subFrame, "TOP", leftPoint, -15)
-    fsPlayerDeath:SetText("Player\nDeath")
-    local cbPlayerDeath = CreateFrame("CheckButton", nil, subFrame, "UICheckButtonTemplate") 
-    cbPlayerDeath:SetPoint("CENTER", subFrame, "TOP", leftPoint, -40)
-    cbPlayerDeath:SetChecked(AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.PlayerDeath])
-    cbPlayerDeath:SetScript("OnClick", function(self, event, arg1)
-      AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.PlayerDeath] = self:GetChecked()
-      subFrame:RepopulateContent()
-    end)
-    
-    leftPoint = leftPoint + 50
-    local fsQuestTurnIn = subFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    fsQuestTurnIn:SetPoint("CENTER", subFrame, "TOP", leftPoint, -15)
-    fsQuestTurnIn:SetText("Quest")
-    local cbQuestTurnIn = CreateFrame("CheckButton", nil, subFrame, "UICheckButtonTemplate") 
-    cbQuestTurnIn:SetPoint("CENTER", subFrame, "TOP", leftPoint, -40)
-    cbQuestTurnIn:SetChecked(AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.QuestTurnIn])
-    cbQuestTurnIn:SetScript("OnClick", function(self, event, arg1)
-      AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.QuestTurnIn] = self:GetChecked()
-      subFrame:RepopulateContent()
-    end)
-    
-    leftPoint = leftPoint + 50
-    local fsReputationLevelChanged = subFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    fsReputationLevelChanged:SetPoint("CENTER", subFrame, "TOP", leftPoint, -15)
-    fsReputationLevelChanged:SetText("Rep\nChanged")
-    local cbReputationLevelChanged= CreateFrame("CheckButton", nil, subFrame, "UICheckButtonTemplate") 
-    cbReputationLevelChanged:SetPoint("CENTER", subFrame, "TOP", leftPoint, -40)
-    cbReputationLevelChanged:SetChecked(AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.ReputationLevelChanged])
-    cbReputationLevelChanged:SetScript("OnClick", function(self, event, arg1)
-      AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.ReputationLevelChanged] = self:GetChecked()
-      subFrame:RepopulateContent()
-    end)
-    
-    leftPoint = leftPoint + 50
-    local fsSkillMilestone = subFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    fsSkillMilestone:SetPoint("CENTER", subFrame, "TOP", leftPoint, -15)
-    fsSkillMilestone:SetText("Skill")
-    local cbSkillMilestone = CreateFrame("CheckButton", nil, subFrame, "UICheckButtonTemplate") 
-    cbSkillMilestone:SetPoint("CENTER", subFrame, "TOP", leftPoint, -40)
-    cbSkillMilestone:SetChecked(AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.SkillMilestone])
-    cbSkillMilestone:SetScript("OnClick", function(self, event, arg1)
-      AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.SkillMilestone] = self:GetChecked()
-      subFrame:RepopulateContent()
-    end)
-    
-    leftPoint = leftPoint + 50
-    local fsSpellLearned = subFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    fsSpellLearned:SetPoint("CENTER", subFrame, "TOP", leftPoint, -15)
-    fsSpellLearned:SetText("Spell")
-    local cbSpellLearned= CreateFrame("CheckButton", nil, subFrame, "UICheckButtonTemplate") 
-    cbSpellLearned:SetPoint("CENTER", subFrame, "TOP", leftPoint, -40)
-    cbSpellLearned:SetChecked(AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.SpellLearned])
-    cbSpellLearned:SetScript("OnClick", function(self, event, arg1)
-      AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.SpellLearned] = self:GetChecked()
-      subFrame:RepopulateContent()
-    end)
-    
-    leftPoint = leftPoint + 50
-    local fsSubZoneFirstVisit = subFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    fsSubZoneFirstVisit:SetPoint("CENTER", subFrame, "TOP", leftPoint, -15)
-    fsSubZoneFirstVisit:SetText("Sub\nZone")
-    local cbSubZoneFirstVisit = CreateFrame("CheckButton", nil, subFrame, "UICheckButtonTemplate") 
-    cbSubZoneFirstVisit:SetPoint("CENTER", subFrame, "TOP", leftPoint, -40)
-    cbSubZoneFirstVisit:SetChecked(AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.SubZoneFirstVisit])
-    cbSubZoneFirstVisit:SetScript("OnClick", function(self, event, arg1)
-      AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.SubZoneFirstVisit] = self:GetChecked()
-      subFrame:RepopulateContent()
-    end)
-    
-    leftPoint = leftPoint + 50
-    local fsZoneFirstVisit = subFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    fsZoneFirstVisit:SetPoint("CENTER", subFrame, "TOP", leftPoint, -15)
-    fsZoneFirstVisit:SetText("Zone")
-    local cbZoneFirstVisit = CreateFrame("CheckButton", nil, subFrame, "UICheckButtonTemplate") 
-    cbZoneFirstVisit:SetPoint("CENTER", subFrame, "TOP", leftPoint, -40)
-    cbZoneFirstVisit:SetChecked(AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.ZoneFirstVisit])
-    cbZoneFirstVisit:SetScript("OnClick", function(self, event, arg1)
-      AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.ZoneFirstVisit] = self:GetChecked()
-      subFrame:RepopulateContent()
-    end)
-    
-    --scrollframe 
-    local scrollframe = CreateFrame("ScrollFrame", nil, subFrame) 
-    scrollframe:SetPoint("TOPLEFT", 10, -65) 
-    scrollframe:SetPoint("BOTTOMRIGHT", -10, 10) 
-
-    --scrollbar 
-    local scrollbar = CreateFrame("Slider", nil, scrollframe, "UIPanelScrollBarTemplate") 
-    scrollbar:SetPoint("TOPLEFT", subFrame, "TOPRIGHT", -15, -17) 
-    scrollbar:SetPoint("BOTTOMLEFT", subFrame, "BOTTOMRIGHT", -15, 12)
-    scrollbar:SetMinMaxValues(1, 1)
-    scrollbar:SetValueStep(1) 
-    scrollbar.scrollStep = 1 
-    scrollbar:SetValue(0) 
-    scrollbar:SetWidth(16) 
-    scrollbar:SetScript("OnValueChanged",
-      function (self, value) 
-        self:GetParent():SetVerticalScroll(value) 
-      end
-    ) 
-    local scrollbg = scrollbar:CreateTexture(nil, "BACKGROUND") 
-    scrollbg:SetAllPoints(scrollbar) 
-    scrollbg:SetTexture(0, 0, 0, 0.4) 
-    frame.scrollbar = scrollbar 
-    
-    --content frame 
-    local content = CreateFrame("Frame", nil, scrollframe) 
-    content:SetSize(1, 1) 
-    
-    --texts
-    local index = 0
-    for i = #events, 1, -1 do
-      if (AutoBiographer_Settings.EventDisplayFilters[events[i].SubType]) then
-        local text = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-        text:SetPoint("TOPLEFT", 5, -15 * index) 
-        text:SetText(Controller:GetEventString(events[i]))--text:SetText(events[i])
-        index = index + 1
-      end
-    end
-    
-    local scrollbarMaxValue = (index * 15) - scrollframe:GetHeight();
-    if (scrollbarMaxValue <= 0) then scrollbarMaxValue = 1 end
-    scrollbar:SetMinMaxValues(1, scrollbarMaxValue)
-    
-    scrollframe.content = content
-    scrollframe:SetScrollChild(content)
-    
-    AutoBiographer_EventWindow = frame
-  else
-    AutoBiographer_EventWindow:Hide()
-    AutoBiographer_EventWindow = nil
-  end
 end
 
 function AutoBiographer_DebugWindow:Update()
@@ -465,6 +431,33 @@ function AutoBiographer_DebugWindow:Update()
   end
 end
 
+function AutoBiographer_EventWindow:Update()
+  if (self.SubFrame.ScrollFrame.Content) then self.SubFrame.ScrollFrame.Content:Hide() end
+  --content frame
+  self.SubFrame.ScrollFrame.Content = CreateFrame("Frame", nil, self.SubFrame.ScrollFrame) 
+  self.SubFrame.ScrollFrame.Content:SetSize(1, 1) 
+  
+  local events = Controller:GetEvents()
+
+  --texts
+  local index = 0
+  for i = 1, #events, 1 do
+    if (AutoBiographer_Settings.EventDisplayFilters[events[i].SubType]) then
+      local text = self.SubFrame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+      text:SetPoint("TOPLEFT", 5, -15 * index) 
+      text:SetText(Controller:GetEventString(events[i]))
+      index = index + 1
+    end
+  end
+  
+  local scrollbarMaxValue = (index * 15) - self.SubFrame.ScrollFrame:GetHeight();
+  if (scrollbarMaxValue <= 0) then scrollbarMaxValue = 1 end
+  self.SubFrame.ScrollFrame.Scrollbar:SetMinMaxValues(1, scrollbarMaxValue)
+  self.SubFrame.ScrollFrame.Scrollbar:SetValue(scrollbarMaxValue)
+  
+  self.SubFrame.ScrollFrame:SetScrollChild(self.SubFrame.ScrollFrame.Content)
+end
+
 function AutoBiographer_MainWindow:Update()
   --content frame 
   local content = CreateFrame("Frame", nil, AutoBiographer_MainWindow.ScrollFrame) 
@@ -481,7 +474,7 @@ function AutoBiographer_MainWindow:Update()
   eventsBtn:SetHighlightFontObject("GameFontHighlightLarge");
   eventsBtn:SetScript("OnClick", 
     function(self)
-      Toggle_EventWindow()
+      AutoBiographer_EventWindow:Toggle()
     end
   )
   
