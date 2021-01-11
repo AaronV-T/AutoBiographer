@@ -1,6 +1,93 @@
+local Controller = AutoBiographer_Controller
 local HF = HelperFunctions
 
-local function AutoBiographer_InitializeMainWindow()
+function AutoBiographer_CreateDebugWindow()
+  --parent frames
+  local parentFame = CreateFrame("Frame", "", AutoBiographer_MainWindow)
+  parentFame:SetSize(750, 585) 
+  parentFame:SetPoint("CENTER") 
+  
+  local frame = CreateFrame("Frame", "AutoBiographerDebug", parentFame, "BasicFrameTemplate") 
+  frame:SetSize(750, 585) 
+  frame:SetPoint("CENTER") 
+
+  frame:SetMovable(true)
+  frame:EnableMouse(true)
+
+  frame:SetScript("OnHide", function(self)
+    if (self.isMoving) then
+      self:StopMovingOrSizing();
+      self.isMoving = false;
+    end
+  end)
+
+  frame:SetScript("OnMouseDown", function(self, button)
+    if (button == "LeftButton" and not self.isMoving) then
+      self:StartMoving();
+      self.isMoving = true;
+    end
+  end)
+
+  frame:SetScript("OnMouseUp", function(self, button)
+    if (button == "LeftButton" and self.isMoving) then
+      self:StopMovingOrSizing();
+      self.isMoving = false;
+    end
+  end)
+
+  frame.Title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  frame.Title:SetPoint("LEFT", frame.TitleBg, "LEFT", 5, 0);
+  frame.Title:SetText("AutoBiographer Debug Window")
+  
+  --scrollframe 
+  frame.ScrollFrame = CreateFrame("ScrollFrame", nil, frame) 
+  frame.ScrollFrame:SetPoint("TOPLEFT", 10, -25) 
+  frame.ScrollFrame:SetPoint("BOTTOMRIGHT", -10, 10) 
+
+  --scrollbar 
+  frame.ScrollFrame.Scrollbar = CreateFrame("Slider", nil, frame.ScrollFrame, "UIPanelScrollBarTemplate") 
+  frame.ScrollFrame.Scrollbar:SetPoint("TOPLEFT", frame, "TOPRIGHT", -25, -40) 
+  frame.ScrollFrame.Scrollbar:SetPoint("BOTTOMLEFT", frame, "BOTTOMRIGHT", -25, 22)
+  frame.ScrollFrame.Scrollbar:SetMinMaxValues(1, 1)
+  frame.ScrollFrame.Scrollbar:SetValueStep(1) 
+  frame.ScrollFrame.Scrollbar.scrollStep = 1 
+  frame.ScrollFrame.Scrollbar:SetValue(0) 
+  frame.ScrollFrame.Scrollbar:SetWidth(16) 
+  frame.ScrollFrame.Scrollbar:SetScript("OnValueChanged",
+    function (self, value) 
+      self:GetParent():SetVerticalScroll(value) 
+    end
+  )
+  local scrollbg = frame.ScrollFrame.Scrollbar:CreateTexture(nil, "BACKGROUND") 
+  scrollbg:SetAllPoints(scrollbar) 
+  scrollbg:SetTexture(0, 0, 0, 0.4) 
+  
+  --content frame 
+  frame.ScrollFrame.Content = CreateFrame("Frame", nil, frame.ScrollFrame)
+  frame.ScrollFrame.Content:SetSize(1, 1)
+  frame.ScrollFrame.Content.ChildrenCount = 0
+  frame.ScrollFrame:SetScrollChild(frame.ScrollFrame.Content)
+
+  frame.LogsUpdated = function(self) -- This is called when a new debug log is added.
+    if (self:IsVisible()) then
+      self:Update()
+    end
+  end
+
+  frame.Toggle = function(self)
+    if (self:IsVisible()) then
+      self:Hide()
+    else
+      self:Update()
+      self:Show()
+    end
+  end
+  
+  frame:Hide()
+  return frame
+end
+
+function AutoBiographer_CreateMainWindow()
   --parent frame 
   local frame = CreateFrame("Frame", "AutoBiographerMain", UIParent, "BasicFrameTemplateWithInset") 
   frame:SetSize(800, 600) 
@@ -37,29 +124,29 @@ local function AutoBiographer_InitializeMainWindow()
   frame.Title:SetText("AutoBiographer Main Window")
 
    --scrollframe 
-  frame.Scrollframe = CreateFrame("ScrollFrame", nil, frame) 
-  frame.Scrollframe:SetPoint("TOPLEFT", 10, -25) 
-  frame.Scrollframe:SetPoint("BOTTOMRIGHT", -10, 10) 
+  frame.ScrollFrame = CreateFrame("ScrollFrame", nil, frame) 
+  frame.ScrollFrame:SetPoint("TOPLEFT", 10, -25) 
+  frame.ScrollFrame:SetPoint("BOTTOMRIGHT", -10, 10) 
 
   --scrollbar 
-  frame.Scrollframe.Scrollbar = CreateFrame("Slider", nil, frame.Scrollframe, "UIPanelScrollBarTemplate") 
-  frame.Scrollframe.Scrollbar:SetPoint("TOPLEFT", frame, "TOPRIGHT", -25, -45) 
-  frame.Scrollframe.Scrollbar:SetPoint("BOTTOMLEFT", frame, "BOTTOMRIGHT", -25, 22)
-  frame.Scrollframe.Scrollbar:SetMinMaxValues(1, 510) 
-  frame.Scrollframe.Scrollbar:SetValueStep(1) 
-  frame.Scrollframe.Scrollbar.scrollStep = 1 
-  frame.Scrollframe.Scrollbar:SetValue(0) 
-  frame.Scrollframe.Scrollbar:SetWidth(16) 
-  frame.Scrollframe.Scrollbar:SetScript("OnValueChanged",
+  frame.ScrollFrame.Scrollbar = CreateFrame("Slider", nil, frame.ScrollFrame, "UIPanelScrollBarTemplate") 
+  frame.ScrollFrame.Scrollbar:SetPoint("TOPLEFT", frame, "TOPRIGHT", -25, -45) 
+  frame.ScrollFrame.Scrollbar:SetPoint("BOTTOMLEFT", frame, "BOTTOMRIGHT", -25, 22)
+  frame.ScrollFrame.Scrollbar:SetMinMaxValues(1, 510) 
+  frame.ScrollFrame.Scrollbar:SetValueStep(1) 
+  frame.ScrollFrame.Scrollbar.scrollStep = 1 
+  frame.ScrollFrame.Scrollbar:SetValue(0) 
+  frame.ScrollFrame.Scrollbar:SetWidth(16) 
+  frame.ScrollFrame.Scrollbar:SetScript("OnValueChanged",
     function (self, value) 
       self:GetParent():SetVerticalScroll(value) 
     end
   )
   
   frame.Clear = function(self)
-    if (self.Scrollframe.Content) then
-      self.Scrollframe.Content:Hide()
-      self.Scrollframe.Content = nil
+    if (self.ScrollFrame.Content) then
+      self.ScrollFrame.Content:Hide()
+      self.ScrollFrame.Content = nil
     end
   end  
   
@@ -76,117 +163,9 @@ local function AutoBiographer_InitializeMainWindow()
   return frame
 end
 
-AutoBiographer_DebugWindow = nil
+AutoBiographer_MainWindow = AutoBiographer_CreateMainWindow() -- This should be first so that it is under the other windows.
+AutoBiographer_DebugWindow = AutoBiographer_CreateDebugWindow()
 AutoBiographer_EventWindow = nil
-AutoBiographer_MainWindow = AutoBiographer_InitializeMainWindow()
-
-local Controller = AutoBiographer_Controller
-
-function Toggle_DebugWindow()
-  if (not AutoBiographer_DebugWindow) then
-  
-    local debugLogs = Controller:GetLogs()
-    
-    --parent frames
-    local parentFame = CreateFrame("Frame", "", AutoBiographer_MainWindow)
-    parentFame:SetSize(750, 585) 
-    parentFame:SetPoint("CENTER") 
-    
-    local frame = CreateFrame("Frame", "AutoBiographerDebug", parentFame, "BasicFrameTemplate") 
-    frame:SetSize(750, 585) 
-    frame:SetPoint("CENTER") 
-
-    frame:SetMovable(true)
-    frame:EnableMouse(true)
-
-    frame:SetScript("OnHide", function(self)
-      if (self.isMoving) then
-        self:StopMovingOrSizing();
-        self.isMoving = false;
-      end
-
-      AutoBiographer_DebugWindow = nil 
-    end)
-
-    frame:SetScript("OnMouseDown", function(self, button)
-      if (button == "LeftButton" and not self.isMoving) then
-        self:StartMoving();
-        self.isMoving = true;
-      end
-    end)
-
-    frame:SetScript("OnMouseUp", function(self, button)
-      if (button == "LeftButton" and self.isMoving) then
-        self:StopMovingOrSizing();
-        self.isMoving = false;
-      end
-    end)
-
-    frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    frame.title:SetPoint("LEFT", frame.TitleBg, "LEFT", 5, 0);
-    frame.title:SetText("AutoBiographer Debug Window")
-    
-    --scrollframe 
-    local scrollframe = CreateFrame("ScrollFrame", nil, frame) 
-    scrollframe:SetPoint("TOPLEFT", 10, -25) 
-    scrollframe:SetPoint("BOTTOMRIGHT", -10, 10) 
-
-    --scrollbar 
-    local scrollbar = CreateFrame("Slider", nil, scrollframe, "UIPanelScrollBarTemplate") 
-    scrollbar:SetPoint("TOPLEFT", frame, "TOPRIGHT", -25, -40) 
-    scrollbar:SetPoint("BOTTOMLEFT", frame, "BOTTOMRIGHT", -25, 22)
-    scrollbar:SetMinMaxValues(1, 1)
-    scrollbar:SetValueStep(1) 
-    scrollbar.scrollStep = 1 
-    scrollbar:SetValue(0) 
-    scrollbar:SetWidth(16) 
-    scrollbar:SetScript("OnValueChanged",
-      function (self, value) 
-        self:GetParent():SetVerticalScroll(value) 
-      end
-    )
-    local scrollbg = scrollbar:CreateTexture(nil, "BACKGROUND") 
-    scrollbg:SetAllPoints(scrollbar) 
-    scrollbg:SetTexture(0, 0, 0, 0.4) 
-    frame.scrollbar = scrollbar 
-
-    --content frame 
-    local content = CreateFrame("Frame", nil, scrollframe) 
-    content:SetSize(1, 1) 
-    
-    --texts
-    local index = 0
-    for i = debugLogs.LastIndex, debugLogs.FirstIndex, -1 do
-      local font = "GameFontWhite"
-      if (debugLogs[i].Level == AutoBiographerEnum.LogLevel.Verbose) then font = "GameFontDisable"
-      elseif (debugLogs[i].Level == AutoBiographerEnum.LogLevel.Debug) then font = "GameFontDisable"
-      elseif (debugLogs[i].Level == AutoBiographerEnum.LogLevel.Information) then font = "GameFontWhite"
-      elseif (debugLogs[i].Level == AutoBiographerEnum.LogLevel.Warning) then font = "GameFontNormal"
-      elseif (debugLogs[i].Level == AutoBiographerEnum.LogLevel.Error) then font = "GameFontRed"
-      elseif (debugLogs[i].Level == AutoBiographerEnum.LogLevel.Fatal) then font = "GameFontRed"
-      end
-      
-      local text = content:CreateFontString(nil, "OVERLAY", font)
-      text:SetPoint("TOPLEFT", 5, -15 * index) 
-      text:SetText(debugLogs[i].Text)
-      index = index + 1
-    end
-    
-    local scrollbarMaxValue = (index * 15) - scrollframe:GetHeight();
-    if (scrollbarMaxValue <= 0) then scrollbarMaxValue = 1 end
-    scrollbar:SetMinMaxValues(1, scrollbarMaxValue)
-    
-    scrollframe.content = content
-    scrollframe:SetScrollChild(content)
-    
-    frame.LogsUpdated = function () return end
-    
-    AutoBiographer_DebugWindow = frame
-  else
-    AutoBiographer_DebugWindow:Hide()
-    AutoBiographer_DebugWindow = nil
-  end
-end
 
 function Toggle_EventWindow()
   if (not AutoBiographer_EventWindow) then
@@ -213,7 +192,7 @@ function Toggle_EventWindow()
 
       AutoBiographer_EventWindow = nil 
     end)
-    
+
     frame:SetScript("OnMouseDown", function(self, button)
       if (button == "LeftButton" and not self.isMoving) then
         self:StartMoving();
@@ -455,12 +434,43 @@ function Toggle_EventWindow()
   end
 end
 
+function AutoBiographer_DebugWindow:Update()
+  local previousScrollbarMaxValue = (self.ScrollFrame.Content.ChildrenCount * 15) - self.ScrollFrame:GetHeight();
+  local previousScrollbarValue = self.ScrollFrame.Scrollbar:GetValue()
+  local previousScrollbarValueWasAtMax = previousScrollbarValue >= previousScrollbarMaxValue
+
+  local debugLogs = Controller:GetLogs()
+  for i = self.ScrollFrame.Content.ChildrenCount + 1, #debugLogs, 1 do
+    local font = "GameFontWhite"
+    if (debugLogs[i].Level == AutoBiographerEnum.LogLevel.Verbose) then font = "GameFontDisable"
+    elseif (debugLogs[i].Level == AutoBiographerEnum.LogLevel.Debug) then font = "GameFontDisable"
+    elseif (debugLogs[i].Level == AutoBiographerEnum.LogLevel.Information) then font = "GameFontWhite"
+    elseif (debugLogs[i].Level == AutoBiographerEnum.LogLevel.Warning) then font = "GameFontNormal"
+    elseif (debugLogs[i].Level == AutoBiographerEnum.LogLevel.Error) then font = "GameFontRed"
+    elseif (debugLogs[i].Level == AutoBiographerEnum.LogLevel.Fatal) then font = "GameFontRed"
+    end
+    
+    local text = self.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", font)
+    text:SetPoint("TOPLEFT", 5, -15 * i) 
+    text:SetText(debugLogs[i].Text)
+    self.ScrollFrame.Content.ChildrenCount = self.ScrollFrame.Content.ChildrenCount + 1
+  end
+  
+  local scrollbarMaxValue = (self.ScrollFrame.Content.ChildrenCount * 15) - self.ScrollFrame:GetHeight();
+  if (scrollbarMaxValue <= 0) then scrollbarMaxValue = 1 end
+  self.ScrollFrame.Scrollbar:SetMinMaxValues(1, scrollbarMaxValue)
+
+  if (previousScrollbarValueWasAtMax) then
+    self.ScrollFrame.Scrollbar:SetValue(scrollbarMaxValue)
+  end
+end
+
 function AutoBiographer_MainWindow:Update()
   --content frame 
-  local content = CreateFrame("Frame", nil, AutoBiographer_MainWindow.Scrollframe) 
+  local content = CreateFrame("Frame", nil, AutoBiographer_MainWindow.ScrollFrame) 
   content:SetSize(775, 600)
-  content:SetPoint("TOPLEFT", AutoBiographer_MainWindow.Scrollframe, "TOPRIGHT", 0, 0) 
-  content:SetPoint("BOTTOMLEFT", AutoBiographer_MainWindow.Scrollframe, "BOTTOMRIGHT", 0, 0)
+  content:SetPoint("TOPLEFT", AutoBiographer_MainWindow.ScrollFrame, "TOPRIGHT", 0, 0) 
+  content:SetPoint("BOTTOMLEFT", AutoBiographer_MainWindow.ScrollFrame, "BOTTOMRIGHT", 0, 0)
   
   -- Buttons
   local eventsBtn = CreateFrame("Button", nil, content, "UIPanelButtonTemplate");
@@ -497,7 +507,7 @@ function AutoBiographer_MainWindow:Update()
   debugBtn:SetHighlightFontObject("GameFontHighlightLarge");
   debugBtn:SetScript("OnClick", 
     function(self)
-      Toggle_DebugWindow()
+      AutoBiographer_DebugWindow:Toggle()
     end
   )
   
@@ -902,6 +912,6 @@ function AutoBiographer_MainWindow:Update()
   timeSpentOnTaxiFs:SetPoint("TOPLEFT", 10, topPoint)
   timeSpentOnTaxiFs:SetText("Time Spent on Flights: " .. HF.SecondsToTimeString(timeSpentOnTaxi) .. ".")
   
-  self.Scrollframe.Content = content
-  self.Scrollframe:SetScrollChild(content)
+  self.ScrollFrame.Content = content
+  self.ScrollFrame:SetScrollChild(content)
 end

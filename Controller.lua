@@ -1,9 +1,6 @@
 AutoBiographer_Controller = {
   CharacterData = {},
-  Logs = {
-    FirstIndex = 1,
-    LastIndex = 0,
-  }, 
+  Logs = {}, 
 }
 
 local Controller = AutoBiographer_Controller
@@ -16,19 +13,12 @@ end
 function Controller:AddLog(text, logLevel)
   if (logLevel == nil) then error("Unspecified logLevel. Log Text: '" .. text .. "'") end
   
-  if (self.Logs.LastIndex - self.Logs.FirstIndex >= 1000) then
-    self.Logs[self.Logs.FirstIndex] = nil
-    self.Logs.FirstIndex = self.Logs.FirstIndex + 1
-  end
-  
-  self.Logs.LastIndex = self.Logs.LastIndex + 1
-  
-  self.Logs[self.Logs.LastIndex] = { 
+  table.insert(self.Logs, {
     Level = logLevel, Text = tostring(text),
-    Timestamp = time() ,
-  }
+    Timestamp = time(),
+  })
   
-  if (AutoBiographer_DebugWindow ) then AutoBiographer_DebugWindow.LogsUpdated() end
+  AutoBiographer_DebugWindow:LogsUpdated()
 end
 
 function Controller:AddOtherPlayerInGroupTime(otherPlayerGuid, seconds)
