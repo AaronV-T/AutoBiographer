@@ -20,13 +20,59 @@ function AutoBiographer_DebugWindow:Initialize()
   frame:SetSize(750, 585)
   frame:SetPoint("CENTER")
 
-  frame:SetMovable(true)
+  frame:EnableKeyboard(true)
   frame:EnableMouse(true)
+  frame:SetMovable(true)
 
   frame:SetScript("OnHide", function(self)
     if (self.isMoving) then
       self:StopMovingOrSizing()
       self.isMoving = false
+    end
+  end)
+
+  frame:SetScript("OnKeyDown", function(self, key)
+    if (key == "ESCAPE") then
+      frame:SetPropagateKeyboardInput(false)
+      frame:Hide()
+    elseif (key == "END") then
+      frame:SetPropagateKeyboardInput(false)
+      local sliderMin, sliderMax = frame.ScrollFrame.Scrollbar:GetMinMaxValues()
+      frame.ScrollFrame.Scrollbar:SetValue(sliderMax)
+    elseif (key == "HOME") then
+      frame:SetPropagateKeyboardInput(false)
+      local sliderMin, sliderMax = frame.ScrollFrame.Scrollbar:GetMinMaxValues()
+      frame.ScrollFrame.Scrollbar:SetValue(sliderMin)
+    elseif (key == "PAGEDOWN") then
+      frame:SetPropagateKeyboardInput(false)
+      local sliderMin, sliderMax = frame.ScrollFrame.Scrollbar:GetMinMaxValues()
+      local sliderCurrentValue = frame.ScrollFrame.Scrollbar:GetValue()
+
+      local sliderNextValue = sliderCurrentValue + frame.ScrollFrame:GetHeight()
+
+      if (sliderNextValue > sliderMax) then
+        sliderNextValue = sliderMax
+      elseif (sliderNextValue < sliderMin) then
+        sliderNextValue = sliderMin
+      end
+
+      frame.ScrollFrame.Scrollbar:SetValue(sliderNextValue)
+    elseif (key == "PAGEUP") then
+      frame:SetPropagateKeyboardInput(false)
+      local sliderMin, sliderMax = frame.ScrollFrame.Scrollbar:GetMinMaxValues()
+      local sliderCurrentValue = frame.ScrollFrame.Scrollbar:GetValue()
+
+      local sliderNextValue = sliderCurrentValue - frame.ScrollFrame:GetHeight()
+
+      if (sliderNextValue > sliderMax) then
+        sliderNextValue = sliderMax
+      elseif (sliderNextValue < sliderMin) then
+        sliderNextValue = sliderMin
+      end
+
+      frame.ScrollFrame.Scrollbar:SetValue(sliderNextValue)
+    else
+      frame:SetPropagateKeyboardInput(true)
     end
   end)
 
@@ -42,6 +88,21 @@ function AutoBiographer_DebugWindow:Initialize()
       self:StopMovingOrSizing()
       self.isMoving = false
     end
+  end)
+
+  frame:SetScript("OnMouseWheel", function(self, direction)
+    local sliderMin, sliderMax = frame.ScrollFrame.Scrollbar:GetMinMaxValues()
+    local sliderCurrentValue = frame.ScrollFrame.Scrollbar:GetValue()
+
+    local sliderNextValue = sliderCurrentValue - (frame.ScrollFrame.Scrollbar.scrollStep * direction)
+
+    if (sliderNextValue > sliderMax) then
+      sliderNextValue = sliderMax
+    elseif (sliderNextValue < sliderMin) then
+      sliderNextValue = sliderMin
+    end
+
+    frame.ScrollFrame.Scrollbar:SetValue(sliderNextValue)
   end)
 
   frame.Title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -101,13 +162,59 @@ function AutoBiographer_EventWindow:Initialize()
   frame:SetSize(750, 585) 
   frame:SetPoint("CENTER") 
   
-  frame:SetMovable(true)
+  frame:EnableKeyboard(true)
   frame:EnableMouse(true)
+  frame:SetMovable(true)
 
   frame:SetScript("OnHide", function(self)
     if (self.isMoving) then
       self:StopMovingOrSizing()
       self.isMoving = false
+    end
+  end)
+
+  frame:SetScript("OnKeyDown", function(self, key)
+    if (key == "ESCAPE") then
+      frame:SetPropagateKeyboardInput(false)
+      frame:Hide()
+    elseif (key == "END") then
+      frame:SetPropagateKeyboardInput(false)
+      local sliderMin, sliderMax = frame.SubFrame.ScrollFrame.Scrollbar:GetMinMaxValues()
+      frame.SubFrame.ScrollFrame.Scrollbar:SetValue(sliderMax)
+    elseif (key == "HOME") then
+      frame:SetPropagateKeyboardInput(false)
+      local sliderMin, sliderMax = frame.SubFrame.ScrollFrame.Scrollbar:GetMinMaxValues()
+      frame.SubFrame.ScrollFrame.Scrollbar:SetValue(sliderMin)
+    elseif (key == "PAGEDOWN") then
+      frame:SetPropagateKeyboardInput(false)
+      local sliderMin, sliderMax = frame.SubFrame.ScrollFrame.Scrollbar:GetMinMaxValues()
+      local sliderCurrentValue = frame.SubFrame.ScrollFrame.Scrollbar:GetValue()
+
+      local sliderNextValue = sliderCurrentValue + frame.SubFrame.ScrollFrame:GetHeight()
+
+      if (sliderNextValue > sliderMax) then
+        sliderNextValue = sliderMax
+      elseif (sliderNextValue < sliderMin) then
+        sliderNextValue = sliderMin
+      end
+
+      frame.SubFrame.ScrollFrame.Scrollbar:SetValue(sliderNextValue)
+    elseif (key == "PAGEUP") then
+      frame:SetPropagateKeyboardInput(false)
+      local sliderMin, sliderMax = frame.SubFrame.ScrollFrame.Scrollbar:GetMinMaxValues()
+      local sliderCurrentValue = frame.SubFrame.ScrollFrame.Scrollbar:GetValue()
+
+      local sliderNextValue = sliderCurrentValue - frame.SubFrame.ScrollFrame:GetHeight()
+
+      if (sliderNextValue > sliderMax) then
+        sliderNextValue = sliderMax
+      elseif (sliderNextValue < sliderMin) then
+        sliderNextValue = sliderMin
+      end
+
+      frame.SubFrame.ScrollFrame.Scrollbar:SetValue(sliderNextValue)
+    else
+      frame:SetPropagateKeyboardInput(true)
     end
   end)
 
@@ -123,6 +230,21 @@ function AutoBiographer_EventWindow:Initialize()
       self:StopMovingOrSizing()
       self.isMoving = false
     end
+  end)
+
+  frame:SetScript("OnMouseWheel", function(self, direction)
+    local sliderMin, sliderMax = frame.SubFrame.ScrollFrame.Scrollbar:GetMinMaxValues()
+    local sliderCurrentValue = frame.SubFrame.ScrollFrame.Scrollbar:GetValue()
+
+    local sliderNextValue = sliderCurrentValue - (frame.SubFrame.ScrollFrame.Scrollbar.scrollStep * direction)
+
+    if (sliderNextValue > sliderMax) then
+      sliderNextValue = sliderMax
+    elseif (sliderNextValue < sliderMin) then
+      sliderNextValue = sliderMin
+    end
+
+    frame.SubFrame.ScrollFrame.Scrollbar:SetValue(sliderNextValue)
   end)
 
   frame.Title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -344,13 +466,59 @@ function AutoBiographer_MainWindow:Initialize()
   frame:SetSize(800, 600) 
   frame:SetPoint("CENTER") 
   
-  frame:SetMovable(true)
+  frame:EnableKeyboard(true)
   frame:EnableMouse(true)
+  frame:SetMovable(true)
 
   frame:SetScript("OnHide", function(self)
     if (self.isMoving) then
       self:StopMovingOrSizing()
       self.isMoving = false
+    end
+  end)
+
+  frame:SetScript("OnKeyDown", function(self, key)
+    if (key == "ESCAPE") then
+      frame:SetPropagateKeyboardInput(false)
+      frame:Hide()
+    elseif (key == "END") then
+      frame:SetPropagateKeyboardInput(false)
+      local sliderMin, sliderMax = frame.ScrollFrame.Scrollbar:GetMinMaxValues()
+      frame.ScrollFrame.Scrollbar:SetValue(sliderMax)
+    elseif (key == "HOME") then
+      frame:SetPropagateKeyboardInput(false)
+      local sliderMin, sliderMax = frame.ScrollFrame.Scrollbar:GetMinMaxValues()
+      frame.ScrollFrame.Scrollbar:SetValue(sliderMin)
+    elseif (key == "PAGEDOWN") then
+      frame:SetPropagateKeyboardInput(false)
+      local sliderMin, sliderMax = frame.ScrollFrame.Scrollbar:GetMinMaxValues()
+      local sliderCurrentValue = frame.ScrollFrame.Scrollbar:GetValue()
+
+      local sliderNextValue = sliderCurrentValue + frame.ScrollFrame:GetHeight()
+
+      if (sliderNextValue > sliderMax) then
+        sliderNextValue = sliderMax
+      elseif (sliderNextValue < sliderMin) then
+        sliderNextValue = sliderMin
+      end
+
+      frame.ScrollFrame.Scrollbar:SetValue(sliderNextValue)
+    elseif (key == "PAGEUP") then
+      frame:SetPropagateKeyboardInput(false)
+      local sliderMin, sliderMax = frame.ScrollFrame.Scrollbar:GetMinMaxValues()
+      local sliderCurrentValue = frame.ScrollFrame.Scrollbar:GetValue()
+
+      local sliderNextValue = sliderCurrentValue - frame.ScrollFrame:GetHeight()
+
+      if (sliderNextValue > sliderMax) then
+        sliderNextValue = sliderMax
+      elseif (sliderNextValue < sliderMin) then
+        sliderNextValue = sliderMin
+      end
+
+      frame.ScrollFrame.Scrollbar:SetValue(sliderNextValue)
+    else
+      frame:SetPropagateKeyboardInput(true)
     end
   end)
 
@@ -366,6 +534,21 @@ function AutoBiographer_MainWindow:Initialize()
      self:StopMovingOrSizing()
      self.isMoving = false
     end
+  end)
+
+  frame:SetScript("OnMouseWheel", function(self, direction)
+    local sliderMin, sliderMax = frame.ScrollFrame.Scrollbar:GetMinMaxValues()
+    local sliderCurrentValue = frame.ScrollFrame.Scrollbar:GetValue()
+
+    local sliderNextValue = sliderCurrentValue - (frame.ScrollFrame.Scrollbar.scrollStep * direction)
+
+    if (sliderNextValue > sliderMax) then
+      sliderNextValue = sliderMax
+    elseif (sliderNextValue < sliderMin) then
+      sliderNextValue = sliderMin
+    end
+
+    frame.ScrollFrame.Scrollbar:SetValue(sliderNextValue)
   end)
   
   frame.Title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight");
