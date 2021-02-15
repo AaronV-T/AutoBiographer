@@ -18,7 +18,9 @@ function Controller:AddLog(text, logLevel)
     Timestamp = time(),
   })
   
-  AutoBiographer_DebugWindow:LogsUpdated()
+  if (AutoBiographer_DebugWindow and AutoBiographer_DebugWindow.LogsUpdated) then
+    AutoBiographer_DebugWindow:LogsUpdated()
+  end
 end
 
 function Controller:AddOtherPlayerInGroupTime(otherPlayerGuid, seconds)
