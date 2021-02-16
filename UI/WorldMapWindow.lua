@@ -30,6 +30,18 @@ function AutoBiographer_WorldMapWindowToggleButton_Toggle(self)
     local event = AutoBiographer_Controller.CharacterData.Events[i]
 
     if (event.Coordinates) then
+      local tooltipLines = {}
+      table.insert(tooltipLines, Event.ToString(event, AutoBiographer_Controller.CharacterData.Catalogs))
+
+      for j = i - 1, 1, -1 do
+        local otherEvent = AutoBiographer_Controller.CharacterData.Events[j]
+        if (otherEvent.Coordinates and
+            otherEvent.Coordinates.MapId == event.Coordinates.MapId and
+            10 > Hbd:GetZoneDistance(event.Coordinates.MapId, event.Coordinates.X, event.Coordinates.Y, otherEvent.Coordinates.MapId, otherEvent.Coordinates.X, otherEvent.Coordinates.Y)) then
+          table.insert(tooltipLines, Event.ToString(otherEvent, AutoBiographer_Controller.CharacterData.Catalogs))
+        end
+      end
+
       local icon = table.remove(AutoBiographer_EventMapIconPool.UnAllocated)
       if (not icon) then
         icon = CreateFrame("Frame", nil, UIParent)
@@ -43,7 +55,17 @@ function AutoBiographer_WorldMapWindowToggleButton_Toggle(self)
         GameTooltip_SetDefaultAnchor(GameTooltip, UIParent)
         GameTooltip:ClearAllPoints();
         GameTooltip:SetPoint("TOPRIGHT", icon, "BOTTOMRIGHT", 0, 0)
-        GameTooltip:SetText(Event.ToString(event, AutoBiographer_Controller.CharacterData.Catalogs))
+
+        if (#tooltipLines == 1) then
+          GameTooltip:SetText("1 Event")
+        else
+          GameTooltip:SetText(#tooltipLines .. " Events")
+        end
+        
+        for j = 1, #tooltipLines do
+          GameTooltip:AddLine(tooltipLines[j])
+        end
+        
         GameTooltip:Show()
       end)
 
