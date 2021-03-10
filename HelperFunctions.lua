@@ -1,6 +1,8 @@
 HelperFunctions = {}
 local HF = HelperFunctions
 
+local Hbd = LibStub("HereBeDragons-2.0")
+local HbdPins = LibStub("HereBeDragons-Pins-2.0")
 
 function HF.GetCatalogIdFromGuid(guid)
   if (not guid) then return nil end
@@ -16,15 +18,21 @@ function HF.GetCatalogIdFromGuid(guid)
 end
 
 function HF.GetCoordinatesByUnitId(unitId)
+  local worldX, worldY, worldInstance = Hbd:GetUnitWorldPosition(unitId)
+
   local mapId = C_Map.GetBestMapForUnit(unitId)
-  
-  if (mapId == nil) then return nil end
-  
-  local position = C_Map.GetPlayerMapPosition(mapId, unitId)
-  
-  if (position == nil) then return nil end
-  
-  return Coordinates.New(mapId, HF.Round(position.x * 100, 2), HF.Round(position.y * 100, 2))
+  local x = nil
+  local y = nil
+
+  if (mapId) then
+    local position = C_Map.GetPlayerMapPosition(mapId, unitId)
+    if (position) then
+      x = HF.Round(position.x * 100, 2)
+      y = HF.Round(position.y * 100, 2)
+    end
+  end
+
+  return Coordinates.New(worldInstance, mapId, x, y)
 end
 
 function HF.GetUnitTypeFromCatalogUnitId(cuid)

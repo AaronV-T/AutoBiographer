@@ -177,6 +177,8 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
 	end
   
   self.PersistentPlayerInfo = _G["AUTOBIOGRAPHER_INFO_CHAR"]
+
+  AutoBiographer_Databases.Initialiaze()
   
   -- Database Migrations
   if (not self.PersistentPlayerInfo.DatabaseVersion or self.PersistentPlayerInfo.DatabaseVersion < AutoBiographer_MigrationManager:GetLatestDatabaseVersion()) then
@@ -196,7 +198,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   AutoBiographer_MinimapButton_Reposition()
   if (AutoBiographer_Settings.Options["ShowMinimapButton"] == false) then AutoBiographer_MinimapButton:Hide()
   else AutoBiographer_MinimapButton:Show() end
-  
+
   AutoBiographer_DebugWindow:Initialize()
   AutoBiographer_EventWindow:Initialize()
   AutoBiographer_OptionWindow:Initialize()
@@ -873,7 +875,7 @@ function EM.EventHandlers.UPDATE_BATTLEFIELD_STATUS(self, battleFieldIndex)
   
   -- Get the battleground's ID (Note: GetBattlegroundInfo is not a reliable function and should be avoided).
   local bgId = nil
-  for k,v in pairs(BattlegroundDatabase) do
+  for k,v in pairs(AutoBiographer_Databases.BattlegroundDatabase) do
     if (v == mapName) then
       bgId = k
     end
@@ -1392,6 +1394,11 @@ function EM:ClearCharacterData(doNotRequireConfirmation, doNotReloadUI)
 end
 
 function EM:Test()
-  --print(HelperFunctions.GetCatalogIdFromGuid("GameObject-0-4380-533-11441-181544-000050305B"))
-  --Controller:OnDeath(time(), nil, "go181544", nil)
+  local Hbd = LibStub("HereBeDragons-2.0")
+  local HbdPins = LibStub("HereBeDragons-Pins-2.0")
+
+  local worldX, worldY, worldInstance = Hbd:GetPlayerWorldPosition()
+  local zoneX, zoneY, zoneMapId, zoneMapType = Hbd:GetPlayerZonePosition()
+
+  HelperFunctions.PrintKeysAndValuesFromTable(HelperFunctions.GetCoordinatesByUnitId("player"))
 end

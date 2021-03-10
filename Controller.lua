@@ -453,7 +453,7 @@ function Controller:OnKill(timestamp, coordinates, kill)
       end
     end
     
-    if (BossDatabase[kill.CatalogUnitId]) then
+    if (AutoBiographer_Databases.BossDatabase[kill.CatalogUnitId]) then
       Controller:OnBossKill(time(), HelperFunctions.GetCoordinatesByUnitId("player"), kill.CatalogUnitId, self.CharacterData.Catalogs.UnitCatalog[kill.CatalogUnitId].Name, hasKilledUnitBefore)
     end
   end

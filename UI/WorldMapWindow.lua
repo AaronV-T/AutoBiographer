@@ -1,5 +1,5 @@
-Hbd = LibStub("HereBeDragons-2.0")
-HbdPins = LibStub("HereBeDragons-Pins-2.0")
+local Hbd = LibStub("HereBeDragons-2.0")
+local HbdPins = LibStub("HereBeDragons-Pins-2.0")
 
 AutoBiographer_EventMapIconPool = {
   Allocated = {},
@@ -36,9 +36,12 @@ function AutoBiographer_WorldMapWindowToggleButton_Toggle(self)
       for j = i - 1, 1, -1 do
         local otherEvent = AutoBiographer_Controller.CharacterData.Events[j]
         if (otherEvent.Coordinates and
-            otherEvent.Coordinates.MapId == event.Coordinates.MapId and
-            10 > Hbd:GetZoneDistance(event.Coordinates.MapId, event.Coordinates.X, event.Coordinates.Y, otherEvent.Coordinates.MapId, otherEvent.Coordinates.X, otherEvent.Coordinates.Y)) then
+            ((event.Coordinates.MapId ~= nil and otherEvent.Coordinates.MapId == event.Coordinates.MapId and
+            10 > Hbd:GetZoneDistance(event.Coordinates.MapId, event.Coordinates.X, event.Coordinates.Y, otherEvent.Coordinates.MapId, otherEvent.Coordinates.X, otherEvent.Coordinates.Y)) or
+            (event.Coordinates.InstanceId ~= nil and otherEvent.Coordinates.InstanceId == event.Coordinates.InstanceId))) then 
+          
           table.insert(tooltipLines, Event.ToString(otherEvent, AutoBiographer_Controller.CharacterData.Catalogs))
+          HbdPins:RemoveWorldMapIcon(AutoBiographer_WorldMapWindowToggleButton, AutoBiographer_EventMapIconPool.Allocated[j])
         end
       end
 
@@ -73,7 +76,13 @@ function AutoBiographer_WorldMapWindowToggleButton_Toggle(self)
         GameTooltip:Hide()
       end)
 
-      HbdPins:AddWorldMapIconMap(AutoBiographer_WorldMapWindowToggleButton, icon, event.Coordinates.MapId, event.Coordinates.X / 100, event.Coordinates.Y / 100, HBD_PINS_WORLDMAP_SHOW_WORLD )--, showFlag, frameLevelType)
+      if (event.Coordinates.MapId ~= nil and event.Coordinates.X and event.Coordinates.Y) then
+        HbdPins:AddWorldMapIconMap(AutoBiographer_WorldMapWindowToggleButton, icon, event.Coordinates.MapId, event.Coordinates.X / 100, event.Coordinates.Y / 100, HBD_PINS_WORLDMAP_SHOW_WORLD)
+      elseif (event.Coordinates.InstanceId ~= nil and AutoBiographer_Databases.InstanceLocationDatabase[event.Coordinates.InstanceId]) then
+        local coords = AutoBiographer_Databases.InstanceLocationDatabase[event.Coordinates.InstanceId]
+        HbdPins:AddWorldMapIconMap(AutoBiographer_WorldMapWindowToggleButton, icon, coords.MapId, coords.X / 100, coords.Y / 100, HBD_PINS_WORLDMAP_SHOW_WORLD)
+      end
+
       table.insert(AutoBiographer_EventMapIconPool.Allocated, icon)
     end
   end

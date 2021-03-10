@@ -58,11 +58,11 @@ function Event.ToString(e, catalogs)
 
   if (e.Type == AutoBiographerEnum.EventType.Battleground) then
     if (e.SubType == AutoBiographerEnum.EventSubType.BattlegroundJoined) then
-      return timestampString .. "You joined " .. BattlegroundDatabase[e.BattlegroundId] .. "."
+      return timestampString .. "You joined " .. AutoBiographer_Databases.BattlegroundDatabase[e.BattlegroundId] .. "."
     elseif (e.SubType == AutoBiographerEnum.EventSubType.BattlegroundLost) then
-      return timestampString .. "You lost " .. BattlegroundDatabase[e.BattlegroundId] .. "."
+      return timestampString .. "You lost " .. AutoBiographer_Databases.BattlegroundDatabase[e.BattlegroundId] .. "."
     elseif (e.SubType == AutoBiographerEnum.EventSubType.BattlegroundWon) then
-      return timestampString .. "You won " .. BattlegroundDatabase[e.BattlegroundId] .. "."
+      return timestampString .. "You won " .. AutoBiographer_Databases.BattlegroundDatabase[e.BattlegroundId] .. "."
     end
   elseif (e.Type == AutoBiographerEnum.EventType.Death) then
     if (e.SubType == AutoBiographerEnum.EventSubType.PlayerDeath) then
