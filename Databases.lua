@@ -351,7 +351,15 @@ function AutoBiographer_Databases.Initialiaze()
   }
 
   AutoBiographer_Databases.InstanceLocationDatabase = {
-    [36] = Coordinates.New(0, 1415, 40.69, 79.58),
+    [33] = Coordinates.New(0, 1421, 44.82, 67.85), -- Shadowfang Keep
+    [34] = Coordinates.New(0, 1453, 39.83, 54.36), -- Stormwind Stockade
+    [36] = Coordinates.New(0, 1415, 40.69, 79.58), -- The Deadmines
+    [90] = Coordinates.New(0, 1415, 42.82, 53.82), -- Gnomeregan
+    [189] = Coordinates.New(0, 1415, 47.76, 19.49), -- Scarlet Monastery
+    [229] = Coordinates.New(0, 1415, 48.94, 63.88), -- Balckrock Spire
+    [230] = Coordinates.New(0, 1415, 48.07, 62.41), -- Blackrock Depths
+    [409] = Coordinates.New(0, 1415, 48.41, 63.81), -- The Molten Core
+    [469] = Coordinates.New(0, 1415, 48.92, 64.46), -- Blackwing Lair
   }
 end
 

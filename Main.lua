@@ -203,6 +203,8 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   AutoBiographer_EventWindow:Initialize()
   AutoBiographer_OptionWindow:Initialize()
   AutoBiographer_MainWindow:Initialize()
+
+  AutoBiographer_WorldMapOverlayWindow_Initialize()
 end
 
 function EM.EventHandlers.BOSS_KILL(self, bossId, bossName)

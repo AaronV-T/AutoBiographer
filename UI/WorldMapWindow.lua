@@ -6,26 +6,88 @@ AutoBiographer_EventMapIconPool = {
   UnAllocated = {},
 }
 
-function AutoBiographer_WorldMapWindowToggleButton_Toggle(self)
-  -- If the events are already showing: hide them.
-  if (AutoBiographer_WorldMapWindowToggleButton.IsActive) then
-    HbdPins:RemoveAllWorldMapIcons(AutoBiographer_WorldMapWindowToggleButton)
-    
-    -- Release allocated icons.
-    for i = 1, #AutoBiographer_EventMapIconPool.Allocated, 1 do
-      local icon = AutoBiographer_EventMapIconPool.Allocated[i]
-      icon:SetScript("OnEnter", nil)
-      icon:SetScript("OnLeave", nil)
-      table.insert(AutoBiographer_EventMapIconPool.UnAllocated, icon)
-    end
-    AutoBiographer_EventMapIconPool.Allocated = {}
+AutoBiographer_WorldMapOverlayWindow = nil
 
-    AutoBiographer_WorldMapWindowToggleButton:SetText("Show Events")
-    AutoBiographer_WorldMapWindowToggleButton.IsActive = false
-    return
+function AutoBiographer_WorldMapOverlayWindow_Initialize()
+  AutoBiographer_WorldMapOverlayWindow = CreateFrame("Frame", "AutoBiographerW", WorldMapFrame.ScrollContainer, "BasicFrameTemplate")
+  local frame = AutoBiographer_WorldMapOverlayWindow
+  frame:SetSize(250, 100)
+  frame:SetPoint("BOTTOMRIGHT", WorldMapFrame.ScrollContainer, "BOTTOMRIGHT")
+
+  frame:EnableKeyboard(true)
+  frame:EnableMouse(true)
+  frame:SetMovable(true)
+
+  frame:SetScript("OnHide", function(self)
+    if (self.isMoving) then
+      self:StopMovingOrSizing()
+      self.isMoving = false
+    end
+  end)
+  frame:SetScript("OnMouseDown", function(self, button)
+    if (button == "LeftButton" and not self.isMoving) then
+     self:StartMoving()
+     self.isMoving = true
+    end
+  end)
+
+  frame:SetScript("OnMouseUp", function(self, button)
+    if (button == "LeftButton" and self.isMoving) then
+     self:StopMovingOrSizing()
+     self.isMoving = false
+    end
+  end)
+
+  frame.Title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight");
+  frame.Title:SetPoint("LEFT", frame.TitleBg, "LEFT", 5, 0);
+  frame.Title:SetText("AutoBiographer Map Events")
+
+  frame.Toggle = function(self)
+    if (self:IsVisible()) then
+      self:Hide()
+    else
+      self:Show()
+    end
   end
 
-  -- Events are hidden. Show them.
+  frame.EventsBtn = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate");
+  frame.EventsBtn:SetPoint("CENTER");
+  frame.EventsBtn:SetSize(140, 40);
+  frame.EventsBtn:SetText("Show Events");
+  frame.EventsBtn:SetNormalFontObject("GameFontNormalLarge");
+  frame.EventsBtn:SetHighlightFontObject("GameFontHighlightLarge");
+  frame.EventsBtn:SetScript("OnClick", 
+    function(self)
+      if (AutoBiographer_WorldMapOverlayWindow.EventsAreShown) then
+        AutoBiographer_WorldMapOverlayWindow_HideEvents()
+      else
+        AutoBiographer_WorldMapOverlayWindow_ShowEvents()
+      end
+      
+    end
+  )
+  
+  frame:Hide()
+end
+
+function AutoBiographer_WorldMapOverlayWindow_HideEvents()
+  HbdPins:RemoveAllWorldMapIcons(AutoBiographer_WorldMapWindowToggleButton)
+
+  -- Release allocated icons.
+  for i = 1, #AutoBiographer_EventMapIconPool.Allocated, 1 do
+    local icon = AutoBiographer_EventMapIconPool.Allocated[i]
+    icon:SetScript("OnEnter", nil)
+    icon:SetScript("OnLeave", nil)
+    table.insert(AutoBiographer_EventMapIconPool.UnAllocated, icon)
+  end
+  AutoBiographer_EventMapIconPool.Allocated = {}
+
+  AutoBiographer_WorldMapOverlayWindow.EventsBtn:SetText("Show Events")
+  AutoBiographer_WorldMapOverlayWindow.EventsAreShown = false
+  return
+end
+
+function AutoBiographer_WorldMapOverlayWindow_ShowEvents()
   for i = 1, #AutoBiographer_Controller.CharacterData.Events do
     local event = AutoBiographer_Controller.CharacterData.Events[i]
 
@@ -38,7 +100,7 @@ function AutoBiographer_WorldMapWindowToggleButton_Toggle(self)
         if (otherEvent.Coordinates and
             ((event.Coordinates.MapId ~= nil and otherEvent.Coordinates.MapId == event.Coordinates.MapId and
             10 > Hbd:GetZoneDistance(event.Coordinates.MapId, event.Coordinates.X, event.Coordinates.Y, otherEvent.Coordinates.MapId, otherEvent.Coordinates.X, otherEvent.Coordinates.Y)) or
-            (event.Coordinates.InstanceId ~= nil and otherEvent.Coordinates.InstanceId == event.Coordinates.InstanceId))) then 
+            (event.Coordinates.MapId == nil and event.Coordinates.InstanceId ~= nil and otherEvent.Coordinates.InstanceId == event.Coordinates.InstanceId))) then 
           
           table.insert(tooltipLines, Event.ToString(otherEvent, AutoBiographer_Controller.CharacterData.Catalogs))
           HbdPins:RemoveWorldMapIcon(AutoBiographer_WorldMapWindowToggleButton, AutoBiographer_EventMapIconPool.Allocated[j])
@@ -87,6 +149,10 @@ function AutoBiographer_WorldMapWindowToggleButton_Toggle(self)
     end
   end
 
-  AutoBiographer_WorldMapWindowToggleButton:SetText("Hide Events")
-  AutoBiographer_WorldMapWindowToggleButton.IsActive = true
+  AutoBiographer_WorldMapOverlayWindow.EventsBtn:SetText("Hide Events")
+  AutoBiographer_WorldMapOverlayWindow.EventsAreShown = true
+end
+
+function AutoBiographer_WorldMapOverlayWindowToggleButton_Toggle(self)
+  AutoBiographer_WorldMapOverlayWindow:Toggle()
 end
