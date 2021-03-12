@@ -354,13 +354,17 @@ function AutoBiographer_Databases.Initialiaze()
     [33] = Coordinates.New(0, 1421, 44.82, 67.85), -- Shadowfang Keep
     [34] = Coordinates.New(0, 1453, 39.83, 54.36), -- The Stockade
     [36] = Coordinates.New(0, 1415, 40.69, 79.58), -- The Deadmines
+    [47] = Coordinates.New(0, 1414, 50.90, 70.37), -- Razorfen Kraul
+    [48] = Coordinates.New(0, 1414, 44.36, 34.86), -- Blackfathom Deeps
     [90] = Coordinates.New(0, 1415, 42.82, 53.82), -- Gnomeregan
+    [129] = Coordinates.New(0, 1414, 53.24, 71.17), -- Razorfen Downs
     [189] = Coordinates.New(0, 1415, 47.76, 19.49), -- Scarlet Monastery
     [229] = Coordinates.New(0, 1415, 48.94, 63.88), -- Balckrock Spire
     [230] = Coordinates.New(0, 1415, 48.07, 62.41), -- Blackrock Depths
     [289] = Coordinates.New(0, 1415, 52.71, 26.39), -- Scholomance
     [309] = Coordinates.New(0, 1434, 53.72, 17.57), -- Zul'Gurub
     [329] = Coordinates.New(0, 1415, 55.12, 17.36), -- Stratholme
+    [349] = Coordinates.New(0, 1414, 38.47, 57.97), -- Maraudon
     [409] = Coordinates.New(0, 1415, 48.41, 63.81), -- The Molten Core
     [429] = Coordinates.New(0, 1414, 43.31, 68.33), -- Dire Maul
     [469] = Coordinates.New(0, 1415, 48.92, 64.46), -- Blackwing Lair

@@ -228,3 +228,15 @@ table.insert(MM.Migrations,
     end
   )
 )
+
+table.insert(MM.Migrations, 
+  AutoBiographer_Migration:New(
+    8,
+    function(eventManager, controller)
+      if (AutoBiographer_Settings.MapEventDisplayFilters == nil) then
+        AutoBiographer_Settings.MapEventDisplayFilters = {}
+      end
+
+    end
+  )
+)

@@ -129,6 +129,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   if type(_G["AUTOBIOGRAPHER_SETTINGS"]) ~= "table" then
 		_G["AUTOBIOGRAPHER_SETTINGS"] = {
       EventDisplayFilters = {}, -- Dict<EventSubType, bool>
+      MapEventDisplayFilters = {}, -- Dict<EventSubType, bool>
       MinimapPos = -25,
       Options = { -- Dict<string?, bool>
         EnableDebugLogging = false,
@@ -142,6 +143,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
     }
     for k,v in pairs(AutoBiographerEnum.EventSubType) do
       _G["AUTOBIOGRAPHER_SETTINGS"].EventDisplayFilters[v] = true
+      _G["AUTOBIOGRAPHER_SETTINGS"].MapEventDisplayFilters[v] = true
     end
 	end
   
@@ -168,7 +170,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
       BattlegroundStatuses = {},
       CurrentSubZone = nil,
       CurrentZone = nil,
-      DatabaseVersion = 7,
+      DatabaseVersion = 8,
       GuildName = nil,
       GuildRankIndex = nil,
       GuildRankName = nil,
@@ -1399,8 +1401,6 @@ function EM:Test()
   local Hbd = LibStub("HereBeDragons-2.0")
   local HbdPins = LibStub("HereBeDragons-Pins-2.0")
 
-  local worldX, worldY, worldInstance = Hbd:GetPlayerWorldPosition()
-  local zoneX, zoneY, zoneMapId, zoneMapType = Hbd:GetPlayerZonePosition()
-
-  HelperFunctions.PrintKeysAndValuesFromTable(HelperFunctions.GetCoordinatesByUnitId("player"))
+  local position = HelperFunctions.GetCoordinatesByUnitId("player")
+  HelperFunctions.PrintKeysAndValuesFromTable(position)
 end
