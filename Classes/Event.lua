@@ -14,7 +14,7 @@ function Event.GetIconPath(e)
     end
   elseif (e.Type == AutoBiographerEnum.EventType.Item) then
     if (e.SubType == AutoBiographerEnum.EventSubType.FirstAcquiredItem) then
-      return "Interface\\Icons\\inv_misc_bag_10_red"
+      return "Interface\\Icons\\inv_misc_bag_10_black"
     end
   elseif (e.Type == AutoBiographerEnum.EventType.Kill) then
     if (e.SubType == AutoBiographerEnum.EventSubType.BossKill) then
@@ -24,7 +24,7 @@ function Event.GetIconPath(e)
     end
   elseif (e.Type == AutoBiographerEnum.EventType.Level) then
     if (e.SubType == AutoBiographerEnum.EventSubType.LevelUp) then
-      return "Interface\\Icons\\ability_mount_charger"
+      return "Interface\\Icons\\spell_holy_innerfire"
     end
   elseif (e.Type == AutoBiographerEnum.EventType.Map) then
     if (e.SubType == AutoBiographerEnum.EventSubType.SubZoneFirstVisit) then
@@ -46,7 +46,7 @@ function Event.GetIconPath(e)
     end
   elseif (e.Type == AutoBiographerEnum.EventType.Quest) then
     if (e.SubType == AutoBiographerEnum.EventSubType.QuestTurnIn) then
-      return "Interface\\Icons\\inv_enchant_shardbrilliantlarge"
+      return "Interface\\Icons\\inv_misc_questionmark"
     end
   end
   

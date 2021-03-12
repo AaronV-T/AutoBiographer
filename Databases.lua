@@ -354,11 +354,15 @@ function AutoBiographer_Databases.Initialiaze()
     [33] = Coordinates.New(0, 1421, 44.82, 67.85), -- Shadowfang Keep
     [34] = Coordinates.New(0, 1453, 39.83, 54.36), -- The Stockade
     [36] = Coordinates.New(0, 1415, 40.69, 79.58), -- The Deadmines
+    [43] = Coordinates.New(0, 1414, 52.40, 55.18), -- The Wailing Caverns
     [47] = Coordinates.New(0, 1414, 50.90, 70.37), -- Razorfen Kraul
     [48] = Coordinates.New(0, 1414, 44.36, 34.86), -- Blackfathom Deeps
+    [70] = Coordinates.New(0, 1415, 53.85, 57.67), -- Uldaman
     [90] = Coordinates.New(0, 1415, 42.82, 53.82), -- Gnomeregan
+    [109] = Coordinates.New(0, 1415, 56.81, 75.18), -- The Temple of Atal'Hakkar
     [129] = Coordinates.New(0, 1414, 53.24, 71.17), -- Razorfen Downs
     [189] = Coordinates.New(0, 1415, 47.76, 19.49), -- Scarlet Monastery
+    [209] = Coordinates.New(0, 1446, 38.72, 20.01), -- Zul'Farrak
     [229] = Coordinates.New(0, 1415, 48.94, 63.88), -- Balckrock Spire
     [230] = Coordinates.New(0, 1415, 48.07, 62.41), -- Blackrock Depths
     [289] = Coordinates.New(0, 1415, 52.71, 26.39), -- Scholomance

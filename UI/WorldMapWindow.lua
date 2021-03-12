@@ -298,6 +298,10 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
   frame.EventsPerSecondFs:SetPoint("LEFT", frame.EventsPerSecondEb, "RIGHT", 2, 0)
   frame.EventsPerSecondFs:SetText("Events Per Second")
 
+  frame.ProgressFs = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  frame.ProgressFs:SetPoint("BOTTOMRIGHT", -5, 45)
+  frame.ProgressFs:SetText("Progress: N/A")
+
   frame.EventsBtn = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate");
   frame.EventsBtn:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -5, 5);
   frame.EventsBtn:SetSize(140, 40);
@@ -326,6 +330,7 @@ function AutoBiographer_WorldMapOverlayWindow_HideEvents()
 
   AutoBiographer_WorldMapOverlayWindow.EventsAreShown = false
   AutoBiographer_WorldMapOverlayWindow.EventsBtn:SetText("Show Events")
+  AutoBiographer_WorldMapOverlayWindow.ProgressFs:SetText("Progress: N/A")
 
   HbdPins:RemoveAllWorldMapIcons(AutoBiographer_WorldMapWindowToggleButton)
 
@@ -373,6 +378,8 @@ function AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex, delay, event
   if (not AutoBiographer_WorldMapOverlayWindow.EventsAreShown or eventIndex > #AutoBiographer_Controller.CharacterData.Events) then
     return
   end
+
+  AutoBiographer_WorldMapOverlayWindow.ProgressFs:SetText("Progress: " .. string.format("%.f %%", (eventIndex / #AutoBiographer_Controller.CharacterData.Events)* 100))
 
   local event = AutoBiographer_Controller.CharacterData.Events[eventIndex]
 
