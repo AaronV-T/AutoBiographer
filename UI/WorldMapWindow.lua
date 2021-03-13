@@ -371,10 +371,10 @@ function AutoBiographer_WorldMapOverlayWindow_ShowEvents()
   end
 
   AutoBiographer_WorldMapOverlayWindow.EventIndexToIconMap = {}
-  AutoBiographer_WorldMapOverlayWindow_ShowEvent(1, delayBetweenEvents * eventsToShowPerDelay, eventsToShowPerDelay, 0)
+  AutoBiographer_WorldMapOverlayWindow_ShowEvent(1, delayBetweenEvents * eventsToShowPerDelay, eventsToShowPerDelay, {})
 end
 
-function AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex, delay, eventsToShowPerDelay, eventsShown)
+function AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex, delay, eventsToShowPerDelay, eventsShownPerMapId)
   if (not AutoBiographer_WorldMapOverlayWindow.EventsAreShown or eventIndex > #AutoBiographer_Controller.CharacterData.Events) then
     return
   end
@@ -382,10 +382,14 @@ function AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex, delay, event
   AutoBiographer_WorldMapOverlayWindow.ProgressFs:SetText("Progress: " .. string.format("%.f %%", (eventIndex / #AutoBiographer_Controller.CharacterData.Events)* 100))
 
   local event = AutoBiographer_Controller.CharacterData.Events[eventIndex]
-
-  if (not event.Coordinates or not AutoBiographer_Settings.MapEventDisplayFilters[event.SubType]) then
-    AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex + 1, delay, eventsToShowPerDelay, eventsShown)
+  local mapCoordinates = Event.GetMapCoordinates(event)
+  if (not mapCoordinates or not AutoBiographer_Settings.MapEventDisplayFilters[event.SubType]) then
+    AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex + 1, delay, eventsToShowPerDelay, eventsShownPerMapId)
     return
+  end
+
+  if (not eventsShownPerMapId[mapCoordinates.MapId]) then
+    eventsShownPerMapId[mapCoordinates.MapId] = 0
   end
 
   local tooltipLines = {}
@@ -393,10 +397,9 @@ function AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex, delay, event
 
   for j = eventIndex - 1, 1, -1 do
     local otherEvent = AutoBiographer_Controller.CharacterData.Events[j]
-    if (otherEvent.Coordinates and AutoBiographer_Settings.MapEventDisplayFilters[otherEvent.SubType] and
-        ((event.Coordinates.MapId ~= nil and otherEvent.Coordinates.MapId == event.Coordinates.MapId and
-        5 > Hbd:GetZoneDistance(event.Coordinates.MapId, event.Coordinates.X / 100, event.Coordinates.Y / 100, otherEvent.Coordinates.MapId, otherEvent.Coordinates.X / 100, otherEvent.Coordinates.Y / 100)) or
-        (event.Coordinates.MapId == nil and event.Coordinates.InstanceId ~= nil and otherEvent.Coordinates.InstanceId == event.Coordinates.InstanceId))) then
+    local otherMapCoordinates = Event.GetMapCoordinates(otherEvent)
+    if (otherMapCoordinates and AutoBiographer_Settings.MapEventDisplayFilters[otherEvent.SubType] and mapCoordinates.MapId == otherMapCoordinates.MapId and
+        5 > Hbd:GetZoneDistance(mapCoordinates.MapId, mapCoordinates.X / 100, mapCoordinates.Y / 100, otherMapCoordinates.MapId, otherMapCoordinates.X / 100, otherMapCoordinates.Y / 100)) then
       
       table.insert(tooltipLines, Event.ToString(otherEvent, AutoBiographer_Controller.CharacterData.Catalogs))
       HbdPins:RemoveWorldMapIcon(AutoBiographer_WorldMapWindowToggleButton, AutoBiographer_WorldMapOverlayWindow.EventIndexToIconMap[j])
@@ -434,23 +437,26 @@ function AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex, delay, event
     GameTooltip:Hide()
   end)
 
-  if (event.Coordinates.MapId ~= nil and event.Coordinates.X and event.Coordinates.Y) then
-    HbdPins:AddWorldMapIconMap(AutoBiographer_WorldMapWindowToggleButton, icon, event.Coordinates.MapId, event.Coordinates.X / 100, event.Coordinates.Y / 100, HBD_PINS_WORLDMAP_SHOW_WORLD)
-  elseif (event.Coordinates.InstanceId ~= nil and AutoBiographer_Databases.InstanceLocationDatabase[event.Coordinates.InstanceId]) then
-    local coords = AutoBiographer_Databases.InstanceLocationDatabase[event.Coordinates.InstanceId]
-    HbdPins:AddWorldMapIconMap(AutoBiographer_WorldMapWindowToggleButton, icon, coords.MapId, coords.X / 100, coords.Y / 100, HBD_PINS_WORLDMAP_SHOW_WORLD)
-  end
+  HbdPins:AddWorldMapIconMap(AutoBiographer_WorldMapWindowToggleButton, icon, mapCoordinates.MapId, mapCoordinates.X / 100, mapCoordinates.Y / 100, HBD_PINS_WORLDMAP_SHOW_WORLD)
+
+  local frameLevel = icon:GetFrameLevel()
+  icon:SetFrameLevel(frameLevel + eventsShownPerMapId[mapCoordinates.MapId])
 
   table.insert(AutoBiographer_EventMapIconPool.Allocated, icon)
   AutoBiographer_WorldMapOverlayWindow.EventIndexToIconMap[eventIndex] = icon
-  eventsShown = eventsShown + 1
+  eventsShownPerMapId[mapCoordinates.MapId] = eventsShownPerMapId[mapCoordinates.MapId] + 1
 
+  local eventsShown = 0
+  for k, v in pairs(eventsShownPerMapId) do
+    eventsShown = eventsShown + v
+  end
+  
   if (eventsShown % eventsToShowPerDelay == 0) then
     C_Timer.After(delay, function()
-      AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex + 1, delay, eventsToShowPerDelay, eventsShown)
+      AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex + 1, delay, eventsToShowPerDelay, eventsShownPerMapId)
     end)
   else
-    AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex + 1, delay, eventsToShowPerDelay, eventsShown)
+    AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex + 1, delay, eventsToShowPerDelay, eventsShownPerMapId)
   end
 end
 

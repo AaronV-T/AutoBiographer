@@ -53,6 +53,22 @@ function Event.GetIconPath(e)
   return "Interface\\Icons\\inv_misc_questionmark"
 end
 
+function Event.GetMapCoordinates(event)
+  if (not event.Coordinates) then
+    return nil
+  end
+
+  if (event.Coordinates.MapId ~= nil and event.Coordinates.X ~= nil and event.Coordinates.Y ~= nil) then
+    return event.Coordinates
+  end
+
+  if (event.Coordinates.InstanceId ~= nil and AutoBiographer_Databases.InstanceLocationDatabase[event.Coordinates.InstanceId]) then
+    return AutoBiographer_Databases.InstanceLocationDatabase[event.Coordinates.InstanceId]
+  end
+
+  return nil
+end
+
 function Event.ToString(e, catalogs)
   local timestampString = HelperFunctions.TimestampToDateString(e.Timestamp) .. ": "
 
