@@ -1,5 +1,5 @@
 ## Interface: 11306
-## Title: AutoBiographer 0.4.15 Beta
+## Title: AutoBiographer 0.5.0
 ## Author: Tollski
 ## Version: 0.5.0
 ## SavedVariables: AUTOBIOGRAPHER_SETTINGS
