@@ -129,6 +129,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   if type(_G["AUTOBIOGRAPHER_SETTINGS"]) ~= "table" then
 		_G["AUTOBIOGRAPHER_SETTINGS"] = {
       EventDisplayFilters = {}, -- Dict<EventSubType, bool>
+      MapEventDisplayFilters = {}, -- Dict<EventSubType, bool>
       MinimapPos = -25,
       Options = { -- Dict<string?, bool>
         EnableDebugLogging = false,
@@ -142,6 +143,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
     }
     for k,v in pairs(AutoBiographerEnum.EventSubType) do
       _G["AUTOBIOGRAPHER_SETTINGS"].EventDisplayFilters[v] = true
+      _G["AUTOBIOGRAPHER_SETTINGS"].MapEventDisplayFilters[v] = true
     end
 	end
   
@@ -168,7 +170,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
       BattlegroundStatuses = {},
       CurrentSubZone = nil,
       CurrentZone = nil,
-      DatabaseVersion = 7,
+      DatabaseVersion = 8,
       GuildName = nil,
       GuildRankIndex = nil,
       GuildRankName = nil,
@@ -177,6 +179,8 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
 	end
   
   self.PersistentPlayerInfo = _G["AUTOBIOGRAPHER_INFO_CHAR"]
+
+  AutoBiographer_Databases.Initialiaze()
   
   -- Database Migrations
   if (not self.PersistentPlayerInfo.DatabaseVersion or self.PersistentPlayerInfo.DatabaseVersion < AutoBiographer_MigrationManager:GetLatestDatabaseVersion()) then
@@ -196,11 +200,13 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   AutoBiographer_MinimapButton_Reposition()
   if (AutoBiographer_Settings.Options["ShowMinimapButton"] == false) then AutoBiographer_MinimapButton:Hide()
   else AutoBiographer_MinimapButton:Show() end
-  
+
   AutoBiographer_DebugWindow:Initialize()
   AutoBiographer_EventWindow:Initialize()
   AutoBiographer_OptionWindow:Initialize()
   AutoBiographer_MainWindow:Initialize()
+
+  AutoBiographer_WorldMapOverlayWindow_Initialize()
 end
 
 function EM.EventHandlers.BOSS_KILL(self, bossId, bossName)
@@ -873,7 +879,7 @@ function EM.EventHandlers.UPDATE_BATTLEFIELD_STATUS(self, battleFieldIndex)
   
   -- Get the battleground's ID (Note: GetBattlegroundInfo is not a reliable function and should be avoided).
   local bgId = nil
-  for k,v in pairs(BattlegroundDatabase) do
+  for k,v in pairs(AutoBiographer_Databases.BattlegroundDatabase) do
     if (v == mapName) then
       bgId = k
     end
@@ -1392,6 +1398,9 @@ function EM:ClearCharacterData(doNotRequireConfirmation, doNotReloadUI)
 end
 
 function EM:Test()
-  --print(HelperFunctions.GetCatalogIdFromGuid("GameObject-0-4380-533-11441-181544-000050305B"))
-  --Controller:OnDeath(time(), nil, "go181544", nil)
+  local Hbd = LibStub("HereBeDragons-2.0")
+  local HbdPins = LibStub("HereBeDragons-Pins-2.0")
+
+  local position = HelperFunctions.GetCoordinatesByUnitId("player")
+  HelperFunctions.PrintKeysAndValuesFromTable(position)
 end

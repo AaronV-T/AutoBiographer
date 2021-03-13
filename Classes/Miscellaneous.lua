@@ -95,8 +95,9 @@ end
 -- *** Coordinates ***
 
 Coordinates = {}
-function Coordinates.New(mapId, x, y)
+function Coordinates.New(instanceId, mapId, x, y)
   return {
+    InstanceId = instanceId,
     MapId = mapId,
     X = x,
     Y = y

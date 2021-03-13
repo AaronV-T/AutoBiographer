@@ -1,0 +1,24 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\FrameXML\UI.xsd">
+  <Button name="AutoBiographer_WorldMapWindowToggleButton" parent="WorldMapFrame" inherits="UIPanelButtonTemplate" text="Event Window">
+		<Size>
+			<AbsDimension x="120" y="20"/>
+		</Size>
+		<Anchors>
+			<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="WorldMapZoomOutButton">
+				<Offset>
+					<AbsDimension x="8" y="0"/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Scripts>
+			<OnLoad>
+				self:SetFrameLevel(10);
+			</OnLoad>
+			<OnClick>
+				AutoBiographer_WorldMapOverlayWindowToggleButton_Toggle()
+			</OnClick>
+		</Scripts>
+	</Button>
+</Ui>

@@ -7,16 +7,78 @@ function Event.New(timestamp, type, subType)
   }
 end
 
+function Event.GetIconPath(e)
+  if (e.Type == AutoBiographerEnum.EventType.Death) then
+    if (e.SubType == AutoBiographerEnum.EventSubType.PlayerDeath) then
+      return "Interface\\Icons\\ability_backstab"
+    end
+  elseif (e.Type == AutoBiographerEnum.EventType.Item) then
+    if (e.SubType == AutoBiographerEnum.EventSubType.FirstAcquiredItem) then
+      return "Interface\\Icons\\inv_misc_bag_10_black"
+    end
+  elseif (e.Type == AutoBiographerEnum.EventType.Kill) then
+    if (e.SubType == AutoBiographerEnum.EventSubType.BossKill) then
+      return "Interface\\Icons\\ability_warrior_challange"
+    elseif (e.SubType == AutoBiographerEnum.EventSubType.FirstKill) then
+      return "Interface\\Icons\\ability_dualwield"
+    end
+  elseif (e.Type == AutoBiographerEnum.EventType.Level) then
+    if (e.SubType == AutoBiographerEnum.EventSubType.LevelUp) then
+      return "Interface\\Icons\\spell_holy_innerfire"
+    end
+  elseif (e.Type == AutoBiographerEnum.EventType.Map) then
+    if (e.SubType == AutoBiographerEnum.EventSubType.SubZoneFirstVisit) then
+      return "Interface\\Icons\\inv_misc_map_01"
+    elseif (e.SubType == AutoBiographerEnum.EventSubType.ZoneFirstVisit) then
+      return "Interface\\Icons\\inv_misc_map_01"
+    end
+  elseif (e.Type == AutoBiographerEnum.EventType.Reputation) then
+    if (e.SubType == AutoBiographerEnum.EventSubType.ReputationLevelChanged) then
+      return "Interface\\Icons\\inv_bijou_green"
+    end
+  elseif (e.Type == AutoBiographerEnum.EventType.Skill) then
+    if (e.SubType == AutoBiographerEnum.EventSubType.SkillMilestone) then
+      return "Interface\\Icons\\inv_bijou_blue"
+    end
+  elseif (e.Type == AutoBiographerEnum.EventType.Spell) then
+    if (e.SubType == AutoBiographerEnum.EventSubType.SpellLearned) then
+      return "Interface\\Icons\\inv_helmet_53"
+    end
+  elseif (e.Type == AutoBiographerEnum.EventType.Quest) then
+    if (e.SubType == AutoBiographerEnum.EventSubType.QuestTurnIn) then
+      return "Interface\\Icons\\inv_misc_questionmark"
+    end
+  end
+  
+  return "Interface\\Icons\\inv_misc_questionmark"
+end
+
+function Event.GetMapCoordinates(event)
+  if (not event.Coordinates) then
+    return nil
+  end
+
+  if (event.Coordinates.MapId ~= nil and event.Coordinates.X ~= nil and event.Coordinates.Y ~= nil) then
+    return event.Coordinates
+  end
+
+  if (event.Coordinates.InstanceId ~= nil and AutoBiographer_Databases.InstanceLocationDatabase[event.Coordinates.InstanceId]) then
+    return AutoBiographer_Databases.InstanceLocationDatabase[event.Coordinates.InstanceId]
+  end
+
+  return nil
+end
+
 function Event.ToString(e, catalogs)
   local timestampString = HelperFunctions.TimestampToDateString(e.Timestamp) .. ": "
 
   if (e.Type == AutoBiographerEnum.EventType.Battleground) then
     if (e.SubType == AutoBiographerEnum.EventSubType.BattlegroundJoined) then
-      return timestampString .. "You joined " .. BattlegroundDatabase[e.BattlegroundId] .. "."
+      return timestampString .. "You joined " .. AutoBiographer_Databases.BattlegroundDatabase[e.BattlegroundId] .. "."
     elseif (e.SubType == AutoBiographerEnum.EventSubType.BattlegroundLost) then
-      return timestampString .. "You lost " .. BattlegroundDatabase[e.BattlegroundId] .. "."
+      return timestampString .. "You lost " .. AutoBiographer_Databases.BattlegroundDatabase[e.BattlegroundId] .. "."
     elseif (e.SubType == AutoBiographerEnum.EventSubType.BattlegroundWon) then
-      return timestampString .. "You won " .. BattlegroundDatabase[e.BattlegroundId] .. "."
+      return timestampString .. "You won " .. AutoBiographer_Databases.BattlegroundDatabase[e.BattlegroundId] .. "."
     end
   elseif (e.Type == AutoBiographerEnum.EventType.Death) then
     if (e.SubType == AutoBiographerEnum.EventSubType.PlayerDeath) then

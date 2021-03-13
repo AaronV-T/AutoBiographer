@@ -18,7 +18,9 @@ function Controller:AddLog(text, logLevel)
     Timestamp = time(),
   })
   
-  AutoBiographer_DebugWindow:LogsUpdated()
+  if (AutoBiographer_DebugWindow and AutoBiographer_DebugWindow.LogsUpdated) then
+    AutoBiographer_DebugWindow:LogsUpdated()
+  end
 end
 
 function Controller:AddOtherPlayerInGroupTime(otherPlayerGuid, seconds)
@@ -451,7 +453,7 @@ function Controller:OnKill(timestamp, coordinates, kill)
       end
     end
     
-    if (BossDatabase[kill.CatalogUnitId]) then
+    if (AutoBiographer_Databases.BossDatabase[kill.CatalogUnitId]) then
       Controller:OnBossKill(time(), HelperFunctions.GetCoordinatesByUnitId("player"), kill.CatalogUnitId, self.CharacterData.Catalogs.UnitCatalog[kill.CatalogUnitId].Name, hasKilledUnitBefore)
     end
   end
