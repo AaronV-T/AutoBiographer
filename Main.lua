@@ -1411,9 +1411,6 @@ function EM:ClearCharacterData(doNotRequireConfirmation, doNotReloadUI)
 end
 
 function EM:Test()
-  local Hbd = LibStub("HereBeDragons-2.0")
-  local HbdPins = LibStub("HereBeDragons-Pins-2.0")
-
   local position = HelperFunctions.GetCoordinatesByUnitId("player")
   HelperFunctions.PrintKeysAndValuesFromTable(position)
 end
