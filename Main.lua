@@ -1059,6 +1059,10 @@ function EM.EventHandlers.ZONE_CHANGED_NEW_AREA(self)
 end
 
 hooksecurefunc("AscendStop", function()
+  if (EM.PlayerFlags.OnTaxi) then
+    return
+  end
+
   local timeNow = GetTime()
   if (not EM.TemporaryTimestamps.LastJump or HelperFunctions.SubtractFloats(timeNow, EM.TemporaryTimestamps.LastJump) > 0.75) then
     Controller:OnJump(time())
