@@ -438,6 +438,11 @@ function Controller:OnJoinedGuild(timestamp, guildName)
   self:AddEvent(GuildJoinedEvent.New(timestamp, guildName))
 end
 
+function Controller:OnJump(timestamp)
+  if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog("Jump.", AutoBiographerEnum.LogLevel.Debug) end
+  MiscellaneousStatistics.Add(self:GetCurrentLevelStatistics().MiscellaneousStatistics, AutoBiographerEnum.MiscellaneousTrackingType.Jumps, 1)
+end
+
 function Controller:OnKill(timestamp, coordinates, kill)
   if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog("Kill: " .. " #" .. tostring(kill.CatalogUnitId) .. ".", AutoBiographerEnum.LogLevel.Debug) end
 

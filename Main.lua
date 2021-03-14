@@ -27,6 +27,7 @@ AutoBiographer_EventManager = {
     EnteredCombat = nil,
     EnteredTaxi = nil,
     JoinedParty = nil,
+    LastJump = nil,
     MarkedAfk = nil,
     OtherPlayerJoinedGroup = {}, -- Dict<UnitGuid, TempTimestamp>
     StartedCasting = nil,
@@ -1056,6 +1057,14 @@ function EM.EventHandlers.ZONE_CHANGED_NEW_AREA(self)
   
   self:UpdatePlayerZone()
 end
+
+hooksecurefunc("AscendStop", function()
+  local timeNow = GetTime()
+  if (not EM.TemporaryTimestamps.LastJump or HelperFunctions.SubtractFloats(timeNow, EM.TemporaryTimestamps.LastJump) > 0.75) then
+    Controller:OnJump(time())
+    EM.TemporaryTimestamps.LastJump = timeNow
+  end
+end);
 
 -- *** Miscellaneous Member Functions ***
 

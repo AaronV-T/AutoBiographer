@@ -29,6 +29,8 @@ It also keeps track of the following statistics:
  - Deaths by creatures, environment, pets, and other players.
  - Duels won and lost to each player.
  - Items looted or acquired by other methods.
+ - Miscellaneous stats:
+   - Jumps.
  - Money gained from auction house, looting, mail, merchants, quests, and trade.
  - Spells started casting and spells successfully cast.
  - Time spent in each zone (broken down into time spent AFK, casting, dead, in combat, in groups, and on flights).
@@ -38,6 +40,7 @@ It also keeps track of the following statistics:
 
 Additional Features:
  - Automatic screenshot capturing on leveling up and killing bosses.
+ - Showing coordinates of events on the map, giving a visual history of your character's adventures.
  
 ## Possible Future Features
 
@@ -57,5 +60,4 @@ Statistics:
  
 
 Other Featues:
-- Showing coordinates of events on the map (these coordinates are already being recorded but just not displayed anywhere).
 - UI overhaul.
