@@ -2,18 +2,10 @@ local Controller = AutoBiographer_Controller
 local HF = HelperFunctions
 
 AutoBiographer_MainWindow = CreateFrame("Frame", "AutoBiographerMain", UIParent, "BasicFrameTemplateWithInset")
+AutoBiographer_MainWindow:SetFrameStrata("HIGH")
 
--- For some reason the debug window needs a parent frame in order to properly show over the main window.
-local debugParent = CreateFrame("Frame", "AutoBiographerDebugParent", AutoBiographer_MainWindow)
-debugParent:SetSize(750, 585)
-debugParent:SetPoint("CENTER")
-AutoBiographer_DebugWindow = CreateFrame("Frame", "AutoBiographerDebug", debugParent, "BasicFrameTemplate")
-
--- For some reason the event window needs a parent frame in order to properly show over the main window.
-local eventParent = CreateFrame("Frame", "AutoBiographerEventParent", AutoBiographer_MainWindow)
-eventParent:SetSize(750, 585)
-eventParent:SetPoint("CENTER")
-AutoBiographer_EventWindow = CreateFrame("Frame", "AutoBiographerEvent", eventParent, "BasicFrameTemplate")
+AutoBiographer_DebugWindow = CreateFrame("Frame", "AutoBiographerDebug", AutoBiographer_MainWindow, "BasicFrameTemplate")
+AutoBiographer_EventWindow = CreateFrame("Frame", "AutoBiographerEvent", AutoBiographer_MainWindow, "BasicFrameTemplate")
 
 function AutoBiographer_DebugWindow:Initialize()
   local frame = self
@@ -150,6 +142,7 @@ function AutoBiographer_DebugWindow:Initialize()
     else
       self:Update()
       self:Show()
+      self:SetFrameLevel(200)
     end
   end
   
@@ -454,6 +447,7 @@ function AutoBiographer_EventWindow:Initialize()
     else
       self:Update()
       self:Show()
+      self:SetFrameLevel(150)
     end
   end
 
@@ -581,6 +575,7 @@ function AutoBiographer_MainWindow:Initialize()
     else
       self:Update()
       self:Show()
+      self:SetFrameLevel(100)
     end
   end
 
