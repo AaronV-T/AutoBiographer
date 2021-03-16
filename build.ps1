@@ -5,6 +5,7 @@ New-Item -Path ".\Deploys\Temp" -Name "AutoBiographer" -ItemType "directory" | O
 
 Copy-Item ".\*" -Destination "$tempSubDirectoryPath" -Include *.lua,*.md,*.toc
 Copy-Item ".\Classes" -Destination "$tempSubDirectoryPath" -Recurse
+Copy-Item ".\Icons" -Destination "$tempSubDirectoryPath" -Recurse
 Copy-Item ".\Libs" -Destination "$tempSubDirectoryPath" -Recurse
 Copy-Item ".\UI" -Destination "$tempSubDirectoryPath" -Recurse
 
