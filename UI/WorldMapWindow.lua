@@ -436,7 +436,7 @@ function AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex, firstIndex, 
 
   local event = AutoBiographer_Controller.CharacterData.Events[eventIndex]
 
-  AutoBiographer_WorldMapOverlayWindow.ProgressFs:SetText("Progress: " .. string.format("%.f%%.", (eventIndex / #AutoBiographer_Controller.CharacterData.Events)* 100))
+  AutoBiographer_WorldMapOverlayWindow.ProgressFs:SetText("Progress: " .. string.format("%.f%%.", ((eventIndex - firstIndex + 1) / (#AutoBiographer_Controller.CharacterData.Events - firstIndex + 1))* 100))
   if (event.SubType == AutoBiographerEnum.EventSubType.LevelUp) then
     AutoBiographer_WorldMapOverlayWindow.LevelFs:SetText("Level: " .. event.LevelNum .. ".")
   end
@@ -495,6 +495,22 @@ function AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex, firstIndex, 
   icon:SetScript("OnLeave", function(self, button)
     GameTooltip:Hide()
   end)
+
+  -- The animation works great when there are few icons, but not when there are many.
+  -- local animationGroup = icon:CreateAnimationGroup()    
+  -- local scaleAnimation = animationGroup:CreateAnimation("Scale")
+  -- scaleAnimation:SetScale(0.5, 0.5)
+  -- scaleAnimation:SetDuration(0.5)
+  -- scaleAnimation:SetSmoothing("IN")
+  -- scaleAnimation:SetScript("OnPlay", function()
+  --   icon:SetWidth(16)
+  --   icon:SetHeight(16)
+  -- end)
+  -- scaleAnimation:SetScript("OnFinished", function()
+  --   icon:SetWidth(8)
+  --   icon:SetHeight(8)
+  -- end)
+  -- animationGroup:Play()
 
   HbdPins:AddWorldMapIconMap(AutoBiographer_WorldMapOverlayWindow, icon, mapCoordinates.MapId, mapCoordinates.X / 100, mapCoordinates.Y / 100, HBD_PINS_WORLDMAP_SHOW_WORLD)
 
