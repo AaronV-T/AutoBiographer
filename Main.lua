@@ -131,6 +131,8 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
 		_G["AUTOBIOGRAPHER_SETTINGS"] = {
       EventDisplayFilters = {}, -- Dict<EventSubType, bool>
       MapEventDisplayFilters = {}, -- Dict<EventSubType, bool>
+      MapEventShowAnimation = false,
+      MapEventShowCircle = true,
       MinimapPos = -25,
       Options = { -- Dict<string?, bool>
         EnableDebugLogging = false,

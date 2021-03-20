@@ -11,7 +11,7 @@ AutoBiographer_WorldMapOverlayWindow = nil
 function AutoBiographer_WorldMapOverlayWindow_Initialize()
   AutoBiographer_WorldMapOverlayWindow = CreateFrame("Frame", "AutoBiographerW", WorldMapFrame.ScrollContainer, "BasicFrameTemplate")
   local frame = AutoBiographer_WorldMapOverlayWindow
-  frame:SetSize(300, 125)
+  frame:SetSize(400, 125)
   frame:SetPoint("BOTTOMRIGHT", WorldMapFrame.ScrollContainer, "BOTTOMRIGHT")
 
   frame:EnableKeyboard(true)
@@ -70,7 +70,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
   frame.BossKillIcon:SetScript("OnLeave", function(self, button)
     GameTooltip:Hide()
   end)
-  frame.BossKillCb= CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate") 
+  frame.BossKillCb = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate") 
   frame.BossKillCb:SetPoint("TOP", frame, "TOP", leftPoint, -40)
   frame.BossKillCb:SetChecked(AutoBiographer_Settings.MapEventDisplayFilters[AutoBiographerEnum.EventSubType.BossKill])
   frame.BossKillCb:SetScript("OnClick", function(self, event, arg1)
@@ -276,10 +276,41 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
     AutoBiographer_Settings.MapEventDisplayFilters[AutoBiographerEnum.EventSubType.ZoneFirstVisit] = self:GetChecked()
   end)
 
-  -- 
+  --
+  frame.ShowAnimationCb = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
+  frame.ShowCircleCb = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
+
+  frame.ShowAnimationCb:SetPoint("BOTTOMLEFT", 5, 2)
+  frame.ShowAnimationCb:SetChecked(AutoBiographer_Settings.MapEventShowAnimation)
+  frame.ShowAnimationCb:SetScript("OnClick", function(self, event, arg1)
+    AutoBiographer_Settings.MapEventShowAnimation = self:GetChecked()
+    if (AutoBiographer_Settings.MapEventShowAnimation) then
+      frame.ShowCircleCb:SetChecked(false)
+      AutoBiographer_Settings.MapEventShowCircle = false
+    end
+  end)
+
+  frame.ShowAnimationFs = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  frame.ShowAnimationFs:SetPoint("LEFT", frame.ShowAnimationCb, "RIGHT", 2, 0)
+  frame.ShowAnimationFs:SetText("Show Animation")
+
+  frame.ShowCircleCb:SetPoint("BOTTOM", frame.ShowAnimationCb, "TOP", 0, -10)
+  frame.ShowCircleCb:SetChecked(AutoBiographer_Settings.MapEventShowCircle)
+  frame.ShowCircleCb:SetScript("OnClick", function(self, event, arg1)
+    AutoBiographer_Settings.MapEventShowCircle = self:GetChecked()
+    if (AutoBiographer_Settings.MapEventShowCircle) then
+      frame.ShowAnimationCb:SetChecked(false)
+      AutoBiographer_Settings.MapEventShowAnimation = false
+    end
+  end)
+
+  frame.ShowCircleFs = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  frame.ShowCircleFs:SetPoint("LEFT", frame.ShowCircleCb, "RIGHT", 2, 0)
+  frame.ShowCircleFs:SetText("Show Circle")
+
   frame.EventsPerSecondEb = CreateFrame("EditBox", nil, frame);
   frame.EventsPerSecondEb:SetSize(30, 20)
-  frame.EventsPerSecondEb:SetPoint("BOTTOMLEFT", 5, 2)
+  frame.EventsPerSecondEb:SetPoint("LEFT", frame.ShowAnimationCb, 120, 0)
   frame.EventsPerSecondEb:SetBackdrop({
     bgFile = "",
     edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -294,7 +325,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
   frame.EventsPerSecondEb:SetNumeric(true)
   frame.EventsPerSecondEb:SetScript("OnEscapePressed", function() frame.EventsPerSecondEb:ClearFocus() end)
 
-  frame.EventsPerSecondFs = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  frame.EventsPerSecondFs = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
   frame.EventsPerSecondFs:SetPoint("LEFT", frame.EventsPerSecondEb, "RIGHT", 2, 0)
   frame.EventsPerSecondFs:SetText("Events Per Second")
 
@@ -315,7 +346,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
   frame.StartingLevelEb:SetNumeric(true)
   frame.StartingLevelEb:SetScript("OnEscapePressed", function() frame.StartingLevelEb:ClearFocus() end)
 
-  frame.StartingLevelFs = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  frame.StartingLevelFs = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
   frame.StartingLevelFs:SetPoint("LEFT", frame.StartingLevelEb, "RIGHT", 2, 0)
   frame.StartingLevelFs:SetText("Starting Level")
 
@@ -356,6 +387,7 @@ function AutoBiographer_WorldMapOverlayWindow_HideEvents()
   AutoBiographer_WorldMapOverlayWindow.EventsAreShown = false
   AutoBiographer_WorldMapOverlayWindow.EventsBtn:SetText("Show Events")
   AutoBiographer_WorldMapOverlayWindow.ProgressFs:SetText("Progress: N/A")
+  AutoBiographer_WorldMapOverlayWindow_SetOptionsEnabled(true)
 
   HbdPins:RemoveAllWorldMapIcons(AutoBiographer_WorldMapOverlayWindow)
   AutoBiographer_WorldMapOverlayWindow_UpdateCurrentEventIndicator(nil)
@@ -365,7 +397,11 @@ function AutoBiographer_WorldMapOverlayWindow_HideEvents()
     local icon = AutoBiographer_EventMapIconPool.Allocated[i]
     icon:SetScript("OnEnter", nil)
     icon:SetScript("OnLeave", nil)
-    table.insert(AutoBiographer_EventMapIconPool.UnAllocated, icon)
+
+    -- If the icon has an animation: don't reuse it (it will be buggy if we try to reuse it).
+    if (not icon.animationGroup) then
+      table.insert(AutoBiographer_EventMapIconPool.UnAllocated, icon)
+    end
   end
   AutoBiographer_EventMapIconPool.Allocated = {}
 
@@ -380,12 +416,18 @@ function AutoBiographer_WorldMapOverlayWindow_ShowEvents()
   AutoBiographer_WorldMapOverlayWindow.EventsAreShown = true
   AutoBiographer_WorldMapOverlayWindow.EventsBtn:SetText("Hide Events")
   AutoBiographer_WorldMapOverlayWindow.LevelFs:SetText("Level: ?")
+  AutoBiographer_WorldMapOverlayWindow_SetOptionsEnabled(false)
+
+  local maxEventsPerSecond = 300
+  if (AutoBiographer_Settings.MapEventShowAnimation) then
+    maxEventsPerSecond = 25
+  end
 
   local eventsPerSecond = AutoBiographer_WorldMapOverlayWindow.EventsPerSecondEb:GetNumber()
   if (eventsPerSecond < 1) then
-    eventsPerSecond = 100
-  elseif (eventsPerSecond > 500) then
-    eventsPerSecond = 500
+    eventsPerSecond = 25
+  elseif (eventsPerSecond > maxEventsPerSecond) then
+    eventsPerSecond = maxEventsPerSecond
   end
 
   AutoBiographer_WorldMapOverlayWindow.EventsPerSecondEb:SetNumber(eventsPerSecond)
@@ -496,21 +538,25 @@ function AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex, firstIndex, 
     GameTooltip:Hide()
   end)
 
-  -- The animation works great when there are few icons, but not when there are many.
-  -- local animationGroup = icon:CreateAnimationGroup()    
-  -- local scaleAnimation = animationGroup:CreateAnimation("Scale")
-  -- scaleAnimation:SetScale(0.5, 0.5)
-  -- scaleAnimation:SetDuration(0.5)
-  -- scaleAnimation:SetSmoothing("IN")
-  -- scaleAnimation:SetScript("OnPlay", function()
-  --   icon:SetWidth(16)
-  --   icon:SetHeight(16)
-  -- end)
-  -- scaleAnimation:SetScript("OnFinished", function()
-  --   icon:SetWidth(8)
-  --   icon:SetHeight(8)
-  -- end)
-  -- animationGroup:Play()
+  if (AutoBiographer_Settings.MapEventShowAnimation) then
+    if (not icon.animationGroup) then
+      icon.animationGroup = icon:CreateAnimationGroup()    
+      local scaleAnimation = icon.animationGroup:CreateAnimation("Scale")
+      scaleAnimation:SetScale(0.5, 0.5)
+      scaleAnimation:SetDuration(0.5)
+      scaleAnimation:SetSmoothing("IN")
+      scaleAnimation:SetScript("OnPlay", function()
+        icon:SetWidth(16)
+        icon:SetHeight(16)
+      end)
+      scaleAnimation:SetScript("OnFinished", function()
+        icon:SetWidth(8)
+        icon:SetHeight(8)
+      end)
+    end
+
+    icon.animationGroup:Play()
+  end
 
   HbdPins:AddWorldMapIconMap(AutoBiographer_WorldMapOverlayWindow, icon, mapCoordinates.MapId, mapCoordinates.X / 100, mapCoordinates.Y / 100, HBD_PINS_WORLDMAP_SHOW_WORLD)
 
@@ -527,7 +573,9 @@ function AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex, firstIndex, 
   end
 
   if (eventsShown % eventsToShowPerDelay == 0) then
-    AutoBiographer_WorldMapOverlayWindow_UpdateCurrentEventIndicator(mapCoordinates)
+    if (AutoBiographer_Settings.MapEventShowCircle) then
+      AutoBiographer_WorldMapOverlayWindow_UpdateCurrentEventIndicator(mapCoordinates)
+    end
 
     C_Timer.After(delay, function()
       AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex + 1, firstIndex, delay, eventsToShowPerDelay, eventsShownPerMapId)
@@ -535,6 +583,22 @@ function AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex, firstIndex, 
   else
     AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex + 1, firstIndex, delay, eventsToShowPerDelay, eventsShownPerMapId)
   end
+end
+
+function AutoBiographer_WorldMapOverlayWindow_SetOptionsEnabled(enabled)
+  AutoBiographer_WorldMapOverlayWindow.BossKillCb:SetEnabled(enabled)
+  AutoBiographer_WorldMapOverlayWindow.FirstAcquiredItemCb:SetEnabled(enabled)
+  AutoBiographer_WorldMapOverlayWindow.FirstKillCb:SetEnabled(enabled)
+  AutoBiographer_WorldMapOverlayWindow.LevelUpCb:SetEnabled(enabled)
+  AutoBiographer_WorldMapOverlayWindow.PlayerDeathCb:SetEnabled(enabled)
+  AutoBiographer_WorldMapOverlayWindow.QuestTurnInCb:SetEnabled(enabled)
+  AutoBiographer_WorldMapOverlayWindow.ReputationLevelChangedCb:SetEnabled(enabled)
+  AutoBiographer_WorldMapOverlayWindow.SkillMilestoneCb:SetEnabled(enabled)
+  AutoBiographer_WorldMapOverlayWindow.SpellLearnedCb:SetEnabled(enabled)
+  AutoBiographer_WorldMapOverlayWindow.ZoneFirstVisitCb:SetEnabled(enabled)
+
+  AutoBiographer_WorldMapOverlayWindow.ShowAnimationCb:SetEnabled(enabled)
+  AutoBiographer_WorldMapOverlayWindow.ShowCircleCb:SetEnabled(enabled)
 end
 
 function AutoBiographer_WorldMapOverlayWindow_UpdateCurrentEventIndicator(coordinates)
