@@ -51,6 +51,53 @@ function Controller:CatalogUnitIsIncomplete(catalogUnitId)
   return self.CharacterData.Catalogs.UnitCatalog[catalogUnitId] == nil or self.CharacterData.Catalogs.UnitCatalog[catalogUnitId].Name == nil
 end
 
+function Controller:GetAggregatedKillStatisticsTotals(minLevel, maxLevel)
+  local killStatisticsDictionary = self:GetAggregatedKillStatisticsDictionary(minLevel, maxLevel)
+  local totalsKillStatistics = KillStatistics.New()
+
+  for catalogUnitId, killStatistics in pairs(killStatisticsDictionary) do
+    totalsKillStatistics.TaggedAssists = totalsKillStatistics.TaggedAssists + killStatistics.TaggedAssists
+    totalsKillStatistics.TaggedGroupAssistsAndKillingBlows = totalsKillStatistics.TaggedGroupAssistsAndKillingBlows + killStatistics.TaggedGroupAssistsAndKillingBlows
+    totalsKillStatistics.TaggedKillingBlows = totalsKillStatistics.TaggedKillingBlows + killStatistics.TaggedKillingBlows
+    totalsKillStatistics.UntaggedAssists = totalsKillStatistics.UntaggedAssists + killStatistics.UntaggedAssists
+    totalsKillStatistics.UntaggedGroupAssistsAndKillingBlows = totalsKillStatistics.UntaggedGroupAssistsAndKillingBlows + killStatistics.UntaggedGroupAssistsAndKillingBlows
+    totalsKillStatistics.UntaggedKillingBlows = totalsKillStatistics.UntaggedKillingBlows + killStatistics.UntaggedKillingBlows
+  end
+
+  return totalsKillStatistics
+end
+
+function Controller:GetAggregatedKillStatisticsByCatalogUnitId(catalogUnitId, minLevel, maxLevel)
+  local killStatisticsDictionary = self:GetAggregatedKillStatisticsDictionary(minLevel, maxLevel)
+  if (not killStatisticsDictionary[catalogUnitId]) then
+    return KillStatistics.New()
+  end
+
+  return killStatisticsDictionary[catalogUnitId]
+end
+
+function Controller:GetAggregatedKillStatisticsDictionary(minLevel, maxLevel)
+  local killStatisticsDictionary = {}
+  for levelNum, levelStatistics in pairs(self.CharacterData.Levels) do
+    if (levelNum >= minLevel and levelNum <= maxLevel) then
+      for catalogUnitId, killStatistics in pairs(levelStatistics.KillStatisticsByUnit) do
+        if (not killStatisticsDictionary[catalogUnitId]) then
+          killStatisticsDictionary[catalogUnitId] = KillStatistics.New()
+        end
+
+        killStatisticsDictionary[catalogUnitId].TaggedAssists = killStatisticsDictionary[catalogUnitId].TaggedAssists + killStatistics.TaggedAssists
+        killStatisticsDictionary[catalogUnitId].TaggedGroupAssistsAndKillingBlows = killStatisticsDictionary[catalogUnitId].TaggedGroupAssistsAndKillingBlows + killStatistics.TaggedGroupAssistsAndKillingBlows
+        killStatisticsDictionary[catalogUnitId].TaggedKillingBlows = killStatisticsDictionary[catalogUnitId].TaggedKillingBlows + killStatistics.TaggedKillingBlows
+        killStatisticsDictionary[catalogUnitId].UntaggedAssists = killStatisticsDictionary[catalogUnitId].UntaggedAssists + killStatistics.UntaggedAssists
+        killStatisticsDictionary[catalogUnitId].UntaggedGroupAssistsAndKillingBlows = killStatisticsDictionary[catalogUnitId].UntaggedGroupAssistsAndKillingBlows + killStatistics.UntaggedGroupAssistsAndKillingBlows
+        killStatisticsDictionary[catalogUnitId].UntaggedKillingBlows = killStatisticsDictionary[catalogUnitId].UntaggedKillingBlows + killStatistics.UntaggedKillingBlows
+      end
+    end
+  end
+  
+  return killStatisticsDictionary
+end
+
 function Controller:GetBattlegroundStatsByBattlegroundId(battlegroundId, minLevel, maxLevel)
   local joined = 0
   local losses = 0
@@ -216,50 +263,6 @@ function Controller:GetTotalMoneyLost(minLevel, maxLevel)
   for k,v in pairs(self.CharacterData.Levels) do
     if (k >= minLevel and k <= maxLevel) then
       sum = sum + v.MoneyStatistics.TotalMoneyLost
-    end
-  end
-  
-  return sum
-end
-
-function Controller:GetTaggedKillingBlows(minLevel, maxLevel)
-  local sum = 0
-  for k,v in pairs(self.CharacterData.Levels) do
-    if (k >= minLevel and k <= maxLevel) then
-      sum = sum + KillStatistics.GetTaggedKillingBlows(v.KillStatistics)
-    end
-  end
-  
-  return sum
-end
-
-function Controller:GetTaggedKills(minLevel, maxLevel)
-  local sum = 0
-  for k,v in pairs(self.CharacterData.Levels) do
-    if (k >= minLevel and k <= maxLevel) then
-      sum = sum + KillStatistics.GetTaggedKills(v.KillStatistics)
-    end
-  end
-  
-  return sum
-end
-
-function Controller:GetTaggedKillsByCatalogUnitId(catalogUnitId, minLevel, maxLevel)
-  local sum = 0
-  for k,v in pairs(self.CharacterData.Levels) do
-    if (k >= minLevel and k <= maxLevel) then
-      sum = sum + KillStatistics.GetTaggedKillsByCatalogUnitId(v.KillStatistics, catalogUnitId)
-    end
-  end
-  
-  return sum
-end
-
-function Controller:GetTotalKillingBlowsByCatalogUnitId(catalogUnitId, minLevel, maxLevel)
-  local sum = 0
-  for k,v in pairs(self.CharacterData.Levels) do
-    if (k >= minLevel and k <= maxLevel) then
-      sum = sum + KillStatistics.GetTotalKillingBlowsByCatalogUnitId(v.KillStatistics, catalogUnitId)
     end
   end
   
@@ -446,7 +449,9 @@ end
 function Controller:OnKill(timestamp, coordinates, kill)
   if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog("Kill: " .. " #" .. tostring(kill.CatalogUnitId) .. ".", AutoBiographerEnum.LogLevel.Debug) end
 
-  KillStatistics.AddKill(self.CharacterData.Levels[self:GetCurrentLevelNum()].KillStatistics, kill)
+  if (not self:GetCurrentLevelStatistics().KillStatisticsByUnit[kill.CatalogUnitId]) then self:GetCurrentLevelStatistics().KillStatisticsByUnit[kill.CatalogUnitId] = KillStatistics.New() end
+  KillStatistics.AddKill(self:GetCurrentLevelStatistics().KillStatisticsByUnit[kill.CatalogUnitId], kill)
+
   if (kill.PlayerHasTag) then 
     local hasKilledUnitBefore = true
     if (not Catalogs.PlayerHasKilledUnit(self.CharacterData.Catalogs, kill.CatalogUnitId)) then

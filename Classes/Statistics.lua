@@ -9,7 +9,7 @@ function AggregatedStatistics.New()
     ExperienceStatistics = ExperienceStatistics.New(),
     GatheringStatistics = nil,
     ItemStatisticsByItem = {}, -- Dict<CatalogItemId, ItemStatistics>
-    KillStatistics = KillStatistics.New(),
+    KillStatisticsByUnit = {}, -- Dict<CatalogUnitId, KillStatistics>
     MiscellaneousStatistics = MiscellaneousStatistics.New(),
     MoneyStatistics = MoneyStatistics.New(),
     OtherPlayerStatisticsByOtherPlayer = {}, -- Dict<CatalogUnitId, PlayerStatistics>
@@ -108,47 +108,33 @@ end
 KillStatistics = {}
 function KillStatistics.New()
   return {
-    UntaggedKills = KillBreakdown.New(),
-    TaggedKills = KillBreakdown.New()
+    TaggedAssists = 0,
+    TaggedGroupAssistsAndKillingBlows = 0,
+    TaggedKillingBlows = 0,
+    UntaggedAssists = 0,
+    UntaggedGroupAssistsAndKillingBlows = 0,
+    UntaggedKillingBlows = 0,
   }
 end
 
 function KillStatistics.AddKill(ks, kill) 
   if (kill.PlayerHasTag) then
-    KillBreakdown.AddKill(ks.TaggedKills, kill)
+    if (kill.PlayerGotKillingBlow) then
+      ks.TaggedKillingBlows = ks.TaggedKillingBlows + 1
+    elseif (kill.PlayerGotAssist) then
+      ks.TaggedAssists = ks.TaggedAssists + 1
+    else
+      ks.TaggedGroupAssistsAndKillingBlows = ks.TaggedGroupAssistsAndKillingBlows + 1
+    end
   else
-    KillBreakdown.AddKill(ks.UntaggedKills, kill)
+    if (kill.PlayerGotKillingBlow) then
+      ks.UntaggedKillingBlows = ks.UntaggedKillingBlows + 1
+    elseif (kill.PlayerGotAssist) then
+      ks.UntaggedAssists = ks.UntaggedAssists + 1
+    else
+      ks.UntaggedGroupAssistsAndKillingBlows = ks.UntaggedGroupAssistsAndKillingBlows + 1
+    end
   end
-end
-
-function KillStatistics.GetTaggedKillingBlows(ks)
-  return KillBreakdown.GetTotalKillingBlows(ks.TaggedKills)
-end
-
-function KillStatistics.GetTaggedKills(ks)
-  return KillBreakdown.GetTotalKills(ks.TaggedKills)
-end
-
-function KillStatistics.GetTaggedKillsByCatalogUnitId(ks, catalogUnitId)
-  return KillBreakdown.GetTotalKillsByCatalogUnitId(ks.TaggedKills, catalogUnitId)
-end
-
-function KillStatistics.GetTotalKillingBlowsByCatalogUnitId(ks, catalogUnitId)
-  local sum = 0
-  
-  if (ks.TaggedKills.PlayerKillingBlows[catalogUnitId]) then
-    sum = sum + ks.TaggedKills.PlayerKillingBlows[catalogUnitId]
-  end
-  
-  if (ks.UntaggedKills.PlayerKillingBlows[catalogUnitId]) then
-    sum = sum + ks.UntaggedKills.PlayerKillingBlows[catalogUnitId]
-  end
-  
-  return sum
-end
-
-function KillStatistics.GetTotalKillsByCatalogUnitId(ks, unitId)
-  return KillBreakdown.GetTotalKillsByCatalogUnitId(ks.UntaggedKills, unitId) + KillBreakdown.GetTotalKillsByCatalogUnitId(ks.TaggedKills, unitId)
 end
 
 -- *** LevelStatistics ***

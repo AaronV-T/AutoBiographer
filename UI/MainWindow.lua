@@ -1088,10 +1088,11 @@ function AutoBiographer_MainWindow:Update()
   self.ScrollFrame.Content.ItemsOtherFs:SetText("Items Acquired By Other Means: " .. HF.CommaValue(itemsOther) .. ".")
   
   -- Kill Stats
-  local taggedKillingBlows = Controller:GetTaggedKillingBlows(self.DisplayMinLevel, self.DisplayMaxLevel)
+  local killStatisticsTotals = Controller:GetAggregatedKillStatisticsTotals(self.DisplayMinLevel, self.DisplayMaxLevel)
+  local taggedKillingBlows = killStatisticsTotals.TaggedKillingBlows
   self.ScrollFrame.Content.TaggedKillingBlowsFs:SetText("Tagged Killing Blows: " .. HF.CommaValue(taggedKillingBlows) .. ".")
   
-  local otherTaggedKills = Controller:GetTaggedKills(self.DisplayMinLevel, self.DisplayMaxLevel) - taggedKillingBlows
+  local otherTaggedKills = killStatisticsTotals.TaggedAssists + killStatisticsTotals.TaggedGroupAssistsAndKillingBlows
   self.ScrollFrame.Content.OtherTaggedKillsFs:SetText("Other Tagged Kills: " .. HF.CommaValue(otherTaggedKills) .. ".")
 
   -- Money Stats

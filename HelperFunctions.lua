@@ -131,7 +131,7 @@ function HF.PrintKeysAndValuesFromTable(tab, noRecurse, indentLevel)
   end
 
   for i = 1, indentLevel do
-    indentation = indentation .. " "
+    indentation = indentation .. "  "
   end
 
   for k,v in pairs(tab) do

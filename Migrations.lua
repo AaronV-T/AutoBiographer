@@ -240,3 +240,52 @@ table.insert(MM.Migrations,
     end
   )
 )
+
+table.insert(MM.Migrations, 
+  AutoBiographer_Migration:New(
+    9,
+    function(eventManager, controller)
+      if (controller:GetCurrentLevelStatistics().KillStatistics) then
+        local ensureKillStatisticsExistsForCatalogUnitId = function(killStatisticsByUnit, catalogUnitId)
+          if (not killStatisticsByUnit[catalogUnitId]) then
+            killStatisticsByUnit[catalogUnitId] = KillStatistics.New()
+          end
+        end
+      
+        for levelNum, levelStats in pairs(controller.CharacterData.Levels) do
+          if (not levelStats.KillStatisticsByUnit) then
+            levelStats.KillStatisticsByUnit = {}
+        
+            for catalogUnitId, taggedKillingBlows in pairs(levelStats.KillStatistics.TaggedKills.PlayerKillingBlows) do
+              ensureKillStatisticsExistsForCatalogUnitId(levelStats.KillStatisticsByUnit, catalogUnitId)
+              levelStats.KillStatisticsByUnit[catalogUnitId].TaggedKillingBlows = levelStats.KillStatisticsByUnit[catalogUnitId].TaggedKillingBlows + taggedKillingBlows
+            end
+            for catalogUnitId, taggedAssists in pairs(levelStats.KillStatistics.TaggedKills.PlayerAssists) do
+              ensureKillStatisticsExistsForCatalogUnitId(levelStats.KillStatisticsByUnit, catalogUnitId)
+              levelStats.KillStatisticsByUnit[catalogUnitId].TaggedAssists = levelStats.KillStatisticsByUnit[catalogUnitId].TaggedAssists + taggedAssists
+            end
+            for catalogUnitId, taggedGroupAssistsAndKillingBlows in pairs(levelStats.KillStatistics.TaggedKills.GroupAssistsAndKillingBlows) do
+              ensureKillStatisticsExistsForCatalogUnitId(levelStats.KillStatisticsByUnit, catalogUnitId)
+              levelStats.KillStatisticsByUnit[catalogUnitId].TaggedGroupAssistsAndKillingBlows = levelStats.KillStatisticsByUnit[catalogUnitId].TaggedGroupAssistsAndKillingBlows + taggedGroupAssistsAndKillingBlows
+            end
+            for catalogUnitId, untaggedKillingBlows in pairs(levelStats.KillStatistics.UntaggedKills.PlayerKillingBlows) do
+              ensureKillStatisticsExistsForCatalogUnitId(levelStats.KillStatisticsByUnit, catalogUnitId)
+              levelStats.KillStatisticsByUnit[catalogUnitId].UntaggedKillingBlows = levelStats.KillStatisticsByUnit[catalogUnitId].UntaggedKillingBlows + untaggedKillingBlows
+            end
+            for catalogUnitId, untaggedAssists in pairs(levelStats.KillStatistics.UntaggedKills.PlayerAssists) do
+              ensureKillStatisticsExistsForCatalogUnitId(levelStats.KillStatisticsByUnit, catalogUnitId)
+              levelStats.KillStatisticsByUnit[catalogUnitId].UntaggedAssists = levelStats.KillStatisticsByUnit[catalogUnitId].UntaggedAssists + untaggedAssists
+            end
+            for catalogUnitId, untaggedGroupAssistsAndKillingBlows in pairs(levelStats.KillStatistics.UntaggedKills.GroupAssistsAndKillingBlows) do
+              ensureKillStatisticsExistsForCatalogUnitId(levelStats.KillStatisticsByUnit, catalogUnitId)
+              levelStats.KillStatisticsByUnit[catalogUnitId].UntaggedGroupAssistsAndKillingBlows = levelStats.KillStatisticsByUnit[catalogUnitId].UntaggedGroupAssistsAndKillingBlows + untaggedGroupAssistsAndKillingBlows
+            end
+
+            levelStats.KillStatistics = nil
+          end
+        end
+      end
+
+    end
+  )
+)
