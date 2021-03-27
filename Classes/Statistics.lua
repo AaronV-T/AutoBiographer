@@ -107,34 +107,45 @@ end
 
 KillStatistics = {}
 function KillStatistics.New()
-  return {
-    TaggedAssists = 0,
-    TaggedGroupAssistsAndKillingBlows = 0,
-    TaggedKillingBlows = 0,
-    UntaggedAssists = 0,
-    UntaggedGroupAssistsAndKillingBlows = 0,
-    UntaggedKillingBlows = 0,
-  }
+  return {}
 end
 
-function KillStatistics.AddKill(ks, kill) 
+function KillStatistics.AddKill(ks, kill)
+  local killTrackingType
   if (kill.PlayerHasTag) then
     if (kill.PlayerGotKillingBlow) then
-      ks.TaggedKillingBlows = ks.TaggedKillingBlows + 1
+      killTrackingType = AutoBiographerEnum.KillTrackingType.TaggedKillingBlow
     elseif (kill.PlayerGotAssist) then
-      ks.TaggedAssists = ks.TaggedAssists + 1
+      killTrackingType = AutoBiographerEnum.KillTrackingType.TaggedAssists
     else
-      ks.TaggedGroupAssistsAndKillingBlows = ks.TaggedGroupAssistsAndKillingBlows + 1
+      killTrackingType = AutoBiographerEnum.KillTrackingType.TaggedGroupAssistsAndKillingBlows
     end
   else
     if (kill.PlayerGotKillingBlow) then
-      ks.UntaggedKillingBlows = ks.UntaggedKillingBlows + 1
+      killTrackingType = AutoBiographerEnum.KillTrackingType.UntaggedKillingBlows
     elseif (kill.PlayerGotAssist) then
-      ks.UntaggedAssists = ks.UntaggedAssists + 1
+      killTrackingType = AutoBiographerEnum.KillTrackingType.UntaggedAssists
     else
-      ks.UntaggedGroupAssistsAndKillingBlows = ks.UntaggedGroupAssistsAndKillingBlows + 1
+      killTrackingType = AutoBiographerEnum.KillTrackingType.UntaggedGroupAssistsAndKillingBlows
     end
   end
+
+  if (killTrackingType) then
+    if (ks[killTrackingType] == nil) then ks[killTrackingType] = 0 end
+
+    ks[killTrackingType] = ks[killTrackingType] + 1
+  end
+end
+
+function KillStatistics.GetSum(ks, killTrackingTypes)
+  local sum = 0
+  for k, killTrackingType in pairs(killTrackingTypes) do
+    if (ks[killTrackingType]) then
+      sum = sum + ks[killTrackingType]
+    end
+  end
+
+  return sum
 end
 
 -- *** LevelStatistics ***

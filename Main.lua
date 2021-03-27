@@ -173,7 +173,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
       BattlegroundStatuses = {},
       CurrentSubZone = nil,
       CurrentZone = nil,
-      DatabaseVersion = 9,
+      DatabaseVersion = 10,
       GuildName = nil,
       GuildRankIndex = nil,
       GuildRankName = nil,
@@ -1037,9 +1037,9 @@ function EM.EventHandlers.UPDATE_MOUSEOVER_UNIT(self)
 	if (AutoBiographer_Settings.Options["ShowKillCountOnUnitToolTips"] and UnitCanAttack("player", "mouseover")) then
     local killStatistics = Controller:GetAggregatedKillStatisticsByCatalogUnitId(catalogUnitId, 1, 9999)
     if (UnitIsPlayer("mouseover")) then
-      GameTooltip:AddLine("Killed " .. tostring(killStatistics.TaggedKillingBlows + killStatistics.UntaggedKillingBlows) .. " times.")
+      GameTooltip:AddLine("Killed " .. tostring(KillStatistics.GetSum(killStatistics, { AutoBiographerEnum.KillTrackingType.TaggedKillingBlow, AutoBiographerEnum.KillTrackingType.UntaggedKillingBlow })) .. " times.")
     else
-      GameTooltip:AddLine("Killed " .. tostring(killStatistics.TaggedKillingBlows + killStatistics.TaggedAssists + killStatistics.TaggedGroupAssistsAndKillingBlows) .. " times.")
+      GameTooltip:AddLine("Killed " .. tostring(KillStatistics.GetSum(killStatistics, { AutoBiographerEnum.KillTrackingType.TaggedAssist, AutoBiographerEnum.KillTrackingType.TaggedGroupAssistOrKillingBlow, AutoBiographerEnum.KillTrackingType.TaggedKillingBlow })) .. " times.")
     end
 	end
 

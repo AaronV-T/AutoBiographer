@@ -81,6 +81,14 @@ AutoBiographerEnum = {
     MailCod = 7,
     Merchant = 8,
   },
+  KillTrackingType = {
+    TaggedAssist = 0,
+    TaggedGroupAssistOrKillingBlow = 1,
+    TaggedKillingBlow = 2,
+    UntaggedAssist = 3,
+    UntaggedGroupAssistOrKillingBlow = 4,
+    UntaggedKillingBlow = 5,
+  },
   LogLevel = {
     Verbose = 0,
     Debug = 1,

@@ -248,7 +248,14 @@ table.insert(MM.Migrations,
       if (controller:GetCurrentLevelStatistics().KillStatistics) then
         local ensureKillStatisticsExistsForCatalogUnitId = function(killStatisticsByUnit, catalogUnitId)
           if (not killStatisticsByUnit[catalogUnitId]) then
-            killStatisticsByUnit[catalogUnitId] = KillStatistics.New()
+            killStatisticsByUnit[catalogUnitId] = {
+              TaggedAssists = 0,
+              TaggedGroupAssistsAndKillingBlows = 0,
+              TaggedKillingBlows = 0,
+              UntaggedAssists = 0,
+              UntaggedGroupAssistsAndKillingBlows = 0,
+              UntaggedKillingBlows = 0,
+            }
           end
         end
       
@@ -286,6 +293,43 @@ table.insert(MM.Migrations,
         end
       end
 
+    end
+  )
+)
+
+table.insert(MM.Migrations, 
+  AutoBiographer_Migration:New(
+    10,
+    function(eventManager, controller)
+      for levelNum, levelStatistics in pairs(controller.CharacterData.Levels) do
+        for catalogUnitId, killStatistics in pairs(levelStatistics.KillStatisticsByUnit) do
+          if (killStatistics.TaggedAssists) then
+            killStatistics[AutoBiographerEnum.KillTrackingType.TaggedAssist] = killStatistics.TaggedAssists
+          end
+          if (killStatistics.TaggedGroupAssistsAndKillingBlows) then
+            killStatistics[AutoBiographerEnum.KillTrackingType.TaggedGroupAssistOrKillingBlow] = killStatistics.TaggedGroupAssistsAndKillingBlows
+          end
+          if (killStatistics.TaggedKillingBlows) then
+            killStatistics[AutoBiographerEnum.KillTrackingType.TaggedKillingBlow] = killStatistics.TaggedKillingBlows
+          end
+          if (killStatistics.UntaggedAssists) then
+            killStatistics[AutoBiographerEnum.KillTrackingType.UntaggedAssist] = killStatistics.UntaggedAssists
+          end
+          if (killStatistics.UntaggedGroupAssistsAndKillingBlows) then
+            killStatistics[AutoBiographerEnum.KillTrackingType.UntaggedGroupAssistOrKillingBlow] = killStatistics.UntaggedGroupAssistsAndKillingBlows
+          end
+          if (killStatistics.UntaggedKillingBlows) then
+            killStatistics[AutoBiographerEnum.KillTrackingType.UntaggedKillingBlow] = killStatistics.UntaggedKillingBlows
+          end
+
+          killStatistics.TaggedAssists = nil
+          killStatistics.TaggedGroupAssistsAndKillingBlows = nil
+          killStatistics.TaggedKillingBlows = nil
+          killStatistics.UntaggedAssists = nil
+          killStatistics.UntaggedGroupAssistsAndKillingBlows = nil
+          killStatistics.UntaggedKillingBlows = nil
+        end
+      end
     end
   )
 )

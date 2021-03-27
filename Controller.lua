@@ -56,12 +56,12 @@ function Controller:GetAggregatedKillStatisticsTotals(minLevel, maxLevel)
   local totalsKillStatistics = KillStatistics.New()
 
   for catalogUnitId, killStatistics in pairs(killStatisticsDictionary) do
-    totalsKillStatistics.TaggedAssists = totalsKillStatistics.TaggedAssists + killStatistics.TaggedAssists
-    totalsKillStatistics.TaggedGroupAssistsAndKillingBlows = totalsKillStatistics.TaggedGroupAssistsAndKillingBlows + killStatistics.TaggedGroupAssistsAndKillingBlows
-    totalsKillStatistics.TaggedKillingBlows = totalsKillStatistics.TaggedKillingBlows + killStatistics.TaggedKillingBlows
-    totalsKillStatistics.UntaggedAssists = totalsKillStatistics.UntaggedAssists + killStatistics.UntaggedAssists
-    totalsKillStatistics.UntaggedGroupAssistsAndKillingBlows = totalsKillStatistics.UntaggedGroupAssistsAndKillingBlows + killStatistics.UntaggedGroupAssistsAndKillingBlows
-    totalsKillStatistics.UntaggedKillingBlows = totalsKillStatistics.UntaggedKillingBlows + killStatistics.UntaggedKillingBlows
+    for k, killTrackingType in pairs(AutoBiographerEnum.KillTrackingType) do
+      if (killStatistics[killTrackingType]) then
+        if (totalsKillStatistics[killTrackingType] == nil) then totalsKillStatistics[killTrackingType] = 0 end
+        totalsKillStatistics[killTrackingType] = totalsKillStatistics[killTrackingType] + killStatistics[killTrackingType]
+      end
+    end
   end
 
   return totalsKillStatistics
@@ -85,12 +85,12 @@ function Controller:GetAggregatedKillStatisticsDictionary(minLevel, maxLevel)
           killStatisticsDictionary[catalogUnitId] = KillStatistics.New()
         end
 
-        killStatisticsDictionary[catalogUnitId].TaggedAssists = killStatisticsDictionary[catalogUnitId].TaggedAssists + killStatistics.TaggedAssists
-        killStatisticsDictionary[catalogUnitId].TaggedGroupAssistsAndKillingBlows = killStatisticsDictionary[catalogUnitId].TaggedGroupAssistsAndKillingBlows + killStatistics.TaggedGroupAssistsAndKillingBlows
-        killStatisticsDictionary[catalogUnitId].TaggedKillingBlows = killStatisticsDictionary[catalogUnitId].TaggedKillingBlows + killStatistics.TaggedKillingBlows
-        killStatisticsDictionary[catalogUnitId].UntaggedAssists = killStatisticsDictionary[catalogUnitId].UntaggedAssists + killStatistics.UntaggedAssists
-        killStatisticsDictionary[catalogUnitId].UntaggedGroupAssistsAndKillingBlows = killStatisticsDictionary[catalogUnitId].UntaggedGroupAssistsAndKillingBlows + killStatistics.UntaggedGroupAssistsAndKillingBlows
-        killStatisticsDictionary[catalogUnitId].UntaggedKillingBlows = killStatisticsDictionary[catalogUnitId].UntaggedKillingBlows + killStatistics.UntaggedKillingBlows
+        for k, killTrackingType in pairs(AutoBiographerEnum.KillTrackingType) do
+          if (killStatistics[killTrackingType]) then
+            if (killStatisticsDictionary[catalogUnitId][killTrackingType] == nil) then killStatisticsDictionary[catalogUnitId][killTrackingType] = 0 end
+            killStatisticsDictionary[catalogUnitId][killTrackingType] = killStatisticsDictionary[catalogUnitId][killTrackingType] + killStatistics[killTrackingType]
+          end
+        end
       end
     end
   end
