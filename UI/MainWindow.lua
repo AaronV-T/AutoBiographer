@@ -1018,7 +1018,7 @@ function AutoBiographer_StatisticsWindow:Initialize()
   frame.SubFrame.Dropdown:SetSize(100, 25)
   frame.SubFrame.Dropdown:SetPoint("LEFT", frame.SubFrame, "TOP", -frame.SubFrame.Dropdown:GetWidth(), -15)
 
-  if (not frame.DropdownText) then frame.DropdownText = "Kill Statistics" end
+  if (not frame.DropdownText) then frame.DropdownText = "Kills" end
   if (not frame.StatisticsDisplayMode) then frame.StatisticsDisplayMode = AutoBiographerEnum.StatisticsDisplayMode.Kills end
   
   UIDropDownMenu_Initialize(frame.SubFrame.Dropdown, function(frame, level, menuList)
@@ -1026,6 +1026,8 @@ function AutoBiographer_StatisticsWindow:Initialize()
     info.func = function(frame, arg1, arg2, checked)
       AutoBiographer_StatisticsWindow.DropdownText = frame.value   
       AutoBiographer_StatisticsWindow.StatisticsDisplayMode = arg1
+      AutoBiographer_StatisticsWindow.SubFrame.OrderColumnIndex = 1
+      AutoBiographer_StatisticsWindow.SubFrame.OrderDirection = "ASC"
       AutoBiographer_StatisticsWindow:Update()
     end
   
@@ -1036,6 +1038,8 @@ function AutoBiographer_StatisticsWindow:Initialize()
     info.text, info.arg1 = "Other Players", AutoBiographerEnum.StatisticsDisplayMode.OtherPlayers
     UIDropDownMenu_AddButton(info)
     info.text, info.arg1 = "Spells", AutoBiographerEnum.StatisticsDisplayMode.Spells
+    UIDropDownMenu_AddButton(info)
+    info.text, info.arg1 = "Time", AutoBiographerEnum.StatisticsDisplayMode.Time
     UIDropDownMenu_AddButton(info)
   end)
 
@@ -1500,11 +1504,31 @@ function AutoBiographer_StatisticsWindow:Update()
 
         local row = {
           spellName,
-          SpellStatistics.GetSum(spellStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.DuelsLostToPlayer }),
-          SpellStatistics.GetSum(spellStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.DuelsWonAgainstPlayer }),
+          SpellStatistics.GetSum(spellStatistics, { AutoBiographerEnum.SpellTrackingType.StartedCasting }),
+          SpellStatistics.GetSum(spellStatistics, { AutoBiographerEnum.SpellTrackingType.SuccessfullyCast }),
         }
         table.insert(tableData.Rows, row)
       end
+    end
+  elseif (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.Time) then
+    local timeStatisticsByArea = Controller:GetAggregatedTimeStatisticsDictionary(1, 9999)
+    tableData = {
+      HeaderValues = { "Area", "AFK", "Casting", "Dead", "Combat", "Total", "Taxi", "Grouped" },
+      RowOffsets = { 0, 225, 285, 345, 405, 465, 525, 585, 645 },
+      Rows = {},
+    }
+    for areaId, timeStatistics in pairs(timeStatisticsByArea) do
+      local row = {
+        areaId,
+        HelperFunctions.Round(TimeStatistics.GetSum(timeStatistics, { AutoBiographerEnum.TimeTrackingType.Afk }) / 3600, 2),
+        HelperFunctions.Round(TimeStatistics.GetSum(timeStatistics, { AutoBiographerEnum.TimeTrackingType.Casting }) / 3600, 2),
+        HelperFunctions.Round(TimeStatistics.GetSum(timeStatistics, { AutoBiographerEnum.TimeTrackingType.DeadOrGhost }) / 3600, 2),
+        HelperFunctions.Round(TimeStatistics.GetSum(timeStatistics, { AutoBiographerEnum.TimeTrackingType.InCombat }) / 3600, 2),
+        HelperFunctions.Round(TimeStatistics.GetSum(timeStatistics, { AutoBiographerEnum.TimeTrackingType.LoggedIn }) / 3600, 2),
+        HelperFunctions.Round(TimeStatistics.GetSum(timeStatistics, { AutoBiographerEnum.TimeTrackingType.OnTaxi }) / 3600, 2),
+        HelperFunctions.Round(TimeStatistics.GetSum(timeStatistics, { AutoBiographerEnum.TimeTrackingType.InParty }) / 3600, 2),
+      }
+      table.insert(tableData.Rows, row)
     end
   else
     print("Unsupported Statistics Display Mode. This should not happen!")

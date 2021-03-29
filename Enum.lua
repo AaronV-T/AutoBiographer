@@ -127,6 +127,7 @@ AutoBiographerEnum = {
     Kills = 1,
     OtherPlayers = 2,
     Spells = 3,
+    Time = 4,
   },
   TimeTrackingType = {
     Afk = 0,

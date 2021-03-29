@@ -164,6 +164,28 @@ function Controller:GetAggregatedSpellStatisticsDictionary(minLevel, maxLevel)
   return spellStatisticsDictionary
 end
 
+function Controller:GetAggregatedTimeStatisticsDictionary(minLevel, maxLevel)
+  local timeStatisticsDictionary = {}
+  for levelNum, levelStatistics in pairs(self.CharacterData.Levels) do
+    if (levelNum >= minLevel and levelNum <= maxLevel) then
+      for areaId, timeStatistics in pairs(levelStatistics.TimeStatisticsByArea) do
+        if (not timeStatisticsDictionary[areaId]) then
+          timeStatisticsDictionary[areaId] = TimeStatistics.New()
+        end
+
+        for k, timeTrackingType in pairs(AutoBiographerEnum.TimeTrackingType) do
+          if (timeStatistics[timeTrackingType]) then
+            if (timeStatisticsDictionary[areaId][timeTrackingType] == nil) then timeStatisticsDictionary[areaId][timeTrackingType] = 0 end
+            timeStatisticsDictionary[areaId][timeTrackingType] = timeStatisticsDictionary[areaId][timeTrackingType] + timeStatistics[timeTrackingType]
+          end
+        end
+      end
+    end
+  end
+  
+  return timeStatisticsDictionary
+end
+
 function Controller:GetBattlegroundStatsByBattlegroundId(battlegroundId, minLevel, maxLevel)
   local joined = 0
   local losses = 0

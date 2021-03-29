@@ -266,3 +266,14 @@ function TimeStatistics.AddTime(ts, timeTrackingType, seconds)
   
   ts[timeTrackingType] = ts[timeTrackingType] + seconds
 end
+
+function TimeStatistics.GetSum(ts, timeTrackingTypes)
+  local sum = 0
+  for k, timeTrackingType in pairs(timeTrackingTypes) do
+    if (ts[timeTrackingType]) then
+      sum = sum + ts[timeTrackingType]
+    end
+  end
+
+  return sum
+end
