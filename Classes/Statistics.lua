@@ -103,6 +103,17 @@ function ItemStatistics.AddCount(is, itemAcquisitionMethod, quantity)
   is[itemAcquisitionMethod] = is[itemAcquisitionMethod] + quantity
 end
 
+function ItemStatistics.GetSum(is, itemAcquisitionMethods)
+  local sum = 0
+  for k, itemAcquisitionMethod in pairs(itemAcquisitionMethods) do
+    if (is[itemAcquisitionMethod]) then
+      sum = sum + is[itemAcquisitionMethod]
+    end
+  end
+
+  return sum
+end
+
 -- *** KillStatistics ***
 
 KillStatistics = {}

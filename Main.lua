@@ -251,6 +251,8 @@ function EM.EventHandlers.CHAT_MSG_LOOT(self, text, arg2, arg3, arg4, arg5, arg6
     itemAcquisitionMethod = AutoBiographerEnum.ItemAcquisitionMethod.Create
   elseif (string.find(text, "You receive loot") == 1) then
     itemAcquisitionMethod = AutoBiographerEnum.ItemAcquisitionMethod.Loot
+  elseif (self.MerchantIsOpen) then
+    itemAcquisitionMethod = AutoBiographerEnum.ItemAcquisitionMethod.Merchant
   else
     itemAcquisitionMethod = AutoBiographerEnum.ItemAcquisitionMethod.Other
   end

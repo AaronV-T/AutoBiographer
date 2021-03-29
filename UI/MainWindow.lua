@@ -1029,13 +1029,13 @@ function AutoBiographer_StatisticsWindow:Initialize()
       AutoBiographer_StatisticsWindow:Update()
     end
   
-    info.text, info.arg1 = "Kill Statistics", AutoBiographerEnum.StatisticsDisplayMode.Kills
+    info.text, info.arg1 = "Item Aquisitions", AutoBiographerEnum.StatisticsDisplayMode.Items
     UIDropDownMenu_AddButton(info)
-    info.text, info.arg1 = "Other Player Statistics", AutoBiographerEnum.StatisticsDisplayMode.OtherPlayers
+    info.text, info.arg1 = "Kills", AutoBiographerEnum.StatisticsDisplayMode.Kills
+    UIDropDownMenu_AddButton(info)
+    info.text, info.arg1 = "Other Players", AutoBiographerEnum.StatisticsDisplayMode.OtherPlayers
     UIDropDownMenu_AddButton(info)
   end)
-  
-  UIDropDownMenu_SetText(frame.SubFrame.Dropdown, frame.DropdownText)
 
   -- Table Headers
   frame.SubFrame.TableHeaders = {}
@@ -1398,10 +1398,38 @@ end
 --
 
 function AutoBiographer_StatisticsWindow:Update()
+  UIDropDownMenu_SetText(self.SubFrame.Dropdown, self.DropdownText)
+
   -- Get table data.
   local tableData
   
-  if (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.Kills) then
+  if (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.Items) then
+    local itemStatisticsByItem = Controller:GetAggregatedItemStatisticsDictionary(1, 9999)
+    tableData = {
+      HeaderValues = { "Item Name", "Created", "Looted", "Other", "Vendor" },
+      RowOffsets = { 0, 225, 300, 375, 450, 525 },
+      Rows = {},
+    }
+    for catalogItemId, itemStatistics in pairs(itemStatisticsByItem) do
+      if (Controller.CharacterData.Catalogs.ItemCatalog[catalogItemId]) then
+        local itemName
+        if (Controller.CharacterData.Catalogs.ItemCatalog[catalogItemId].Name) then
+          itemName = Controller.CharacterData.Catalogs.ItemCatalog[catalogItemId].Name
+        else
+          itemName = "Item ID: " .. catalogUnitId
+        end
+
+        local row = {
+          itemName,
+          ItemStatistics.GetSum(itemStatistics, { AutoBiographerEnum.ItemAcquisitionMethod.Create }),
+          ItemStatistics.GetSum(itemStatistics, { AutoBiographerEnum.ItemAcquisitionMethod.Loot }),
+          ItemStatistics.GetSum(itemStatistics, { AutoBiographerEnum.ItemAcquisitionMethod.Other }),
+          ItemStatistics.GetSum(itemStatistics, { AutoBiographerEnum.ItemAcquisitionMethod.Merchant }),
+        }
+        table.insert(tableData.Rows, row)
+      end
+    end
+  elseif (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.Kills) then
     local killStatisticsByUnit = Controller:GetAggregatedKillStatisticsDictionary(1, 9999)
     tableData = {
       HeaderValues = { "Unit Name", "Tagged Kills", "Tagged Assists", "Untagged Kills", "Untagged Assists" },
@@ -1519,7 +1547,14 @@ function AutoBiographer_StatisticsWindow:Update()
       end
 
       fs:SetPoint("TOPLEFT", self.SubFrame.ScrollFrame.Content, 17 + tableData.RowOffsets[j], -15 * (i - 1))
-      fs:SetText(tableData.Rows[i][j])
+
+      local text = tableData.Rows[i][j]
+      local maxTextLength = (tableData.RowOffsets[j + 1] - tableData.RowOffsets[j]) / 7
+      if (string.len(text) > maxTextLength) then
+        text = string.sub(text, 1, maxTextLength - 3) .. "..."
+      end
+
+      fs:SetText(text)
       fs:Show()
       table.insert(self.SubFrame.ScrollFrame.Content.FontStringsPool.Allocated, fs)
     end

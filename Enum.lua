@@ -123,8 +123,9 @@ AutoBiographerEnum = {
     SuccessfullyCast = 1,
   },
   StatisticsDisplayMode = {
-    Kills = 0,
-    OtherPlayers = 1,
+    Items = 0,
+    Kills = 1,
+    OtherPlayers = 2,
   },
   TimeTrackingType = {
     Afk = 0,

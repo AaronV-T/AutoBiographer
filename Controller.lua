@@ -51,6 +51,28 @@ function Controller:CatalogUnitIsIncomplete(catalogUnitId)
   return self.CharacterData.Catalogs.UnitCatalog[catalogUnitId] == nil or self.CharacterData.Catalogs.UnitCatalog[catalogUnitId].Name == nil
 end
 
+function Controller:GetAggregatedItemStatisticsDictionary(minLevel, maxLevel)
+  local itemStatisticsDictionary = {}
+  for levelNum, levelStatistics in pairs(self.CharacterData.Levels) do
+    if (levelNum >= minLevel and levelNum <= maxLevel) then
+      for catalogItemId, itemStatistics in pairs(levelStatistics.ItemStatisticsByItem) do
+        if (not itemStatisticsDictionary[catalogItemId]) then
+          itemStatisticsDictionary[catalogItemId] = ItemStatistics.New()
+        end
+
+        for k, itemAcquisitionMethod in pairs(AutoBiographerEnum.ItemAcquisitionMethod) do
+          if (itemStatistics[itemAcquisitionMethod]) then
+            if (itemStatisticsDictionary[catalogItemId][itemAcquisitionMethod] == nil) then itemStatisticsDictionary[catalogItemId][itemAcquisitionMethod] = 0 end
+            itemStatisticsDictionary[catalogItemId][itemAcquisitionMethod] = itemStatisticsDictionary[catalogItemId][itemAcquisitionMethod] + itemStatistics[itemAcquisitionMethod]
+          end
+        end
+      end
+    end
+  end
+  
+  return itemStatisticsDictionary
+end
+
 function Controller:GetAggregatedKillStatisticsTotals(minLevel, maxLevel)
   local killStatisticsDictionary = self:GetAggregatedKillStatisticsDictionary(minLevel, maxLevel)
   local totalsKillStatistics = KillStatistics.New()
