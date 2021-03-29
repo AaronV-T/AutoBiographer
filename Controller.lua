@@ -98,6 +98,28 @@ function Controller:GetAggregatedKillStatisticsDictionary(minLevel, maxLevel)
   return killStatisticsDictionary
 end
 
+function Controller:GetAggregatedOtherPlayerStatisticsDictionary(minLevel, maxLevel)
+  local otherPlayerStatisticsDictionary = {}
+  for levelNum, levelStatistics in pairs(self.CharacterData.Levels) do
+    if (levelNum >= minLevel and levelNum <= maxLevel) then
+      for catalogUnitId, otherPlayerStatistics in pairs(levelStatistics.OtherPlayerStatisticsByOtherPlayer) do
+        if (not otherPlayerStatisticsDictionary[catalogUnitId]) then
+          otherPlayerStatisticsDictionary[catalogUnitId] = OtherPlayerStatistics.New()
+        end
+
+        for k, otherPlayerTrackingType in pairs(AutoBiographerEnum.OtherPlayerTrackingType) do
+          if (otherPlayerStatistics[otherPlayerTrackingType]) then
+            if (otherPlayerStatisticsDictionary[catalogUnitId][otherPlayerTrackingType] == nil) then otherPlayerStatisticsDictionary[catalogUnitId][otherPlayerTrackingType] = 0 end
+            otherPlayerStatisticsDictionary[catalogUnitId][otherPlayerTrackingType] = otherPlayerStatisticsDictionary[catalogUnitId][otherPlayerTrackingType] + otherPlayerStatistics[otherPlayerTrackingType]
+          end
+        end
+      end
+    end
+  end
+  
+  return otherPlayerStatisticsDictionary
+end
+
 function Controller:GetBattlegroundStatsByBattlegroundId(battlegroundId, minLevel, maxLevel)
   local joined = 0
   local losses = 0

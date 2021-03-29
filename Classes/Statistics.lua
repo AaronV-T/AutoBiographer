@@ -208,6 +208,17 @@ function OtherPlayerStatistics.Add(ops, otherPlayerTrackingType, sum)
   ops[otherPlayerTrackingType] = ops[otherPlayerTrackingType] + sum
 end
 
+function OtherPlayerStatistics.GetSum(ops, otherPlayerTrackingTypes)
+  local sum = 0
+  for k, otherPlayerTrackingType in pairs(otherPlayerTrackingTypes) do
+    if (ops[otherPlayerTrackingType]) then
+      sum = sum + ops[otherPlayerTrackingType]
+    end
+  end
+
+  return sum
+end
+
 -- *** SpellStatistics ***
 
 SpellStatistics = {}

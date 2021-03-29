@@ -124,6 +124,7 @@ AutoBiographerEnum = {
   },
   StatisticsDisplayMode = {
     Kills = 0,
+    OtherPlayers = 1,
   },
   TimeTrackingType = {
     Afk = 0,

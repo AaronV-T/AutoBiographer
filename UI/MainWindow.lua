@@ -1029,8 +1029,10 @@ function AutoBiographer_StatisticsWindow:Initialize()
       AutoBiographer_StatisticsWindow:Update()
     end
   
-    info.text, info.arg1, info.arg2 = "Kill Statistics", AutoBiographerEnum.StatisticsDisplayMode.Kills
-    UIDropDownMenu_AddButton(info) 
+    info.text, info.arg1 = "Kill Statistics", AutoBiographerEnum.StatisticsDisplayMode.Kills
+    UIDropDownMenu_AddButton(info)
+    info.text, info.arg1 = "Other Player Statistics", AutoBiographerEnum.StatisticsDisplayMode.OtherPlayers
+    UIDropDownMenu_AddButton(info)
   end)
   
   UIDropDownMenu_SetText(frame.SubFrame.Dropdown, frame.DropdownText)
@@ -1397,30 +1399,62 @@ end
 
 function AutoBiographer_StatisticsWindow:Update()
   -- Get table data.
-  local killStatisticsByUnit = Controller:GetAggregatedKillStatisticsDictionary(1, 9999)
-  local tableData = {
-    HeaderValues = { "Unit Name", "Tagged Kills", "Tagged Assists", "Untagged Kills", "Untagged Assists" },
-    RowOffsets = { 0, 225, 340, 455, 570, 685 },
-    Rows = {},
-  }
-  for catalogUnitId, killStatistics in pairs(killStatisticsByUnit) do
-    if (Controller.CharacterData.Catalogs.UnitCatalog[catalogUnitId] and Controller.CharacterData.Catalogs.UnitCatalog[catalogUnitId].UType == AutoBiographerEnum.UnitType.Creature) then
-      local unitName
-      if (Controller.CharacterData.Catalogs.UnitCatalog[catalogUnitId].Name) then
-        unitName = Controller.CharacterData.Catalogs.UnitCatalog[catalogUnitId].Name
-      else
-        unitName = "Unit ID: " .. catalogUnitId
-      end
+  local tableData
+  
+  if (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.Kills) then
+    local killStatisticsByUnit = Controller:GetAggregatedKillStatisticsDictionary(1, 9999)
+    tableData = {
+      HeaderValues = { "Unit Name", "Tagged Kills", "Tagged Assists", "Untagged Kills", "Untagged Assists" },
+      RowOffsets = { 0, 225, 340, 455, 570, 685 },
+      Rows = {},
+    }
+    for catalogUnitId, killStatistics in pairs(killStatisticsByUnit) do
+      if (Controller.CharacterData.Catalogs.UnitCatalog[catalogUnitId] and Controller.CharacterData.Catalogs.UnitCatalog[catalogUnitId].UType == AutoBiographerEnum.UnitType.Creature) then
+        local unitName
+        if (Controller.CharacterData.Catalogs.UnitCatalog[catalogUnitId].Name) then
+          unitName = Controller.CharacterData.Catalogs.UnitCatalog[catalogUnitId].Name
+        else
+          unitName = "Unit ID: " .. catalogUnitId
+        end
 
-      local row = {
-        unitName,
-        KillStatistics.GetSum(killStatistics, { AutoBiographerEnum.KillTrackingType.TaggedKillingBlow }),
-        KillStatistics.GetSum(killStatistics, { AutoBiographerEnum.KillTrackingType.TaggedAssist, AutoBiographerEnum.KillTrackingType.TaggedGroupAssistOrKillingBlow }),
-        KillStatistics.GetSum(killStatistics, { AutoBiographerEnum.KillTrackingType.UntaggedKillingBlow }),
-        KillStatistics.GetSum(killStatistics, { AutoBiographerEnum.KillTrackingType.UntaggedAssist, AutoBiographerEnum.KillTrackingType.UntaggedGroupAssistOrKillingBlow }),
-      }
-      table.insert(tableData.Rows, row)
+        local row = {
+          unitName,
+          KillStatistics.GetSum(killStatistics, { AutoBiographerEnum.KillTrackingType.TaggedKillingBlow }),
+          KillStatistics.GetSum(killStatistics, { AutoBiographerEnum.KillTrackingType.TaggedAssist, AutoBiographerEnum.KillTrackingType.TaggedGroupAssistOrKillingBlow }),
+          KillStatistics.GetSum(killStatistics, { AutoBiographerEnum.KillTrackingType.UntaggedKillingBlow }),
+          KillStatistics.GetSum(killStatistics, { AutoBiographerEnum.KillTrackingType.UntaggedAssist, AutoBiographerEnum.KillTrackingType.UntaggedGroupAssistOrKillingBlow }),
+        }
+        table.insert(tableData.Rows, row)
+      end
     end
+  elseif (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.OtherPlayers) then
+    local otherPlayerStatisticsByUnit = Controller:GetAggregatedOtherPlayerStatisticsDictionary(1, 9999)
+    tableData = {
+      HeaderValues = { "Unit Name", "Duels (Win)", "Duels (Lose)", "Time Grouped" },
+      RowOffsets = { 0, 225, 340, 455, 570 },
+      Rows = {},
+    }
+    for catalogUnitId, otherPlayerStatistics in pairs(otherPlayerStatisticsByUnit) do
+      if (Controller.CharacterData.Catalogs.UnitCatalog[catalogUnitId] and Controller.CharacterData.Catalogs.UnitCatalog[catalogUnitId].UType == AutoBiographerEnum.UnitType.Player) then
+        local unitName
+        if (Controller.CharacterData.Catalogs.UnitCatalog[catalogUnitId].Name) then
+          unitName = Controller.CharacterData.Catalogs.UnitCatalog[catalogUnitId].Name
+        else
+          unitName = "Unit ID: " .. catalogUnitId
+        end
+
+        local row = {
+          unitName,
+          OtherPlayerStatistics.GetSum(otherPlayerStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.DuelsLostToPlayer }),
+          OtherPlayerStatistics.GetSum(otherPlayerStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.DuelsWonAgainstPlayer }),
+          HelperFunctions.Round(OtherPlayerStatistics.GetSum(otherPlayerStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.TimeSpentGroupedWithPlayer }) / 3600, 2),
+        }
+        table.insert(tableData.Rows, row)
+      end
+    end
+  else
+    print("Unsupported Statistics Display Mode. This should not happen!")
+    return
   end
 
   table.sort(tableData.Rows, function(rowA, rowB)
@@ -1471,14 +1505,20 @@ function AutoBiographer_StatisticsWindow:Update()
   self.SubFrame.ScrollFrame.Content.FontStringsPool.Allocated = {}
 
   -- Setup table body.
-  for i = 2, #tableData.Rows, 1 do
+  for i = 1, #tableData.Rows, 1 do
     for j = 1, #tableData.Rows[i], 1 do
       local fs = table.remove(self.SubFrame.ScrollFrame.Content.FontStringsPool.UnAllocated)
       if (not fs) then
-        fs = self.SubFrame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        fs = self.SubFrame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY")
       end
       
-      fs:SetPoint("TOPLEFT", self.SubFrame.ScrollFrame.Content, 17 + tableData.RowOffsets[j], -15 * (i - 2))
+      if (i % 2 == 0) then
+        fs:SetFontObject("GameFontNormal")
+      else
+        fs:SetFontObject("GameFontHighlight")
+      end
+
+      fs:SetPoint("TOPLEFT", self.SubFrame.ScrollFrame.Content, 17 + tableData.RowOffsets[j], -15 * (i - 1))
       fs:SetText(tableData.Rows[i][j])
       fs:Show()
       table.insert(self.SubFrame.ScrollFrame.Content.FontStringsPool.Allocated, fs)
