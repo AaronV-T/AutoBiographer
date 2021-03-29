@@ -243,6 +243,17 @@ function SpellStatistics.Increment(ss, spellTrackingType)
   ss[spellTrackingType] = ss[spellTrackingType] + 1
 end
 
+function SpellStatistics.GetSum(ss, spellTrackingTypes)
+  local sum = 0
+  for k, spellTrackingType in pairs(spellTrackingTypes) do
+    if (ss[spellTrackingType]) then
+      sum = sum + ss[spellTrackingType]
+    end
+  end
+
+  return sum
+end
+
 -- *** TimeStatistics ***
 
 TimeStatistics = {}

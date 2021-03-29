@@ -142,6 +142,28 @@ function Controller:GetAggregatedOtherPlayerStatisticsDictionary(minLevel, maxLe
   return otherPlayerStatisticsDictionary
 end
 
+function Controller:GetAggregatedSpellStatisticsDictionary(minLevel, maxLevel)
+  local spellStatisticsDictionary = {}
+  for levelNum, levelStatistics in pairs(self.CharacterData.Levels) do
+    if (levelNum >= minLevel and levelNum <= maxLevel) then
+      for catalogSpellId, spellStatistics in pairs(levelStatistics.SpellStatisticsBySpell) do
+        if (not spellStatisticsDictionary[catalogSpellId]) then
+          spellStatisticsDictionary[catalogSpellId] = SpellStatistics.New()
+        end
+
+        for k, spellTrackingType in pairs(AutoBiographerEnum.SpellTrackingType) do
+          if (spellStatistics[spellTrackingType]) then
+            if (spellStatisticsDictionary[catalogSpellId][spellTrackingType] == nil) then spellStatisticsDictionary[catalogSpellId][spellTrackingType] = 0 end
+            spellStatisticsDictionary[catalogSpellId][spellTrackingType] = spellStatisticsDictionary[catalogSpellId][spellTrackingType] + spellStatistics[spellTrackingType]
+          end
+        end
+      end
+    end
+  end
+  
+  return spellStatisticsDictionary
+end
+
 function Controller:GetBattlegroundStatsByBattlegroundId(battlegroundId, minLevel, maxLevel)
   local joined = 0
   local losses = 0

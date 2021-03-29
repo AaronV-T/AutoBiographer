@@ -1035,6 +1035,8 @@ function AutoBiographer_StatisticsWindow:Initialize()
     UIDropDownMenu_AddButton(info)
     info.text, info.arg1 = "Other Players", AutoBiographerEnum.StatisticsDisplayMode.OtherPlayers
     UIDropDownMenu_AddButton(info)
+    info.text, info.arg1 = "Spells", AutoBiographerEnum.StatisticsDisplayMode.Spells
+    UIDropDownMenu_AddButton(info)
   end)
 
   -- Table Headers
@@ -1476,6 +1478,30 @@ function AutoBiographer_StatisticsWindow:Update()
           OtherPlayerStatistics.GetSum(otherPlayerStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.DuelsLostToPlayer }),
           OtherPlayerStatistics.GetSum(otherPlayerStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.DuelsWonAgainstPlayer }),
           HelperFunctions.Round(OtherPlayerStatistics.GetSum(otherPlayerStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.TimeSpentGroupedWithPlayer }) / 3600, 2),
+        }
+        table.insert(tableData.Rows, row)
+      end
+    end
+  elseif (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.Spells) then
+    local spellStatisticsBySpell = Controller:GetAggregatedSpellStatisticsDictionary(1, 9999)
+    tableData = {
+      HeaderValues = { "Unit Name", "Started Casting", "Successfully Cast" },
+      RowOffsets = { 0, 225, 340, 455 },
+      Rows = {},
+    }
+    for catalogSpellId, spellStatistics in pairs(spellStatisticsBySpell) do
+      if (Controller.CharacterData.Catalogs.SpellCatalog[catalogSpellId]) then
+        local spellName
+        if (Controller.CharacterData.Catalogs.SpellCatalog[catalogSpellId].Name) then
+          spellName = Controller.CharacterData.Catalogs.SpellCatalog[catalogSpellId].Name
+        else
+          spellName = "Spell ID: " .. catalogSpellId
+        end
+
+        local row = {
+          spellName,
+          SpellStatistics.GetSum(spellStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.DuelsLostToPlayer }),
+          SpellStatistics.GetSum(spellStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.DuelsWonAgainstPlayer }),
         }
         table.insert(tableData.Rows, row)
       end
