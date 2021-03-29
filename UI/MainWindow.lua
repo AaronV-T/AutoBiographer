@@ -6,6 +6,13 @@ AutoBiographer_MainWindow:SetFrameStrata("HIGH")
 
 AutoBiographer_DebugWindow = CreateFrame("Frame", "AutoBiographerDebug", AutoBiographer_MainWindow, "BasicFrameTemplate")
 AutoBiographer_EventWindow = CreateFrame("Frame", "AutoBiographerEvent", AutoBiographer_MainWindow, "BasicFrameTemplate")
+AutoBiographer_StatisticsWindow = CreateFrame("Frame", "AutoBiographerStatistics", AutoBiographer_MainWindow, "BasicFrameTemplate")
+
+--
+--
+-- Debug Window Initialization
+--
+--
 
 function AutoBiographer_DebugWindow:Initialize()
   local frame = self
@@ -142,13 +149,19 @@ function AutoBiographer_DebugWindow:Initialize()
     else
       self:Update()
       self:Show()
-      self:SetFrameLevel(200)
+      self:SetFrameLevel(250)
     end
   end
   
   frame:Hide()
   return frame
 end
+
+--
+--
+-- Event Window Initialization
+--
+--
 
 function AutoBiographer_EventWindow:Initialize()
   local frame = self
@@ -455,6 +468,12 @@ function AutoBiographer_EventWindow:Initialize()
   return frame
 end
 
+--
+--
+-- Main Window Initialization
+--
+--
+
 function AutoBiographer_MainWindow:Initialize()
   local frame = self
   frame:SetSize(800, 600) 
@@ -588,7 +607,7 @@ function AutoBiographer_MainWindow:Initialize()
   
   -- Buttons
   frame.ScrollFrame.Content.EventsBtn = CreateFrame("Button", nil, frame.ScrollFrame.Content, "UIPanelButtonTemplate");
-  frame.ScrollFrame.Content.EventsBtn:SetPoint("CENTER", frame.ScrollFrame.Content, "TOP", -150, -25);
+  frame.ScrollFrame.Content.EventsBtn:SetPoint("CENTER", frame.ScrollFrame.Content, "TOP", -225, -25);
   frame.ScrollFrame.Content.EventsBtn:SetSize(140, 40);
   frame.ScrollFrame.Content.EventsBtn:SetText("Events");
   frame.ScrollFrame.Content.EventsBtn:SetNormalFontObject("GameFontNormalLarge");
@@ -598,9 +617,21 @@ function AutoBiographer_MainWindow:Initialize()
       AutoBiographer_EventWindow:Toggle()
     end
   )
+
+  frame.ScrollFrame.Content.StatisticsBtn = CreateFrame("Button", nil, frame.ScrollFrame.Content, "UIPanelButtonTemplate");
+  frame.ScrollFrame.Content.StatisticsBtn:SetPoint("CENTER", frame.ScrollFrame.Content, "TOP", -75, -25);
+  frame.ScrollFrame.Content.StatisticsBtn:SetSize(140, 40);
+  frame.ScrollFrame.Content.StatisticsBtn:SetText("Statistics");
+  frame.ScrollFrame.Content.StatisticsBtn:SetNormalFontObject("GameFontNormalLarge");
+  frame.ScrollFrame.Content.StatisticsBtn:SetHighlightFontObject("GameFontHighlightLarge");
+  frame.ScrollFrame.Content.StatisticsBtn:SetScript("OnClick", 
+    function(self)
+      AutoBiographer_StatisticsWindow:Toggle()
+    end
+  )
   
   frame.ScrollFrame.Content.OptionsBtn = CreateFrame("Button", nil, frame.ScrollFrame.Content, "UIPanelButtonTemplate");
-  frame.ScrollFrame.Content.OptionsBtn:SetPoint("CENTER", frame.ScrollFrame.Content, "TOP", 0, -25);
+  frame.ScrollFrame.Content.OptionsBtn:SetPoint("CENTER", frame.ScrollFrame.Content, "TOP", 75, -25);
   frame.ScrollFrame.Content.OptionsBtn:SetSize(140, 40);
   frame.ScrollFrame.Content.OptionsBtn:SetText("Options");
   frame.ScrollFrame.Content.OptionsBtn:SetNormalFontObject("GameFontNormalLarge");
@@ -614,7 +645,7 @@ function AutoBiographer_MainWindow:Initialize()
   )
   
   frame.ScrollFrame.Content.DebugBtn = CreateFrame("Button", nil, frame.ScrollFrame.Content, "UIPanelButtonTemplate");
-  frame.ScrollFrame.Content.DebugBtn:SetPoint("CENTER", frame.ScrollFrame.Content, "TOP", 150, -25);
+  frame.ScrollFrame.Content.DebugBtn:SetPoint("CENTER", frame.ScrollFrame.Content, "TOP", 225, -25);
   frame.ScrollFrame.Content.DebugBtn:SetSize(140, 40);
   frame.ScrollFrame.Content.DebugBtn:SetText("Debug");
   frame.ScrollFrame.Content.DebugBtn:SetNormalFontObject("GameFontNormalLarge");
@@ -878,6 +909,190 @@ function AutoBiographer_MainWindow:Initialize()
   return frame
 end
 
+--
+--
+-- Statistics Window Initialization
+--
+--
+
+function AutoBiographer_StatisticsWindow:Initialize()
+  local frame = self
+  frame:SetSize(750, 585) 
+  frame:SetPoint("CENTER") 
+  
+  frame:EnableKeyboard(true)
+  frame:EnableMouse(true)
+  frame:SetMovable(true)
+
+  frame:SetScript("OnHide", function(self)
+    if (self.isMoving) then
+      self:StopMovingOrSizing()
+      self.isMoving = false
+    end
+  end)
+
+  frame:SetScript("OnKeyDown", function(self, key)
+    if (key == "ESCAPE") then
+      frame:SetPropagateKeyboardInput(false)
+      frame:Hide()
+    elseif (key == "END") then
+      frame:SetPropagateKeyboardInput(false)
+      local sliderMin, sliderMax = frame.SubFrame.ScrollFrame.Scrollbar:GetMinMaxValues()
+      frame.SubFrame.ScrollFrame.Scrollbar:SetValue(sliderMax)
+    elseif (key == "HOME") then
+      frame:SetPropagateKeyboardInput(false)
+      local sliderMin, sliderMax = frame.SubFrame.ScrollFrame.Scrollbar:GetMinMaxValues()
+      frame.SubFrame.ScrollFrame.Scrollbar:SetValue(sliderMin)
+    elseif (key == "PAGEDOWN") then
+      frame:SetPropagateKeyboardInput(false)
+      local sliderMin, sliderMax = frame.SubFrame.ScrollFrame.Scrollbar:GetMinMaxValues()
+      local sliderCurrentValue = frame.SubFrame.ScrollFrame.Scrollbar:GetValue()
+
+      local sliderNextValue = sliderCurrentValue + frame.SubFrame.ScrollFrame:GetHeight()
+
+      if (sliderNextValue > sliderMax) then
+        sliderNextValue = sliderMax
+      elseif (sliderNextValue < sliderMin) then
+        sliderNextValue = sliderMin
+      end
+
+      frame.SubFrame.ScrollFrame.Scrollbar:SetValue(sliderNextValue)
+    elseif (key == "PAGEUP") then
+      frame:SetPropagateKeyboardInput(false)
+      local sliderMin, sliderMax = frame.SubFrame.ScrollFrame.Scrollbar:GetMinMaxValues()
+      local sliderCurrentValue = frame.SubFrame.ScrollFrame.Scrollbar:GetValue()
+
+      local sliderNextValue = sliderCurrentValue - frame.SubFrame.ScrollFrame:GetHeight()
+
+      if (sliderNextValue > sliderMax) then
+        sliderNextValue = sliderMax
+      elseif (sliderNextValue < sliderMin) then
+        sliderNextValue = sliderMin
+      end
+
+      frame.SubFrame.ScrollFrame.Scrollbar:SetValue(sliderNextValue)
+    else
+      frame:SetPropagateKeyboardInput(true)
+    end
+  end)
+
+  frame:SetScript("OnMouseDown", function(self, button)
+    if (button == "LeftButton" and not self.isMoving) then
+      self:StartMoving()
+      self.isMoving = true
+    end
+  end)
+
+  frame:SetScript("OnMouseUp", function(self, button)
+    if (button == "LeftButton" and self.isMoving) then
+      self:StopMovingOrSizing()
+      self.isMoving = false
+    end
+  end)
+
+  frame:SetScript("OnMouseWheel", function(self, direction)
+    local sliderMin, sliderMax = frame.SubFrame.ScrollFrame.Scrollbar:GetMinMaxValues()
+    local sliderCurrentValue = frame.SubFrame.ScrollFrame.Scrollbar:GetValue()
+
+    local sliderNextValue = sliderCurrentValue - (frame.SubFrame.ScrollFrame.Scrollbar.scrollStep * direction)
+
+    if (sliderNextValue > sliderMax) then
+      sliderNextValue = sliderMax
+    elseif (sliderNextValue < sliderMin) then
+      sliderNextValue = sliderMin
+    end
+
+    frame.SubFrame.ScrollFrame.Scrollbar:SetValue(sliderNextValue)
+  end)
+
+  frame.Title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  frame.Title:SetPoint("LEFT", frame.TitleBg, "LEFT", 5, 0);
+  frame.Title:SetText("AutoBiographer Event Window")
+  
+  frame.SubFrame = CreateFrame("Frame", "AutoBiographerEventSub", frame)
+  frame.SubFrame:SetPoint("TOPLEFT", 10, -25) 
+  frame.SubFrame:SetPoint("BOTTOMRIGHT", -10, 10) 
+  
+  -- Dropdown
+  frame.SubFrame.Dropdown = CreateFrame("Frame", nil, frame.SubFrame, "UIDropDownMenuTemplate")
+  frame.SubFrame.Dropdown:SetSize(100, 25)
+  frame.SubFrame.Dropdown:SetPoint("LEFT", frame.SubFrame, "TOP", -frame.SubFrame.Dropdown:GetWidth(), -15)
+
+  if (not frame.DropdownText) then frame.DropdownText = "Kill Statistics" end
+  if (not frame.StatisticsDisplayMode) then frame.StatisticsDisplayMode = AutoBiographerEnum.StatisticsDisplayMode.Kills end
+  
+  UIDropDownMenu_Initialize(frame.SubFrame.Dropdown, function(frame, level, menuList)
+    local info = UIDropDownMenu_CreateInfo()
+    info.func = function(frame, arg1, arg2, checked)
+      AutoBiographer_StatisticsWindow.DropdownText = frame.value   
+      AutoBiographer_StatisticsWindow.StatisticsDisplayMode = arg1
+      AutoBiographer_StatisticsWindow:Update()
+    end
+  
+    info.text, info.arg1, info.arg2 = "Kill Statistics", AutoBiographerEnum.StatisticsDisplayMode.Kills
+    UIDropDownMenu_AddButton(info) 
+  end)
+  
+  UIDropDownMenu_SetText(frame.SubFrame.Dropdown, frame.DropdownText)
+
+  -- Table Headers
+  frame.SubFrame.TableHeaders = {}
+
+  self.SubFrame.OrderColumnIndex = 1
+  self.SubFrame.OrderDirection = "ASC"
+
+  --scrollframe 
+  frame.SubFrame.ScrollFrame = CreateFrame("ScrollFrame", nil, frame.SubFrame) 
+  frame.SubFrame.ScrollFrame:SetPoint("TOPLEFT", 10, -65) 
+  frame.SubFrame.ScrollFrame:SetPoint("BOTTOMRIGHT", -10, 10) 
+
+  --scrollbar 
+  frame.SubFrame.ScrollFrame.Scrollbar = CreateFrame("Slider", nil, frame.SubFrame.ScrollFrame, "UIPanelScrollBarTemplate")
+  frame.SubFrame.ScrollFrame.Scrollbar:SetPoint("TOPLEFT", frame.SubFrame, "TOPRIGHT", -15, -17)
+  frame.SubFrame.ScrollFrame.Scrollbar:SetPoint("BOTTOMLEFT", frame.SubFrame, "BOTTOMRIGHT", -15, 12)
+  frame.SubFrame.ScrollFrame.Scrollbar:SetMinMaxValues(1, 1)
+  frame.SubFrame.ScrollFrame.Scrollbar:SetValueStep(1)
+  frame.SubFrame.ScrollFrame.Scrollbar.scrollStep = 15
+  frame.SubFrame.ScrollFrame.Scrollbar:SetValue(0)
+  frame.SubFrame.ScrollFrame.Scrollbar:SetWidth(16)
+  frame.SubFrame.ScrollFrame.Scrollbar:SetScript("OnValueChanged",
+    function (self, value) 
+      self:GetParent():SetVerticalScroll(value) 
+    end
+  ) 
+  local scrollbg = frame.SubFrame.ScrollFrame.Scrollbar:CreateTexture(nil, "BACKGROUND") 
+  scrollbg:SetAllPoints(frame.SubFrame.ScrollFrame.Scrollbar) 
+  scrollbg:SetTexture(0, 0, 0, 0.4) 
+
+  --content frame
+  frame.SubFrame.ScrollFrame.Content = CreateFrame("Frame", nil, frame.SubFrame.ScrollFrame)
+  frame.SubFrame.ScrollFrame.Content:SetSize(1, 1)
+  frame.SubFrame.ScrollFrame.Content.FontStringsPool = {
+    Allocated = {},
+    UnAllocated = {},
+  }
+  frame.SubFrame.ScrollFrame:SetScrollChild(frame.SubFrame.ScrollFrame.Content)
+
+  frame.Toggle = function(self)
+    if (self:IsVisible()) then
+      self:Hide()
+    else
+      self:Update()
+      self:Show()
+      self:SetFrameLevel(200)
+    end
+  end
+
+  frame:Hide()
+  return frame
+end
+
+--
+--
+-- Debug Window Update
+--
+--
+
 function AutoBiographer_DebugWindow:Update()
   local previousScrollbarMaxValue = (self.ScrollFrame.Content.ChildrenCount * 15) - self.ScrollFrame:GetHeight();
   local previousScrollbarValue = self.ScrollFrame.Scrollbar:GetValue()
@@ -908,6 +1123,12 @@ function AutoBiographer_DebugWindow:Update()
     self.ScrollFrame.Scrollbar:SetValue(scrollbarMaxValue)
   end
 end
+
+--
+--
+-- Event Window Update
+--
+--
 
 function AutoBiographer_EventWindow:Update()
   -- Release previous font strings.
@@ -940,6 +1161,12 @@ function AutoBiographer_EventWindow:Update()
   self.SubFrame.ScrollFrame.Scrollbar:SetMinMaxValues(1, scrollbarMaxValue)
   self.SubFrame.ScrollFrame.Scrollbar:SetValue(scrollbarMaxValue)
 end
+
+--
+--
+-- Main Window Update
+--
+--
 
 function AutoBiographer_MainWindow:Update()
   -- Dropdown
@@ -1160,4 +1387,105 @@ function AutoBiographer_MainWindow:Update()
   
   local timeSpentOnTaxi = Controller:GetTimeForTimeTrackingType(AutoBiographerEnum.TimeTrackingType.OnTaxi, self.DisplayMinLevel, self.DisplayMaxLevel)
   self.ScrollFrame.Content.TimeSpentOnTaxiFs:SetText("Time Spent on Flights: " .. HF.SecondsToTimeString(timeSpentOnTaxi) .. ".")
+end
+
+--
+--
+-- Statistics Window Update
+--
+--
+
+function AutoBiographer_StatisticsWindow:Update()
+  -- Get table data.
+  local killStatisticsByUnit = Controller:GetAggregatedKillStatisticsDictionary(1, 9999)
+  local tableData = {
+    HeaderValues = { "Unit Name", "Tagged Kills", "Tagged Assists", "Untagged Kills", "Untagged Assists" },
+    RowOffsets = { 0, 225, 340, 455, 570, 685 },
+    Rows = {},
+  }
+  for catalogUnitId, killStatistics in pairs(killStatisticsByUnit) do
+    if (Controller.CharacterData.Catalogs.UnitCatalog[catalogUnitId] and Controller.CharacterData.Catalogs.UnitCatalog[catalogUnitId].UType == AutoBiographerEnum.UnitType.Creature) then
+      local unitName
+      if (Controller.CharacterData.Catalogs.UnitCatalog[catalogUnitId].Name) then
+        unitName = Controller.CharacterData.Catalogs.UnitCatalog[catalogUnitId].Name
+      else
+        unitName = "Unit ID: " .. catalogUnitId
+      end
+
+      local row = {
+        unitName,
+        KillStatistics.GetSum(killStatistics, { AutoBiographerEnum.KillTrackingType.TaggedKillingBlow }),
+        KillStatistics.GetSum(killStatistics, { AutoBiographerEnum.KillTrackingType.TaggedAssist, AutoBiographerEnum.KillTrackingType.TaggedGroupAssistOrKillingBlow }),
+        KillStatistics.GetSum(killStatistics, { AutoBiographerEnum.KillTrackingType.UntaggedKillingBlow }),
+        KillStatistics.GetSum(killStatistics, { AutoBiographerEnum.KillTrackingType.UntaggedAssist, AutoBiographerEnum.KillTrackingType.UntaggedGroupAssistOrKillingBlow }),
+      }
+      table.insert(tableData.Rows, row)
+    end
+  end
+
+  table.sort(tableData.Rows, function(rowA, rowB)
+    if (self.SubFrame.OrderDirection == "ASC") then
+      return rowA[self.SubFrame.OrderColumnIndex] < rowB[self.SubFrame.OrderColumnIndex]
+    else
+      return rowA[self.SubFrame.OrderColumnIndex] > rowB[self.SubFrame.OrderColumnIndex]
+    end
+  end)
+  
+  -- Setup table headers.
+  for k, headerFrame in pairs(self.SubFrame.TableHeaders) do
+    headerFrame:Hide()
+  end
+  
+  for i = 1, #tableData.HeaderValues do
+    header = CreateFrame("Button", nil, self.SubFrame, "UIPanelButtonTemplate");
+    header:SetPoint("TOPLEFT", self.SubFrame, 25 + tableData.RowOffsets[i], -40);
+    header:SetPoint("BOTTOMRIGHT", self.SubFrame, "TOPLEFT", 25 + tableData.RowOffsets[i + 1], -60);
+    header:SetText(tableData.HeaderValues[i]);
+    header:SetNormalFontObject("GameFontNormal");
+    header:SetHighlightFontObject("GameFontHighlight");
+    header:SetScript("OnClick", 
+      function(self)
+        if (AutoBiographer_StatisticsWindow.SubFrame.OrderColumnIndex == i) then
+          if (AutoBiographer_StatisticsWindow.SubFrame.OrderDirection == "DESC") then
+            AutoBiographer_StatisticsWindow.SubFrame.OrderDirection = "ASC"
+          else
+            AutoBiographer_StatisticsWindow.SubFrame.OrderDirection = "DESC"
+          end
+        else
+          AutoBiographer_StatisticsWindow.SubFrame.OrderColumnIndex = i
+          AutoBiographer_StatisticsWindow.SubFrame.OrderDirection = "DESC"
+        end
+        AutoBiographer_StatisticsWindow:Update()
+      end
+    )
+    table.insert(self.SubFrame.TableHeaders, header)
+  end
+
+  -- Release previous table body font strings.
+  for i = 1, #self.SubFrame.ScrollFrame.Content.FontStringsPool.Allocated, 1 do
+    local fs = self.SubFrame.ScrollFrame.Content.FontStringsPool.Allocated[i]
+    fs:Hide()
+    fs:SetText("")
+    table.insert(self.SubFrame.ScrollFrame.Content.FontStringsPool.UnAllocated, fs)
+  end
+  self.SubFrame.ScrollFrame.Content.FontStringsPool.Allocated = {}
+
+  -- Setup table body.
+  for i = 2, #tableData.Rows, 1 do
+    for j = 1, #tableData.Rows[i], 1 do
+      local fs = table.remove(self.SubFrame.ScrollFrame.Content.FontStringsPool.UnAllocated)
+      if (not fs) then
+        fs = self.SubFrame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+      end
+      
+      fs:SetPoint("TOPLEFT", self.SubFrame.ScrollFrame.Content, 17 + tableData.RowOffsets[j], -15 * (i - 2))
+      fs:SetText(tableData.Rows[i][j])
+      fs:Show()
+      table.insert(self.SubFrame.ScrollFrame.Content.FontStringsPool.Allocated, fs)
+    end
+  end
+  
+  local scrollbarMaxValue = (#tableData.Rows * 15) - self.SubFrame.ScrollFrame:GetHeight();
+  if (scrollbarMaxValue <= 0) then scrollbarMaxValue = 1 end
+  self.SubFrame.ScrollFrame.Scrollbar:SetMinMaxValues(1, scrollbarMaxValue)
 end

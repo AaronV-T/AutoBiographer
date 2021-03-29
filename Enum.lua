@@ -122,6 +122,9 @@ AutoBiographerEnum = {
     StartedCasting = 0,
     SuccessfullyCast = 1,
   },
+  StatisticsDisplayMode = {
+    Kills = 0,
+  },
   TimeTrackingType = {
     Afk = 0,
     Casting = 1,

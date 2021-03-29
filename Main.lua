@@ -206,8 +206,9 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
 
   AutoBiographer_DebugWindow:Initialize()
   AutoBiographer_EventWindow:Initialize()
-  AutoBiographer_OptionWindow:Initialize()
   AutoBiographer_MainWindow:Initialize()
+  AutoBiographer_OptionWindow:Initialize()
+  AutoBiographer_StatisticsWindow:Initialize()
 
   AutoBiographer_WorldMapOverlayWindow_Initialize()
 end
