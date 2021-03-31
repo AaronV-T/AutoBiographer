@@ -28,7 +28,7 @@ It also keeps track of the following statistics:
  - Damage dealt and taken; healing dealt to self, healing dealt to others, and healing taken.
  - Deaths by creatures, environment, pets, and other players.
  - Duels won and lost to each player.
- - Items looted or acquired by other methods.
+ - Items created, looted, purchased, or acquired by other methods.
  - Miscellaneous stats:
    - Jumps.
  - Money gained from auction house, looting, mail, merchants, quests, and trade.
@@ -58,6 +58,3 @@ Statistics:
  - PVP stats (honorable kills, dishonorable kills).
  - Rolls.
  
-
-Other Featues:
-- UI overhaul.

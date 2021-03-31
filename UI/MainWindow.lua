@@ -1043,6 +1043,95 @@ function AutoBiographer_StatisticsWindow:Initialize()
     UIDropDownMenu_AddButton(info)
   end)
 
+  -- Level Range
+  frame.SubFrame.MinimumLevelFs = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  frame.SubFrame.MinimumLevelFs:SetPoint("LEFT", frame.SubFrame.Dropdown, "RIGHT", 60, 0)
+  frame.SubFrame.MinimumLevelFs:SetText("Minimum Level:")
+  frame.SubFrame.MinimumLevelEb = CreateFrame("EditBox", nil, frame.SubFrame);
+  frame.SubFrame.MinimumLevelEb:SetSize(20, 20)
+  frame.SubFrame.MinimumLevelEb:SetPoint("LEFT", frame.SubFrame.MinimumLevelFs, "RIGHT", 2, 0)
+  frame.SubFrame.MinimumLevelEb:SetBackdrop({
+    bgFile = "",
+    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+    tile = "true",
+    tileSize = 32,
+    edgeSize = 10,
+    insets = {left = 3, right = 3, top = 3, bottom = 3}
+  })
+  frame.SubFrame.MinimumLevelEb:SetFont("Fonts\\FRIZQT__.TTF", 11)
+  frame.SubFrame.MinimumLevelEb:SetAutoFocus(false)
+  frame.SubFrame.MinimumLevelEb:SetMultiLine(false)
+  frame.SubFrame.MinimumLevelEb:SetNumeric(true)
+  frame.SubFrame.MinimumLevelEb:SetScript("OnEscapePressed", function() frame.SubFrame.MinimumLevelEb:ClearFocus() end)
+  frame.SubFrame.MinimumLevelEb:SetScript("OnTextChanged", function(arg1, arg2)
+    if (not arg2) then
+      return
+    end
+
+    frame.SubFrame.MinimumLevelEb.DebounceCount = frame.SubFrame.MinimumLevelEb.DebounceCount + 1
+    C_Timer.After(2, function()
+      frame.SubFrame.MinimumLevelEb.DebounceCount = frame.SubFrame.MinimumLevelEb.DebounceCount - 1
+
+      if (frame.SubFrame.MinimumLevelEb.DebounceCount == 0) then
+        frame.SubFrame.MinimumLevelEb:ClearFocus()
+
+        if (frame.SubFrame.MinimumLevelEb:GetNumber() < 1) then
+          frame.SubFrame.MinimumLevelEb:SetNumber(1)
+        elseif (frame.SubFrame.MinimumLevelEb:GetNumber() > frame.SubFrame.MaximumLevelEb:GetNumber()) then
+          frame.SubFrame.MinimumLevelEb:SetNumber(frame.SubFrame.MaximumLevelEb:GetNumber())
+        end
+    
+        frame:Update()
+      end
+    end)
+  end)
+  frame.SubFrame.MinimumLevelEb:SetNumber(1)
+  frame.SubFrame.MinimumLevelEb.DebounceCount = 0
+
+  frame.SubFrame.MaximumLevelFs = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  frame.SubFrame.MaximumLevelFs:SetPoint("LEFT", frame.SubFrame.MinimumLevelEb, "RIGHT", 15, 0)
+  frame.SubFrame.MaximumLevelFs:SetText("Maximum Level:")
+  frame.SubFrame.MaximumLevelEb = CreateFrame("EditBox", nil, frame.SubFrame);
+  frame.SubFrame.MaximumLevelEb:SetSize(20, 20)
+  frame.SubFrame.MaximumLevelEb:SetPoint("LEFT", frame.SubFrame.MaximumLevelFs, "RIGHT", 2, 0)
+  frame.SubFrame.MaximumLevelEb:SetBackdrop({
+    bgFile = "",
+    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+    tile = "true",
+    tileSize = 32,
+    edgeSize = 10,
+    insets = {left = 3, right = 3, top = 3, bottom = 3}
+  })
+  frame.SubFrame.MaximumLevelEb:SetFont("Fonts\\FRIZQT__.TTF", 11)
+  frame.SubFrame.MaximumLevelEb:SetAutoFocus(false)
+  frame.SubFrame.MaximumLevelEb:SetMultiLine(false)
+  frame.SubFrame.MaximumLevelEb:SetNumeric(true)
+  frame.SubFrame.MaximumLevelEb:SetScript("OnEscapePressed", function() frame.SubFrame.MaximumLevelEb:ClearFocus() end)
+  frame.SubFrame.MaximumLevelEb:SetScript("OnTextChanged", function(arg1, arg2)
+    if (not arg2) then
+      return
+    end
+
+    frame.SubFrame.MaximumLevelEb.DebounceCount = frame.SubFrame.MaximumLevelEb.DebounceCount + 1
+    C_Timer.After(2, function()
+      frame.SubFrame.MaximumLevelEb.DebounceCount = frame.SubFrame.MaximumLevelEb.DebounceCount - 1
+
+      if (frame.SubFrame.MaximumLevelEb.DebounceCount == 0) then
+        frame.SubFrame.MaximumLevelEb:ClearFocus()
+        
+        if (frame.SubFrame.MaximumLevelEb:GetNumber() > Controller:GetCurrentLevelNum()) then
+          frame.SubFrame.MaximumLevelEb:SetNumber(Controller:GetCurrentLevelNum())
+        elseif (frame.SubFrame.MaximumLevelEb:GetNumber() < frame.SubFrame.MinimumLevelEb:GetNumber()) then
+          frame.SubFrame.MaximumLevelEb:SetNumber(frame.SubFrame.MinimumLevelEb:GetNumber())
+        end
+    
+        frame:Update()
+      end
+    end)
+  end)
+  frame.SubFrame.MaximumLevelEb:SetNumber(Controller:GetCurrentLevelNum())
+  frame.SubFrame.MaximumLevelEb.DebounceCount = 0
+
   -- Table Headers
   frame.SubFrame.TableHeaders = {}
 
@@ -1405,12 +1494,14 @@ end
 
 function AutoBiographer_StatisticsWindow:Update()
   UIDropDownMenu_SetText(self.SubFrame.Dropdown, self.DropdownText)
+  local minLevel = self.SubFrame.MinimumLevelEb:GetNumber()
+  local maxLevel = self.SubFrame.MaximumLevelEb:GetNumber()
 
   -- Get table data.
   local tableData
   
   if (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.Items) then
-    local itemStatisticsByItem = Controller:GetAggregatedItemStatisticsDictionary(1, 9999)
+    local itemStatisticsByItem = Controller:GetAggregatedItemStatisticsDictionary(minLevel, maxLevel)
     tableData = {
       HeaderValues = { "Item Name", "Created", "Looted", "Other", "Vendor" },
       RowOffsets = { 0, 225, 300, 375, 450, 525 },
@@ -1436,7 +1527,7 @@ function AutoBiographer_StatisticsWindow:Update()
       end
     end
   elseif (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.Kills) then
-    local killStatisticsByUnit = Controller:GetAggregatedKillStatisticsDictionary(1, 9999)
+    local killStatisticsByUnit = Controller:GetAggregatedKillStatisticsDictionary(minLevel, maxLevel)
     tableData = {
       HeaderValues = { "Unit Name", "Tagged Kills", "Tagged Assists", "Untagged Kills", "Untagged Assists" },
       RowOffsets = { 0, 225, 340, 455, 570, 685 },
@@ -1462,7 +1553,7 @@ function AutoBiographer_StatisticsWindow:Update()
       end
     end
   elseif (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.OtherPlayers) then
-    local otherPlayerStatisticsByUnit = Controller:GetAggregatedOtherPlayerStatisticsDictionary(1, 9999)
+    local otherPlayerStatisticsByUnit = Controller:GetAggregatedOtherPlayerStatisticsDictionary(minLevel, maxLevel)
     tableData = {
       HeaderValues = { "Unit Name", "Duels (Win)", "Duels (Lose)", "Time Grouped" },
       RowOffsets = { 0, 225, 340, 455, 570 },
@@ -1487,9 +1578,9 @@ function AutoBiographer_StatisticsWindow:Update()
       end
     end
   elseif (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.Spells) then
-    local spellStatisticsBySpell = Controller:GetAggregatedSpellStatisticsDictionary(1, 9999)
+    local spellStatisticsBySpell = Controller:GetAggregatedSpellStatisticsDictionary(minLevel, maxLevel)
     tableData = {
-      HeaderValues = { "Unit Name", "Started Casting", "Successfully Cast" },
+      HeaderValues = { "Spell Name", "Started Casting", "Successfully Cast" },
       RowOffsets = { 0, 225, 340, 455 },
       Rows = {},
     }
@@ -1511,7 +1602,7 @@ function AutoBiographer_StatisticsWindow:Update()
       end
     end
   elseif (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.Time) then
-    local timeStatisticsByArea = Controller:GetAggregatedTimeStatisticsDictionary(1, 9999)
+    local timeStatisticsByArea = Controller:GetAggregatedTimeStatisticsDictionary(minLevel, maxLevel)
     tableData = {
       HeaderValues = { "Area", "AFK", "Casting", "Dead", "Combat", "Total", "Taxi", "Grouped" },
       RowOffsets = { 0, 225, 285, 345, 405, 465, 525, 585, 645 },
