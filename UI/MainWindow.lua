@@ -1416,8 +1416,8 @@ function AutoBiographer_MainWindow:Update()
   local taggedKillingBlows = KillStatistics.GetSum(totalsKillStatistics, { AutoBiographerEnum.KillTrackingType.TaggedKillingBlow })
   self.ScrollFrame.Content.TaggedKillingBlowsFs:SetText("Tagged Killing Blows: " .. HF.CommaValue(taggedKillingBlows) .. ".")
   
-  local otherTaggedKills = KillStatistics.GetSum(totalsKillStatistics, { AutoBiographerEnum.KillTrackingType.TaggedAssist, AutoBiographerEnum.KillTrackingType.TaggedGroupAssistOrKillingBlow })
-  self.ScrollFrame.Content.OtherTaggedKillsFs:SetText("Other Tagged Kills: " .. HF.CommaValue(otherTaggedKills) .. ".")
+  local otherTaggedKills = KillStatistics.GetSum(totalsKillStatistics, { AutoBiographerEnum.KillTrackingType.TaggedAssist, AutoBiographerEnum.KillTrackingType.TaggedGroupAssistOrKillingBlow, AutoBiographerEnum.KillTrackingType.TaggedKillingBlow })
+  self.ScrollFrame.Content.OtherTaggedKillsFs:SetText("Tagged Killing Blows and Assists: " .. HF.CommaValue(otherTaggedKills) .. ".")
 
   -- Money Stats
   local moneyGainedFromAuctionHouseSales = Controller:GetMoneyForAcquisitionMethod(AutoBiographerEnum.MoneyAcquisitionMethod.AuctionHouseSale, self.DisplayMinLevel, self.DisplayMaxLevel)
@@ -1529,7 +1529,7 @@ function AutoBiographer_StatisticsWindow:Update()
   elseif (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.Kills) then
     local killStatisticsByUnit = Controller:GetAggregatedKillStatisticsDictionary(minLevel, maxLevel)
     tableData = {
-      HeaderValues = { "Unit Name", "Tagged Kills", "Tagged Assists", "Untagged Kills", "Untagged Assists" },
+      HeaderValues = { "Unit Name", "Tagged KB", "Tagged KB+A", "Untagged KB", "Untagged KB+A" },
       RowOffsets = { 0, 225, 340, 455, 570, 685 },
       Rows = {},
     }
@@ -1545,9 +1545,9 @@ function AutoBiographer_StatisticsWindow:Update()
         local row = {
           unitName,
           KillStatistics.GetSum(killStatistics, { AutoBiographerEnum.KillTrackingType.TaggedKillingBlow }),
-          KillStatistics.GetSum(killStatistics, { AutoBiographerEnum.KillTrackingType.TaggedAssist, AutoBiographerEnum.KillTrackingType.TaggedGroupAssistOrKillingBlow }),
+          KillStatistics.GetSum(killStatistics, { AutoBiographerEnum.KillTrackingType.TaggedAssist, AutoBiographerEnum.KillTrackingType.TaggedGroupAssistOrKillingBlow, AutoBiographerEnum.KillTrackingType.TaggedKillingBlow }),
           KillStatistics.GetSum(killStatistics, { AutoBiographerEnum.KillTrackingType.UntaggedKillingBlow }),
-          KillStatistics.GetSum(killStatistics, { AutoBiographerEnum.KillTrackingType.UntaggedAssist, AutoBiographerEnum.KillTrackingType.UntaggedGroupAssistOrKillingBlow }),
+          KillStatistics.GetSum(killStatistics, { AutoBiographerEnum.KillTrackingType.UntaggedAssist, AutoBiographerEnum.KillTrackingType.UntaggedGroupAssistOrKillingBlow, AutoBiographerEnum.KillTrackingType.UntaggedKillingBlow }),
         }
         table.insert(tableData.Rows, row)
       end
