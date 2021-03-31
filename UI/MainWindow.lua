@@ -1007,7 +1007,7 @@ function AutoBiographer_StatisticsWindow:Initialize()
 
   frame.Title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   frame.Title:SetPoint("LEFT", frame.TitleBg, "LEFT", 5, 0);
-  frame.Title:SetText("AutoBiographer Event Window")
+  frame.Title:SetText("AutoBiographer Statistics Window")
   
   frame.SubFrame = CreateFrame("Frame", "AutoBiographerEventSub", frame)
   frame.SubFrame:SetPoint("TOPLEFT", 10, -25) 
@@ -1584,6 +1584,8 @@ function AutoBiographer_StatisticsWindow:Update()
       RowOffsets = { 0, 225, 340, 455 },
       Rows = {},
     }
+
+    local dictAggregatedBySpellName = {}
     for catalogSpellId, spellStatistics in pairs(spellStatisticsBySpell) do
       if (Controller.CharacterData.Catalogs.SpellCatalog[catalogSpellId]) then
         local spellName
@@ -1593,13 +1595,24 @@ function AutoBiographer_StatisticsWindow:Update()
           spellName = "Spell ID: " .. catalogSpellId
         end
 
-        local row = {
-          spellName,
-          SpellStatistics.GetSum(spellStatistics, { AutoBiographerEnum.SpellTrackingType.StartedCasting }),
-          SpellStatistics.GetSum(spellStatistics, { AutoBiographerEnum.SpellTrackingType.SuccessfullyCast }),
-        }
-        table.insert(tableData.Rows, row)
+        local startedCasting = SpellStatistics.GetSum(spellStatistics, { AutoBiographerEnum.SpellTrackingType.StartedCasting })
+        local successfullyCast = SpellStatistics.GetSum(spellStatistics, { AutoBiographerEnum.SpellTrackingType.SuccessfullyCast })
+
+        if (not dictAggregatedBySpellName[spellName]) then
+          dictAggregatedBySpellName[spellName] = {
+            spellName,
+            startedCasting,
+            successfullyCast,
+          }
+        else
+          dictAggregatedBySpellName[spellName][2] = dictAggregatedBySpellName[spellName][2] + startedCasting
+          dictAggregatedBySpellName[spellName][3] = dictAggregatedBySpellName[spellName][3] + successfullyCast
+        end
       end
+    end
+
+    for k, row in pairs(dictAggregatedBySpellName) do
+      table.insert(tableData.Rows, row)
     end
   elseif (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.Time) then
     local timeStatisticsByArea = Controller:GetAggregatedTimeStatisticsDictionary(minLevel, maxLevel)
@@ -1608,18 +1621,44 @@ function AutoBiographer_StatisticsWindow:Update()
       RowOffsets = { 0, 225, 285, 345, 405, 465, 525, 585, 645 },
       Rows = {},
     }
+
+    local dictAggregatedByZone = {}
     for areaId, timeStatistics in pairs(timeStatisticsByArea) do
-      local row = {
-        areaId,
-        HelperFunctions.Round(TimeStatistics.GetSum(timeStatistics, { AutoBiographerEnum.TimeTrackingType.Afk }) / 3600, 2),
-        HelperFunctions.Round(TimeStatistics.GetSum(timeStatistics, { AutoBiographerEnum.TimeTrackingType.Casting }) / 3600, 2),
-        HelperFunctions.Round(TimeStatistics.GetSum(timeStatistics, { AutoBiographerEnum.TimeTrackingType.DeadOrGhost }) / 3600, 2),
-        HelperFunctions.Round(TimeStatistics.GetSum(timeStatistics, { AutoBiographerEnum.TimeTrackingType.InCombat }) / 3600, 2),
-        HelperFunctions.Round(TimeStatistics.GetSum(timeStatistics, { AutoBiographerEnum.TimeTrackingType.LoggedIn }) / 3600, 2),
-        HelperFunctions.Round(TimeStatistics.GetSum(timeStatistics, { AutoBiographerEnum.TimeTrackingType.OnTaxi }) / 3600, 2),
-        HelperFunctions.Round(TimeStatistics.GetSum(timeStatistics, { AutoBiographerEnum.TimeTrackingType.InParty }) / 3600, 2),
-      }
-      table.insert(tableData.Rows, row)
+      local zone = string.sub(areaId, 1, areaId:find("-") - 1)
+      local afk = HelperFunctions.Round(TimeStatistics.GetSum(timeStatistics, { AutoBiographerEnum.TimeTrackingType.Afk }) / 3600, 2)
+      local casting = HelperFunctions.Round(TimeStatistics.GetSum(timeStatistics, { AutoBiographerEnum.TimeTrackingType.Casting }) / 3600, 2)
+      local deadOrGhost = HelperFunctions.Round(TimeStatistics.GetSum(timeStatistics, { AutoBiographerEnum.TimeTrackingType.DeadOrGhost }) / 3600, 2)
+      local inCombat = HelperFunctions.Round(TimeStatistics.GetSum(timeStatistics, { AutoBiographerEnum.TimeTrackingType.InCombat }) / 3600, 2)
+      local loggedIn = HelperFunctions.Round(TimeStatistics.GetSum(timeStatistics, { AutoBiographerEnum.TimeTrackingType.LoggedIn }) / 3600, 2)
+      local onTaxi = HelperFunctions.Round(TimeStatistics.GetSum(timeStatistics, { AutoBiographerEnum.TimeTrackingType.OnTaxi }) / 3600, 2)
+      local inParty = HelperFunctions.Round(TimeStatistics.GetSum(timeStatistics, { AutoBiographerEnum.TimeTrackingType.InParty }) / 3600, 2)
+
+      if (not dictAggregatedByZone[zone]) then
+        dictAggregatedByZone[zone] = {
+          zone,
+          afk,
+          casting,
+          deadOrGhost,
+          inCombat,
+          loggedIn,
+          onTaxi,
+          inParty,
+        }
+      else
+        dictAggregatedByZone[zone][2] = dictAggregatedByZone[zone][2] + afk
+        dictAggregatedByZone[zone][3] = dictAggregatedByZone[zone][3] + casting
+        dictAggregatedByZone[zone][4] = dictAggregatedByZone[zone][4] + deadOrGhost
+        dictAggregatedByZone[zone][5] = dictAggregatedByZone[zone][5] + inCombat
+        dictAggregatedByZone[zone][6] = dictAggregatedByZone[zone][6] + loggedIn
+        dictAggregatedByZone[zone][7] = dictAggregatedByZone[zone][7] + onTaxi
+        dictAggregatedByZone[zone][8] = dictAggregatedByZone[zone][8] + inParty
+      end
+    end
+
+    for k, row in pairs(dictAggregatedByZone) do
+      if (row[1] ~= "nil") then
+        table.insert(tableData.Rows, row)
+      end
     end
   else
     print("Unsupported Statistics Display Mode. This should not happen!")
