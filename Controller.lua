@@ -51,6 +51,28 @@ function Controller:CatalogUnitIsIncomplete(catalogUnitId)
   return self.CharacterData.Catalogs.UnitCatalog[catalogUnitId] == nil or self.CharacterData.Catalogs.UnitCatalog[catalogUnitId].Name == nil
 end
 
+function Controller:GetAggregatedItemStatisticsDictionary(minLevel, maxLevel)
+  local itemStatisticsDictionary = {}
+  for levelNum, levelStatistics in pairs(self.CharacterData.Levels) do
+    if (levelNum >= minLevel and levelNum <= maxLevel) then
+      for catalogItemId, itemStatistics in pairs(levelStatistics.ItemStatisticsByItem) do
+        if (not itemStatisticsDictionary[catalogItemId]) then
+          itemStatisticsDictionary[catalogItemId] = ItemStatistics.New()
+        end
+
+        for k, itemAcquisitionMethod in pairs(AutoBiographerEnum.ItemAcquisitionMethod) do
+          if (itemStatistics[itemAcquisitionMethod]) then
+            if (itemStatisticsDictionary[catalogItemId][itemAcquisitionMethod] == nil) then itemStatisticsDictionary[catalogItemId][itemAcquisitionMethod] = 0 end
+            itemStatisticsDictionary[catalogItemId][itemAcquisitionMethod] = itemStatisticsDictionary[catalogItemId][itemAcquisitionMethod] + itemStatistics[itemAcquisitionMethod]
+          end
+        end
+      end
+    end
+  end
+  
+  return itemStatisticsDictionary
+end
+
 function Controller:GetAggregatedKillStatisticsTotals(minLevel, maxLevel)
   local killStatisticsDictionary = self:GetAggregatedKillStatisticsDictionary(minLevel, maxLevel)
   local totalsKillStatistics = KillStatistics.New()
@@ -96,6 +118,72 @@ function Controller:GetAggregatedKillStatisticsDictionary(minLevel, maxLevel)
   end
   
   return killStatisticsDictionary
+end
+
+function Controller:GetAggregatedOtherPlayerStatisticsDictionary(minLevel, maxLevel)
+  local otherPlayerStatisticsDictionary = {}
+  for levelNum, levelStatistics in pairs(self.CharacterData.Levels) do
+    if (levelNum >= minLevel and levelNum <= maxLevel) then
+      for catalogUnitId, otherPlayerStatistics in pairs(levelStatistics.OtherPlayerStatisticsByOtherPlayer) do
+        if (not otherPlayerStatisticsDictionary[catalogUnitId]) then
+          otherPlayerStatisticsDictionary[catalogUnitId] = OtherPlayerStatistics.New()
+        end
+
+        for k, otherPlayerTrackingType in pairs(AutoBiographerEnum.OtherPlayerTrackingType) do
+          if (otherPlayerStatistics[otherPlayerTrackingType]) then
+            if (otherPlayerStatisticsDictionary[catalogUnitId][otherPlayerTrackingType] == nil) then otherPlayerStatisticsDictionary[catalogUnitId][otherPlayerTrackingType] = 0 end
+            otherPlayerStatisticsDictionary[catalogUnitId][otherPlayerTrackingType] = otherPlayerStatisticsDictionary[catalogUnitId][otherPlayerTrackingType] + otherPlayerStatistics[otherPlayerTrackingType]
+          end
+        end
+      end
+    end
+  end
+  
+  return otherPlayerStatisticsDictionary
+end
+
+function Controller:GetAggregatedSpellStatisticsDictionary(minLevel, maxLevel)
+  local spellStatisticsDictionary = {}
+  for levelNum, levelStatistics in pairs(self.CharacterData.Levels) do
+    if (levelNum >= minLevel and levelNum <= maxLevel) then
+      for catalogSpellId, spellStatistics in pairs(levelStatistics.SpellStatisticsBySpell) do
+        if (not spellStatisticsDictionary[catalogSpellId]) then
+          spellStatisticsDictionary[catalogSpellId] = SpellStatistics.New()
+        end
+
+        for k, spellTrackingType in pairs(AutoBiographerEnum.SpellTrackingType) do
+          if (spellStatistics[spellTrackingType]) then
+            if (spellStatisticsDictionary[catalogSpellId][spellTrackingType] == nil) then spellStatisticsDictionary[catalogSpellId][spellTrackingType] = 0 end
+            spellStatisticsDictionary[catalogSpellId][spellTrackingType] = spellStatisticsDictionary[catalogSpellId][spellTrackingType] + spellStatistics[spellTrackingType]
+          end
+        end
+      end
+    end
+  end
+  
+  return spellStatisticsDictionary
+end
+
+function Controller:GetAggregatedTimeStatisticsDictionary(minLevel, maxLevel)
+  local timeStatisticsDictionary = {}
+  for levelNum, levelStatistics in pairs(self.CharacterData.Levels) do
+    if (levelNum >= minLevel and levelNum <= maxLevel) then
+      for areaId, timeStatistics in pairs(levelStatistics.TimeStatisticsByArea) do
+        if (not timeStatisticsDictionary[areaId]) then
+          timeStatisticsDictionary[areaId] = TimeStatistics.New()
+        end
+
+        for k, timeTrackingType in pairs(AutoBiographerEnum.TimeTrackingType) do
+          if (timeStatistics[timeTrackingType]) then
+            if (timeStatisticsDictionary[areaId][timeTrackingType] == nil) then timeStatisticsDictionary[areaId][timeTrackingType] = 0 end
+            timeStatisticsDictionary[areaId][timeTrackingType] = timeStatisticsDictionary[areaId][timeTrackingType] + timeStatistics[timeTrackingType]
+          end
+        end
+      end
+    end
+  end
+  
+  return timeStatisticsDictionary
 end
 
 function Controller:GetBattlegroundStatsByBattlegroundId(battlegroundId, minLevel, maxLevel)

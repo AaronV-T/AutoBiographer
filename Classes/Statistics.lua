@@ -103,6 +103,17 @@ function ItemStatistics.AddCount(is, itemAcquisitionMethod, quantity)
   is[itemAcquisitionMethod] = is[itemAcquisitionMethod] + quantity
 end
 
+function ItemStatistics.GetSum(is, itemAcquisitionMethods)
+  local sum = 0
+  for k, itemAcquisitionMethod in pairs(itemAcquisitionMethods) do
+    if (is[itemAcquisitionMethod]) then
+      sum = sum + is[itemAcquisitionMethod]
+    end
+  end
+
+  return sum
+end
+
 -- *** KillStatistics ***
 
 KillStatistics = {}
@@ -208,6 +219,17 @@ function OtherPlayerStatistics.Add(ops, otherPlayerTrackingType, sum)
   ops[otherPlayerTrackingType] = ops[otherPlayerTrackingType] + sum
 end
 
+function OtherPlayerStatistics.GetSum(ops, otherPlayerTrackingTypes)
+  local sum = 0
+  for k, otherPlayerTrackingType in pairs(otherPlayerTrackingTypes) do
+    if (ops[otherPlayerTrackingType]) then
+      sum = sum + ops[otherPlayerTrackingType]
+    end
+  end
+
+  return sum
+end
+
 -- *** SpellStatistics ***
 
 SpellStatistics = {}
@@ -221,6 +243,17 @@ function SpellStatistics.Increment(ss, spellTrackingType)
   ss[spellTrackingType] = ss[spellTrackingType] + 1
 end
 
+function SpellStatistics.GetSum(ss, spellTrackingTypes)
+  local sum = 0
+  for k, spellTrackingType in pairs(spellTrackingTypes) do
+    if (ss[spellTrackingType]) then
+      sum = sum + ss[spellTrackingType]
+    end
+  end
+
+  return sum
+end
+
 -- *** TimeStatistics ***
 
 TimeStatistics = {}
@@ -232,4 +265,15 @@ function TimeStatistics.AddTime(ts, timeTrackingType, seconds)
   if (ts[timeTrackingType] == nil) then ts[timeTrackingType] = 0 end
   
   ts[timeTrackingType] = ts[timeTrackingType] + seconds
+end
+
+function TimeStatistics.GetSum(ts, timeTrackingTypes)
+  local sum = 0
+  for k, timeTrackingType in pairs(timeTrackingTypes) do
+    if (ts[timeTrackingType]) then
+      sum = sum + ts[timeTrackingType]
+    end
+  end
+
+  return sum
 end

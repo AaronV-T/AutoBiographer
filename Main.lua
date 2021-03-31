@@ -206,8 +206,9 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
 
   AutoBiographer_DebugWindow:Initialize()
   AutoBiographer_EventWindow:Initialize()
-  AutoBiographer_OptionWindow:Initialize()
   AutoBiographer_MainWindow:Initialize()
+  AutoBiographer_OptionWindow:Initialize()
+  AutoBiographer_StatisticsWindow:Initialize()
 
   AutoBiographer_WorldMapOverlayWindow_Initialize()
 end
@@ -250,6 +251,8 @@ function EM.EventHandlers.CHAT_MSG_LOOT(self, text, arg2, arg3, arg4, arg5, arg6
     itemAcquisitionMethod = AutoBiographerEnum.ItemAcquisitionMethod.Create
   elseif (string.find(text, "You receive loot") == 1) then
     itemAcquisitionMethod = AutoBiographerEnum.ItemAcquisitionMethod.Loot
+  elseif (self.MerchantIsOpen) then
+    itemAcquisitionMethod = AutoBiographerEnum.ItemAcquisitionMethod.Merchant
   else
     itemAcquisitionMethod = AutoBiographerEnum.ItemAcquisitionMethod.Other
   end
