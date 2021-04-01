@@ -802,6 +802,17 @@ function AutoBiographer_MainWindow:Initialize()
   frame.ScrollFrame.Content.OtherTaggedKillsFs:SetPoint("TOPLEFT", 10, topPoint)
   topPoint = topPoint - 15
 
+  -- Miscellaneous Stats
+  topPoint = topPoint - 15
+  frame.ScrollFrame.Content.MiscellaneousHeaderFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+  frame.ScrollFrame.Content.MiscellaneousHeaderFs:SetPoint("TOPLEFT", 10, topPoint)
+  frame.ScrollFrame.Content.MiscellaneousHeaderFs:SetText("Miscellaneous")
+  topPoint = topPoint - 20
+
+  frame.ScrollFrame.Content.JumpsFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  frame.ScrollFrame.Content.JumpsFs:SetPoint("TOPLEFT", 10, topPoint)
+  topPoint = topPoint - 15
+
   -- Money Stats
   topPoint = topPoint - 15
   frame.ScrollFrame.Content.MoneyHeaderFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
@@ -1418,6 +1429,10 @@ function AutoBiographer_MainWindow:Update()
   
   local otherTaggedKills = KillStatistics.GetSum(totalsKillStatistics, { AutoBiographerEnum.KillTrackingType.TaggedAssist, AutoBiographerEnum.KillTrackingType.TaggedGroupAssistOrKillingBlow, AutoBiographerEnum.KillTrackingType.TaggedKillingBlow })
   self.ScrollFrame.Content.OtherTaggedKillsFs:SetText("Tagged Killing Blows and Assists: " .. HF.CommaValue(otherTaggedKills) .. ".")
+
+  -- Miscellaneous Stats
+  local jumps = Controller:GetMiscellaneousStatByMiscellaneousTrackingType(AutoBiographerEnum.MiscellaneousTrackingType.Jumps, self.DisplayMinLevel, self.DisplayMaxLevel)
+  self.ScrollFrame.Content.JumpsFs:SetText("Jumps: " .. jumps)
 
   -- Money Stats
   local moneyGainedFromAuctionHouseSales = Controller:GetMoneyForAcquisitionMethod(AutoBiographerEnum.MoneyAcquisitionMethod.AuctionHouseSale, self.DisplayMinLevel, self.DisplayMaxLevel)
