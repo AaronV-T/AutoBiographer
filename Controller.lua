@@ -120,6 +120,15 @@ function Controller:GetAggregatedKillStatisticsDictionary(minLevel, maxLevel)
   return killStatisticsDictionary
 end
 
+function Controller:GetAggregatedOtherPlayerStatisticsByCatalogUnitId(catalogUnitId, minLevel, maxLevel)
+  local otherPlayerStatisticsDictionary = self:GetAggregatedOtherPlayerStatisticsDictionary(minLevel, maxLevel)
+  if (not otherPlayerStatisticsDictionary[catalogUnitId]) then
+    return OtherPlayerStatistics.New()
+  end
+
+  return otherPlayerStatisticsDictionary[catalogUnitId]
+end
+
 function Controller:GetAggregatedOtherPlayerStatisticsDictionary(minLevel, maxLevel)
   local otherPlayerStatisticsDictionary = {}
   for levelNum, levelStatistics in pairs(self.CharacterData.Levels) do
