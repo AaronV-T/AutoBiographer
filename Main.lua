@@ -174,7 +174,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
       BattlegroundStatuses = {},
       CurrentSubZone = nil,
       CurrentZone = nil,
-      DatabaseVersion = 10,
+      DatabaseVersion = 11,
       GuildName = nil,
       GuildRankIndex = nil,
       GuildRankName = nil,
@@ -1050,10 +1050,22 @@ function EM.EventHandlers.UPDATE_MOUSEOVER_UNIT(self)
     end
   elseif (AutoBiographer_Settings.Options["ShowFriendlyPlayerToolTips"] and not UnitCanAttack("player", "mouseover") and UnitIsPlayer("mouseover")) then
     local otherPlayerStatistics = Controller:GetAggregatedOtherPlayerStatisticsByCatalogUnitId(catalogUnitId, 1, 9999)
+    local tooltipString = ""
+
     local duelsWon = OtherPlayerStatistics.GetSum(otherPlayerStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.DuelsLostToPlayer })
     local duelsLost = OtherPlayerStatistics.GetSum(otherPlayerStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.DuelsWonAgainstPlayer })
+    if (duelsWon > 0 or duelsLost > 0) then
+      tooltipString = tooltipString .. "Duels (W/L): " .. tostring(duelsWon) .. "/" .. tostring(duelsLost) .. ". "
+    end
+
     local timeGrouped = HelperFunctions.Round(OtherPlayerStatistics.GetSum(otherPlayerStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.TimeSpentGroupedWithPlayer }) / 3600, 2)
-    GameTooltip:AddLine("Duels (W/L): " .. tostring(duelsWon) .. "/" .. tostring(duelsLost) .. ". Time Grouped: " .. timeGrouped .. "h.")
+    if (timeGrouped > 0) then
+      tooltipString = tooltipString .. "Time Grouped: " .. timeGrouped .. "h. "
+    end
+
+    if (tooltipString ~= "") then
+      GameTooltip:AddLine(tooltipString)
+    end
 	end
 
 	GameTooltip:Show()

@@ -333,3 +333,14 @@ table.insert(MM.Migrations,
     end
   )
 )
+
+table.insert(MM.Migrations, 
+  AutoBiographer_Migration:New(
+    11,
+    function(eventManager, controller)
+      if (AutoBiographer_Settings.Options.ShowFriendlyPlayerToolTips == nil) then
+        AutoBiographer_Settings.Options.ShowFriendlyPlayerToolTips = true
+      end
+    end
+  )
+)
