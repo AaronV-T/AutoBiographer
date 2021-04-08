@@ -7,6 +7,10 @@ function AutoBiographer_Databases.Initialiaze()
   }
 
   AutoBiographer_Databases.BossDatabase = {
+    --
+    -- Vanilla Bosses
+    --
+
     -- Blackfathom Deeps
     [4887] = "Ghamoo-ra",
     [4831] = "Lady Sarevess",
@@ -348,6 +352,150 @@ function AutoBiographer_Databases.Initialiaze()
     [15083] = "Hazza'rah",
     [15114] = "Gahz'ranka",
     [11380] = "Jin'do the Hexxer",
+
+    --
+    -- TBC Bosses
+    --
+
+    -- Auchindoun
+    -- Mana-Tombs
+    [18341] = "Pandemonius",
+    [18343] = "Tavarok",
+    [18344] = "Nexus-Prince Shaffar",
+    [22930] = "Yor <Void Hound of Shaffar>",
+    -- Auchenai Crypts
+    [18371] = "Shirrak the Dead Watcher",
+    [18373] = "Exarch Maladaar",
+    -- Sethekk Halls
+    [18472] = "Darkweaver Syth",
+    [18473] = "Talon King Ikiss",
+    [23035] = "Anzu",
+    -- Shadow Labyrinth
+    [18731] = "Ambassador Hellmaw",
+    [18667] = "Blackheart the Inciter",
+    [18732] = "Grandmaster Vorpil",
+    [18708] = "Murmur",
+
+    -- Black Temple
+    [22887] = "High Warlord Naj'entus",
+    [22898] = "Supremus",
+    [22841] = "Shade of Akama",
+    [22871] = "Teron Gorefiend",
+    [22948] = "Gurtogg Bloodboil",
+    [22856] = "Reliquary of the Lost",
+    [22947] = "Mother Shahraz",
+    [23426] = "The Illidari Council",
+    [22917] = "Illidan Stormrage <The Betrayer>",
+
+    -- Caverns of Time
+    -- Old Hillsbrad Foothills
+    [17848] = "Lieutenant Drake",
+    [17862] = "Captain Skarloc",
+    [18096] = "Epoch Hunter",
+    -- The Black Morass
+    [17879] = "Chrono Lord Deja",
+    [17880] = "Temporus",
+    [17881] = "Aeonus",
+    -- Hyjal Summit
+    [17767] = "Rage Winterchill",
+    [17808] = "Anetheron",
+    [17888] = "Kaz'rogal",
+    [17842] = "Azgalor",
+    [17968] = "Archimonde",
+
+    -- Coilfang Reservoir
+    -- The Slave Pens
+    [17941] = "Mennu the Betrayer",
+    [17991] = "Rokmar the Crackler",
+    [17942] = "Quagmirran",
+    -- The Underbog
+    [17770] = "Hungarfen",
+    [18105] = "Ghaz'an",
+    [17826] = "Swamplord Musel'ek",
+    [17882] = "The Black Stalker",
+    -- The Steamvault
+    [17797] = "Hydromancer Thespia",
+    [17796] = "Mekgineer Steamrigger",
+    [17798] = "Warlord Kalithresh",
+    -- Serpentshrine Cavern
+    [21216] = "Hydross the Unstable <Duke of Currents>",
+    [21217] = "The Lurker Below",
+    [21215] = "Leotheras the Blind",
+    [21214] = "Fathom-Lord Karathress",
+    [21213] = "Morogrim Tidewalker",
+    [21212] = "Lady Vashj <Coilfang Matron>",
+
+    -- Gruul's Lair
+    [18831] = "High King Maulgar <Lord of the Ogres>",
+    [19044] = "Gruul the Dragonkiller",
+
+    -- Hellfire Citadel
+    -- Hellfire Ramparts
+    [17306] = "Watchkeeper Gargolmar",
+    [17308] = "Omor the Unscarred",
+    [17536] = "Nazan",
+    [17537] = "Vazruden",
+    -- The Blood Furnace
+    [17381] = "The Maker",
+    [17380] = "Broggok",
+    [17377] = "Keli'dan the Breaker",
+    -- The Shattered Halls
+    [16807] = "Grand Warlock Nethekurse",
+    [20923] = "Blood Guard Porung",
+    [16809] = "Warbringer O'mrogg",
+    [16808] = "Warchief Kargath Bladefist",
+    -- Magtheridon's Lair
+    [17257] = "Magtheridon",
+
+    --Karazhan
+    [16181] = "Rokad the Ravager",
+    [16180] = "Shadikith the Glider",
+    [16179] = "Hyakiss the Lurker",
+    [16152] = "Attumen the Huntsman",
+    [15687] = "Moroes <Tower Steward>",
+    [16457] = "Maiden of Virtue",
+    [18168] = "The Crone",
+    [17521] = "The Big Bad Wolf",
+    [17533] = "Romulo",
+    [17534] = "Julianne",
+    [15691] = "The Curator",
+    [15688] = "Terestian Illhoof",
+    [16524] = "Shade of Aran",
+    [15689] = "Netherspite",
+    [17225] = "Nightbane",
+    [15690] = "Prince Malchezaar",
+
+    -- Sunwell Plateau
+    [24850] = "Kalecgos",
+    [24892] = "Sathrovarr the Corruptor",
+    [24882] = "Brutallus",
+    [25038] = "Felmyst",
+    [25166] = "Grand Warlock Alythess",
+    [25165] = "Lady Sacrolash",
+    [25840] = "Entropius",
+    [25315] = "Kil'jaeden <The Deceiver>",
+
+    -- Tempest Keep
+    -- The Arcatraz
+    [20870] = "Zereketh the Unbound",
+    [20885] = "Dalliah the Doomsayer",
+    [20886] = "Wrath-Scryer Soccothrates",
+    [20912] = "Harbinger Skyriss",
+    -- The Botanica
+    [17976] = "Commander Sarannis",
+    [17975] = "High Botanist Freywinn",
+    [17978] = "Thorngrin the Tender",
+    [17980] = "Laj",
+    [17977] = "Warp Splinter",
+    -- The Mechanar
+    [19219] = "Mechano-Lord Capacitus",
+    [19221] = "Nethermancer Sepethrea",
+    [19220] = "Pathaleon the Calculator",
+    -- The Eye
+    [19516] = "Void Reaver",
+    [19514] = "Al'ar <Phoenix God>",
+    [18805] = "High Astromancer Solarian",
+    [19622] = "Kael'thas Sunstrider <Lord of the Blood Elves>",
   }
 
   AutoBiographer_Databases.InstanceLocationDatabase = {
