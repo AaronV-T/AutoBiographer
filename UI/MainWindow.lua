@@ -1058,7 +1058,7 @@ function AutoBiographer_StatisticsWindow:Initialize()
   frame.SubFrame.MinimumLevelFs = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   frame.SubFrame.MinimumLevelFs:SetPoint("LEFT", frame.SubFrame.Dropdown, "RIGHT", 60, 0)
   frame.SubFrame.MinimumLevelFs:SetText("Minimum Level:")
-  frame.SubFrame.MinimumLevelEb = CreateFrame("EditBox", nil, frame.SubFrame);
+  frame.SubFrame.MinimumLevelEb = CreateFrame("EditBox", nil, frame.SubFrame, BackdropTemplateMixin and "BackdropTemplate");
   frame.SubFrame.MinimumLevelEb:SetSize(20, 20)
   frame.SubFrame.MinimumLevelEb:SetPoint("LEFT", frame.SubFrame.MinimumLevelFs, "RIGHT", 2, 0)
   frame.SubFrame.MinimumLevelEb:SetBackdrop({
@@ -1102,7 +1102,7 @@ function AutoBiographer_StatisticsWindow:Initialize()
   frame.SubFrame.MaximumLevelFs = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   frame.SubFrame.MaximumLevelFs:SetPoint("LEFT", frame.SubFrame.MinimumLevelEb, "RIGHT", 15, 0)
   frame.SubFrame.MaximumLevelFs:SetText("Maximum Level:")
-  frame.SubFrame.MaximumLevelEb = CreateFrame("EditBox", nil, frame.SubFrame);
+  frame.SubFrame.MaximumLevelEb = CreateFrame("EditBox", nil, frame.SubFrame, BackdropTemplateMixin and "BackdropTemplate");
   frame.SubFrame.MaximumLevelEb:SetSize(20, 20)
   frame.SubFrame.MaximumLevelEb:SetPoint("LEFT", frame.SubFrame.MaximumLevelFs, "RIGHT", 2, 0)
   frame.SubFrame.MaximumLevelEb:SetBackdrop({

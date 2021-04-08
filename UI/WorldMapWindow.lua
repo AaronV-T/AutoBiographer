@@ -56,7 +56,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
 
   -- Filter Check Boxes
   local leftPoint = -112.5
-  frame.BossKillIcon = CreateFrame("Frame", nil, frame)
+  frame.BossKillIcon = CreateFrame("Frame", nil, frame, BackdropTemplateMixin and "BackdropTemplate")
   frame.BossKillIcon:SetSize(20, 20)
   frame.BossKillIcon:SetPoint("TOP", frame, "TOP", leftPoint, -25)
   frame.BossKillIcon:SetBackdrop({bgFile = Event.GetIconPath(BossKillEvent.New())})
@@ -78,7 +78,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
   end)
   
   leftPoint = leftPoint + 25
-  frame.FirstAcquiredItemIcon = CreateFrame("Frame", nil, frame)
+  frame.FirstAcquiredItemIcon = CreateFrame("Frame", nil, frame, BackdropTemplateMixin and "BackdropTemplate")
   frame.FirstAcquiredItemIcon:SetSize(20, 20)
   frame.FirstAcquiredItemIcon:SetPoint("TOP", frame, "TOP", leftPoint, -25)
   frame.FirstAcquiredItemIcon:SetBackdrop({bgFile = Event.GetIconPath(FirstAcquiredItemEvent.New())})
@@ -100,7 +100,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
   end)
   
   leftPoint = leftPoint + 25
-  frame.FirstKillIcon = CreateFrame("Frame", nil, frame)
+  frame.FirstKillIcon = CreateFrame("Frame", nil, frame, BackdropTemplateMixin and "BackdropTemplate")
   frame.FirstKillIcon:SetSize(20, 20)
   frame.FirstKillIcon:SetPoint("TOP", frame, "TOP", leftPoint, -25)
   frame.FirstKillIcon:SetBackdrop({bgFile = Event.GetIconPath(FirstKillEvent.New())})
@@ -122,7 +122,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
   end)
   
   leftPoint = leftPoint + 25
-  frame.LevelUpIcon = CreateFrame("Frame", nil, frame)
+  frame.LevelUpIcon = CreateFrame("Frame", nil, frame, BackdropTemplateMixin and "BackdropTemplate")
   frame.LevelUpIcon:SetSize(20, 20)
   frame.LevelUpIcon:SetPoint("TOP", frame, "TOP", leftPoint, -25)
   frame.LevelUpIcon:SetBackdrop({bgFile = Event.GetIconPath(LevelUpEvent.New())})
@@ -144,7 +144,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
   end)
   
   leftPoint = leftPoint + 25
-  frame.PlayerDeathIcon = CreateFrame("Frame", nil, frame)
+  frame.PlayerDeathIcon = CreateFrame("Frame", nil, frame, BackdropTemplateMixin and "BackdropTemplate")
   frame.PlayerDeathIcon:SetSize(20, 20)
   frame.PlayerDeathIcon:SetPoint("TOP", frame, "TOP", leftPoint, -25)
   frame.PlayerDeathIcon:SetBackdrop({bgFile = Event.GetIconPath(PlayerDeathEvent.New())})
@@ -166,7 +166,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
   end)
   
   leftPoint = leftPoint + 25
-  frame.QuestTurnInIcon = CreateFrame("Frame", nil, frame)
+  frame.QuestTurnInIcon = CreateFrame("Frame", nil, frame, BackdropTemplateMixin and "BackdropTemplate")
   frame.QuestTurnInIcon:SetSize(20, 20)
   frame.QuestTurnInIcon:SetPoint("TOP", frame, "TOP", leftPoint, -25)
   frame.QuestTurnInIcon:SetBackdrop({bgFile = Event.GetIconPath(QuestTurnInEvent.New())})
@@ -188,7 +188,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
   end)
   
   leftPoint = leftPoint + 25
-  frame.ReputationLevelChangedIcon = CreateFrame("Frame", nil, frame)
+  frame.ReputationLevelChangedIcon = CreateFrame("Frame", nil, frame, BackdropTemplateMixin and "BackdropTemplate")
   frame.ReputationLevelChangedIcon:SetSize(20, 20)
   frame.ReputationLevelChangedIcon:SetPoint("TOP", frame, "TOP", leftPoint, -25)
   frame.ReputationLevelChangedIcon:SetBackdrop({bgFile = Event.GetIconPath(ReputationLevelChangedEvent.New())})
@@ -210,7 +210,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
   end)
   
   leftPoint = leftPoint + 25
-  frame.SkillMilestoneIcon = CreateFrame("Frame", nil, frame)
+  frame.SkillMilestoneIcon = CreateFrame("Frame", nil, frame, BackdropTemplateMixin and "BackdropTemplate")
   frame.SkillMilestoneIcon:SetSize(20, 20)
   frame.SkillMilestoneIcon:SetPoint("TOP", frame, "TOP", leftPoint, -25)
   frame.SkillMilestoneIcon:SetBackdrop({bgFile = Event.GetIconPath(SkillMilestoneEvent.New())})
@@ -232,7 +232,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
   end)
   
   leftPoint = leftPoint + 25
-  frame.SpellLearnedIcon = CreateFrame("Frame", nil, frame)
+  frame.SpellLearnedIcon = CreateFrame("Frame", nil, frame, BackdropTemplateMixin and "BackdropTemplate")
   frame.SpellLearnedIcon:SetSize(20, 20)
   frame.SpellLearnedIcon:SetPoint("TOP", frame, "TOP", leftPoint, -25)
   frame.SpellLearnedIcon:SetBackdrop({bgFile = Event.GetIconPath(SpellLearnedEvent.New())})
@@ -254,7 +254,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
   end)
   
   leftPoint = leftPoint + 25
-  frame.ZoneFirstVisitIcon = CreateFrame("Frame", nil, frame)
+  frame.ZoneFirstVisitIcon = CreateFrame("Frame", nil, frame, BackdropTemplateMixin and "BackdropTemplate")
   frame.ZoneFirstVisitIcon:SetSize(20, 20)
   frame.ZoneFirstVisitIcon:SetPoint("TOP", frame, "TOP", leftPoint, -25)
   frame.ZoneFirstVisitIcon:SetBackdrop({bgFile = Event.GetIconPath(ZoneFirstVisitEvent.New())})
@@ -308,7 +308,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
   frame.ShowCircleFs:SetPoint("LEFT", frame.ShowCircleCb, "RIGHT", 2, 0)
   frame.ShowCircleFs:SetText("Show Circle")
 
-  frame.EventsPerSecondEb = CreateFrame("EditBox", nil, frame);
+  frame.EventsPerSecondEb = CreateFrame("EditBox", nil, frame, BackdropTemplateMixin and "BackdropTemplate");
   frame.EventsPerSecondEb:SetSize(30, 20)
   frame.EventsPerSecondEb:SetPoint("LEFT", frame.ShowAnimationCb, 120, 0)
   frame.EventsPerSecondEb:SetBackdrop({
@@ -329,7 +329,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
   frame.EventsPerSecondFs:SetPoint("LEFT", frame.EventsPerSecondEb, "RIGHT", 2, 0)
   frame.EventsPerSecondFs:SetText("Events Per Second")
 
-  frame.StartingLevelEb = CreateFrame("EditBox", nil, frame);
+  frame.StartingLevelEb = CreateFrame("EditBox", nil, frame, BackdropTemplateMixin and "BackdropTemplate");
   frame.StartingLevelEb:SetSize(30, 20)
   frame.StartingLevelEb:SetPoint("BOTTOM", frame.EventsPerSecondEb, "TOP", 0, 1)
   frame.StartingLevelEb:SetBackdrop({
@@ -509,7 +509,7 @@ function AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex, firstIndex, 
 
   local icon = table.remove(AutoBiographer_EventMapIconPool.UnAllocated)
   if (not icon) then
-    icon = CreateFrame("Frame", nil, UIParent)
+    icon = CreateFrame("Frame", nil, UIParent, BackdropTemplateMixin and "BackdropTemplate")
   end
   
   icon:SetWidth(8)
@@ -603,7 +603,7 @@ end
 
 function AutoBiographer_WorldMapOverlayWindow_UpdateCurrentEventIndicator(coordinates)
   if (not AutoBiographer_WorldMapOverlayWindow.CircleIcon) then
-    AutoBiographer_WorldMapOverlayWindow.CircleIcon = CreateFrame("Frame", nil, UIParent)
+    AutoBiographer_WorldMapOverlayWindow.CircleIcon = CreateFrame("Frame", nil, UIParent, BackdropTemplateMixin and "BackdropTemplate")
     AutoBiographer_WorldMapOverlayWindow.CircleIcon:SetWidth(16)
     AutoBiographer_WorldMapOverlayWindow.CircleIcon:SetHeight(16)
     AutoBiographer_WorldMapOverlayWindow.CircleIcon:SetBackdrop({bgFile = "Interface\\AddOns\\AutoBiographer\\Icons\\circle.blp"})
