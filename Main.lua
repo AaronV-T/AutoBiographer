@@ -212,6 +212,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   AutoBiographer_StatisticsWindow:Initialize()
 
   AutoBiographer_WorldMapOverlayWindow_Initialize()
+  AutoBiographer_WorldMapOverlayWindowToggleButton:Initialize()
 end
 
 function EM.EventHandlers.BOSS_KILL(self, bossId, bossName)

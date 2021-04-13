@@ -7,9 +7,10 @@ AutoBiographer_EventMapIconPool = {
 }
 
 AutoBiographer_WorldMapOverlayWindow = nil
+AutoBiographer_WorldMapOverlayWindowToggleButton = CreateFrame("Button", "AutoBiographer_WorldMapOverlayWindowToggleButton", WorldMapFrame, "UIPanelButtonTemplate")
 
 function AutoBiographer_WorldMapOverlayWindow_Initialize()
-  AutoBiographer_WorldMapOverlayWindow = CreateFrame("Frame", "AutoBiographerW", WorldMapFrame.ScrollContainer, "BasicFrameTemplate")
+  AutoBiographer_WorldMapOverlayWindow = CreateFrame("Frame", "AutoBiographer_WorldMapOverlayWindow", WorldMapFrame.ScrollContainer, "BasicFrameTemplate")
   local frame = AutoBiographer_WorldMapOverlayWindow
   frame:SetSize(400, 125)
   frame:SetPoint("BOTTOMRIGHT", WorldMapFrame.ScrollContainer, "BOTTOMRIGHT")
@@ -620,6 +621,21 @@ function AutoBiographer_WorldMapOverlayWindow_UpdateCurrentEventIndicator(coordi
   AutoBiographer_WorldMapOverlayWindow.CircleIcon:SetFrameLevel(9999)
 end
 
-function AutoBiographer_WorldMapOverlayWindowToggleButton_Toggle(self)
-  AutoBiographer_WorldMapOverlayWindow:Toggle()
+function AutoBiographer_WorldMapOverlayWindowToggleButton:Initialize()
+  local frame = AutoBiographer_WorldMapOverlayWindowToggleButton
+  if (WorldMapZoneMinimapDropDown) then
+    frame:SetPoint("TOPRIGHT", WorldMapZoneMinimapDropDown, "TOPLEFT", 13, -3);
+  else
+    frame:SetPoint("LEFT", WorldMapZoomOutButton, "RIGHT", 8, 0);
+  end
+  frame:SetSize(120, 20);
+  frame:SetText("Event Window");
+  frame:SetNormalFontObject("GameFontNormal");
+  frame:SetHighlightFontObject("GameFontHighlight");
+  frame:SetFrameLevel(10)
+  frame:SetScript("OnClick", 
+    function(self)
+      AutoBiographer_WorldMapOverlayWindow:Toggle()
+    end
+  )
 end

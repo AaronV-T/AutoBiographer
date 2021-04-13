@@ -523,6 +523,8 @@ function AutoBiographer_Databases.Initialiaze()
     [509] = Coordinates.New(0, 1414, 42.29, 86.48), -- Ruins of Ahn'Qiraj
     [531] = Coordinates.New(0, 1414, 40.96, 85.76), -- Temple of Ahn'Qiraj
     [533] = Coordinates.New(0, 1423, 39.75, 26.31), -- Naxxramas
+    [542] = Coordinates.New(530, 1944, 46.07, 51.73), -- The Blood Furnace
+    [543] = Coordinates.New(530, 1944, 47.68, 53.56), -- Hellfire Ramparts
   }
 end
 
