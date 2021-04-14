@@ -525,6 +525,9 @@ function AutoBiographer_Databases.Initialiaze()
     [533] = Coordinates.New(0, 1423, 39.75, 26.31), -- Naxxramas
     [542] = Coordinates.New(530, 1944, 46.07, 51.73), -- The Blood Furnace
     [543] = Coordinates.New(530, 1944, 47.68, 53.56), -- Hellfire Ramparts
+    [545] = Coordinates.New(530, 1946, 50.48, 33.34), -- The Steamvault
+    [546] = Coordinates.New(530, 1946, 54.11, 34.43), -- The Underbog
+    [547] = Coordinates.New(530, 1946, 48.96, 35.93), -- The Slave Pens
   }
 end
 

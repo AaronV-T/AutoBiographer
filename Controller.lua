@@ -90,12 +90,22 @@ function Controller:GetAggregatedKillStatisticsTotals(minLevel, maxLevel)
 end
 
 function Controller:GetAggregatedKillStatisticsByCatalogUnitId(catalogUnitId, minLevel, maxLevel)
-  local killStatisticsDictionary = self:GetAggregatedKillStatisticsDictionary(minLevel, maxLevel)
-  if (not killStatisticsDictionary[catalogUnitId]) then
-    return KillStatistics.New()
+  local killStatisticsByCatalogUnitId = KillStatistics.New()
+  for levelNum, levelStatistics in pairs(self.CharacterData.Levels) do
+    if (levelNum >= minLevel and levelNum <= maxLevel) then
+      local killStatistics = levelStatistics.KillStatisticsByUnit[catalogUnitId]
+      if (killStatistics) then
+        for k, killTrackingType in pairs(AutoBiographerEnum.KillTrackingType) do
+          if (killStatistics[killTrackingType]) then
+            if (killStatisticsByCatalogUnitId[killTrackingType] == nil) then killStatisticsByCatalogUnitId[killTrackingType] = 0 end
+            killStatisticsByCatalogUnitId[killTrackingType] = killStatisticsByCatalogUnitId[killTrackingType] + killStatistics[killTrackingType]
+          end
+        end
+      end
+    end
   end
-
-  return killStatisticsDictionary[catalogUnitId]
+  
+  return killStatisticsByCatalogUnitId
 end
 
 function Controller:GetAggregatedKillStatisticsDictionary(minLevel, maxLevel)
@@ -121,12 +131,22 @@ function Controller:GetAggregatedKillStatisticsDictionary(minLevel, maxLevel)
 end
 
 function Controller:GetAggregatedOtherPlayerStatisticsByCatalogUnitId(catalogUnitId, minLevel, maxLevel)
-  local otherPlayerStatisticsDictionary = self:GetAggregatedOtherPlayerStatisticsDictionary(minLevel, maxLevel)
-  if (not otherPlayerStatisticsDictionary[catalogUnitId]) then
-    return OtherPlayerStatistics.New()
+  local otherPlayerStatisticsByCatalogUnitId = OtherPlayerStatistics.New()
+  for levelNum, levelStatistics in pairs(self.CharacterData.Levels) do
+    if (levelNum >= minLevel and levelNum <= maxLevel) then
+      local otherPlayerStatistics = levelStatistics.OtherPlayerStatisticsByOtherPlayer[catalogUnitId]
+      if (otherPlayerStatistics) then
+        for k, otherPlayerTrackingType in pairs(AutoBiographerEnum.OtherPlayerTrackingType) do
+          if (otherPlayerStatistics[otherPlayerTrackingType]) then
+            if (otherPlayerStatisticsByCatalogUnitId[otherPlayerTrackingType] == nil) then otherPlayerStatisticsByCatalogUnitId[otherPlayerTrackingType] = 0 end
+            otherPlayerStatisticsByCatalogUnitId[otherPlayerTrackingType] = otherPlayerStatisticsByCatalogUnitId[otherPlayerTrackingType] + otherPlayerStatistics[otherPlayerTrackingType]
+          end
+        end
+      end
+    end
   end
-
-  return otherPlayerStatisticsDictionary[catalogUnitId]
+  
+  return otherPlayerStatisticsByCatalogUnitId
 end
 
 function Controller:GetAggregatedOtherPlayerStatisticsDictionary(minLevel, maxLevel)

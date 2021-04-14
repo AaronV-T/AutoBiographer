@@ -577,7 +577,7 @@ function AutoBiographer_MainWindow:Initialize()
   frame.ScrollFrame.Scrollbar = CreateFrame("Slider", nil, frame.ScrollFrame, "UIPanelScrollBarTemplate")
   frame.ScrollFrame.Scrollbar:SetPoint("TOPLEFT", frame, "TOPRIGHT", -25, -45)
   frame.ScrollFrame.Scrollbar:SetPoint("BOTTOMLEFT", frame, "BOTTOMRIGHT", -25, 22)
-  frame.ScrollFrame.Scrollbar:SetMinMaxValues(1, 510)
+  frame.ScrollFrame.Scrollbar:SetMinMaxValues(1, 560)
   frame.ScrollFrame.Scrollbar:SetValueStep(1)
   frame.ScrollFrame.Scrollbar.scrollStep = 15
   frame.ScrollFrame.Scrollbar:SetValue(0)
