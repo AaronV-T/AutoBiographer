@@ -4,6 +4,7 @@ function AutoBiographer_Databases.Initialiaze()
     [1] = "Alterac Valley",
     [2] = "Warsong Gulch",
     [3] = "Arathi Basin",
+    [4] = "Eye of the Storm",
   }
 
   AutoBiographer_Databases.BossDatabase = {

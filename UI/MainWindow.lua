@@ -656,6 +656,8 @@ function AutoBiographer_MainWindow:Initialize()
     end
   )
   
+  local gameVersion = HelperFunctions.GetGameVersion()
+
   -- Header
   frame.ScrollFrame.Content.TimePlayedThisLevelFS = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   frame.ScrollFrame.Content.TimePlayedThisLevelFS:SetPoint("LEFT", frame.ScrollFrame.Content, "TOP", 50, -65)
@@ -674,6 +676,12 @@ function AutoBiographer_MainWindow:Initialize()
   frame.ScrollFrame.Content.AbStatsFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   frame.ScrollFrame.Content.AbStatsFs:SetPoint("TOPLEFT", 10, topPoint)
   topPoint = topPoint - 15
+
+  if (gameVersion >= 2) then
+    frame.ScrollFrame.Content.EotsStatsFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    frame.ScrollFrame.Content.EotsStatsFs:SetPoint("TOPLEFT", 10, topPoint)
+    topPoint = topPoint - 15
+  end
 
   frame.ScrollFrame.Content.WsgStatsFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   frame.ScrollFrame.Content.WsgStatsFs:SetPoint("TOPLEFT", 10, topPoint)
@@ -1352,6 +1360,12 @@ function AutoBiographer_MainWindow:Update()
   local abJoined, abLosses, abWins = Controller:GetBattlegroundStatsByBattlegroundId(3, self.DisplayMinLevel, self.DisplayMaxLevel)
   local abStatsText = "Arathi Basin - Wins: " .. HF.CommaValue(abWins) .. ". Losses: " .. HF.CommaValue(abLosses) .. ". Incomplete: " .. HF.CommaValue(abJoined - abLosses - abWins) .. "."
   self.ScrollFrame.Content.AbStatsFs:SetText(abStatsText)
+
+  if (self.ScrollFrame.Content.EotsStatsFs) then
+    local eotsJoined, eotsLosses, eotsWins = Controller:GetBattlegroundStatsByBattlegroundId(4, self.DisplayMinLevel, self.DisplayMaxLevel)
+    local eotsStatsText = "Eye of the Storm - Wins: " .. HF.CommaValue(eotsWins) .. ". Losses: " .. HF.CommaValue(eotsLosses) .. ". Incomplete: " .. HF.CommaValue(eotsJoined - eotsLosses - eotsWins) .. "."
+    self.ScrollFrame.Content.EotsStatsFs:SetText(eotsStatsText)
+  end
 
   local wsgJoined, wsgLosses, wsgWins = Controller:GetBattlegroundStatsByBattlegroundId(2, self.DisplayMinLevel, self.DisplayMaxLevel)
   local wsgStatsText = "Warsong Gulch - Wins: " .. HF.CommaValue(wsgWins) .. ". Losses: " .. HF.CommaValue(wsgLosses) .. ". Incomplete: " .. HF.CommaValue(wsgJoined - wsgLosses - wsgWins) .. "."
