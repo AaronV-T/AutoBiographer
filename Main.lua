@@ -32,6 +32,7 @@ AutoBiographer_EventManager = {
     OtherPlayerJoinedGroup = {}, -- Dict<UnitGuid, TempTimestamp>
     StartedCasting = nil,
   },
+  TimePlayedMessageIsUnregistered = nil,
   TradeInfo = nil,
   ZoneChangedNewAreaEventHasFired = false
 }
@@ -178,6 +179,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
       GuildName = nil,
       GuildRankIndex = nil,
       GuildRankName = nil,
+      LastTotalTimePlayed = nil,
       PlayerGuid = nil,
     }
 	end
@@ -213,6 +215,10 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
 
   AutoBiographer_WorldMapOverlayWindow_Initialize()
   AutoBiographer_WorldMapOverlayWindowToggleButton:Initialize()
+
+  C_Timer.After(1, function()
+    EM:RequestTimePlayedInterval()
+  end)
 end
 
 function EM.EventHandlers.BOSS_KILL(self, bossId, bossName)
@@ -634,6 +640,7 @@ function EM.EventHandlers.PLAYER_LEVEL_UP(self, newLevel, ...)
     for i = 1, 10 do 
       _G["ChatFrame" .. i]:UnregisterEvent("TIME_PLAYED_MSG")
     end
+    self.TimePlayedMessageIsUnregistered = true
   end
   
   RequestTimePlayed()
@@ -932,15 +939,27 @@ function EM.EventHandlers.UPDATE_BATTLEFIELD_STATUS(self, battleFieldIndex)
 end
 
 function EM.EventHandlers.TIME_PLAYED_MSG(self, totalTimePlayed, levelTimePlayed) 
-  if (AutoBiographer_Settings.Options["ShowTimePlayedOnLevelUp"] == false) then
+  if (self.TimePlayedMessageIsUnregistered) then
     for i = 1, 10 do 
       _G["ChatFrame" .. i]:RegisterEvent("TIME_PLAYED_MSG")
     end
+    self.TimePlayedMessageIsUnregistered = false
   end
 
   if self.NewLevelToAddToHistory ~= nil then
     Controller:OnLevelUp(time(), HelperFunctions.GetCoordinatesByUnitId("player"), self.NewLevelToAddToHistory, totalTimePlayed)
     self.NewLevelToAddToHistory = nil
+  end
+
+  if (self.PersistentPlayerInfo.LastTotalTimePlayed == nil) then
+    self.PersistentPlayerInfo.LastTotalTimePlayed = totalTimePlayed
+    return
+  end
+
+  local timeSinceLastTotalTimePlayed = totalTimePlayed - self.PersistentPlayerInfo.LastTotalTimePlayed
+  self.PersistentPlayerInfo.LastTotalTimePlayed = totalTimePlayed
+  if (timeSinceLastTotalTimePlayed > 300) then
+    print ("There are approximately " .. HelperFunctions.Round(timeSinceLastTotalTimePlayed / 60) .. " minutes of play time on this character unaccounted for by AutoBiographer. Some events or statistics may not have been tracked.")
   end
 end
 
@@ -1139,6 +1158,19 @@ function EM:OnStoppedCasting()
     Controller:AddLog("Player stopped casting but there was no timestamp for starting casting.", AutoBiographerEnum.LogLevel.Warning)
   end
   self.TemporaryTimestamps.StartedCasting = nil
+end
+
+function EM:RequestTimePlayedInterval()
+  for i = 1, 10 do 
+    _G["ChatFrame" .. i]:UnregisterEvent("TIME_PLAYED_MSG")
+  end
+  self.TimePlayedMessageIsUnregistered = true
+
+  RequestTimePlayed()
+
+  C_Timer.After(60, function()
+    EM:RequestTimePlayedInterval()
+  end)
 end
 
 function EM:UpdateGroupMemberInfo()
