@@ -118,6 +118,9 @@ AutoBiographerEnum = {
     DuelsWonAgainstPlayer = 1,
     TimeSpentGroupedWithPlayer = 2,
   },
+  QuestTrackingType = {
+    Completed = 0,
+  },
   SpellTrackingType = {
     StartedCasting = 0,
     SuccessfullyCast = 1,

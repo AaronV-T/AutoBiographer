@@ -101,6 +101,12 @@ function HF.SplitString(str)
   return splitString
 end
 
+function HF.GetTableLength(tab)
+  local count = 0
+  for _ in pairs(tab) do count = count + 1 end
+  return count
+end
+
 function HF.GetKeysFromTable(tab, sort)
   if (not tab) then return nil end
   

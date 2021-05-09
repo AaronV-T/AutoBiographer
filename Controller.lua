@@ -171,6 +171,44 @@ function Controller:GetAggregatedOtherPlayerStatisticsDictionary(minLevel, maxLe
   return otherPlayerStatisticsDictionary
 end
 
+function Controller:GetAggregatedQuestStatisticsDictionary(minLevel, maxLevel)
+  local questStatisticsDictionary = {}
+  for levelNum, levelStatistics in pairs(self.CharacterData.Levels) do
+    if (levelNum >= minLevel and levelNum <= maxLevel) then
+      for questId, questStatistics in pairs(levelStatistics.QuestStatisticsByQuest) do
+        if (not questStatisticsDictionary[questId]) then
+          questStatisticsDictionary[questId] = QuestStatistics.New()
+        end
+
+        for k, questTrackingType in pairs(AutoBiographerEnum.QuestTrackingType) do
+          if (questStatistics[questTrackingType]) then
+            if (questStatisticsDictionary[questId][questTrackingType] == nil) then questStatisticsDictionary[questId][questTrackingType] = 0 end
+            questStatisticsDictionary[questId][questTrackingType] = questStatisticsDictionary[questId][questTrackingType] + questStatistics[questTrackingType]
+          end
+        end
+      end
+    end
+  end
+  
+  return questStatisticsDictionary
+end
+
+function Controller:GetAggregatedQuestStatisticsTotals(minLevel, maxLevel, questStatisticsDictionary)
+  if (not questStatisticsDictionary) then questStatisticsDictionary = self:GetAggregatedQuestStatisticsDictionary(minLevel, maxLevel) end
+  local totalsQuestStatistics = QuestStatistics.New()
+
+  for catalogUnitId, questStatistics in pairs(questStatisticsDictionary) do
+    for k, questTrackingType in pairs(AutoBiographerEnum.QuestTrackingType) do
+      if (questStatistics[questTrackingType]) then
+        if (totalsQuestStatistics[questTrackingType] == nil) then totalsQuestStatistics[questTrackingType] = 0 end
+        totalsQuestStatistics[questTrackingType] = totalsQuestStatistics[questTrackingType] + questStatistics[questTrackingType]
+      end
+    end
+  end
+
+  return totalsQuestStatistics
+end
+
 function Controller:GetAggregatedSpellStatisticsDictionary(minLevel, maxLevel)
   local spellStatisticsDictionary = {}
   for levelNum, levelStatistics in pairs(self.CharacterData.Levels) do
@@ -621,6 +659,9 @@ end
 function Controller:OnQuestTurnedIn(timestamp, coordinates, questId, questTitle, xpGained, moneyGained)
   if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog("QuestTurnedIn: " .. tostring(questTitle) .. " (#" .. tostring(questId) .. "), " .. tostring(xpGained) .. ", " .. tostring(moneyGained) .. ".", AutoBiographerEnum.LogLevel.Debug) end
   self:AddEvent(QuestTurnInEvent.New(timestamp, coordinates, questId, questTitle, xpGained, moneyGained))
+
+  if (not self:GetCurrentLevelStatistics().QuestStatisticsByQuest[questId]) then self:GetCurrentLevelStatistics().QuestStatisticsByQuest[questId] = QuestStatistics.New() end
+  QuestStatistics.Increment(self:GetCurrentLevelStatistics().QuestStatisticsByQuest[questId], AutoBiographerEnum.QuestTrackingType.Completed)
 end
 
 function Controller:OnReputationLevelChanged(timestamp, coordinates, faction, reputationLevel)

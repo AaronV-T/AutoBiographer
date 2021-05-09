@@ -14,6 +14,7 @@ function AggregatedStatistics.New()
     MoneyStatistics = MoneyStatistics.New(),
     OtherPlayerStatisticsByOtherPlayer = {}, -- Dict<CatalogUnitId, PlayerStatistics>
     PvpStatistics = nil,
+    QuestStatisticsByQuest = {}, -- Dict<QuestId, QuestStatistics>
     SpellStatisticsBySpell = {}, -- Dict<CatalogSpellId, SpellStatistics>
     TimeStatisticsByArea = {}, -- Dict<ZoneName-SubZoneName, TimeStatistics>
   }
@@ -224,6 +225,30 @@ function OtherPlayerStatistics.GetSum(ops, otherPlayerTrackingTypes)
   for k, otherPlayerTrackingType in pairs(otherPlayerTrackingTypes) do
     if (ops[otherPlayerTrackingType]) then
       sum = sum + ops[otherPlayerTrackingType]
+    end
+  end
+
+  return sum
+end
+
+-- *** QuestStatistics ***
+
+QuestStatistics = {}
+function QuestStatistics.New()
+  return {}
+end
+
+function QuestStatistics.Increment(qs, questTrackingType)
+  if (not qs[questTrackingType]) then qs[questTrackingType] = 0 end
+  
+  qs[questTrackingType] = qs[questTrackingType] + 1
+end
+
+function QuestStatistics.GetSum(qs, questTrackingTypes)
+  local sum = 0
+  for k, questTrackingType in pairs(questTrackingTypes) do
+    if (qs[questTrackingType]) then
+      sum = sum + qs[questTrackingType]
     end
   end
 

@@ -344,3 +344,31 @@ table.insert(MM.Migrations,
     end
   )
 )
+
+table.insert(MM.Migrations, 
+  AutoBiographer_Migration:New(
+    12,
+    function(eventManager, controller)
+      -- Create QuestStatisticsByQuest for each level.
+      for k,v in pairs(controller.CharacterData.Levels) do
+        if (v.QuestStatisticsByQuest == nil) then v.QuestStatisticsByQuest = {} end
+      end
+
+      -- Populate each level's QuestStatisticsByQuest.
+      local levelNum = HelperFunctions.GetKeysFromTable(controller.CharacterData.Levels, true)[1]
+      for i = 1, #controller.CharacterData.Events do
+        local event = controller.CharacterData.Events[i]
+
+        if (event.Type == AutoBiographerEnum.EventType.Level and event.SubType == AutoBiographerEnum.EventSubType.LevelUp) then
+          levelNum = event.LevelNum
+        elseif (event.Type == AutoBiographerEnum.EventType.Quest and event.SubType == AutoBiographerEnum.EventSubType.QuestTurnIn) then
+          if (controller.CharacterData.Levels[levelNum].QuestStatisticsByQuest[event.QuestId] == nil) then
+            controller.CharacterData.Levels[levelNum].QuestStatisticsByQuest[event.QuestId] = QuestStatistics.New()
+          end
+
+          QuestStatistics.Increment(controller.CharacterData.Levels[levelNum].QuestStatisticsByQuest[event.QuestId], AutoBiographerEnum.QuestTrackingType.Completed)
+        end
+      end
+    end
+  )
+)

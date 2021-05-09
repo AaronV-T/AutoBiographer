@@ -577,7 +577,6 @@ function AutoBiographer_MainWindow:Initialize()
   frame.ScrollFrame.Scrollbar = CreateFrame("Slider", nil, frame.ScrollFrame, "UIPanelScrollBarTemplate")
   frame.ScrollFrame.Scrollbar:SetPoint("TOPLEFT", frame, "TOPRIGHT", -25, -45)
   frame.ScrollFrame.Scrollbar:SetPoint("BOTTOMLEFT", frame, "BOTTOMRIGHT", -25, 22)
-  frame.ScrollFrame.Scrollbar:SetMinMaxValues(1, 560)
   frame.ScrollFrame.Scrollbar:SetValueStep(1)
   frame.ScrollFrame.Scrollbar.scrollStep = 15
   frame.ScrollFrame.Scrollbar:SetValue(0)
@@ -817,8 +816,20 @@ function AutoBiographer_MainWindow:Initialize()
   frame.ScrollFrame.Content.MiscellaneousHeaderFs:SetText("Miscellaneous")
   topPoint = topPoint - 20
 
+  frame.ScrollFrame.Content.DuelsFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  frame.ScrollFrame.Content.DuelsFs:SetPoint("TOPLEFT", 10, topPoint)
+  topPoint = topPoint - 15
+
   frame.ScrollFrame.Content.JumpsFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   frame.ScrollFrame.Content.JumpsFs:SetPoint("TOPLEFT", 10, topPoint)
+  topPoint = topPoint - 15
+
+  frame.ScrollFrame.Content.QuestsCompletedFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  frame.ScrollFrame.Content.QuestsCompletedFs:SetPoint("TOPLEFT", 10, topPoint)
+  topPoint = topPoint - 15
+
+  frame.ScrollFrame.Content.SpellsFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  frame.ScrollFrame.Content.SpellsFs:SetPoint("TOPLEFT", 10, topPoint)
   topPoint = topPoint - 15
 
   -- Money Stats
@@ -860,36 +871,6 @@ function AutoBiographer_MainWindow:Initialize()
   frame.ScrollFrame.Content.MoneyGainedFromOtherFs:SetPoint("TOPLEFT", 10, topPoint)
   topPoint = topPoint - 15
 
-  -- Other Player Stats
-  topPoint = topPoint - 15
-  frame.ScrollFrame.Content.OtherPlayerHeaderFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-  frame.ScrollFrame.Content.OtherPlayerHeaderFs:SetPoint("TOPLEFT", 10, topPoint)
-  frame.ScrollFrame.Content.OtherPlayerHeaderFs:SetText("Other Player")
-  topPoint = topPoint - 20
-
-  frame.ScrollFrame.Content.DuelsWonFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-  frame.ScrollFrame.Content.DuelsWonFs:SetPoint("TOPLEFT", 10, topPoint)
-  topPoint = topPoint - 15
-
-  frame.ScrollFrame.Content.DuelsLostFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-  frame.ScrollFrame.Content.DuelsLostFs:SetPoint("TOPLEFT", 10, topPoint)
-  topPoint = topPoint - 15
-
-  -- Spell Stats
-  topPoint = topPoint - 15
-  frame.ScrollFrame.Content.SpellsHeaderFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-  frame.ScrollFrame.Content.SpellsHeaderFs:SetPoint("TOPLEFT", 10, topPoint)
-  frame.ScrollFrame.Content.SpellsHeaderFs:SetText("Spells")
-  topPoint = topPoint - 20
-
-  frame.ScrollFrame.Content.SpellsStartedCastingFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-  frame.ScrollFrame.Content.SpellsStartedCastingFs:SetPoint("TOPLEFT", 10, topPoint)
-  topPoint = topPoint - 15
-
-  frame.ScrollFrame.Content.SpellsSuccessfullyCastFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-  frame.ScrollFrame.Content.SpellsSuccessfullyCastFs:SetPoint("TOPLEFT", 10, topPoint)
-  topPoint = topPoint - 15
-
   -- Time Stats
   topPoint = topPoint - 15
   frame.ScrollFrame.Content.TimeHeaderFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
@@ -923,6 +904,10 @@ function AutoBiographer_MainWindow:Initialize()
 
   frame.ScrollFrame.Content.TimeSpentOnTaxiFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   frame.ScrollFrame.Content.TimeSpentOnTaxiFs:SetPoint("TOPLEFT", 10, topPoint)
+  topPoint = topPoint - 15
+
+  local _, ySize = frame.ScrollFrame:GetSize()
+  frame.ScrollFrame.Scrollbar:SetMinMaxValues(1, -topPoint - ySize)
 
   frame:Hide()
   return frame
@@ -1318,7 +1303,7 @@ function AutoBiographer_MainWindow:Update()
         info.text, info.arg1, info.arg2 = "Total", 1, 9999
         UIDropDownMenu_AddButton(info)
         
-        for i = 0, 5 do
+        for i = 0, 6 do
           local includeThisRange = false
           for j = 1, 10 do
             if (Controller.CharacterData.Levels[(i * 10) + j]) then includeThisRange = true end
@@ -1350,6 +1335,8 @@ function AutoBiographer_MainWindow:Update()
   -- Header Stuff
   if (self.DisplayMinLevel == self.DisplayMaxLevel and Controller.CharacterData.Levels[self.DisplayMinLevel] and Controller.CharacterData.Levels[self.DisplayMinLevel].TimePlayedThisLevel) then
     self.ScrollFrame.Content.TimePlayedThisLevelFS:SetText("Time played this level: " .. HF.SecondsToTimeString(Controller.CharacterData.Levels[self.DisplayMinLevel].TimePlayedThisLevel))
+  else
+    self.ScrollFrame.Content.TimePlayedThisLevelFS:SetText("")
   end
   
   -- Battleground Stats
@@ -1375,7 +1362,7 @@ function AutoBiographer_MainWindow:Update()
   local damageDealtAmount, damageDealtOver = Controller:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageDealt, self.DisplayMinLevel, self.DisplayMaxLevel)
   local petDamageDealtAmount, petDamageDealtOver = Controller:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.PetDamageDealt, self.DisplayMinLevel, self.DisplayMaxLevel)
   local damageDealtText = "Damage Dealt: " .. HF.CommaValue(damageDealtAmount) .. " (" .. HF.CommaValue(damageDealtOver) .. " over)."
-  if (petDamageDealtAmount > 0) then damageDealtText = damageDealtText .. " Pet Damage Dealt: " .. tostring(petDamageDealtAmount) .. " (" .. tostring(petDamageDealtOver) .. " over)." end
+  if (petDamageDealtAmount > 0) then damageDealtText = damageDealtText .. " Pet Damage Dealt: " .. HF.CommaValue(petDamageDealtAmount) .. " (" .. HF.CommaValue(petDamageDealtOver) .. " over)." end
   self.ScrollFrame.Content.DamageDealtFs:SetText(damageDealtText)
   
   local damageTakenAmount, damageTakenOver = Controller:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageTaken, self.DisplayMinLevel, self.DisplayMaxLevel)
@@ -1445,8 +1432,22 @@ function AutoBiographer_MainWindow:Update()
   self.ScrollFrame.Content.OtherTaggedKillsFs:SetText("Tagged Killing Blows and Assists: " .. HF.CommaValue(otherTaggedKills) .. ".")
 
   -- Miscellaneous Stats
+  local duelsWon = Controller:GetOtherPlayerStatByOtherPlayerTrackingType(AutoBiographerEnum.OtherPlayerTrackingType.DuelsLostToPlayer, self.DisplayMinLevel, self.DisplayMaxLevel)
+  local duelsLost = Controller:GetOtherPlayerStatByOtherPlayerTrackingType(AutoBiographerEnum.OtherPlayerTrackingType.DuelsWonAgainstPlayer, self.DisplayMinLevel, self.DisplayMaxLevel)
+  self.ScrollFrame.Content.DuelsFs:SetText("Duels Won: " .. HF.CommaValue(duelsWon) .. ". Duels Lost: " .. HF.CommaValue(duelsLost) .. ".")
+  
   local jumps = Controller:GetMiscellaneousStatByMiscellaneousTrackingType(AutoBiographerEnum.MiscellaneousTrackingType.Jumps, self.DisplayMinLevel, self.DisplayMaxLevel)
   self.ScrollFrame.Content.JumpsFs:SetText("Jumps: " .. jumps)
+
+  local aggregatedQuestStatisticsDictionary = Controller:GetAggregatedQuestStatisticsDictionary(self.DisplayMinLevel, self.DisplayMaxLevel)
+  local totalsQuestStatistics = Controller:GetAggregatedQuestStatisticsTotals(self.DisplayMinLevel, self.DisplayMaxLevel, aggregatedQuestStatisticsDictionary)
+  local uniqueQuestsCompleted = HelperFunctions.GetTableLength(aggregatedQuestStatisticsDictionary)
+  local duplicateQuestsCompleted = QuestStatistics.GetSum(totalsQuestStatistics, { AutoBiographerEnum.QuestTrackingType.Completed }) - uniqueQuestsCompleted
+  self.ScrollFrame.Content.QuestsCompletedFs:SetText("Unique Quests Completed: " .. HF.CommaValue(uniqueQuestsCompleted) .. ". Duplicate Quests Completed: " .. HF.CommaValue(duplicateQuestsCompleted) .. ".")
+
+  local spellsStartedCasting = Controller:GetSpellCountBySpellTrackingType(AutoBiographerEnum.SpellTrackingType.StartedCasting, self.DisplayMinLevel, self.DisplayMaxLevel)
+  local spellsSuccessfullyCast = Controller:GetSpellCountBySpellTrackingType(AutoBiographerEnum.SpellTrackingType.SuccessfullyCast, self.DisplayMinLevel, self.DisplayMaxLevel)
+  self.ScrollFrame.Content.SpellsFs:SetText("Spells Started Casting: " .. HF.CommaValue(spellsStartedCasting) .. ". Spells Successfully Cast: " .. HF.CommaValue(spellsSuccessfullyCast) .. ".")
 
   -- Money Stats
   local moneyGainedFromAuctionHouseSales = Controller:GetMoneyForAcquisitionMethod(AutoBiographerEnum.MoneyAcquisitionMethod.AuctionHouseSale, self.DisplayMinLevel, self.DisplayMaxLevel)
@@ -1477,20 +1478,6 @@ function AutoBiographer_MainWindow:Update()
     moneyGainedFromQuests - moneyGainedFromTrade
   if (moneyGainedFromOther < 0) then moneyGainedFromOther = 0 end -- This should not ever happen.
   self.ScrollFrame.Content.MoneyGainedFromOtherFs:SetText("Money Gained From Other Sources: " .. GetCoinText(moneyGainedFromOther) .. ".")
-  
-  -- Other Player Stats 
-  local duelsWon = Controller:GetOtherPlayerStatByOtherPlayerTrackingType(AutoBiographerEnum.OtherPlayerTrackingType.DuelsLostToPlayer, self.DisplayMinLevel, self.DisplayMaxLevel)
-  self.ScrollFrame.Content.DuelsWonFs:SetText("Duels Won: " .. HF.CommaValue(duelsWon) .. ".")
-  
-  local duelsLost = Controller:GetOtherPlayerStatByOtherPlayerTrackingType(AutoBiographerEnum.OtherPlayerTrackingType.DuelsWonAgainstPlayer, self.DisplayMinLevel, self.DisplayMaxLevel)
-  self.ScrollFrame.Content.DuelsLostFs:SetText("Duels Lost: " .. HF.CommaValue(duelsLost) .. ".")
-  
-  -- Spell Stats
-  local spellsStartedCasting = Controller:GetSpellCountBySpellTrackingType(AutoBiographerEnum.SpellTrackingType.StartedCasting, self.DisplayMinLevel, self.DisplayMaxLevel)
-  self.ScrollFrame.Content.SpellsStartedCastingFs:SetText("Spells Started Casting: " .. HF.CommaValue(spellsStartedCasting) .. ".")
-  
-  local spellsSuccessfullyCast = Controller:GetSpellCountBySpellTrackingType(AutoBiographerEnum.SpellTrackingType.SuccessfullyCast, self.DisplayMinLevel, self.DisplayMaxLevel)
-  self.ScrollFrame.Content.SpellsSuccessfullyCastFs:SetText("Spells Successfully Cast: " .. HF.CommaValue(spellsSuccessfullyCast) .. ".")
   
   -- Time Stats
   local timeSpentAfk = Controller:GetTimeForTimeTrackingType(AutoBiographerEnum.TimeTrackingType.Afk, self.DisplayMinLevel, self.DisplayMaxLevel)

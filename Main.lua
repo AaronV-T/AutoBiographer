@@ -175,7 +175,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
       BattlegroundStatuses = {},
       CurrentSubZone = nil,
       CurrentZone = nil,
-      DatabaseVersion = 11,
+      DatabaseVersion = 12,
       GuildName = nil,
       GuildRankIndex = nil,
       GuildRankName = nil,
@@ -888,6 +888,7 @@ end
 
 function EM.EventHandlers.UPDATE_BATTLEFIELD_STATUS(self, battleFieldIndex)
   local status, mapName, instanceID, minlevel, maxlevel, teamSize, registeredMatch = GetBattlefieldStatus(battleFieldIndex)
+  --print("Status: " .. tostring(status) .. ". MapName: " .. tostring(mapName) .. ". InstanceId: " .. tostring(instanceID) .. ". MinLevel: " .. tostring(minlevel) .. ". MaxLevel: " .. tostring(maxlevel) .. ". TeamSize: " .. tostring(teamSize) .. ". RegisteredMatch: " .. tostring(registeredMatch))
   if (status == nil or status == "error") then
     return
   end
@@ -1107,7 +1108,7 @@ function EM.EventHandlers.ZONE_CHANGED_NEW_AREA(self)
 end
 
 hooksecurefunc("AscendStop", function()
-  if (EM.PlayerFlags.OnTaxi) then
+  if (not IsFalling()) then
     return
   end
 
