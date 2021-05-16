@@ -261,12 +261,14 @@ function AutoBiographer_EventWindow:Initialize()
   frame.SubFrame:SetPoint("TOPLEFT", 10, -25) 
   frame.SubFrame:SetPoint("BOTTOMRIGHT", -10, 10) 
   
+  local gameVersion = HelperFunctions.GetGameVersion()
+
   -- Filter Check Boxes
   local leftPoint = -300
   local fsArenaAndBattleground = frame.SubFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
   fsArenaAndBattleground:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -15)
   fsArenaAndBattleground:SetText("Arena\n& BG")
-  if (gameVersion >= 2) then fsArenaAndBattleground:SetText("BG") end
+  if (gameVersion < 2) then fsArenaAndBattleground:SetText("BG") end
   local cbArenaAndBattleground = CreateFrame("CheckButton", nil, frame.SubFrame, "UICheckButtonTemplate") 
   cbArenaAndBattleground:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -40)
   cbArenaAndBattleground:SetChecked(AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.ArenaJoined])
@@ -658,7 +660,7 @@ function AutoBiographer_MainWindow:Initialize()
       AutoBiographer_DebugWindow:Toggle()
     end
   )
-  
+
   local gameVersion = HelperFunctions.GetGameVersion()
 
   -- Header

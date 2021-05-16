@@ -535,6 +535,11 @@ function AutoBiographer_Databases.Initialiaze()
     [545] = Coordinates.New(530, 1946, 50.48, 33.34), -- The Steamvault
     [546] = Coordinates.New(530, 1946, 54.11, 34.43), -- The Underbog
     [547] = Coordinates.New(530, 1946, 48.96, 35.93), -- The Slave Pens
+    [553] = Coordinates.New(530, 1953, 71.66, 55.14), -- The Botanica
+    [554] = Coordinates.New(530, 1953, 70.49, 69.56), -- The Mechanar
+    [556] = Coordinates.New(530, 1952, 44.71, 65.61), -- Sethekk Halls
+    [557] = Coordinates.New(530, 1952, 39.65, 57.96), -- Mana-Tombs
+    [558] = Coordinates.New(530, 1952, 34.71, 65.61), -- Auchenai Crypts
   }
 end
 
