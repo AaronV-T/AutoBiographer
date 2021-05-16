@@ -372,3 +372,22 @@ table.insert(MM.Migrations,
     end
   )
 )
+
+table.insert(MM.Migrations, 
+  AutoBiographer_Migration:New(
+    13,
+    function(eventManager, controller)
+      if (eventManager.PersistentPlayerInfo.ArenaStatuses == nil) then
+        eventManager.PersistentPlayerInfo.ArenaStatuses = {}
+      end      
+
+      -- Create ArenaStatistics for each level.
+      for k,v in pairs(controller.CharacterData.Levels) do
+        if (v.ArenaStatistics == nil) then
+          v.ArenaStatistics = ArenaStatistics.New()
+        end
+      end
+
+    end
+  )
+)

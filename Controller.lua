@@ -253,6 +253,28 @@ function Controller:GetAggregatedTimeStatisticsDictionary(minLevel, maxLevel)
   return timeStatisticsDictionary
 end
 
+function Controller:GetArenaStatsByRegistrationTypeAndTeamSize(registered, teamSize, minLevel, maxLevel)
+  local joined = 0
+  local losses = 0
+  local wins = 0
+  for k,v in pairs(self.CharacterData.Levels) do
+    if (k >= minLevel and k <= maxLevel) then
+      local subObject
+      if (registered) then subObject = v.ArenaStatistics.Registered
+      else subObject = v.ArenaStatistics.Unregistered
+      end
+
+      if (subObject and subObject[teamSize]) then
+        joined = joined + subObject[teamSize].joined
+        losses = losses + subObject[teamSize].losses
+        wins = wins + subObject[teamSize].wins
+      end
+    end
+  end
+  
+  return joined, losses, wins
+end
+
 function Controller:GetBattlegroundStatsByBattlegroundId(battlegroundId, minLevel, maxLevel)
   local joined = 0
   local losses = 0
@@ -452,6 +474,25 @@ function Controller:OnAcquiredItem(timestamp, coordinates, itemAcquisitionMethod
   
   if (not self:GetCurrentLevelStatistics().ItemStatisticsByItem[catalogItem.Id]) then self:GetCurrentLevelStatistics().ItemStatisticsByItem[catalogItem.Id] = ItemStatistics.New() end
   ItemStatistics.AddCount(self:GetCurrentLevelStatistics().ItemStatisticsByItem[catalogItem.Id], itemAcquisitionMethod, quantity)
+end
+
+function Controller:OnArenaFinished(timestamp, registered, teamSize, arenaId, playerWon)
+  if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog("ArenaFinished: " .. tostring(registered) .. ", " .. tostring(teamSize) .. ", " .. tostring(arenaId) .. ", " .. tostring(playerWon) .. ".", AutoBiographerEnum.LogLevel.Debug) end
+  
+  if (playerWon) then
+    self:AddEvent(ArenaWonEvent.New(timestamp, registered, teamSize, arenaId))
+    ArenaStatistics.IncrementWins(self:GetCurrentLevelStatistics().ArenaStatistics, registered, teamSize)
+  else
+    self:AddEvent(ArenaLostEvent.New(timestamp, registered, teamSize, arenaId))
+    ArenaStatistics.IncrementLosses(self:GetCurrentLevelStatistics().ArenaStatistics, registered, teamSize)
+  end
+end
+
+function Controller:OnArenaJoined(timestamp, registered, teamSize, arenaId)
+  if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog("ArenaJoined: " .. tostring(registered) .. ", " .. tostring(teamSize) .. ", " .. tostring(arenaId) .. ", " .. tostring(playerWon) .. ".", AutoBiographerEnum.LogLevel.Debug) end
+  
+  self:AddEvent(ArenaJoinedEvent.New(timestamp, registered, teamSize, arenaId))
+  ArenaStatistics.IncrementJoined(self:GetCurrentLevelStatistics().ArenaStatistics, registered, teamSize)
 end
 
 function Controller:OnBattlegroundFinished(timestamp, battlegroundId, playerWon)

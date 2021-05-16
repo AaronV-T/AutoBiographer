@@ -3,6 +3,7 @@
 AggregatedStatistics = {}
 function AggregatedStatistics.New()
   return {
+    ArenaStatistics = ArenaStatistics.New(),
     BattlegroundStatistics = BattlegroundStatistics.New(),
     DamageStatistics = DamageStatistics.New(),
     DeathStatistics = DeathStatistics.New(),
@@ -18,6 +19,56 @@ function AggregatedStatistics.New()
     SpellStatisticsBySpell = {}, -- Dict<CatalogSpellId, SpellStatistics>
     TimeStatisticsByArea = {}, -- Dict<ZoneName-SubZoneName, TimeStatistics>
   }
+end
+
+-- *** ArenaStatistics ***
+
+ArenaStatistics = {}
+function ArenaStatistics.New()
+  return {}
+end
+
+function ArenaStatistics.EnsureCreated(as, registered, teamSize)
+  local subObject
+  if (registered) then
+    if (as.Registered == nil) then as.Registered = {} end
+    subObject = as.Registered
+  else
+    if (as.Unregistered == nil) then as.Unregistered = {} end
+    subObject = as.Unregistered
+  end
+
+  if (subObject[teamSize] == nil) then
+    subObject[teamSize] = {
+      joined = 0,
+      losses = 0,
+      wins = 0
+    }
+  end
+end
+  
+function ArenaStatistics.IncrementJoined(as, registered, teamSize)
+  ArenaStatistics.EnsureCreated(as, registered, teamSize)
+
+  if (registered) then as.Registered[teamSize].joined = as.Registered[teamSize].joined + 1
+  else as.Unregistered[teamSize].joined = as.Unregistered[teamSize].joined + 1
+  end
+end
+
+function ArenaStatistics.IncrementLosses(as, registered, teamSize)
+  ArenaStatistics.EnsureCreated(as, registered, teamSize)
+
+  if (registered) then as.Registered[teamSize].losses = as.Registered[teamSize].losses + 1
+  else as.Unregistered[teamSize].losses = as.Unregistered[teamSize].losses + 1
+  end
+end
+
+function ArenaStatistics.IncrementWins(as, registered, teamSize)
+  ArenaStatistics.EnsureCreated(as, registered, teamSize)
+
+  if (registered) then as.Registered[teamSize].wins = as.Registered[teamSize].wins + 1
+  else as.Unregistered[teamSize].wins = as.Unregistered[teamSize].wins + 1
+  end
 end
 
 -- *** BattlegroundStatistics ***

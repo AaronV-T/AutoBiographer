@@ -263,13 +263,17 @@ function AutoBiographer_EventWindow:Initialize()
   
   -- Filter Check Boxes
   local leftPoint = -300
-  local fsBattleground = frame.SubFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-  fsBattleground:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -15)
-  fsBattleground:SetText("Battle\nground")
-  local cbBattleground= CreateFrame("CheckButton", nil, frame.SubFrame, "UICheckButtonTemplate") 
-  cbBattleground:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -40)
-  cbBattleground:SetChecked(AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.BattlegroundJoined])
-  cbBattleground:SetScript("OnClick", function(self, event, arg1)
+  local fsArenaAndBattleground = frame.SubFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  fsArenaAndBattleground:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -15)
+  fsArenaAndBattleground:SetText("Arena\n& BG")
+  if (gameVersion >= 2) then fsArenaAndBattleground:SetText("BG") end
+  local cbArenaAndBattleground = CreateFrame("CheckButton", nil, frame.SubFrame, "UICheckButtonTemplate") 
+  cbArenaAndBattleground:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -40)
+  cbArenaAndBattleground:SetChecked(AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.ArenaJoined])
+  cbArenaAndBattleground:SetScript("OnClick", function(self, event, arg1)
+    AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.ArenaJoined] = self:GetChecked()
+    AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.ArenaLost] = self:GetChecked()
+    AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.ArenaWon] = self:GetChecked()
     AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.BattlegroundJoined] = self:GetChecked()
     AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.BattlegroundLost] = self:GetChecked()
     AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.BattlegroundWon] = self:GetChecked()
@@ -661,8 +665,31 @@ function AutoBiographer_MainWindow:Initialize()
   frame.ScrollFrame.Content.TimePlayedThisLevelFS = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   frame.ScrollFrame.Content.TimePlayedThisLevelFS:SetPoint("LEFT", frame.ScrollFrame.Content, "TOP", 50, -65)
 
+  local topPoint = -60
+
+  -- Arena Stats
+  if (gameVersion >= 2) then
+    topPoint = topPoint - 15
+    frame.ScrollFrame.Content.ArenaHeaderFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    frame.ScrollFrame.Content.ArenaHeaderFs:SetPoint("TOPLEFT", 10, topPoint)
+    frame.ScrollFrame.Content.ArenaHeaderFs:SetText("Arenas")
+    topPoint = topPoint - 20
+
+    frame.ScrollFrame.Content.Arena2v2StatsFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    frame.ScrollFrame.Content.Arena2v2StatsFs:SetPoint("TOPLEFT", 10, topPoint)
+    topPoint = topPoint - 15
+
+    frame.ScrollFrame.Content.Arena3v3StatsFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    frame.ScrollFrame.Content.Arena3v3StatsFs:SetPoint("TOPLEFT", 10, topPoint)
+    topPoint = topPoint - 15
+
+    frame.ScrollFrame.Content.Arena5v5StatsFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    frame.ScrollFrame.Content.Arena5v5StatsFs:SetPoint("TOPLEFT", 10, topPoint)
+    topPoint = topPoint - 15
+  end
+
   -- Battleground Stats
-  local topPoint = -75
+  topPoint = topPoint - 15
   frame.ScrollFrame.Content.BattlegroundHeaderFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
   frame.ScrollFrame.Content.BattlegroundHeaderFs:SetPoint("TOPLEFT", 10, topPoint)
   frame.ScrollFrame.Content.BattlegroundHeaderFs:SetText("Battlegrounds")
@@ -1339,6 +1366,27 @@ function AutoBiographer_MainWindow:Update()
     self.ScrollFrame.Content.TimePlayedThisLevelFS:SetText("")
   end
   
+  -- Arena Stats
+  if (self.ScrollFrame.Content.Arena2v2StatsFs) then
+    local arenaRegistered2v2Joined, arenaRegistered2v2Losses, arenaRegistered2v2Wins = Controller:GetArenaStatsByRegistrationTypeAndTeamSize(true, 2, self.DisplayMinLevel, self.DisplayMaxLevel)
+    local arenaUnregistered2v2Joined, arenaUnregistered2v2Losses, arenaUnregistered2v2Wins = Controller:GetArenaStatsByRegistrationTypeAndTeamSize(false, 2, self.DisplayMinLevel, self.DisplayMaxLevel)
+    local arenaRegistered2v2StatsText = "2v2 Rated - Wins: " .. HF.CommaValue(arenaRegistered2v2Wins) .. ". Losses: " .. HF.CommaValue(arenaRegistered2v2Losses) .. ". Incomplete: " .. HF.CommaValue(arenaRegistered2v2Joined - arenaRegistered2v2Losses - arenaRegistered2v2Wins) .. "."
+    local arenaUnregistered2v2StatsText = "2v2 Skirmish - Wins: " .. HF.CommaValue(arenaUnregistered2v2Wins) .. ". Losses: " .. HF.CommaValue(arenaUnregistered2v2Losses) .. ". Incomplete: " .. HF.CommaValue(arenaUnregistered2v2Joined - arenaUnregistered2v2Losses - arenaUnregistered2v2Wins) .. "."
+    self.ScrollFrame.Content.Arena2v2StatsFs:SetText(arenaRegistered2v2StatsText .. " " .. arenaUnregistered2v2StatsText)
+
+    local arenaRegistered3v3Joined, arenaRegistered3v3Losses, arenaRegistered3v3Wins = Controller:GetArenaStatsByRegistrationTypeAndTeamSize(true, 3, self.DisplayMinLevel, self.DisplayMaxLevel)
+    local arenaUnregistered3v3Joined, arenaUnregistered3v3Losses, arenaUnregistered3v3Wins = Controller:GetArenaStatsByRegistrationTypeAndTeamSize(false, 3, self.DisplayMinLevel, self.DisplayMaxLevel)
+    local arenaRegistered3v3StatsText = "3v3 Rated - Wins: " .. HF.CommaValue(arenaRegistered3v3Wins) .. ". Losses: " .. HF.CommaValue(arenaRegistered3v3Losses) .. ". Incomplete: " .. HF.CommaValue(arenaRegistered3v3Joined - arenaRegistered3v3Losses - arenaRegistered3v3Wins) .. "."
+    local arenaUnregistered3v3StatsText = "3v3 Skirmish - Wins: " .. HF.CommaValue(arenaUnregistered3v3Wins) .. ". Losses: " .. HF.CommaValue(arenaUnregistered3v3Losses) .. ". Incomplete: " .. HF.CommaValue(arenaUnregistered3v3Joined - arenaUnregistered3v3Losses - arenaUnregistered3v3Wins) .. "."
+    self.ScrollFrame.Content.Arena3v3StatsFs:SetText(arenaRegistered3v3StatsText .. " " .. arenaUnregistered3v3StatsText)
+
+    local arenaRegistered5v5Joined, arenaRegistered5v5Losses, arenaRegistered5v5Wins = Controller:GetArenaStatsByRegistrationTypeAndTeamSize(true, 5, self.DisplayMinLevel, self.DisplayMaxLevel)
+    local arenaUnregistered5v5Joined, arenaUnregistered5v5Losses, arenaUnregistered5v5Wins = Controller:GetArenaStatsByRegistrationTypeAndTeamSize(false, 5, self.DisplayMinLevel, self.DisplayMaxLevel)
+    local arenaRegistered5v5StatsText = "5v5 Rated - Wins: " .. HF.CommaValue(arenaRegistered5v5Wins) .. ". Losses: " .. HF.CommaValue(arenaRegistered5v5Losses) .. ". Incomplete: " .. HF.CommaValue(arenaRegistered5v5Joined - arenaRegistered5v5Losses - arenaRegistered5v5Wins) .. "."
+    local arenaUnregistered5v5StatsText = "5v5 Skirmish - Wins: " .. HF.CommaValue(arenaUnregistered5v5Wins) .. ". Losses: " .. HF.CommaValue(arenaUnregistered5v5Losses) .. ". Incomplete: " .. HF.CommaValue(arenaUnregistered5v5Joined - arenaUnregistered5v5Losses - arenaUnregistered5v5Wins) .. "."
+    self.ScrollFrame.Content.Arena5v5StatsFs:SetText(arenaRegistered5v5StatsText .. " " .. arenaUnregistered5v5StatsText)
+  end
+
   -- Battleground Stats
   local avJoined, avLosses, avWins = Controller:GetBattlegroundStatsByBattlegroundId(1, self.DisplayMinLevel, self.DisplayMaxLevel)
   local avStatsText = "Alterac Valley - Wins: " .. HF.CommaValue(avWins) .. ". Losses: " .. HF.CommaValue(avLosses) .. ". Incomplete: " .. HF.CommaValue(avJoined - avLosses - avWins) .. "."

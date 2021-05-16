@@ -1,5 +1,11 @@
 AutoBiographer_Databases = {}
 function AutoBiographer_Databases.Initialiaze()
+  AutoBiographer_Databases.ArenaDatabase = {
+    [1] = "Blade's Edge Arena",
+    [2] = "Nagrand Arena",
+    [3] = "Ruins of Lordaeron",
+  }
+
   AutoBiographer_Databases.BattlegroundDatabase = {
     [1] = "Alterac Valley",
     [2] = "Warsong Gulch",
