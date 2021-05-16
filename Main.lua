@@ -32,6 +32,7 @@ AutoBiographer_EventManager = {
     OtherPlayerJoinedGroup = {}, -- Dict<UnitGuid, TempTimestamp>
     StartedCasting = nil,
   },
+  TimePlayedMessageIsUnregistered = nil,
   TradeInfo = nil,
   ZoneChangedNewAreaEventHasFired = false
 }
@@ -171,13 +172,15 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   
   if type(_G["AUTOBIOGRAPHER_INFO_CHAR"]) ~= "table" then
 		_G["AUTOBIOGRAPHER_INFO_CHAR"] = {
+      ArenaStatuses = {},
       BattlegroundStatuses = {},
       CurrentSubZone = nil,
       CurrentZone = nil,
-      DatabaseVersion = 11,
+      DatabaseVersion = 13,
       GuildName = nil,
       GuildRankIndex = nil,
       GuildRankName = nil,
+      LastTotalTimePlayed = nil,
       PlayerGuid = nil,
     }
 	end
@@ -212,6 +215,11 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   AutoBiographer_StatisticsWindow:Initialize()
 
   AutoBiographer_WorldMapOverlayWindow_Initialize()
+  AutoBiographer_WorldMapOverlayWindowToggleButton:Initialize()
+
+  C_Timer.After(1, function()
+    EM:RequestTimePlayedInterval()
+  end)
 end
 
 function EM.EventHandlers.BOSS_KILL(self, bossId, bossName)
@@ -633,6 +641,7 @@ function EM.EventHandlers.PLAYER_LEVEL_UP(self, newLevel, ...)
     for i = 1, 10 do 
       _G["ChatFrame" .. i]:UnregisterEvent("TIME_PLAYED_MSG")
     end
+    self.TimePlayedMessageIsUnregistered = true
   end
   
   RequestTimePlayed()
@@ -649,196 +658,146 @@ function EM.EventHandlers.PLAYER_MONEY(self)
 
   if (self.AuctionHouseIsOpen) then
   elseif (self.MailboxIsOpen and deltaMoney > 0) then
-    local moneyAllocatedToMail = false
-    for i = 1, #self.MailboxMessages do
-      local message = self.MailboxMessages[i]
-      if (not message.moneyIsAssumedTaken and message.money and message.money == deltaMoney) then
-        self:MailMoneyTaken(message)
-        moneyAllocatedToMail = true
-        break
+    C_Timer.After(0.1, function()
+      local moneyAllocatedToMail = false
+      for i = 1, #self.MailboxMessages do
+        local message = self.MailboxMessages[i]
+        if (not message.moneyIsAssumedTaken and message.money and message.money == deltaMoney) then
+          self:MailMoneyTaken(message)
+          moneyAllocatedToMail = true
+          break
+        end
+      end -- for i
+
+      if (not moneyAllocatedToMail) then
+        for i = 1, #self.MailboxMessages do
+          local message1 = self.MailboxMessages[i]
+          if (not message1.moneyIsAssumedTaken and message1.money) then
+            for j = i + 1, #self.MailboxMessages do
+              local message2 = self.MailboxMessages[j]
+              if (not message2.moneyIsAssumedTaken and message2.money and (message1.money + message2.money == deltaMoney)) then
+                self:MailMoneyTaken(message1)
+                self:MailMoneyTaken(message2)
+                moneyAllocatedToMail = true
+                break
+              end
+            end -- for j
+
+            if (moneyAllocatedToMail) then break end
+          end
+        end -- for i
       end
-    end -- for i
 
-    if (not moneyAllocatedToMail) then
-      for i = 1, #self.MailboxMessages do
-        local message1 = self.MailboxMessages[i]
-        if (not message1.moneyIsAssumedTaken and message1.money) then
-          for j = i + 1, #self.MailboxMessages do
-            local message2 = self.MailboxMessages[j]
-            if (not message2.moneyIsAssumedTaken and message2.money and (message1.money + message2.money == deltaMoney)) then
-              self:MailMoneyTaken(message1)
-              self:MailMoneyTaken(message2)
-              moneyAllocatedToMail = true
-              break
-            end
-          end -- for j
+      if (not moneyAllocatedToMail) then
+        for i = 1, #self.MailboxMessages do
+          local message1 = self.MailboxMessages[i]
+          if (not message1.moneyIsAssumedTaken and message1.money) then
+            for j = i + 1, #self.MailboxMessages do
+              local message2 = self.MailboxMessages[j]
+              if (not message2.moneyIsAssumedTaken and message2.money) then
+                for k = j + 1, #self.MailboxMessages do
+                  local message3 = self.MailboxMessages[k]
+                  if (not message3.moneyIsAssumedTaken and message3.money and (message1.money + message2.money + message3.money == deltaMoney)) then
+                    self:MailMoneyTaken(message1)
+                    self:MailMoneyTaken(message2)
+                    self:MailMoneyTaken(message3)
+                    moneyAllocatedToMail = true
+                    break
+                  end
+                end -- for k
 
-          if (moneyAllocatedToMail) then break end
-        end
-      end -- for i
-    end
+                if (moneyAllocatedToMail) then break end
+              end
+            end -- for j
 
-    if (not moneyAllocatedToMail) then
-      for i = 1, #self.MailboxMessages do
-        local message1 = self.MailboxMessages[i]
-        if (not message1.moneyIsAssumedTaken and message1.money) then
-          for j = i + 1, #self.MailboxMessages do
-            local message2 = self.MailboxMessages[j]
-            if (not message2.moneyIsAssumedTaken and message2.money) then
-              for k = j + 1, #self.MailboxMessages do
-                local message3 = self.MailboxMessages[k]
-                if (not message3.moneyIsAssumedTaken and message3.money and (message1.money + message2.money + message3.money == deltaMoney)) then
-                  self:MailMoneyTaken(message1)
-                  self:MailMoneyTaken(message2)
-                  self:MailMoneyTaken(message3)
-                  moneyAllocatedToMail = true
-                  break
-                end
-              end -- for k
+            if (moneyAllocatedToMail) then break end
+          end
+        end -- for i
+      end
 
-              if (moneyAllocatedToMail) then break end
-            end
-          end -- for j
+      if (not moneyAllocatedToMail) then
+        for i = 1, #self.MailboxMessages do
+          local message1 = self.MailboxMessages[i]
+          if (not message1.moneyIsAssumedTaken and message1.money) then
+            for j = i + 1, #self.MailboxMessages do
+              local message2 = self.MailboxMessages[j]
+              if (not message2.moneyIsAssumedTaken and message2.money) then
+                for k = j + 1, #self.MailboxMessages do
+                  local message3 = self.MailboxMessages[k]
+                  if (not message3.moneyIsAssumedTaken and message3.money) then
+                    for l = k + 1, #self.MailboxMessages do
+                      local message4 = self.MailboxMessages[l]
+                      if (not message4.moneyIsAssumedTaken and message4.money and (message1.money + message2.money + message3.money + message4.money == deltaMoney)) then
+                        self:MailMoneyTaken(message1)
+                        self:MailMoneyTaken(message2)
+                        self:MailMoneyTaken(message3)
+                        self:MailMoneyTaken(message4)
+                        moneyAllocatedToMail = true
+                        break
+                      end
+                    end -- for l
 
-          if (moneyAllocatedToMail) then break end
-        end
-      end -- for i
-    end
+                    if (moneyAllocatedToMail) then break end
+                  end
+                end -- for k
 
-    if (not moneyAllocatedToMail) then
-      for i = 1, #self.MailboxMessages do
-        local message1 = self.MailboxMessages[i]
-        if (not message1.moneyIsAssumedTaken and message1.money) then
-          for j = i + 1, #self.MailboxMessages do
-            local message2 = self.MailboxMessages[j]
-            if (not message2.moneyIsAssumedTaken and message2.money) then
-              for k = j + 1, #self.MailboxMessages do
-                local message3 = self.MailboxMessages[k]
-                if (not message3.moneyIsAssumedTaken and message3.money) then
-                  for l = k + 1, #self.MailboxMessages do
-                    local message4 = self.MailboxMessages[l]
-                    if (not message4.moneyIsAssumedTaken and message4.money and (message1.money + message2.money + message3.money + message4.money == deltaMoney)) then
-                      self:MailMoneyTaken(message1)
-                      self:MailMoneyTaken(message2)
-                      self:MailMoneyTaken(message3)
-                      self:MailMoneyTaken(message4)
-                      moneyAllocatedToMail = true
-                      break
-                    end
-                  end -- for l
+                if (moneyAllocatedToMail) then break end
+              end
+            end -- for j
 
-                  if (moneyAllocatedToMail) then break end
-                end
-              end -- for k
+            if (moneyAllocatedToMail) then break end
+          end
+        end -- for i
+      end
 
-              if (moneyAllocatedToMail) then break end
-            end
-          end -- for j
+      if (not moneyAllocatedToMail) then
+        for i = 1, #self.MailboxMessages do
+          local message1 = self.MailboxMessages[i]
+          if (not message1.moneyIsAssumedTaken and message1.money) then
+            for j = i + 1, #self.MailboxMessages do
+              local message2 = self.MailboxMessages[j]
+              if (not message2.moneyIsAssumedTaken and message2.money) then
+                for k = j + 1, #self.MailboxMessages do
+                  local message3 = self.MailboxMessages[k]
+                  if (not message3.moneyIsAssumedTaken and message3.money) then
+                    for l = k + 1, #self.MailboxMessages do
+                      local message4 = self.MailboxMessages[l]
+                      if (not message4.moneyIsAssumedTaken and message4.money) then
+                        for m = l + 1, #self.MailboxMessages do
+                          local message5 = self.MailboxMessages[m]
+                          if (not message5.moneyIsAssumedTaken and message5.money and
+                              (message1.money + message2.money + message3.money + message4.money + message5.money == deltaMoney)) then
+                            self:MailMoneyTaken(message1)
+                            self:MailMoneyTaken(message2)
+                            self:MailMoneyTaken(message3)
+                            self:MailMoneyTaken(message4)
+                            self:MailMoneyTaken(message5)
+                            moneyAllocatedToMail = true
+                            break
+                          end
+                        end -- for m
+  
+                        if (moneyAllocatedToMail) then break end
+                      end
+                    end -- for l
+  
+                    if (moneyAllocatedToMail) then break end
+                  end
+                end -- for k
+  
+                if (moneyAllocatedToMail) then break end
+              end
+            end -- for j
+  
+            if (moneyAllocatedToMail) then break end
+          end
+        end -- for i
+      end
 
-          if (moneyAllocatedToMail) then break end
-        end
-      end -- for i
-    end
-
-    if (not moneyAllocatedToMail) then
-      for i = 1, #self.MailboxMessages do
-        local message1 = self.MailboxMessages[i]
-        if (not message1.moneyIsAssumedTaken and message1.money) then
-          for j = i + 1, #self.MailboxMessages do
-            local message2 = self.MailboxMessages[j]
-            if (not message2.moneyIsAssumedTaken and message2.money) then
-              for k = j + 1, #self.MailboxMessages do
-                local message3 = self.MailboxMessages[k]
-                if (not message3.moneyIsAssumedTaken and message3.money) then
-                  for l = k + 1, #self.MailboxMessages do
-                    local message4 = self.MailboxMessages[l]
-                    if (not message4.moneyIsAssumedTaken and message4.money) then
-                      for m = l + 1, #self.MailboxMessages do
-                        local message5 = self.MailboxMessages[m]
-                        if (not message5.moneyIsAssumedTaken and message5.money and
-                            (message1.money + message2.money + message3.money + message4.money + message5.money == deltaMoney)) then
-                          self:MailMoneyTaken(message1)
-                          self:MailMoneyTaken(message2)
-                          self:MailMoneyTaken(message3)
-                          self:MailMoneyTaken(message4)
-                          self:MailMoneyTaken(message5)
-                          moneyAllocatedToMail = true
-                          break
-                        end
-                      end -- for m
-
-                      if (moneyAllocatedToMail) then break end
-                    end
-                  end -- for l
-
-                  if (moneyAllocatedToMail) then break end
-                end
-              end -- for k
-
-              if (moneyAllocatedToMail) then break end
-            end
-          end -- for j
-
-          if (moneyAllocatedToMail) then break end
-        end
-      end -- for i
-    end
-
-    if (not moneyAllocatedToMail) then
-      for i = 1, #self.MailboxMessages do
-        local message1 = self.MailboxMessages[i]
-        if (not message1.moneyIsAssumedTaken and message1.money) then
-          for j = i + 1, #self.MailboxMessages do
-            local message2 = self.MailboxMessages[j]
-            if (not message2.moneyIsAssumedTaken and message2.money) then
-              for k = j + 1, #self.MailboxMessages do
-                local message3 = self.MailboxMessages[k]
-                if (not message3.moneyIsAssumedTaken and message3.money) then
-                  for l = k + 1, #self.MailboxMessages do
-                    local message4 = self.MailboxMessages[l]
-                    if (not message4.moneyIsAssumedTaken and message4.money) then
-                      for m = l + 1, #self.MailboxMessages do
-                        local message5 = self.MailboxMessages[m]
-                        if (not message5.moneyIsAssumedTaken and message5.money) then
-                          for n = m + 1, #self.MailboxMessages do
-                            local message6 = self.MailboxMessages[n]
-                            if (not message6.moneyIsAssumedTaken and message6.money and
-                                (message1.money + message2.money + message3.money + message4.money + message5.money + message6.money == deltaMoney)) then
-                              self:MailMoneyTaken(message1)
-                              self:MailMoneyTaken(message2)
-                              self:MailMoneyTaken(message3)
-                              self:MailMoneyTaken(message4)
-                              self:MailMoneyTaken(message5)
-                              self:MailMoneyTaken(message6)
-                              moneyAllocatedToMail = true
-                              break
-                            end
-                          end -- for n
-
-                          if (moneyAllocatedToMail) then break end
-                        end
-                      end -- for m
-
-                      if (moneyAllocatedToMail) then break end
-                    end
-                  end -- for l
-
-                  if (moneyAllocatedToMail) then break end
-                end
-              end -- for k
-
-              if (moneyAllocatedToMail) then break end
-            end
-          end -- for j
-
-          if (moneyAllocatedToMail) then break end
-        end
-      end -- for i
-    end
-
-    if (not moneyAllocatedToMail) then
-      print("Money change did not match six messages.")
-    end
+      if (not moneyAllocatedToMail) then
+        print("Money change did not match five messages.")
+      end
+    end)
   elseif (self.MerchantIsOpen) then
     if (deltaMoney > 0) then
       Controller:OnGainedMoney(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.MoneyAcquisitionMethod.Merchant, deltaMoney)
@@ -880,66 +839,121 @@ end
 
 function EM.EventHandlers.UPDATE_BATTLEFIELD_STATUS(self, battleFieldIndex)
   local status, mapName, instanceID, minlevel, maxlevel, teamSize, registeredMatch = GetBattlefieldStatus(battleFieldIndex)
-  if (status == nil or status == "error") then
+  --print("Status: " .. tostring(status) .. ". MapName: " .. tostring(mapName) .. ". InstanceId: " .. tostring(instanceID) .. ". MinLevel: " .. tostring(minlevel) .. ". MaxLevel: " .. tostring(maxlevel) .. ". TeamSize: " .. tostring(teamSize) .. ". RegisteredMatch: " .. tostring(registeredMatch))
+  if (status == nil or status == "none" or status == "error") then
     return
   end
   
-  -- Get the battleground's ID (Note: GetBattlegroundInfo is not a reliable function and should be avoided).
-  local bgId = nil
-  for k,v in pairs(AutoBiographer_Databases.BattlegroundDatabase) do
-    if (v == mapName) then
-      bgId = k
-    end
-  end
+  local isBattleground = teamSize == nil or teamSize == 0
 
-  if (bgId == nil) then
-    return
+  -- Get the arena or battleground ID (Note: GetBattlegroundInfo is not a reliable function and should be avoided).
+  local battlegroundId = nil
+  if (isBattleground) then
+    for bgId, bgName in pairs(AutoBiographer_Databases.BattlegroundDatabase) do
+      if (bgName == mapName) then
+        battlegroundId = bgId
+      end
+    end
+
+    if (battlegroundId == nil) then
+      Controller:AddLog("Unsupported battleground map name '" .. tostring(mapName) .. "'.", AutoBiographerEnum.LogLevel.Warning)
+      return
+    end
   end
 
   -- If the status isn't "active": save status and return.
   if (status ~= "active") then
-    self.PersistentPlayerInfo.BattlegroundStatuses[bgId] = status
+    if (isBattleground) then self.PersistentPlayerInfo.BattlegroundStatuses[battlegroundId] = status
+    else self.PersistentPlayerInfo.ArenaStatuses[teamSize] = status
+    end
+
     return
   end
 
-  -- If the last status for this battleground was "finished": return.
-  if (self.PersistentPlayerInfo.BattlegroundStatuses[bgId] == "finished") then
+  local arenaId
+  if (not isBattleground) then
+    for aId, aName in pairs(AutoBiographer_Databases.ArenaDatabase) do
+      if (aName == mapName) then
+        arenaId = aId
+      end
+    end
+    
+    
+    if (arenaId == nil) then
+      Controller:AddLog("Unsupported arena map name '" .. tostring(mapName) .. "'.", AutoBiographerEnum.LogLevel.Warning)
+      return
+    end
+  end
+
+  local lastStatus
+  if (isBattleground) then lastStatus = self.PersistentPlayerInfo.BattlegroundStatuses[battlegroundId]
+  else lastStatus = self.PersistentPlayerInfo.ArenaStatuses[teamSize]
+  end
+
+  -- If the last status for this battlefield was "finished": return.
+  if (lastStatus == "finished") then
     return
   end
 
-  -- If the last status for this battleground was "confirm": the player must have just joined the battleground.
-  if (self.PersistentPlayerInfo.BattlegroundStatuses[bgId] == "confirm") then
-    Controller:OnBattlegroundJoined(time(), bgId)
+  -- If the last status for this battlefield was "confirm": the player must have just joined the battlefield.
+  if (lastStatus == "confirm") then
+    if (isBattleground) then Controller:OnBattlegroundJoined(time(), battlegroundId)
+    else Controller:OnArenaJoined(time(), registeredMatch, teamSize, arenaId)
+    end
   end
 
   -- If the match isn't over: save status and return.
   local winner = GetBattlefieldWinner()
   if (winner == nil) then
-    self.PersistentPlayerInfo.BattlegroundStatuses[bgId] = status
+    if (isBattleground) then self.PersistentPlayerInfo.BattlegroundStatuses[battlegroundId] = status
+    else self.PersistentPlayerInfo.ArenaStatuses[teamSize] = status
+    end
+
     return
   end
 
   -- The match just ended.
-  local playerWon = false
-  local englishFaction, localizedFaction = UnitFactionGroup("player")
-  if ((winner == 0 and englishFaction == "Horde") or (winner == 1 and englishFaction == "Alliance")) then
-    playerWon = true
-  end
+  local numScores = GetNumBattlefieldScores()
+  for i = 1, numScores do
+    name, killingBlows, honorableKills, deaths, honorGained, faction, rank, race, class = GetBattlefieldScore(i);
+    if (name == UnitName("player")) then
+      local playerWon = faction == winner
 
-  Controller:OnBattlegroundFinished(time(), bgId, playerWon)
-  self.PersistentPlayerInfo.BattlegroundStatuses[bgId] = "finished"
+      if (isBattleground) then Controller:OnBattlegroundFinished(time(), battlegroundId, playerWon)
+      else Controller:OnArenaFinished(time(), registeredMatch, teamSize, arenaId, playerWon)
+      end
+
+      if (isBattleground) then self.PersistentPlayerInfo.BattlegroundStatuses[battlegroundId] = "finished"
+      else self.PersistentPlayerInfo.ArenaStatuses[teamSize] = "finished"
+      end
+
+      break
+    end
+  end
 end
 
 function EM.EventHandlers.TIME_PLAYED_MSG(self, totalTimePlayed, levelTimePlayed) 
-  if (AutoBiographer_Settings.Options["ShowTimePlayedOnLevelUp"] == false) then
+  if (self.TimePlayedMessageIsUnregistered) then
     for i = 1, 10 do 
       _G["ChatFrame" .. i]:RegisterEvent("TIME_PLAYED_MSG")
     end
+    self.TimePlayedMessageIsUnregistered = false
   end
 
   if self.NewLevelToAddToHistory ~= nil then
     Controller:OnLevelUp(time(), HelperFunctions.GetCoordinatesByUnitId("player"), self.NewLevelToAddToHistory, totalTimePlayed)
     self.NewLevelToAddToHistory = nil
+  end
+
+  if (self.PersistentPlayerInfo.LastTotalTimePlayed == nil) then
+    self.PersistentPlayerInfo.LastTotalTimePlayed = totalTimePlayed
+    return
+  end
+
+  local timeSinceLastTotalTimePlayed = totalTimePlayed - self.PersistentPlayerInfo.LastTotalTimePlayed
+  self.PersistentPlayerInfo.LastTotalTimePlayed = totalTimePlayed
+  if (timeSinceLastTotalTimePlayed > 300) then
+    print ("There are approximately " .. HelperFunctions.Round(timeSinceLastTotalTimePlayed / 60) .. " minutes of play time on this character unaccounted for by AutoBiographer. Some events or statistics may not have been tracked.")
   end
 end
 
@@ -1087,7 +1101,7 @@ function EM.EventHandlers.ZONE_CHANGED_NEW_AREA(self)
 end
 
 hooksecurefunc("AscendStop", function()
-  if (EM.PlayerFlags.OnTaxi) then
+  if (not IsFalling()) then
     return
   end
 
@@ -1138,6 +1152,19 @@ function EM:OnStoppedCasting()
     Controller:AddLog("Player stopped casting but there was no timestamp for starting casting.", AutoBiographerEnum.LogLevel.Warning)
   end
   self.TemporaryTimestamps.StartedCasting = nil
+end
+
+function EM:RequestTimePlayedInterval()
+  for i = 1, 10 do 
+    _G["ChatFrame" .. i]:UnregisterEvent("TIME_PLAYED_MSG")
+  end
+  self.TimePlayedMessageIsUnregistered = true
+
+  RequestTimePlayed()
+
+  C_Timer.After(60, function()
+    EM:RequestTimePlayedInterval()
+  end)
 end
 
 function EM:UpdateGroupMemberInfo()

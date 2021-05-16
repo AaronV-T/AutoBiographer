@@ -72,7 +72,20 @@ end
 function Event.ToString(e, catalogs)
   local timestampString = HelperFunctions.TimestampToDateString(e.Timestamp) .. ": "
 
-  if (e.Type == AutoBiographerEnum.EventType.Battleground) then
+  if (e.Type == AutoBiographerEnum.EventType.Arena) then    
+    local arenaTypeString
+    if (e.Registered) then arenaTypeString = "rated arena"
+    else arenaTypeString = "arena skirmish"
+    end
+
+    if (e.SubType == AutoBiographerEnum.EventSubType.ArenaJoined) then
+      return timestampString .. "You joined a " .. e.TeamSize .. "v" .. e.TeamSize .. " " .. arenaTypeString .. " (" .. AutoBiographer_Databases.ArenaDatabase[e.ArenaId] .. ")."
+    elseif (e.SubType == AutoBiographerEnum.EventSubType.ArenaLost) then
+      return timestampString .. "You lost a " .. e.TeamSize .. "v" .. e.TeamSize .. " " .. arenaTypeString .. " (" .. AutoBiographer_Databases.ArenaDatabase[e.ArenaId] .. ")."
+    elseif (e.SubType == AutoBiographerEnum.EventSubType.ArenaWon) then
+      return timestampString .. "You won a " .. e.TeamSize .. "v" .. e.TeamSize .. " " .. arenaTypeString .. " (" .. AutoBiographer_Databases.ArenaDatabase[e.ArenaId] .. ")."
+    end
+  elseif (e.Type == AutoBiographerEnum.EventType.Battleground) then
     if (e.SubType == AutoBiographerEnum.EventSubType.BattlegroundJoined) then
       return timestampString .. "You joined " .. AutoBiographer_Databases.BattlegroundDatabase[e.BattlegroundId] .. "."
     elseif (e.SubType == AutoBiographerEnum.EventSubType.BattlegroundLost) then
@@ -174,6 +187,36 @@ function WorldEvent.New(timestamp, type, subType, coordinates)
 end
 
 -- *** Concrete Events ***
+
+ArenaJoinedEvent = {}
+function ArenaJoinedEvent.New(timestamp, registered, teamSize, arenaId)
+  local newInstance = Event.New(timestamp, AutoBiographerEnum.EventType.Arena, AutoBiographerEnum.EventSubType.ArenaJoined)
+  newInstance.ArenaId = arenaId
+  newInstance.Registered = registered
+  newInstance.TeamSize = teamSize
+  
+  return newInstance
+end
+
+ArenaLostEvent = {}
+function ArenaLostEvent.New(timestamp, registered, teamSize, arenaId)
+  local newInstance = Event.New(timestamp, AutoBiographerEnum.EventType.Arena, AutoBiographerEnum.EventSubType.ArenaLost)
+  newInstance.ArenaId = arenaId
+  newInstance.Registered = registered
+  newInstance.TeamSize = teamSize
+  
+  return newInstance
+end
+
+ArenaWonEvent = {}
+function ArenaWonEvent.New(timestamp, registered, teamSize, arenaId)
+  local newInstance = Event.New(timestamp, AutoBiographerEnum.EventType.Arena, AutoBiographerEnum.EventSubType.ArenaWon)
+  newInstance.ArenaId = arenaId
+  newInstance.Registered = registered
+  newInstance.TeamSize = teamSize
+  
+  return newInstance
+end
 
 BattlegroundJoinedEvent = {}
 function BattlegroundJoinedEvent.New(timestamp, battlegroundId)

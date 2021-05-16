@@ -261,15 +261,21 @@ function AutoBiographer_EventWindow:Initialize()
   frame.SubFrame:SetPoint("TOPLEFT", 10, -25) 
   frame.SubFrame:SetPoint("BOTTOMRIGHT", -10, 10) 
   
+  local gameVersion = HelperFunctions.GetGameVersion()
+
   -- Filter Check Boxes
   local leftPoint = -300
-  local fsBattleground = frame.SubFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-  fsBattleground:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -15)
-  fsBattleground:SetText("Battle\nground")
-  local cbBattleground= CreateFrame("CheckButton", nil, frame.SubFrame, "UICheckButtonTemplate") 
-  cbBattleground:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -40)
-  cbBattleground:SetChecked(AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.BattlegroundJoined])
-  cbBattleground:SetScript("OnClick", function(self, event, arg1)
+  local fsArenaAndBattleground = frame.SubFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  fsArenaAndBattleground:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -15)
+  fsArenaAndBattleground:SetText("Arena\n& BG")
+  if (gameVersion < 2) then fsArenaAndBattleground:SetText("BG") end
+  local cbArenaAndBattleground = CreateFrame("CheckButton", nil, frame.SubFrame, "UICheckButtonTemplate") 
+  cbArenaAndBattleground:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -40)
+  cbArenaAndBattleground:SetChecked(AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.ArenaJoined])
+  cbArenaAndBattleground:SetScript("OnClick", function(self, event, arg1)
+    AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.ArenaJoined] = self:GetChecked()
+    AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.ArenaLost] = self:GetChecked()
+    AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.ArenaWon] = self:GetChecked()
     AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.BattlegroundJoined] = self:GetChecked()
     AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.BattlegroundLost] = self:GetChecked()
     AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.BattlegroundWon] = self:GetChecked()
@@ -577,7 +583,6 @@ function AutoBiographer_MainWindow:Initialize()
   frame.ScrollFrame.Scrollbar = CreateFrame("Slider", nil, frame.ScrollFrame, "UIPanelScrollBarTemplate")
   frame.ScrollFrame.Scrollbar:SetPoint("TOPLEFT", frame, "TOPRIGHT", -25, -45)
   frame.ScrollFrame.Scrollbar:SetPoint("BOTTOMLEFT", frame, "BOTTOMRIGHT", -25, 22)
-  frame.ScrollFrame.Scrollbar:SetMinMaxValues(1, 510)
   frame.ScrollFrame.Scrollbar:SetValueStep(1)
   frame.ScrollFrame.Scrollbar.scrollStep = 15
   frame.ScrollFrame.Scrollbar:SetValue(0)
@@ -655,13 +660,38 @@ function AutoBiographer_MainWindow:Initialize()
       AutoBiographer_DebugWindow:Toggle()
     end
   )
-  
+
+  local gameVersion = HelperFunctions.GetGameVersion()
+
   -- Header
   frame.ScrollFrame.Content.TimePlayedThisLevelFS = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   frame.ScrollFrame.Content.TimePlayedThisLevelFS:SetPoint("LEFT", frame.ScrollFrame.Content, "TOP", 50, -65)
 
+  local topPoint = -60
+
+  -- Arena Stats
+  if (gameVersion >= 2) then
+    topPoint = topPoint - 15
+    frame.ScrollFrame.Content.ArenaHeaderFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    frame.ScrollFrame.Content.ArenaHeaderFs:SetPoint("TOPLEFT", 10, topPoint)
+    frame.ScrollFrame.Content.ArenaHeaderFs:SetText("Arenas")
+    topPoint = topPoint - 20
+
+    frame.ScrollFrame.Content.Arena2v2StatsFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    frame.ScrollFrame.Content.Arena2v2StatsFs:SetPoint("TOPLEFT", 10, topPoint)
+    topPoint = topPoint - 15
+
+    frame.ScrollFrame.Content.Arena3v3StatsFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    frame.ScrollFrame.Content.Arena3v3StatsFs:SetPoint("TOPLEFT", 10, topPoint)
+    topPoint = topPoint - 15
+
+    frame.ScrollFrame.Content.Arena5v5StatsFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    frame.ScrollFrame.Content.Arena5v5StatsFs:SetPoint("TOPLEFT", 10, topPoint)
+    topPoint = topPoint - 15
+  end
+
   -- Battleground Stats
-  local topPoint = -75
+  topPoint = topPoint - 15
   frame.ScrollFrame.Content.BattlegroundHeaderFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
   frame.ScrollFrame.Content.BattlegroundHeaderFs:SetPoint("TOPLEFT", 10, topPoint)
   frame.ScrollFrame.Content.BattlegroundHeaderFs:SetText("Battlegrounds")
@@ -674,6 +704,12 @@ function AutoBiographer_MainWindow:Initialize()
   frame.ScrollFrame.Content.AbStatsFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   frame.ScrollFrame.Content.AbStatsFs:SetPoint("TOPLEFT", 10, topPoint)
   topPoint = topPoint - 15
+
+  if (gameVersion >= 2) then
+    frame.ScrollFrame.Content.EotsStatsFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    frame.ScrollFrame.Content.EotsStatsFs:SetPoint("TOPLEFT", 10, topPoint)
+    topPoint = topPoint - 15
+  end
 
   frame.ScrollFrame.Content.WsgStatsFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   frame.ScrollFrame.Content.WsgStatsFs:SetPoint("TOPLEFT", 10, topPoint)
@@ -809,8 +845,20 @@ function AutoBiographer_MainWindow:Initialize()
   frame.ScrollFrame.Content.MiscellaneousHeaderFs:SetText("Miscellaneous")
   topPoint = topPoint - 20
 
+  frame.ScrollFrame.Content.DuelsFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  frame.ScrollFrame.Content.DuelsFs:SetPoint("TOPLEFT", 10, topPoint)
+  topPoint = topPoint - 15
+
   frame.ScrollFrame.Content.JumpsFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   frame.ScrollFrame.Content.JumpsFs:SetPoint("TOPLEFT", 10, topPoint)
+  topPoint = topPoint - 15
+
+  frame.ScrollFrame.Content.QuestsCompletedFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  frame.ScrollFrame.Content.QuestsCompletedFs:SetPoint("TOPLEFT", 10, topPoint)
+  topPoint = topPoint - 15
+
+  frame.ScrollFrame.Content.SpellsFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  frame.ScrollFrame.Content.SpellsFs:SetPoint("TOPLEFT", 10, topPoint)
   topPoint = topPoint - 15
 
   -- Money Stats
@@ -852,36 +900,6 @@ function AutoBiographer_MainWindow:Initialize()
   frame.ScrollFrame.Content.MoneyGainedFromOtherFs:SetPoint("TOPLEFT", 10, topPoint)
   topPoint = topPoint - 15
 
-  -- Other Player Stats
-  topPoint = topPoint - 15
-  frame.ScrollFrame.Content.OtherPlayerHeaderFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-  frame.ScrollFrame.Content.OtherPlayerHeaderFs:SetPoint("TOPLEFT", 10, topPoint)
-  frame.ScrollFrame.Content.OtherPlayerHeaderFs:SetText("Other Player")
-  topPoint = topPoint - 20
-
-  frame.ScrollFrame.Content.DuelsWonFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-  frame.ScrollFrame.Content.DuelsWonFs:SetPoint("TOPLEFT", 10, topPoint)
-  topPoint = topPoint - 15
-
-  frame.ScrollFrame.Content.DuelsLostFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-  frame.ScrollFrame.Content.DuelsLostFs:SetPoint("TOPLEFT", 10, topPoint)
-  topPoint = topPoint - 15
-
-  -- Spell Stats
-  topPoint = topPoint - 15
-  frame.ScrollFrame.Content.SpellsHeaderFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-  frame.ScrollFrame.Content.SpellsHeaderFs:SetPoint("TOPLEFT", 10, topPoint)
-  frame.ScrollFrame.Content.SpellsHeaderFs:SetText("Spells")
-  topPoint = topPoint - 20
-
-  frame.ScrollFrame.Content.SpellsStartedCastingFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-  frame.ScrollFrame.Content.SpellsStartedCastingFs:SetPoint("TOPLEFT", 10, topPoint)
-  topPoint = topPoint - 15
-
-  frame.ScrollFrame.Content.SpellsSuccessfullyCastFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-  frame.ScrollFrame.Content.SpellsSuccessfullyCastFs:SetPoint("TOPLEFT", 10, topPoint)
-  topPoint = topPoint - 15
-
   -- Time Stats
   topPoint = topPoint - 15
   frame.ScrollFrame.Content.TimeHeaderFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
@@ -915,6 +933,10 @@ function AutoBiographer_MainWindow:Initialize()
 
   frame.ScrollFrame.Content.TimeSpentOnTaxiFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   frame.ScrollFrame.Content.TimeSpentOnTaxiFs:SetPoint("TOPLEFT", 10, topPoint)
+  topPoint = topPoint - 15
+
+  local _, ySize = frame.ScrollFrame:GetSize()
+  frame.ScrollFrame.Scrollbar:SetMinMaxValues(1, -topPoint - ySize)
 
   frame:Hide()
   return frame
@@ -1058,7 +1080,7 @@ function AutoBiographer_StatisticsWindow:Initialize()
   frame.SubFrame.MinimumLevelFs = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   frame.SubFrame.MinimumLevelFs:SetPoint("LEFT", frame.SubFrame.Dropdown, "RIGHT", 60, 0)
   frame.SubFrame.MinimumLevelFs:SetText("Minimum Level:")
-  frame.SubFrame.MinimumLevelEb = CreateFrame("EditBox", nil, frame.SubFrame);
+  frame.SubFrame.MinimumLevelEb = CreateFrame("EditBox", nil, frame.SubFrame, BackdropTemplateMixin and "BackdropTemplate");
   frame.SubFrame.MinimumLevelEb:SetSize(20, 20)
   frame.SubFrame.MinimumLevelEb:SetPoint("LEFT", frame.SubFrame.MinimumLevelFs, "RIGHT", 2, 0)
   frame.SubFrame.MinimumLevelEb:SetBackdrop({
@@ -1102,7 +1124,7 @@ function AutoBiographer_StatisticsWindow:Initialize()
   frame.SubFrame.MaximumLevelFs = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   frame.SubFrame.MaximumLevelFs:SetPoint("LEFT", frame.SubFrame.MinimumLevelEb, "RIGHT", 15, 0)
   frame.SubFrame.MaximumLevelFs:SetText("Maximum Level:")
-  frame.SubFrame.MaximumLevelEb = CreateFrame("EditBox", nil, frame.SubFrame);
+  frame.SubFrame.MaximumLevelEb = CreateFrame("EditBox", nil, frame.SubFrame, BackdropTemplateMixin and "BackdropTemplate");
   frame.SubFrame.MaximumLevelEb:SetSize(20, 20)
   frame.SubFrame.MaximumLevelEb:SetPoint("LEFT", frame.SubFrame.MaximumLevelFs, "RIGHT", 2, 0)
   frame.SubFrame.MaximumLevelEb:SetBackdrop({
@@ -1310,7 +1332,7 @@ function AutoBiographer_MainWindow:Update()
         info.text, info.arg1, info.arg2 = "Total", 1, 9999
         UIDropDownMenu_AddButton(info)
         
-        for i = 0, 5 do
+        for i = 0, 6 do
           local includeThisRange = false
           for j = 1, 10 do
             if (Controller.CharacterData.Levels[(i * 10) + j]) then includeThisRange = true end
@@ -1342,8 +1364,31 @@ function AutoBiographer_MainWindow:Update()
   -- Header Stuff
   if (self.DisplayMinLevel == self.DisplayMaxLevel and Controller.CharacterData.Levels[self.DisplayMinLevel] and Controller.CharacterData.Levels[self.DisplayMinLevel].TimePlayedThisLevel) then
     self.ScrollFrame.Content.TimePlayedThisLevelFS:SetText("Time played this level: " .. HF.SecondsToTimeString(Controller.CharacterData.Levels[self.DisplayMinLevel].TimePlayedThisLevel))
+  else
+    self.ScrollFrame.Content.TimePlayedThisLevelFS:SetText("")
   end
   
+  -- Arena Stats
+  if (self.ScrollFrame.Content.Arena2v2StatsFs) then
+    local arenaRegistered2v2Joined, arenaRegistered2v2Losses, arenaRegistered2v2Wins = Controller:GetArenaStatsByRegistrationTypeAndTeamSize(true, 2, self.DisplayMinLevel, self.DisplayMaxLevel)
+    local arenaUnregistered2v2Joined, arenaUnregistered2v2Losses, arenaUnregistered2v2Wins = Controller:GetArenaStatsByRegistrationTypeAndTeamSize(false, 2, self.DisplayMinLevel, self.DisplayMaxLevel)
+    local arenaRegistered2v2StatsText = "2v2 Rated - Wins: " .. HF.CommaValue(arenaRegistered2v2Wins) .. ". Losses: " .. HF.CommaValue(arenaRegistered2v2Losses) .. ". Incomplete: " .. HF.CommaValue(arenaRegistered2v2Joined - arenaRegistered2v2Losses - arenaRegistered2v2Wins) .. "."
+    local arenaUnregistered2v2StatsText = "2v2 Skirmish - Wins: " .. HF.CommaValue(arenaUnregistered2v2Wins) .. ". Losses: " .. HF.CommaValue(arenaUnregistered2v2Losses) .. ". Incomplete: " .. HF.CommaValue(arenaUnregistered2v2Joined - arenaUnregistered2v2Losses - arenaUnregistered2v2Wins) .. "."
+    self.ScrollFrame.Content.Arena2v2StatsFs:SetText(arenaRegistered2v2StatsText .. " " .. arenaUnregistered2v2StatsText)
+
+    local arenaRegistered3v3Joined, arenaRegistered3v3Losses, arenaRegistered3v3Wins = Controller:GetArenaStatsByRegistrationTypeAndTeamSize(true, 3, self.DisplayMinLevel, self.DisplayMaxLevel)
+    local arenaUnregistered3v3Joined, arenaUnregistered3v3Losses, arenaUnregistered3v3Wins = Controller:GetArenaStatsByRegistrationTypeAndTeamSize(false, 3, self.DisplayMinLevel, self.DisplayMaxLevel)
+    local arenaRegistered3v3StatsText = "3v3 Rated - Wins: " .. HF.CommaValue(arenaRegistered3v3Wins) .. ". Losses: " .. HF.CommaValue(arenaRegistered3v3Losses) .. ". Incomplete: " .. HF.CommaValue(arenaRegistered3v3Joined - arenaRegistered3v3Losses - arenaRegistered3v3Wins) .. "."
+    local arenaUnregistered3v3StatsText = "3v3 Skirmish - Wins: " .. HF.CommaValue(arenaUnregistered3v3Wins) .. ". Losses: " .. HF.CommaValue(arenaUnregistered3v3Losses) .. ". Incomplete: " .. HF.CommaValue(arenaUnregistered3v3Joined - arenaUnregistered3v3Losses - arenaUnregistered3v3Wins) .. "."
+    self.ScrollFrame.Content.Arena3v3StatsFs:SetText(arenaRegistered3v3StatsText .. " " .. arenaUnregistered3v3StatsText)
+
+    local arenaRegistered5v5Joined, arenaRegistered5v5Losses, arenaRegistered5v5Wins = Controller:GetArenaStatsByRegistrationTypeAndTeamSize(true, 5, self.DisplayMinLevel, self.DisplayMaxLevel)
+    local arenaUnregistered5v5Joined, arenaUnregistered5v5Losses, arenaUnregistered5v5Wins = Controller:GetArenaStatsByRegistrationTypeAndTeamSize(false, 5, self.DisplayMinLevel, self.DisplayMaxLevel)
+    local arenaRegistered5v5StatsText = "5v5 Rated - Wins: " .. HF.CommaValue(arenaRegistered5v5Wins) .. ". Losses: " .. HF.CommaValue(arenaRegistered5v5Losses) .. ". Incomplete: " .. HF.CommaValue(arenaRegistered5v5Joined - arenaRegistered5v5Losses - arenaRegistered5v5Wins) .. "."
+    local arenaUnregistered5v5StatsText = "5v5 Skirmish - Wins: " .. HF.CommaValue(arenaUnregistered5v5Wins) .. ". Losses: " .. HF.CommaValue(arenaUnregistered5v5Losses) .. ". Incomplete: " .. HF.CommaValue(arenaUnregistered5v5Joined - arenaUnregistered5v5Losses - arenaUnregistered5v5Wins) .. "."
+    self.ScrollFrame.Content.Arena5v5StatsFs:SetText(arenaRegistered5v5StatsText .. " " .. arenaUnregistered5v5StatsText)
+  end
+
   -- Battleground Stats
   local avJoined, avLosses, avWins = Controller:GetBattlegroundStatsByBattlegroundId(1, self.DisplayMinLevel, self.DisplayMaxLevel)
   local avStatsText = "Alterac Valley - Wins: " .. HF.CommaValue(avWins) .. ". Losses: " .. HF.CommaValue(avLosses) .. ". Incomplete: " .. HF.CommaValue(avJoined - avLosses - avWins) .. "."
@@ -1353,6 +1398,12 @@ function AutoBiographer_MainWindow:Update()
   local abStatsText = "Arathi Basin - Wins: " .. HF.CommaValue(abWins) .. ". Losses: " .. HF.CommaValue(abLosses) .. ". Incomplete: " .. HF.CommaValue(abJoined - abLosses - abWins) .. "."
   self.ScrollFrame.Content.AbStatsFs:SetText(abStatsText)
 
+  if (self.ScrollFrame.Content.EotsStatsFs) then
+    local eotsJoined, eotsLosses, eotsWins = Controller:GetBattlegroundStatsByBattlegroundId(4, self.DisplayMinLevel, self.DisplayMaxLevel)
+    local eotsStatsText = "Eye of the Storm - Wins: " .. HF.CommaValue(eotsWins) .. ". Losses: " .. HF.CommaValue(eotsLosses) .. ". Incomplete: " .. HF.CommaValue(eotsJoined - eotsLosses - eotsWins) .. "."
+    self.ScrollFrame.Content.EotsStatsFs:SetText(eotsStatsText)
+  end
+
   local wsgJoined, wsgLosses, wsgWins = Controller:GetBattlegroundStatsByBattlegroundId(2, self.DisplayMinLevel, self.DisplayMaxLevel)
   local wsgStatsText = "Warsong Gulch - Wins: " .. HF.CommaValue(wsgWins) .. ". Losses: " .. HF.CommaValue(wsgLosses) .. ". Incomplete: " .. HF.CommaValue(wsgJoined - wsgLosses - wsgWins) .. "."
   self.ScrollFrame.Content.WsgStatsFs:SetText(wsgStatsText)
@@ -1361,7 +1412,7 @@ function AutoBiographer_MainWindow:Update()
   local damageDealtAmount, damageDealtOver = Controller:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageDealt, self.DisplayMinLevel, self.DisplayMaxLevel)
   local petDamageDealtAmount, petDamageDealtOver = Controller:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.PetDamageDealt, self.DisplayMinLevel, self.DisplayMaxLevel)
   local damageDealtText = "Damage Dealt: " .. HF.CommaValue(damageDealtAmount) .. " (" .. HF.CommaValue(damageDealtOver) .. " over)."
-  if (petDamageDealtAmount > 0) then damageDealtText = damageDealtText .. " Pet Damage Dealt: " .. tostring(petDamageDealtAmount) .. " (" .. tostring(petDamageDealtOver) .. " over)." end
+  if (petDamageDealtAmount > 0) then damageDealtText = damageDealtText .. " Pet Damage Dealt: " .. HF.CommaValue(petDamageDealtAmount) .. " (" .. HF.CommaValue(petDamageDealtOver) .. " over)." end
   self.ScrollFrame.Content.DamageDealtFs:SetText(damageDealtText)
   
   local damageTakenAmount, damageTakenOver = Controller:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageTaken, self.DisplayMinLevel, self.DisplayMaxLevel)
@@ -1431,8 +1482,22 @@ function AutoBiographer_MainWindow:Update()
   self.ScrollFrame.Content.OtherTaggedKillsFs:SetText("Tagged Killing Blows and Assists: " .. HF.CommaValue(otherTaggedKills) .. ".")
 
   -- Miscellaneous Stats
+  local duelsWon = Controller:GetOtherPlayerStatByOtherPlayerTrackingType(AutoBiographerEnum.OtherPlayerTrackingType.DuelsLostToPlayer, self.DisplayMinLevel, self.DisplayMaxLevel)
+  local duelsLost = Controller:GetOtherPlayerStatByOtherPlayerTrackingType(AutoBiographerEnum.OtherPlayerTrackingType.DuelsWonAgainstPlayer, self.DisplayMinLevel, self.DisplayMaxLevel)
+  self.ScrollFrame.Content.DuelsFs:SetText("Duels Won: " .. HF.CommaValue(duelsWon) .. ". Duels Lost: " .. HF.CommaValue(duelsLost) .. ".")
+  
   local jumps = Controller:GetMiscellaneousStatByMiscellaneousTrackingType(AutoBiographerEnum.MiscellaneousTrackingType.Jumps, self.DisplayMinLevel, self.DisplayMaxLevel)
   self.ScrollFrame.Content.JumpsFs:SetText("Jumps: " .. jumps)
+
+  local aggregatedQuestStatisticsDictionary = Controller:GetAggregatedQuestStatisticsDictionary(self.DisplayMinLevel, self.DisplayMaxLevel)
+  local totalsQuestStatistics = Controller:GetAggregatedQuestStatisticsTotals(self.DisplayMinLevel, self.DisplayMaxLevel, aggregatedQuestStatisticsDictionary)
+  local uniqueQuestsCompleted = HelperFunctions.GetTableLength(aggregatedQuestStatisticsDictionary)
+  local duplicateQuestsCompleted = QuestStatistics.GetSum(totalsQuestStatistics, { AutoBiographerEnum.QuestTrackingType.Completed }) - uniqueQuestsCompleted
+  self.ScrollFrame.Content.QuestsCompletedFs:SetText("Unique Quests Completed: " .. HF.CommaValue(uniqueQuestsCompleted) .. ". Duplicate Quests Completed: " .. HF.CommaValue(duplicateQuestsCompleted) .. ".")
+
+  local spellsStartedCasting = Controller:GetSpellCountBySpellTrackingType(AutoBiographerEnum.SpellTrackingType.StartedCasting, self.DisplayMinLevel, self.DisplayMaxLevel)
+  local spellsSuccessfullyCast = Controller:GetSpellCountBySpellTrackingType(AutoBiographerEnum.SpellTrackingType.SuccessfullyCast, self.DisplayMinLevel, self.DisplayMaxLevel)
+  self.ScrollFrame.Content.SpellsFs:SetText("Spells Started Casting: " .. HF.CommaValue(spellsStartedCasting) .. ". Spells Successfully Cast: " .. HF.CommaValue(spellsSuccessfullyCast) .. ".")
 
   -- Money Stats
   local moneyGainedFromAuctionHouseSales = Controller:GetMoneyForAcquisitionMethod(AutoBiographerEnum.MoneyAcquisitionMethod.AuctionHouseSale, self.DisplayMinLevel, self.DisplayMaxLevel)
@@ -1463,20 +1528,6 @@ function AutoBiographer_MainWindow:Update()
     moneyGainedFromQuests - moneyGainedFromTrade
   if (moneyGainedFromOther < 0) then moneyGainedFromOther = 0 end -- This should not ever happen.
   self.ScrollFrame.Content.MoneyGainedFromOtherFs:SetText("Money Gained From Other Sources: " .. GetCoinText(moneyGainedFromOther) .. ".")
-  
-  -- Other Player Stats 
-  local duelsWon = Controller:GetOtherPlayerStatByOtherPlayerTrackingType(AutoBiographerEnum.OtherPlayerTrackingType.DuelsLostToPlayer, self.DisplayMinLevel, self.DisplayMaxLevel)
-  self.ScrollFrame.Content.DuelsWonFs:SetText("Duels Won: " .. HF.CommaValue(duelsWon) .. ".")
-  
-  local duelsLost = Controller:GetOtherPlayerStatByOtherPlayerTrackingType(AutoBiographerEnum.OtherPlayerTrackingType.DuelsWonAgainstPlayer, self.DisplayMinLevel, self.DisplayMaxLevel)
-  self.ScrollFrame.Content.DuelsLostFs:SetText("Duels Lost: " .. HF.CommaValue(duelsLost) .. ".")
-  
-  -- Spell Stats
-  local spellsStartedCasting = Controller:GetSpellCountBySpellTrackingType(AutoBiographerEnum.SpellTrackingType.StartedCasting, self.DisplayMinLevel, self.DisplayMaxLevel)
-  self.ScrollFrame.Content.SpellsStartedCastingFs:SetText("Spells Started Casting: " .. HF.CommaValue(spellsStartedCasting) .. ".")
-  
-  local spellsSuccessfullyCast = Controller:GetSpellCountBySpellTrackingType(AutoBiographerEnum.SpellTrackingType.SuccessfullyCast, self.DisplayMinLevel, self.DisplayMaxLevel)
-  self.ScrollFrame.Content.SpellsSuccessfullyCastFs:SetText("Spells Successfully Cast: " .. HF.CommaValue(spellsSuccessfullyCast) .. ".")
   
   -- Time Stats
   local timeSpentAfk = Controller:GetTimeForTimeTrackingType(AutoBiographerEnum.TimeTrackingType.Afk, self.DisplayMinLevel, self.DisplayMaxLevel)

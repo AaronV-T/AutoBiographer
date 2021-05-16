@@ -32,6 +32,7 @@ It also keeps track of the following statistics:
  - Miscellaneous stats:
    - Jumps.
  - Money gained from auction house, looting, mail, merchants, quests, and trade.
+ - Quests Completed
  - Spells started casting and spells successfully cast.
  - Time spent in each zone (broken down into time spent AFK, casting, dead, in combat, in groups, and on flights).
  - Time spent in a group with each player you've grouped with.

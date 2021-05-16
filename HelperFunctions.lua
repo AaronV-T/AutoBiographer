@@ -35,6 +35,14 @@ function HF.GetCoordinatesByUnitId(unitId)
   return Coordinates.New(worldInstance, mapId, x, y)
 end
 
+function HF.GetGameVersion()
+  local v1, v2, v3 = strsplit(".", GetBuildInfo())
+  v1 = tonumber(v1)
+  v2 = tonumber(v2)
+  v3 = tonumber(v3)
+  return v1, v2, v3
+end
+
 function HF.GetUnitTypeFromCatalogUnitId(cuid)
   if (string.match(cuid, "go%d+")) then
     return AutoBiographerEnum.UnitType.GameObject
@@ -91,6 +99,12 @@ function HF.SplitString(str)
   end
   
   return splitString
+end
+
+function HF.GetTableLength(tab)
+  local count = 0
+  for _ in pairs(tab) do count = count + 1 end
+  return count
 end
 
 function HF.GetKeysFromTable(tab, sort)

@@ -90,12 +90,22 @@ function Controller:GetAggregatedKillStatisticsTotals(minLevel, maxLevel)
 end
 
 function Controller:GetAggregatedKillStatisticsByCatalogUnitId(catalogUnitId, minLevel, maxLevel)
-  local killStatisticsDictionary = self:GetAggregatedKillStatisticsDictionary(minLevel, maxLevel)
-  if (not killStatisticsDictionary[catalogUnitId]) then
-    return KillStatistics.New()
+  local killStatisticsByCatalogUnitId = KillStatistics.New()
+  for levelNum, levelStatistics in pairs(self.CharacterData.Levels) do
+    if (levelNum >= minLevel and levelNum <= maxLevel) then
+      local killStatistics = levelStatistics.KillStatisticsByUnit[catalogUnitId]
+      if (killStatistics) then
+        for k, killTrackingType in pairs(AutoBiographerEnum.KillTrackingType) do
+          if (killStatistics[killTrackingType]) then
+            if (killStatisticsByCatalogUnitId[killTrackingType] == nil) then killStatisticsByCatalogUnitId[killTrackingType] = 0 end
+            killStatisticsByCatalogUnitId[killTrackingType] = killStatisticsByCatalogUnitId[killTrackingType] + killStatistics[killTrackingType]
+          end
+        end
+      end
+    end
   end
-
-  return killStatisticsDictionary[catalogUnitId]
+  
+  return killStatisticsByCatalogUnitId
 end
 
 function Controller:GetAggregatedKillStatisticsDictionary(minLevel, maxLevel)
@@ -121,12 +131,22 @@ function Controller:GetAggregatedKillStatisticsDictionary(minLevel, maxLevel)
 end
 
 function Controller:GetAggregatedOtherPlayerStatisticsByCatalogUnitId(catalogUnitId, minLevel, maxLevel)
-  local otherPlayerStatisticsDictionary = self:GetAggregatedOtherPlayerStatisticsDictionary(minLevel, maxLevel)
-  if (not otherPlayerStatisticsDictionary[catalogUnitId]) then
-    return OtherPlayerStatistics.New()
+  local otherPlayerStatisticsByCatalogUnitId = OtherPlayerStatistics.New()
+  for levelNum, levelStatistics in pairs(self.CharacterData.Levels) do
+    if (levelNum >= minLevel and levelNum <= maxLevel) then
+      local otherPlayerStatistics = levelStatistics.OtherPlayerStatisticsByOtherPlayer[catalogUnitId]
+      if (otherPlayerStatistics) then
+        for k, otherPlayerTrackingType in pairs(AutoBiographerEnum.OtherPlayerTrackingType) do
+          if (otherPlayerStatistics[otherPlayerTrackingType]) then
+            if (otherPlayerStatisticsByCatalogUnitId[otherPlayerTrackingType] == nil) then otherPlayerStatisticsByCatalogUnitId[otherPlayerTrackingType] = 0 end
+            otherPlayerStatisticsByCatalogUnitId[otherPlayerTrackingType] = otherPlayerStatisticsByCatalogUnitId[otherPlayerTrackingType] + otherPlayerStatistics[otherPlayerTrackingType]
+          end
+        end
+      end
+    end
   end
-
-  return otherPlayerStatisticsDictionary[catalogUnitId]
+  
+  return otherPlayerStatisticsByCatalogUnitId
 end
 
 function Controller:GetAggregatedOtherPlayerStatisticsDictionary(minLevel, maxLevel)
@@ -149,6 +169,44 @@ function Controller:GetAggregatedOtherPlayerStatisticsDictionary(minLevel, maxLe
   end
   
   return otherPlayerStatisticsDictionary
+end
+
+function Controller:GetAggregatedQuestStatisticsDictionary(minLevel, maxLevel)
+  local questStatisticsDictionary = {}
+  for levelNum, levelStatistics in pairs(self.CharacterData.Levels) do
+    if (levelNum >= minLevel and levelNum <= maxLevel) then
+      for questId, questStatistics in pairs(levelStatistics.QuestStatisticsByQuest) do
+        if (not questStatisticsDictionary[questId]) then
+          questStatisticsDictionary[questId] = QuestStatistics.New()
+        end
+
+        for k, questTrackingType in pairs(AutoBiographerEnum.QuestTrackingType) do
+          if (questStatistics[questTrackingType]) then
+            if (questStatisticsDictionary[questId][questTrackingType] == nil) then questStatisticsDictionary[questId][questTrackingType] = 0 end
+            questStatisticsDictionary[questId][questTrackingType] = questStatisticsDictionary[questId][questTrackingType] + questStatistics[questTrackingType]
+          end
+        end
+      end
+    end
+  end
+  
+  return questStatisticsDictionary
+end
+
+function Controller:GetAggregatedQuestStatisticsTotals(minLevel, maxLevel, questStatisticsDictionary)
+  if (not questStatisticsDictionary) then questStatisticsDictionary = self:GetAggregatedQuestStatisticsDictionary(minLevel, maxLevel) end
+  local totalsQuestStatistics = QuestStatistics.New()
+
+  for catalogUnitId, questStatistics in pairs(questStatisticsDictionary) do
+    for k, questTrackingType in pairs(AutoBiographerEnum.QuestTrackingType) do
+      if (questStatistics[questTrackingType]) then
+        if (totalsQuestStatistics[questTrackingType] == nil) then totalsQuestStatistics[questTrackingType] = 0 end
+        totalsQuestStatistics[questTrackingType] = totalsQuestStatistics[questTrackingType] + questStatistics[questTrackingType]
+      end
+    end
+  end
+
+  return totalsQuestStatistics
 end
 
 function Controller:GetAggregatedSpellStatisticsDictionary(minLevel, maxLevel)
@@ -193,6 +251,28 @@ function Controller:GetAggregatedTimeStatisticsDictionary(minLevel, maxLevel)
   end
   
   return timeStatisticsDictionary
+end
+
+function Controller:GetArenaStatsByRegistrationTypeAndTeamSize(registered, teamSize, minLevel, maxLevel)
+  local joined = 0
+  local losses = 0
+  local wins = 0
+  for k,v in pairs(self.CharacterData.Levels) do
+    if (k >= minLevel and k <= maxLevel) then
+      local subObject
+      if (registered) then subObject = v.ArenaStatistics.Registered
+      else subObject = v.ArenaStatistics.Unregistered
+      end
+
+      if (subObject and subObject[teamSize]) then
+        joined = joined + subObject[teamSize].joined
+        losses = losses + subObject[teamSize].losses
+        wins = wins + subObject[teamSize].wins
+      end
+    end
+  end
+  
+  return joined, losses, wins
 end
 
 function Controller:GetBattlegroundStatsByBattlegroundId(battlegroundId, minLevel, maxLevel)
@@ -394,6 +474,25 @@ function Controller:OnAcquiredItem(timestamp, coordinates, itemAcquisitionMethod
   
   if (not self:GetCurrentLevelStatistics().ItemStatisticsByItem[catalogItem.Id]) then self:GetCurrentLevelStatistics().ItemStatisticsByItem[catalogItem.Id] = ItemStatistics.New() end
   ItemStatistics.AddCount(self:GetCurrentLevelStatistics().ItemStatisticsByItem[catalogItem.Id], itemAcquisitionMethod, quantity)
+end
+
+function Controller:OnArenaFinished(timestamp, registered, teamSize, arenaId, playerWon)
+  if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog("ArenaFinished: " .. tostring(registered) .. ", " .. tostring(teamSize) .. ", " .. tostring(arenaId) .. ", " .. tostring(playerWon) .. ".", AutoBiographerEnum.LogLevel.Debug) end
+  
+  if (playerWon) then
+    self:AddEvent(ArenaWonEvent.New(timestamp, registered, teamSize, arenaId))
+    ArenaStatistics.IncrementWins(self:GetCurrentLevelStatistics().ArenaStatistics, registered, teamSize)
+  else
+    self:AddEvent(ArenaLostEvent.New(timestamp, registered, teamSize, arenaId))
+    ArenaStatistics.IncrementLosses(self:GetCurrentLevelStatistics().ArenaStatistics, registered, teamSize)
+  end
+end
+
+function Controller:OnArenaJoined(timestamp, registered, teamSize, arenaId)
+  if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog("ArenaJoined: " .. tostring(registered) .. ", " .. tostring(teamSize) .. ", " .. tostring(arenaId) .. ", " .. tostring(playerWon) .. ".", AutoBiographerEnum.LogLevel.Debug) end
+  
+  self:AddEvent(ArenaJoinedEvent.New(timestamp, registered, teamSize, arenaId))
+  ArenaStatistics.IncrementJoined(self:GetCurrentLevelStatistics().ArenaStatistics, registered, teamSize)
 end
 
 function Controller:OnBattlegroundFinished(timestamp, battlegroundId, playerWon)
@@ -601,6 +700,9 @@ end
 function Controller:OnQuestTurnedIn(timestamp, coordinates, questId, questTitle, xpGained, moneyGained)
   if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog("QuestTurnedIn: " .. tostring(questTitle) .. " (#" .. tostring(questId) .. "), " .. tostring(xpGained) .. ", " .. tostring(moneyGained) .. ".", AutoBiographerEnum.LogLevel.Debug) end
   self:AddEvent(QuestTurnInEvent.New(timestamp, coordinates, questId, questTitle, xpGained, moneyGained))
+
+  if (not self:GetCurrentLevelStatistics().QuestStatisticsByQuest[questId]) then self:GetCurrentLevelStatistics().QuestStatisticsByQuest[questId] = QuestStatistics.New() end
+  QuestStatistics.Increment(self:GetCurrentLevelStatistics().QuestStatisticsByQuest[questId], AutoBiographerEnum.QuestTrackingType.Completed)
 end
 
 function Controller:OnReputationLevelChanged(timestamp, coordinates, faction, reputationLevel)
