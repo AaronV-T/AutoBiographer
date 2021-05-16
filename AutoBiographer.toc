@@ -1,7 +1,7 @@
 ## Interface: 20501
-## Title: AutoBiographer 2.0.9
+## Title: AutoBiographer 2.1.0
 ## Author: Tollski
-## Version: 2.0.9
+## Version: 2.1.0
 ## SavedVariables: AUTOBIOGRAPHER_SETTINGS
 ## SavedVariablesPerCharacter: AUTOBIOGRAPHER_CATALOGS_CHAR, AUTOBIOGRAPHER_EVENTS_CHAR, AUTOBIOGRAPHER_INFO_CHAR, AUTOBIOGRAPHER_LEVELS_CHAR
 
