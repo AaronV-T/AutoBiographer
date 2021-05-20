@@ -14,7 +14,7 @@ The addon currently records the following events:
  - Changing reputation level with a faction.
  - Dieing (including which unit killed you and their level).
  - Entering a zone or subzone you have never before entered.
- - Joining a battleground, losing a battleground, or winning a battleground.
+ - Joining, losing, or winning an arena or battleground.
  - Joining a guild, leaving a guild, or changing rank in a guild.
  - Killing a boss.
  - Killing a unit you have never before killed.
@@ -24,7 +24,7 @@ The addon currently records the following events:
  - Turning in a quest.
  
 It also keeps track of the following statistics:
- - Battleground results.
+ - Arena and battleground results.
  - Damage dealt and taken; healing dealt to self, healing dealt to others, and healing taken.
  - Deaths by creatures, environment, pets, and other players.
  - Duels won and lost to each player.
