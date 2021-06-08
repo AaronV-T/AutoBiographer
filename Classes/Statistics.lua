@@ -179,25 +179,29 @@ function KillStatistics.AddKill(ks, kill)
     if (kill.PlayerGotKillingBlow) then
       killTrackingType = AutoBiographerEnum.KillTrackingType.TaggedKillingBlow
     elseif (kill.PlayerGotAssist) then
-      killTrackingType = AutoBiographerEnum.KillTrackingType.TaggedAssists
+      killTrackingType = AutoBiographerEnum.KillTrackingType.TaggedAssist
     else
-      killTrackingType = AutoBiographerEnum.KillTrackingType.TaggedGroupAssistsAndKillingBlows
+      killTrackingType = AutoBiographerEnum.KillTrackingType.TaggedGroupAssistOrKillingBlow
     end
   else
     if (kill.PlayerGotKillingBlow) then
-      killTrackingType = AutoBiographerEnum.KillTrackingType.UntaggedKillingBlows
+      killTrackingType = AutoBiographerEnum.KillTrackingType.UntaggedKillingBlow
     elseif (kill.PlayerGotAssist) then
-      killTrackingType = AutoBiographerEnum.KillTrackingType.UntaggedAssists
+      killTrackingType = AutoBiographerEnum.KillTrackingType.UntaggedAssist
     else
-      killTrackingType = AutoBiographerEnum.KillTrackingType.UntaggedGroupAssistsAndKillingBlows
+      killTrackingType = AutoBiographerEnum.KillTrackingType.UntaggedGroupAssistOrKillingBlow
     end
   end
 
-  if (killTrackingType) then
-    if (ks[killTrackingType] == nil) then ks[killTrackingType] = 0 end
+  if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then AutoBiographer_Controller:AddLog("killTrackingType: " .. tostring(killTrackingType) .. ".", AutoBiographerEnum.LogLevel.Debug) end
 
-    ks[killTrackingType] = ks[killTrackingType] + 1
+  if (not killTrackingType) then
+    AutoBiographer_Controller:AddLog("Kill statistic not recorded; failed to find killTrackingType.", AutoBiographerEnum.LogLevel.Warning)
   end
+
+  if (ks[killTrackingType] == nil) then ks[killTrackingType] = 0 end
+
+  ks[killTrackingType] = ks[killTrackingType] + 1
 end
 
 function KillStatistics.GetSum(ks, killTrackingTypes)
