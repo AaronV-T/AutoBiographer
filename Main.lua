@@ -691,6 +691,10 @@ function EM.EventHandlers.PLAYER_MONEY(self)
           end
         end
       end -- for i
+
+      if (not moneyAllocatedToMail and AutoBiographer_Settings.Options["EnableDebugLogging"]) then
+        AutoBiographer_Controller:AddLog("Delta money (" .. tostring(deltaMoney) .. ") did not match " .. tostring(#messagesContributingToSum) .. " messages (message money sum: " .. tostring(sum) .. ").", AutoBiographerEnum.LogLevel.Debug)
+      end
     end
 
     if (not moneyAllocatedToMail) then
@@ -947,7 +951,35 @@ function EM.EventHandlers.UNIT_TARGET(self, unitId)
   
 end
 
-function EM.EventHandlers.UPDATE_MOUSEOVER_UNIT(self)
+function EM.EventHandlers.ZONE_CHANGED(self)
+  self:UpdatePlayerZone()
+end
+
+function EM.EventHandlers.ZONE_CHANGED_INDOORS(self)
+  self:UpdatePlayerZone()
+end
+
+function EM.EventHandlers.ZONE_CHANGED_NEW_AREA(self)
+  if (not self.ZoneChangedNewAreaEventHasFired) then
+    self.ZoneChangedNewAreaEventHasFired = true
+  end 
+  
+  self:UpdatePlayerZone()
+end
+
+hooksecurefunc("AscendStop", function()
+  if (not IsFalling()) then
+    return
+  end
+
+  local timeNow = GetTime()
+  if (not EM.TemporaryTimestamps.LastJump or HelperFunctions.SubtractFloats(timeNow, EM.TemporaryTimestamps.LastJump) > 0.75) then
+    Controller:OnJump(time())
+    EM.TemporaryTimestamps.LastJump = timeNow
+  end
+end);
+
+GameTooltip:HookScript("OnTooltipSetUnit", function(self)
 	local catalogUnitId = HelperFunctions.GetCatalogIdFromGuid(UnitGUID("mouseover"))
   if (not catalogUnitId) then
     return
@@ -980,35 +1012,8 @@ function EM.EventHandlers.UPDATE_MOUSEOVER_UNIT(self)
     end
 	end
 
-	GameTooltip:Show()
-end
-function EM.EventHandlers.ZONE_CHANGED(self)
-  self:UpdatePlayerZone()
-end
-
-function EM.EventHandlers.ZONE_CHANGED_INDOORS(self)
-  self:UpdatePlayerZone()
-end
-
-function EM.EventHandlers.ZONE_CHANGED_NEW_AREA(self)
-  if (not self.ZoneChangedNewAreaEventHasFired) then
-    self.ZoneChangedNewAreaEventHasFired = true
-  end 
-  
-  self:UpdatePlayerZone()
-end
-
-hooksecurefunc("AscendStop", function()
-  if (not IsFalling()) then
-    return
-  end
-
-  local timeNow = GetTime()
-  if (not EM.TemporaryTimestamps.LastJump or HelperFunctions.SubtractFloats(timeNow, EM.TemporaryTimestamps.LastJump) > 0.75) then
-    Controller:OnJump(time())
-    EM.TemporaryTimestamps.LastJump = timeNow
-  end
-end);
+	self:Show()
+end)
 
 -- *** Miscellaneous Member Functions ***
 
@@ -1020,6 +1025,7 @@ end
 
 function EM:MailMoneyTakenFromOneMessage(message)
   --print("Message match: " .. message.sender)
+  if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then AutoBiographer_Controller:AddLog("Message match: " .. message.sender, AutoBiographerEnum.LogLevel.Debug) end
   if (message.isFromAuctionHouse) then
     if (message.auctionHouseMessageType == AutoBiographerEnum.AuctionHouseMessageType.Outbid) then
       Controller:OnGainedMoney(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.MoneyAcquisitionMethod.AuctionHouseOutbid, message.money)
