@@ -13,7 +13,7 @@ function HF.GetCatalogIdFromGuid(guid)
   elseif splitGuid[1] == "Player" then return splitGuid[2] .. "-" .. splitGuid[3] -- serverID-playerUID
   elseif splitGuid[1] == "Pet" then return "pet" .. splitGuid[6] -- petID
   elseif splitGuid[1] == "Creature" then return tonumber(splitGuid[6]) -- ID
-  else error("Unsupported GUID: " .. guid)
+  else error("Unsupported GUID: '" .. guid .. "'.")
   end
 end
 

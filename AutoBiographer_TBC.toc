@@ -1,0 +1,33 @@
+## Interface: 20504
+## Title: AutoBiographer 2.1.5
+## Notes: Tracks character milestones and statistics.
+## Author: Tollski
+## Version: 2.1.5
+## SavedVariables: AUTOBIOGRAPHER_SETTINGS
+## SavedVariablesPerCharacter: AUTOBIOGRAPHER_CATALOGS_CHAR, AUTOBIOGRAPHER_EVENTS_CHAR, AUTOBIOGRAPHER_INFO_CHAR, AUTOBIOGRAPHER_LEVELS_CHAR
+
+Libs/HereBeDragons/LibStub/LibStub.lua
+Libs/HereBeDragons/CallbackHandler-1.0/CallbackHandler-1.0.lua
+
+Libs/HereBeDragons/HereBeDragons-2.0.lua
+Libs/HereBeDragons/HereBeDragons-Pins-2.0.lua
+Libs/HereBeDragons/HereBeDragons-Migrate.lua
+
+Controller.lua
+Databases.lua
+Enum.lua
+HelperFunctions.lua
+Main.lua
+Migrations.lua
+
+Classes/Catalog.lua
+Classes/Event.lua
+Classes/Miscellaneous.lua
+Classes/Statistics.lua
+
+UI/ConfirmWindow.lua
+UI/MainWindow.lua
+UI/MinimapButton.lua
+UI/MinimapButton.xml
+UI/WorldMapWindow.lua
+UI/Options.lua

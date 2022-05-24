@@ -1025,7 +1025,13 @@ end
 
 function EM:MailMoneyTakenFromOneMessage(message)
   --print("Message match: " .. message.sender)
-  if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then AutoBiographer_Controller:AddLog("Message match: " .. message.sender, AutoBiographerEnum.LogLevel.Debug) end
+  
+  if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then
+    local sender = "Unknown Sender"
+    if (message.sender) then sender = message.sender end
+    AutoBiographer_Controller:AddLog("Message match: '" .. sender .. "'.", AutoBiographerEnum.LogLevel.Debug)
+  end
+
   if (message.isFromAuctionHouse) then
     if (message.auctionHouseMessageType == AutoBiographerEnum.AuctionHouseMessageType.Outbid) then
       Controller:OnGainedMoney(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.MoneyAcquisitionMethod.AuctionHouseOutbid, message.money)
