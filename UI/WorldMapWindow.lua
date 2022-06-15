@@ -56,10 +56,10 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
   end
 
   -- Filter Check Boxes
-  local leftPoint = -112.5
+  local leftPoint = 10
   frame.BossKillIcon = CreateFrame("Frame", nil, frame, BackdropTemplateMixin and "BackdropTemplate")
   frame.BossKillIcon:SetSize(20, 20)
-  frame.BossKillIcon:SetPoint("TOP", frame, "TOP", leftPoint, -25)
+  frame.BossKillIcon:SetPoint("TOPLEFT", frame, "TOPLEFT", leftPoint, -25)
   frame.BossKillIcon:SetBackdrop({bgFile = Event.GetIconPath(BossKillEvent.New())})
   frame.BossKillIcon:SetScript("OnEnter", function(self, button)
     GameTooltip_SetDefaultAnchor(GameTooltip, UIParent)
@@ -72,7 +72,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
     GameTooltip:Hide()
   end)
   frame.BossKillCb = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate") 
-  frame.BossKillCb:SetPoint("TOP", frame, "TOP", leftPoint, -40)
+  frame.BossKillCb:SetPoint("TOPLEFT", frame, "TOPLEFT", leftPoint - 5, -40)
   frame.BossKillCb:SetChecked(AutoBiographer_Settings.MapEventDisplayFilters[AutoBiographerEnum.EventSubType.BossKill])
   frame.BossKillCb:SetScript("OnClick", function(self, event, arg1)
     AutoBiographer_Settings.MapEventDisplayFilters[AutoBiographerEnum.EventSubType.BossKill] = self:GetChecked()
@@ -81,7 +81,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
   leftPoint = leftPoint + 25
   frame.FirstAcquiredItemIcon = CreateFrame("Frame", nil, frame, BackdropTemplateMixin and "BackdropTemplate")
   frame.FirstAcquiredItemIcon:SetSize(20, 20)
-  frame.FirstAcquiredItemIcon:SetPoint("TOP", frame, "TOP", leftPoint, -25)
+  frame.FirstAcquiredItemIcon:SetPoint("TOPLEFT", frame, "TOPLEFT", leftPoint, -25)
   frame.FirstAcquiredItemIcon:SetBackdrop({bgFile = Event.GetIconPath(FirstAcquiredItemEvent.New())})
   frame.FirstAcquiredItemIcon:SetScript("OnEnter", function(self, button)
     GameTooltip_SetDefaultAnchor(GameTooltip, UIParent)
@@ -94,7 +94,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
     GameTooltip:Hide()
   end)
   frame.FirstAcquiredItemCb = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate") 
-  frame.FirstAcquiredItemCb:SetPoint("TOP", frame, "TOP", leftPoint, -40)
+  frame.FirstAcquiredItemCb:SetPoint("TOPLEFT", frame, "TOPLEFT", leftPoint - 5, -40)
   frame.FirstAcquiredItemCb:SetChecked(AutoBiographer_Settings.MapEventDisplayFilters[AutoBiographerEnum.EventSubType.FirstAcquiredItem])
   frame.FirstAcquiredItemCb:SetScript("OnClick", function(self, event, arg1)
     AutoBiographer_Settings.MapEventDisplayFilters[AutoBiographerEnum.EventSubType.FirstAcquiredItem] = self:GetChecked()
@@ -103,7 +103,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
   leftPoint = leftPoint + 25
   frame.FirstKillIcon = CreateFrame("Frame", nil, frame, BackdropTemplateMixin and "BackdropTemplate")
   frame.FirstKillIcon:SetSize(20, 20)
-  frame.FirstKillIcon:SetPoint("TOP", frame, "TOP", leftPoint, -25)
+  frame.FirstKillIcon:SetPoint("TOPLEFT", frame, "TOPLEFT", leftPoint, -25)
   frame.FirstKillIcon:SetBackdrop({bgFile = Event.GetIconPath(FirstKillEvent.New())})
   frame.FirstKillIcon:SetScript("OnEnter", function(self, button)
     GameTooltip_SetDefaultAnchor(GameTooltip, UIParent)
@@ -116,7 +116,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
     GameTooltip:Hide()
   end)
   frame.FirstKillCb = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate") 
-  frame.FirstKillCb:SetPoint("TOP", frame, "TOP", leftPoint, -40)
+  frame.FirstKillCb:SetPoint("TOPLEFT", frame, "TOPLEFT", leftPoint - 5, -40)
   frame.FirstKillCb:SetChecked(AutoBiographer_Settings.MapEventDisplayFilters[AutoBiographerEnum.EventSubType.FirstKill])
   frame.FirstKillCb:SetScript("OnClick", function(self, event, arg1)
     AutoBiographer_Settings.MapEventDisplayFilters[AutoBiographerEnum.EventSubType.FirstKill] = self:GetChecked()
@@ -125,7 +125,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
   leftPoint = leftPoint + 25
   frame.LevelUpIcon = CreateFrame("Frame", nil, frame, BackdropTemplateMixin and "BackdropTemplate")
   frame.LevelUpIcon:SetSize(20, 20)
-  frame.LevelUpIcon:SetPoint("TOP", frame, "TOP", leftPoint, -25)
+  frame.LevelUpIcon:SetPoint("TOPLEFT", frame, "TOPLEFT", leftPoint, -25)
   frame.LevelUpIcon:SetBackdrop({bgFile = Event.GetIconPath(LevelUpEvent.New())})
   frame.LevelUpIcon:SetScript("OnEnter", function(self, button)
     GameTooltip_SetDefaultAnchor(GameTooltip, UIParent)
@@ -138,7 +138,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
     GameTooltip:Hide()
   end)
   frame.LevelUpCb = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate") 
-  frame.LevelUpCb:SetPoint("TOP", frame, "TOP", leftPoint, -40)
+  frame.LevelUpCb:SetPoint("TOPLEFT", frame, "TOPLEFT", leftPoint - 5, -40)
   frame.LevelUpCb:SetChecked(AutoBiographer_Settings.MapEventDisplayFilters[AutoBiographerEnum.EventSubType.LevelUp])
   frame.LevelUpCb:SetScript("OnClick", function(self, event, arg1)
     AutoBiographer_Settings.MapEventDisplayFilters[AutoBiographerEnum.EventSubType.LevelUp] = self:GetChecked()
@@ -147,7 +147,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
   leftPoint = leftPoint + 25
   frame.PlayerDeathIcon = CreateFrame("Frame", nil, frame, BackdropTemplateMixin and "BackdropTemplate")
   frame.PlayerDeathIcon:SetSize(20, 20)
-  frame.PlayerDeathIcon:SetPoint("TOP", frame, "TOP", leftPoint, -25)
+  frame.PlayerDeathIcon:SetPoint("TOPLEFT", frame, "TOPLEFT", leftPoint, -25)
   frame.PlayerDeathIcon:SetBackdrop({bgFile = Event.GetIconPath(PlayerDeathEvent.New())})
   frame.PlayerDeathIcon:SetScript("OnEnter", function(self, button)
     GameTooltip_SetDefaultAnchor(GameTooltip, UIParent)
@@ -160,7 +160,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
     GameTooltip:Hide()
   end)
   frame.PlayerDeathCb = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate") 
-  frame.PlayerDeathCb:SetPoint("TOP", frame, "TOP", leftPoint, -40)
+  frame.PlayerDeathCb:SetPoint("TOPLEFT", frame, "TOPLEFT", leftPoint - 5, -40)
   frame.PlayerDeathCb:SetChecked(AutoBiographer_Settings.MapEventDisplayFilters[AutoBiographerEnum.EventSubType.PlayerDeath])
   frame.PlayerDeathCb:SetScript("OnClick", function(self, event, arg1)
     AutoBiographer_Settings.MapEventDisplayFilters[AutoBiographerEnum.EventSubType.PlayerDeath] = self:GetChecked()
@@ -169,7 +169,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
   leftPoint = leftPoint + 25
   frame.QuestTurnInIcon = CreateFrame("Frame", nil, frame, BackdropTemplateMixin and "BackdropTemplate")
   frame.QuestTurnInIcon:SetSize(20, 20)
-  frame.QuestTurnInIcon:SetPoint("TOP", frame, "TOP", leftPoint, -25)
+  frame.QuestTurnInIcon:SetPoint("TOPLEFT", frame, "TOPLEFT", leftPoint, -25)
   frame.QuestTurnInIcon:SetBackdrop({bgFile = Event.GetIconPath(QuestTurnInEvent.New())})
   frame.QuestTurnInIcon:SetScript("OnEnter", function(self, button)
     GameTooltip_SetDefaultAnchor(GameTooltip, UIParent)
@@ -182,7 +182,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
     GameTooltip:Hide()
   end)
   frame.QuestTurnInCb = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate") 
-  frame.QuestTurnInCb:SetPoint("TOP", frame, "TOP", leftPoint, -40)
+  frame.QuestTurnInCb:SetPoint("TOPLEFT", frame, "TOPLEFT", leftPoint - 5, -40)
   frame.QuestTurnInCb:SetChecked(AutoBiographer_Settings.MapEventDisplayFilters[AutoBiographerEnum.EventSubType.QuestTurnIn])
   frame.QuestTurnInCb:SetScript("OnClick", function(self, event, arg1)
     AutoBiographer_Settings.MapEventDisplayFilters[AutoBiographerEnum.EventSubType.QuestTurnIn] = self:GetChecked()
@@ -191,7 +191,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
   leftPoint = leftPoint + 25
   frame.ReputationLevelChangedIcon = CreateFrame("Frame", nil, frame, BackdropTemplateMixin and "BackdropTemplate")
   frame.ReputationLevelChangedIcon:SetSize(20, 20)
-  frame.ReputationLevelChangedIcon:SetPoint("TOP", frame, "TOP", leftPoint, -25)
+  frame.ReputationLevelChangedIcon:SetPoint("TOPLEFT", frame, "TOPLEFT", leftPoint, -25)
   frame.ReputationLevelChangedIcon:SetBackdrop({bgFile = Event.GetIconPath(ReputationLevelChangedEvent.New())})
   frame.ReputationLevelChangedIcon:SetScript("OnEnter", function(self, button)
     GameTooltip_SetDefaultAnchor(GameTooltip, UIParent)
@@ -204,7 +204,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
     GameTooltip:Hide()
   end)
   frame.ReputationLevelChangedCb = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate") 
-  frame.ReputationLevelChangedCb:SetPoint("TOP", frame, "TOP", leftPoint, -40)
+  frame.ReputationLevelChangedCb:SetPoint("TOPLEFT", frame, "TOPLEFT", leftPoint - 5, -40)
   frame.ReputationLevelChangedCb:SetChecked(AutoBiographer_Settings.MapEventDisplayFilters[AutoBiographerEnum.EventSubType.ReputationLevelChanged])
   frame.ReputationLevelChangedCb:SetScript("OnClick", function(self, event, arg1)
     AutoBiographer_Settings.MapEventDisplayFilters[AutoBiographerEnum.EventSubType.ReputationLevelChanged] = self:GetChecked()
@@ -213,7 +213,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
   leftPoint = leftPoint + 25
   frame.SkillMilestoneIcon = CreateFrame("Frame", nil, frame, BackdropTemplateMixin and "BackdropTemplate")
   frame.SkillMilestoneIcon:SetSize(20, 20)
-  frame.SkillMilestoneIcon:SetPoint("TOP", frame, "TOP", leftPoint, -25)
+  frame.SkillMilestoneIcon:SetPoint("TOPLEFT", frame, "TOPLEFT", leftPoint, -25)
   frame.SkillMilestoneIcon:SetBackdrop({bgFile = Event.GetIconPath(SkillMilestoneEvent.New())})
   frame.SkillMilestoneIcon:SetScript("OnEnter", function(self, button)
     GameTooltip_SetDefaultAnchor(GameTooltip, UIParent)
@@ -226,7 +226,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
     GameTooltip:Hide()
   end)
   frame.SkillMilestoneCb = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate") 
-  frame.SkillMilestoneCb:SetPoint("TOP", frame, "TOP", leftPoint, -40)
+  frame.SkillMilestoneCb:SetPoint("TOPLEFT", frame, "TOPLEFT", leftPoint - 5, -40)
   frame.SkillMilestoneCb:SetChecked(AutoBiographer_Settings.MapEventDisplayFilters[AutoBiographerEnum.EventSubType.SkillMilestone])
   frame.SkillMilestoneCb:SetScript("OnClick", function(self, event, arg1)
     AutoBiographer_Settings.MapEventDisplayFilters[AutoBiographerEnum.EventSubType.SkillMilestone] = self:GetChecked()
@@ -235,7 +235,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
   leftPoint = leftPoint + 25
   frame.SpellLearnedIcon = CreateFrame("Frame", nil, frame, BackdropTemplateMixin and "BackdropTemplate")
   frame.SpellLearnedIcon:SetSize(20, 20)
-  frame.SpellLearnedIcon:SetPoint("TOP", frame, "TOP", leftPoint, -25)
+  frame.SpellLearnedIcon:SetPoint("TOPLEFT", frame, "TOPLEFT", leftPoint, -25)
   frame.SpellLearnedIcon:SetBackdrop({bgFile = Event.GetIconPath(SpellLearnedEvent.New())})
   frame.SpellLearnedIcon:SetScript("OnEnter", function(self, button)
     GameTooltip_SetDefaultAnchor(GameTooltip, UIParent)
@@ -248,7 +248,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
     GameTooltip:Hide()
   end)
   frame.SpellLearnedCb = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate") 
-  frame.SpellLearnedCb:SetPoint("TOP", frame, "TOP", leftPoint, -40)
+  frame.SpellLearnedCb:SetPoint("TOPLEFT", frame, "TOPLEFT", leftPoint - 5, -40)
   frame.SpellLearnedCb:SetChecked(AutoBiographer_Settings.MapEventDisplayFilters[AutoBiographerEnum.EventSubType.SpellLearned])
   frame.SpellLearnedCb:SetScript("OnClick", function(self, event, arg1)
     AutoBiographer_Settings.MapEventDisplayFilters[AutoBiographerEnum.EventSubType.SpellLearned] = self:GetChecked()
@@ -257,7 +257,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
   leftPoint = leftPoint + 25
   frame.ZoneFirstVisitIcon = CreateFrame("Frame", nil, frame, BackdropTemplateMixin and "BackdropTemplate")
   frame.ZoneFirstVisitIcon:SetSize(20, 20)
-  frame.ZoneFirstVisitIcon:SetPoint("TOP", frame, "TOP", leftPoint, -25)
+  frame.ZoneFirstVisitIcon:SetPoint("TOPLEFT", frame, "TOPLEFT", leftPoint, -25)
   frame.ZoneFirstVisitIcon:SetBackdrop({bgFile = Event.GetIconPath(ZoneFirstVisitEvent.New())})
   frame.ZoneFirstVisitIcon:SetScript("OnEnter", function(self, button)
     GameTooltip_SetDefaultAnchor(GameTooltip, UIParent)
@@ -270,7 +270,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
     GameTooltip:Hide()
   end)
   frame.ZoneFirstVisitCb = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate") 
-  frame.ZoneFirstVisitCb:SetPoint("TOP", frame, "TOP", leftPoint, -40)
+  frame.ZoneFirstVisitCb:SetPoint("TOPLEFT", frame, "TOPLEFT", leftPoint - 5, -40)
   frame.ZoneFirstVisitCb:SetChecked(AutoBiographer_Settings.MapEventDisplayFilters[AutoBiographerEnum.EventSubType.SubZoneFirstVisit])
   frame.ZoneFirstVisitCb:SetScript("OnClick", function(self, event, arg1)
     AutoBiographer_Settings.MapEventDisplayFilters[AutoBiographerEnum.EventSubType.SubZoneFirstVisit] = self:GetChecked()
@@ -351,13 +351,13 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
   frame.StartingLevelFs:SetPoint("LEFT", frame.StartingLevelEb, "RIGHT", 2, 0)
   frame.StartingLevelFs:SetText("Starting Level")
 
-  frame.ProgressFs = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-  frame.ProgressFs:SetPoint("BOTTOMRIGHT", -5, 45)
-  frame.ProgressFs:SetText("Progress: N/A.")
-
   frame.LevelFs = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-  frame.LevelFs:SetPoint("RIGHT", frame.ProgressFs, "LEFT", -5, 0)
-  frame.LevelFs:SetText("Level: N/A.")
+  frame.LevelFs:SetPoint("TOPRIGHT", -5, -40)
+  frame.LevelFs:SetText("Level: N/A")
+
+  frame.ProgressFs = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  frame.ProgressFs:SetPoint("TOPRIGHT", frame.LevelFs, "BOTTOMRIGHT", 0, 0)
+  frame.ProgressFs:SetText("Progress: N/A")
 
   frame.EventsBtn = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate");
   frame.EventsBtn:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -5, 5);
@@ -387,6 +387,7 @@ function AutoBiographer_WorldMapOverlayWindow_HideEvents()
 
   AutoBiographer_WorldMapOverlayWindow.EventsAreShown = false
   AutoBiographer_WorldMapOverlayWindow.EventsBtn:SetText("Show Events")
+  AutoBiographer_WorldMapOverlayWindow.LevelFs:SetText("Level: N/A")
   AutoBiographer_WorldMapOverlayWindow.ProgressFs:SetText("Progress: N/A")
   AutoBiographer_WorldMapOverlayWindow_SetOptionsEnabled(true)
 
@@ -398,11 +399,9 @@ function AutoBiographer_WorldMapOverlayWindow_HideEvents()
     local icon = AutoBiographer_EventMapIconPool.Allocated[i]
     icon:SetScript("OnEnter", nil)
     icon:SetScript("OnLeave", nil)
+    icon.IsShownOnMap = false
 
-    -- If the icon has an animation: don't reuse it (it will be buggy if we try to reuse it).
-    if (not icon.animationGroup) then
-      table.insert(AutoBiographer_EventMapIconPool.UnAllocated, icon)
-    end
+    table.insert(AutoBiographer_EventMapIconPool.UnAllocated, icon)
   end
   AutoBiographer_EventMapIconPool.Allocated = {}
 
@@ -479,9 +478,12 @@ function AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex, firstIndex, 
 
   local event = AutoBiographer_Controller.CharacterData.Events[eventIndex]
 
-  AutoBiographer_WorldMapOverlayWindow.ProgressFs:SetText("Progress: " .. string.format("%.f%%.", ((eventIndex - firstIndex + 1) / (#AutoBiographer_Controller.CharacterData.Events - firstIndex + 1))* 100))
+  AutoBiographer_WorldMapOverlayWindow.ProgressFs:SetText("Progress: " .. string.format("%.f%%", ((eventIndex - firstIndex + 1) / (#AutoBiographer_Controller.CharacterData.Events - firstIndex + 1))* 100))
   if (event.SubType == AutoBiographerEnum.EventSubType.LevelUp) then
-    AutoBiographer_WorldMapOverlayWindow.LevelFs:SetText("Level: " .. event.LevelNum .. ".")
+    --AutoBiographer_WorldMapOverlayWindow.TempLevelChange = event.LevelNum
+    local extraSpaces = ""
+    if (event.LevelNum < 10) then extraSpaces = "  " end
+    AutoBiographer_WorldMapOverlayWindow.LevelFs:SetText("Level: " .. extraSpaces .. event.LevelNum)
   end
 
   local mapCoordinates = Event.GetMapCoordinates(event)
@@ -489,6 +491,12 @@ function AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex, firstIndex, 
     AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex + 1, firstIndex, delay, eventsToShowPerDelay, eventsShownPerMapId)
     return
   end
+
+  --local deltaTime = 0
+  --if (AutoBiographer_WorldMapOverlayWindow.TempLastTime) then
+    --deltaTime = string.format("%." .. 2 .. "f", GetTime() - AutoBiographer_WorldMapOverlayWindow.LastTime)
+  --end
+  --AutoBiographer_WorldMapOverlayWindow.TempLastTime = GetTime()                                                                                                 
 
   if (not eventsShownPerMapId[mapCoordinates.MapId]) then
     eventsShownPerMapId[mapCoordinates.MapId] = 0
@@ -501,10 +509,13 @@ function AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex, firstIndex, 
     local otherEvent = AutoBiographer_Controller.CharacterData.Events[j]
     local otherMapCoordinates = Event.GetMapCoordinates(otherEvent)
     if (otherMapCoordinates and AutoBiographer_Settings.MapEventDisplayFilters[otherEvent.SubType] and mapCoordinates.MapId == otherMapCoordinates.MapId and
-        5 > Hbd:GetZoneDistance(mapCoordinates.MapId, mapCoordinates.X / 100, mapCoordinates.Y / 100, otherMapCoordinates.MapId, otherMapCoordinates.X / 100, otherMapCoordinates.Y / 100)) then
+        10 > Hbd:GetZoneDistance(mapCoordinates.MapId, mapCoordinates.X / 100, mapCoordinates.Y / 100, otherMapCoordinates.MapId, otherMapCoordinates.X / 100, otherMapCoordinates.Y / 100)) then
       
       table.insert(tooltipLines, Event.ToString(otherEvent, AutoBiographer_Controller.CharacterData.Catalogs))
-      HbdPins:RemoveWorldMapIcon(AutoBiographer_WorldMapOverlayWindow, AutoBiographer_WorldMapOverlayWindow.EventIndexToIconMap[j])
+      if (AutoBiographer_WorldMapOverlayWindow.EventIndexToIconMap[j].IsShownOnMap) then
+        HbdPins:RemoveWorldMapIcon(AutoBiographer_WorldMapOverlayWindow, AutoBiographer_WorldMapOverlayWindow.EventIndexToIconMap[j])
+        AutoBiographer_WorldMapOverlayWindow.EventIndexToIconMap[j].IsShownOnMap = false
+      end
     end
   end
 
@@ -556,10 +567,15 @@ function AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex, firstIndex, 
       end)
     end
 
-    icon.animationGroup:Play()
+    if (icon.animationGroup:IsPlaying()) then
+      icon.animationGroup:Restart()
+    else
+      icon.animationGroup:Play()
+    end
   end
-
+  
   HbdPins:AddWorldMapIconMap(AutoBiographer_WorldMapOverlayWindow, icon, mapCoordinates.MapId, mapCoordinates.X / 100, mapCoordinates.Y / 100, HBD_PINS_WORLDMAP_SHOW_WORLD)
+  icon.IsShownOnMap = true
 
   local frameLevel = icon:GetFrameLevel()
   icon:SetFrameLevel(frameLevel + eventsShownPerMapId[mapCoordinates.MapId])
@@ -567,6 +583,12 @@ function AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex, firstIndex, 
   table.insert(AutoBiographer_EventMapIconPool.Allocated, icon)
   AutoBiographer_WorldMapOverlayWindow.EventIndexToIconMap[eventIndex] = icon
   eventsShownPerMapId[mapCoordinates.MapId] = eventsShownPerMapId[mapCoordinates.MapId] + 1
+
+  --AutoBiographer_WorldMapOverlayWindow.ProgressFs:SetText(deltaTime .. "ms, " .. AutoBiographer_WorldMapOverlayWindow.ActiveIconCount .. "a, " .. AutoBiographer_WorldMapOverlayWindow.DeactivatedIconCount .. "da")
+  --if (AutoBiographer_WorldMapOverlayWindow.TempLevelChange) then
+    --print("Level " .. AutoBiographer_WorldMapOverlayWindow.TempLevelChange .. ": " .. deltaTime .. "ms")
+    --AutoBiographer_WorldMapOverlayWindow.TempLevelChange = nil
+  --end
 
   local eventsShown = 0
   for k, v in pairs(eventsShownPerMapId) do

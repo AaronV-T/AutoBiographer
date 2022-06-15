@@ -1,0 +1,4 @@
+Make map events more efficient.
+Add TBC raids to InstanceLocationDatabase.
+Migration to add map events for late-added instance locations.
+Progressive map events mode (change map with first Outland event at lvl 58+, reuse events from previous map, show events on previous map on dark portal).
