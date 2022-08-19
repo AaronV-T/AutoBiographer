@@ -520,6 +520,7 @@ function AutoBiographer_Databases.Initialiaze()
     [209] = Coordinates.New(0, 1446, 38.72, 20.01), -- Zul'Farrak
     [229] = Coordinates.New(0, 1415, 48.94, 63.88), -- Balckrock Spire
     [230] = Coordinates.New(0, 1415, 48.07, 62.41), -- Blackrock Depths
+    [269] = Coordinates.New(1, 1446, 57.61, 62.67), -- The Black Morass
     [289] = Coordinates.New(0, 1415, 52.71, 26.39), -- Scholomance
     [309] = Coordinates.New(0, 1434, 53.72, 17.57), -- Zul'Gurub
     [329] = Coordinates.New(0, 1415, 55.12, 17.36), -- Stratholme
@@ -529,17 +530,28 @@ function AutoBiographer_Databases.Initialiaze()
     [469] = Coordinates.New(0, 1415, 48.92, 64.46), -- Blackwing Lair
     [509] = Coordinates.New(0, 1414, 42.29, 86.48), -- Ruins of Ahn'Qiraj
     [531] = Coordinates.New(0, 1414, 40.96, 85.76), -- Temple of Ahn'Qiraj
+    [532] = Coordinates.New(0, 1430, 46.93, 74.81), -- Karazhan
     [533] = Coordinates.New(0, 1423, 39.75, 26.31), -- Naxxramas
+    [534] = Coordinates.New(1, 1446, 57.38, 50.07), -- Hyjal Summit
     [542] = Coordinates.New(530, 1944, 46.07, 51.73), -- The Blood Furnace
     [543] = Coordinates.New(530, 1944, 47.68, 53.56), -- Hellfire Ramparts
+    [544] = Coordinates.New(530, 1944, 47.50, 52.08), -- Magtheridon's Lair
     [545] = Coordinates.New(530, 1946, 50.48, 33.34), -- The Steamvault
     [546] = Coordinates.New(530, 1946, 54.11, 34.43), -- The Underbog
     [547] = Coordinates.New(530, 1946, 48.96, 35.93), -- The Slave Pens
+    [548] = Coordinates.New(530, 1946, 51.90, 33.03), -- Serpentshrine Cavern
+    [550] = Coordinates.New(530, 1953, 73.56, 63.72), -- Tempest Keep
     [553] = Coordinates.New(530, 1953, 71.66, 55.14), -- The Botanica
     [554] = Coordinates.New(530, 1953, 70.49, 69.56), -- The Mechanar
     [556] = Coordinates.New(530, 1952, 44.71, 65.61), -- Sethekk Halls
     [557] = Coordinates.New(530, 1952, 39.65, 57.96), -- Mana-Tombs
     [558] = Coordinates.New(530, 1952, 34.71, 65.61), -- Auchenai Crypts
+    [560] = Coordinates.New(1, 1446, 55.65, 54.00), -- Old Hillsbrad Foothills
+    [564] = Coordinates.New(530, 1948, 71.06, 46.45), -- Black Temple
+    [565] = Coordinates.New(530, 1949, 69.19, 24.00), -- Gruul's Lair
+    [568] = Coordinates.New(0, 1942, 81.87, 64.34), -- Zul'Aman
+    [580] = Coordinates.New(0, 1957, 44.27, 45.62), -- Sunwell Plateau
+    [585] = Coordinates.New(0, 1957, 61.14, 30.80), -- Magisters' Terrace
   }
 end
 

@@ -1381,6 +1381,11 @@ function EM:ClearCharacterData(doNotRequireConfirmation, doNotReloadUI)
   end
 end
 
+function EM:GetPosition()
+  local position = HelperFunctions.GetCoordinatesByUnitId("player")
+  HelperFunctions.PrintKeysAndValuesFromTable(position)
+end
+
 function EM:Test()
   local position = HelperFunctions.GetCoordinatesByUnitId("player")
   HelperFunctions.PrintKeysAndValuesFromTable(position)
