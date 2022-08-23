@@ -134,6 +134,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
       MapEventDisplayFilters = {}, -- Dict<EventSubType, bool>
       MapEventShowAnimation = false,
       MapEventShowCircle = true,
+			MapEventFollowExpansions = false,
       MinimapPos = -25,
       Options = { -- Dict<string?, bool>
         EnableDebugLogging = false,

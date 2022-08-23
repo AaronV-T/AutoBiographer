@@ -279,8 +279,6 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
 
   --
   frame.ShowAnimationCb = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
-  frame.ShowCircleCb = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
-
   frame.ShowAnimationCb:SetPoint("BOTTOMLEFT", 5, 2)
   frame.ShowAnimationCb:SetChecked(AutoBiographer_Settings.MapEventShowAnimation)
   frame.ShowAnimationCb:SetScript("OnClick", function(self, event, arg1)
@@ -293,8 +291,9 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
 
   frame.ShowAnimationFs = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
   frame.ShowAnimationFs:SetPoint("LEFT", frame.ShowAnimationCb, "RIGHT", 2, 0)
-  frame.ShowAnimationFs:SetText("Show Animation")
+  frame.ShowAnimationFs:SetText("Animation")
 
+	frame.ShowCircleCb = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
   frame.ShowCircleCb:SetPoint("BOTTOM", frame.ShowAnimationCb, "TOP", 0, -10)
   frame.ShowCircleCb:SetChecked(AutoBiographer_Settings.MapEventShowCircle)
   frame.ShowCircleCb:SetScript("OnClick", function(self, event, arg1)
@@ -307,11 +306,22 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
 
   frame.ShowCircleFs = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
   frame.ShowCircleFs:SetPoint("LEFT", frame.ShowCircleCb, "RIGHT", 2, 0)
-  frame.ShowCircleFs:SetText("Show Circle")
+  frame.ShowCircleFs:SetText("Circle")
+
+	frame.FollowExpansionsCb = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
+  frame.FollowExpansionsCb:SetPoint("LEFT", frame.ShowCircleCb, 90, 0)
+  frame.FollowExpansionsCb:SetChecked(AutoBiographer_Settings.MapEventFollowExpansions)
+  frame.FollowExpansionsCb:SetScript("OnClick", function(self, event, arg1)
+    AutoBiographer_Settings.MapEventFollowExpansions = self:GetChecked()
+  end)
+
+  frame.FollowExpansionsFs = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  frame.FollowExpansionsFs:SetPoint("LEFT", frame.FollowExpansionsCb, "RIGHT", 2, 0)
+  frame.FollowExpansionsFs:SetText("Follow")
 
   frame.EventsPerSecondEb = CreateFrame("EditBox", nil, frame, BackdropTemplateMixin and "BackdropTemplate");
   frame.EventsPerSecondEb:SetSize(30, 20)
-  frame.EventsPerSecondEb:SetPoint("LEFT", frame.ShowAnimationCb, 120, 0)
+  frame.EventsPerSecondEb:SetPoint("LEFT", frame.ShowAnimationCb, 160, 0)
   frame.EventsPerSecondEb:SetBackdrop({
     bgFile = "",
     edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -328,7 +338,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
 
   frame.EventsPerSecondFs = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
   frame.EventsPerSecondFs:SetPoint("LEFT", frame.EventsPerSecondEb, "RIGHT", 2, 0)
-  frame.EventsPerSecondFs:SetText("Events Per Second")
+  frame.EventsPerSecondFs:SetText("Events/Sec")
 
   frame.StartingLevelEb = CreateFrame("EditBox", nil, frame, BackdropTemplateMixin and "BackdropTemplate");
   frame.StartingLevelEb:SetSize(30, 20)
@@ -349,7 +359,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
 
   frame.StartingLevelFs = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
   frame.StartingLevelFs:SetPoint("LEFT", frame.StartingLevelEb, "RIGHT", 2, 0)
-  frame.StartingLevelFs:SetText("Starting Level")
+  frame.StartingLevelFs:SetText("Start Level")
 
   frame.LevelFs = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   frame.LevelFs:SetPoint("TOPRIGHT", -5, -40)
@@ -467,10 +477,10 @@ function AutoBiographer_WorldMapOverlayWindow_ShowEvents()
   AutoBiographer_WorldMapOverlayWindow.StartingLevelEb:SetNumber(startingLevel)
 
   AutoBiographer_WorldMapOverlayWindow.EventIndexToIconMap = {}
-  AutoBiographer_WorldMapOverlayWindow_ShowEvent(startingIndex, startingIndex, delayBetweenEvents * eventsToShowPerDelay, eventsToShowPerDelay, {})
+  AutoBiographer_WorldMapOverlayWindow_ShowEvent(startingIndex, startingIndex, delayBetweenEvents * eventsToShowPerDelay, eventsToShowPerDelay, {}, nil, startingLevel)
 end
 
-function AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex, firstIndex, delay, eventsToShowPerDelay, eventsShownPerMapId)
+function AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex, firstIndex, delay, eventsToShowPerDelay, eventsShownPerMapId, currentEventsExpansion, currentEventsLevel)
   if (not AutoBiographer_WorldMapOverlayWindow.EventsAreShown or eventIndex > #AutoBiographer_Controller.CharacterData.Events) then
     AutoBiographer_WorldMapOverlayWindow_UpdateCurrentEventIndicator(nil)
     return
@@ -483,12 +493,13 @@ function AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex, firstIndex, 
     --AutoBiographer_WorldMapOverlayWindow.TempLevelChange = event.LevelNum
     local extraSpaces = ""
     if (event.LevelNum < 10) then extraSpaces = "  " end
+		currentEventsLevel = event.LevelNum
     AutoBiographer_WorldMapOverlayWindow.LevelFs:SetText("Level: " .. extraSpaces .. event.LevelNum)
   end
 
   local mapCoordinates = Event.GetMapCoordinates(event)
   if (not mapCoordinates or not AutoBiographer_Settings.MapEventDisplayFilters[event.SubType]) then
-    AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex + 1, firstIndex, delay, eventsToShowPerDelay, eventsShownPerMapId)
+    AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex + 1, firstIndex, delay, eventsToShowPerDelay, eventsShownPerMapId, currentEventsExpansion, currentEventsLevel)
     return
   end
 
@@ -496,7 +507,26 @@ function AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex, firstIndex, 
   --if (AutoBiographer_WorldMapOverlayWindow.TempLastTime) then
     --deltaTime = string.format("%." .. 2 .. "f", GetTime() - AutoBiographer_WorldMapOverlayWindow.LastTime)
   --end
-  --AutoBiographer_WorldMapOverlayWindow.TempLastTime = GetTime()                                                                                                 
+  --AutoBiographer_WorldMapOverlayWindow.TempLastTime = GetTime()
+
+  if (AutoBiographer_Settings.MapEventFollowExpansions) then
+		if (currentEventsLevel ~= nil) then
+			if ((currentEventsExpansion == nil or currentEventsExpansion < 1) and currentEventsLevel <= 60 and (mapCoordinates.InstanceId == 0 or mapCoordinates.InstanceId == 1)) then
+				currentEventsExpansion = 1
+				if (WorldMapFrame:GetMapID() ~= 947) then
+					WorldMapFrame:SetMapID(947)
+				end
+			elseif ((currentEventsExpansion == nil or currentEventsExpansion < 2) and currentEventsLevel >= 58 and mapCoordinates.InstanceId == 530) then
+				currentEventsExpansion = 2
+				if (WorldMapFrame:GetMapID() ~= 1945) then
+					WorldMapFrame:SetMapID(1945)
+				end
+				HbdPins:RemoveAllWorldMapIcons(AutoBiographer_WorldMapOverlayWindow)
+			end
+		end
+
+		mapCoordinates = AutoBiographer_WorldMapOverlayWindow_TransformCoordinates(currentEventsExpansion, mapCoordinates)
+	end
 
   if (not eventsShownPerMapId[mapCoordinates.MapId]) then
     eventsShownPerMapId[mapCoordinates.MapId] = 0
@@ -508,15 +538,21 @@ function AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex, firstIndex, 
   for j = eventIndex - 1, firstIndex, -1 do
     local otherEvent = AutoBiographer_Controller.CharacterData.Events[j]
     local otherMapCoordinates = Event.GetMapCoordinates(otherEvent)
-    if (otherMapCoordinates and AutoBiographer_Settings.MapEventDisplayFilters[otherEvent.SubType] and mapCoordinates.MapId == otherMapCoordinates.MapId and
-        10 > Hbd:GetZoneDistance(mapCoordinates.MapId, mapCoordinates.X / 100, mapCoordinates.Y / 100, otherMapCoordinates.MapId, otherMapCoordinates.X / 100, otherMapCoordinates.Y / 100)) then
-      
-      table.insert(tooltipLines, Event.ToString(otherEvent, AutoBiographer_Controller.CharacterData.Catalogs))
-      if (AutoBiographer_WorldMapOverlayWindow.EventIndexToIconMap[j].IsShownOnMap) then
-        HbdPins:RemoveWorldMapIcon(AutoBiographer_WorldMapOverlayWindow, AutoBiographer_WorldMapOverlayWindow.EventIndexToIconMap[j])
-        AutoBiographer_WorldMapOverlayWindow.EventIndexToIconMap[j].IsShownOnMap = false
-      end
-    end
+		if (otherMapCoordinates and AutoBiographer_Settings.MapEventDisplayFilters[otherEvent.SubType]) then
+			if (AutoBiographer_Settings.MapEventFollowExpansions) then
+				otherMapCoordinates = AutoBiographer_WorldMapOverlayWindow_TransformCoordinates(currentEventsExpansion, otherMapCoordinates)
+			end
+
+			if (mapCoordinates.MapId == otherMapCoordinates.MapId and
+					10 > Hbd:GetZoneDistance(mapCoordinates.MapId, mapCoordinates.X / 100, mapCoordinates.Y / 100, otherMapCoordinates.MapId, otherMapCoordinates.X / 100, otherMapCoordinates.Y / 100)) then
+				
+				table.insert(tooltipLines, Event.ToString(otherEvent, AutoBiographer_Controller.CharacterData.Catalogs))
+				if (AutoBiographer_WorldMapOverlayWindow.EventIndexToIconMap[j].IsShownOnMap) then
+					HbdPins:RemoveWorldMapIcon(AutoBiographer_WorldMapOverlayWindow, AutoBiographer_WorldMapOverlayWindow.EventIndexToIconMap[j])
+					AutoBiographer_WorldMapOverlayWindow.EventIndexToIconMap[j].IsShownOnMap = false
+				end
+			end
+		end
   end
 
   local icon = table.remove(AutoBiographer_EventMapIconPool.UnAllocated)
@@ -540,6 +576,10 @@ function AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex, firstIndex, 
     end
     
     for j = 1, #tooltipLines do
+			if (j >= 100) then
+				break
+			end
+
       GameTooltip:AddLine(tooltipLines[j])
     end
     
@@ -601,11 +641,21 @@ function AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex, firstIndex, 
     end
 
     C_Timer.After(delay, function()
-      AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex + 1, firstIndex, delay, eventsToShowPerDelay, eventsShownPerMapId)
+      AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex + 1, firstIndex, delay, eventsToShowPerDelay, eventsShownPerMapId, currentEventsExpansion, currentEventsLevel)
     end)
   else
-    AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex + 1, firstIndex, delay, eventsToShowPerDelay, eventsShownPerMapId)
+    AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex + 1, firstIndex, delay, eventsToShowPerDelay, eventsShownPerMapId, currentEventsExpansion, currentEventsLevel)
   end
+end
+
+function AutoBiographer_WorldMapOverlayWindow_TransformCoordinates(currentEventsExpansion, mapCoordinates)
+	if (currentEventsExpansion == 1 and mapCoordinates.InstanceId == 530) then
+		return Coordinates.New(0, 1419, 59.56, 58.66) -- Dark portal in Blasted Lands.
+	elseif (currentEventsExpansion == 2 and mapCoordinates.InstanceId ~= 530) then
+		return Coordinates.New(530, 1944, 89.34, 50.22) -- Dark portal in Hellfire Peninsula.
+	end
+
+	return mapCoordinates;
 end
 
 function AutoBiographer_WorldMapOverlayWindow_SetOptionsEnabled(enabled)
