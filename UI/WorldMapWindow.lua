@@ -490,7 +490,6 @@ function AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex, firstIndex, 
 
   AutoBiographer_WorldMapOverlayWindow.ProgressFs:SetText("Progress: " .. string.format("%.f%%", ((eventIndex - firstIndex + 1) / (#AutoBiographer_Controller.CharacterData.Events - firstIndex + 1))* 100))
   if (event.SubType == AutoBiographerEnum.EventSubType.LevelUp) then
-    --AutoBiographer_WorldMapOverlayWindow.TempLevelChange = event.LevelNum
     local extraSpaces = ""
     if (event.LevelNum < 10) then extraSpaces = "  " end
 		currentEventsLevel = event.LevelNum
@@ -503,11 +502,20 @@ function AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex, firstIndex, 
     return
   end
 
-  --local deltaTime = 0
-  --if (AutoBiographer_WorldMapOverlayWindow.TempLastTime) then
-    --deltaTime = string.format("%." .. 2 .. "f", GetTime() - AutoBiographer_WorldMapOverlayWindow.LastTime)
-  --end
-  --AutoBiographer_WorldMapOverlayWindow.TempLastTime = GetTime()
+	-- if (AutoBiographer_WorldMapOverlayWindow.TempEventsSinceLastDeltaTimeCalculation == nil) then
+	-- 	AutoBiographer_WorldMapOverlayWindow.TempEventsSinceLastDeltaTimeCalculation = 0
+	-- else
+	-- 	AutoBiographer_WorldMapOverlayWindow.TempEventsSinceLastDeltaTimeCalculation = AutoBiographer_WorldMapOverlayWindow.TempEventsSinceLastDeltaTimeCalculation + 1
+	-- end
+
+	-- if (AutoBiographer_WorldMapOverlayWindow.TempEventsSinceLastDeltaTimeCalculation % 1 == 0) then
+	-- 	local deltaTime = 0
+	-- 	if (AutoBiographer_WorldMapOverlayWindow.TempLastTime) then
+	-- 		deltaTime = string.format("%." .. 3 .. "f", GetTime() - AutoBiographer_WorldMapOverlayWindow.TempLastTime)
+	-- 	end
+	-- 	AutoBiographer_WorldMapOverlayWindow.TempLastTime = GetTime()
+	-- 	AutoBiographer_WorldMapOverlayWindow.ProgressFs:SetText("dt: " .. deltaTime .. "s, ")
+	-- end
 
   if (AutoBiographer_Settings.MapEventFollowExpansions) then
 		if (currentEventsLevel ~= nil) then
@@ -521,7 +529,16 @@ function AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex, firstIndex, 
 				if (WorldMapFrame:GetMapID() ~= 1945) then
 					WorldMapFrame:SetMapID(1945)
 				end
-				HbdPins:RemoveAllWorldMapIcons(AutoBiographer_WorldMapOverlayWindow)
+				
+				for j = eventIndex - 1, firstIndex, -1 do
+					local otherEvent = AutoBiographer_Controller.CharacterData.Events[j]
+					local otherMapCoordinates = Event.GetMapCoordinates(otherEvent)
+					if (otherMapCoordinates and AutoBiographer_WorldMapOverlayWindow.EventIndexToIconMap[j] and
+							AutoBiographer_WorldMapOverlayWindow.EventIndexToIconMap[j].IsShownOnMap and otherMapCoordinates.InstanceId ~= 530) then
+						HbdPins:RemoveWorldMapIcon(AutoBiographer_WorldMapOverlayWindow, AutoBiographer_WorldMapOverlayWindow.EventIndexToIconMap[j])
+						AutoBiographer_WorldMapOverlayWindow.EventIndexToIconMap[j].IsShownOnMap = false
+					end
+				end
 			end
 		end
 
@@ -535,6 +552,7 @@ function AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex, firstIndex, 
   local tooltipLines = {}
   table.insert(tooltipLines, Event.ToString(event, AutoBiographer_Controller.CharacterData.Catalogs))
 
+	-- Todo: A map of coordinates to tooltipLines could make this much more efficient.
   for j = eventIndex - 1, firstIndex, -1 do
     local otherEvent = AutoBiographer_Controller.CharacterData.Events[j]
     local otherMapCoordinates = Event.GetMapCoordinates(otherEvent)
@@ -545,7 +563,6 @@ function AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex, firstIndex, 
 
 			if (mapCoordinates.MapId == otherMapCoordinates.MapId and
 					10 > Hbd:GetZoneDistance(mapCoordinates.MapId, mapCoordinates.X / 100, mapCoordinates.Y / 100, otherMapCoordinates.MapId, otherMapCoordinates.X / 100, otherMapCoordinates.Y / 100)) then
-				
 				table.insert(tooltipLines, Event.ToString(otherEvent, AutoBiographer_Controller.CharacterData.Catalogs))
 				if (AutoBiographer_WorldMapOverlayWindow.EventIndexToIconMap[j].IsShownOnMap) then
 					HbdPins:RemoveWorldMapIcon(AutoBiographer_WorldMapOverlayWindow, AutoBiographer_WorldMapOverlayWindow.EventIndexToIconMap[j])
@@ -623,12 +640,6 @@ function AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex, firstIndex, 
   table.insert(AutoBiographer_EventMapIconPool.Allocated, icon)
   AutoBiographer_WorldMapOverlayWindow.EventIndexToIconMap[eventIndex] = icon
   eventsShownPerMapId[mapCoordinates.MapId] = eventsShownPerMapId[mapCoordinates.MapId] + 1
-
-  --AutoBiographer_WorldMapOverlayWindow.ProgressFs:SetText(deltaTime .. "ms, " .. AutoBiographer_WorldMapOverlayWindow.ActiveIconCount .. "a, " .. AutoBiographer_WorldMapOverlayWindow.DeactivatedIconCount .. "da")
-  --if (AutoBiographer_WorldMapOverlayWindow.TempLevelChange) then
-    --print("Level " .. AutoBiographer_WorldMapOverlayWindow.TempLevelChange .. ": " .. deltaTime .. "ms")
-    --AutoBiographer_WorldMapOverlayWindow.TempLevelChange = nil
-  --end
 
   local eventsShown = 0
   for k, v in pairs(eventsShownPerMapId) do
