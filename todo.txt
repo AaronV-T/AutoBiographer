@@ -1,2 +1,2 @@
 Make map events more efficient.
-Progressive map events mode (change map with first Outland event at lvl 58+, reuse events from previous map, show events on previous map on dark portal).
+Progressive map events WotLK improvement (use Azeroth map, move icons instead of delete)

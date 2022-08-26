@@ -2,9 +2,11 @@ $addonVersionLineTbc = Select-String -Pattern "## Version" -Path ".\AutoBiograph
 $addonVersionTbc = $addonVersionLineTbc.ToString().Substring($addonVersionLineTbc.ToString().LastIndexOf(" ") + 1)
 $addonVersionLineVanilla = Select-String -Pattern "## Version" -Path ".\AutoBiographer_Vanilla.toc"
 $addonVersionVanilla = $addonVersionLineVanilla.ToString().Substring($addonVersionLineVanilla.ToString().LastIndexOf(" ") + 1)
+$addonVersionLineWotlk = Select-String -Pattern "## Version" -Path ".\AutoBiographer_Wrath.toc"
+$addonVersionWotlk = $addonVersionLineWotlk.ToString().Substring($addonVersionLineWotlk.ToString().LastIndexOf(" ") + 1)
 
-if ($addonVersionTbc -ne $addonVersionVanilla) {
-  throw "Versions don't match in TBC and Vanilla TOC files."
+if ($addonVersionVanilla -ne $addonVersionTbc -or $addonVersionTbc -ne $addonVersionWotlk) {
+  throw "Versions don't match in TOC files."
 }
 
 $outputDirectoryPath = ".\Deploys"

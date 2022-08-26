@@ -2,7 +2,7 @@
 ## Title: AutoBiographer
 ## Notes: Tracks character milestones and statistics.
 ## Author: Tollski
-## Version: 2.1.7
+## Version: 3.0.0
 ## SavedVariables: AUTOBIOGRAPHER_SETTINGS
 ## SavedVariablesPerCharacter: AUTOBIOGRAPHER_CATALOGS_CHAR, AUTOBIOGRAPHER_EVENTS_CHAR, AUTOBIOGRAPHER_INFO_CHAR, AUTOBIOGRAPHER_LEVELS_CHAR
 

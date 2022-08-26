@@ -503,6 +503,103 @@ function AutoBiographer_Databases.Initialiaze()
     [19514] = "Al'ar <Phoenix God>",
     [18805] = "High Astromancer Solarian",
     [19622] = "Kael'thas Sunstrider <Lord of the Blood Elves>",
+
+    --
+    -- WotLK Bosses
+    --
+
+    -- Ahn'kahet: The Old Kingdom
+    [29309] = "Elder Nadox",
+    [29308] = "Prince Taldaram",
+    [29310] = "Jedoga Shadowseeker",
+    [29311] = "Herald Volazj",
+    [30258] = "Amanitar",
+
+    -- Azjol-Nerub
+    [28684] = "Krik'thir the Gatewatcher",
+    [28921] = "Hadronox",
+    [29120] = "Anub'arak",
+
+    -- Drak'Tharon Keep
+    [26630] = "Trollgore",
+    [26631] = "Novos the Summoner",
+    [27483] = "King Dred",
+    [26632] = "The Prophet Tharon'ja",
+
+    -- Gundrak
+    [29304] = "Slad'ran",
+    [29307] = "Drakkari Colossus",
+    [29573] = "Drakkari Elemental",
+    [29305] = "Moorabi",
+    [29306] = "Gal'darah",
+    [29932] = "Eck the Ferocious",
+
+    -- Halls of Lightning
+    [28586] = "General Bjarngrim",
+    [28587] = "Volkhan",
+    [28546] = "Ionar",
+    [28923] = "Loken",
+
+    -- Halls of Stone
+    [27975] = "Maiden of Grief",
+    [27977] = "Krystallus",
+    [28234] = "Tribunal of the Ages",
+    [27978] = "Sjonnir The Ironshaper",
+
+    -- Icecrown Citadel
+
+    -- The Culling of Stratholme
+    [26529] = "Meathook",
+    [26530] = "Salramm the Fleshcrafter",
+    [26532] = "Chrono-Lord Epoch",
+    [26533] = "Mal'Ganis",
+    [32273] = "Infinite Corruptor",
+
+    -- The Eye of Eternity
+    [28859] = "Malygos",
+
+    -- The Nexus
+    [26731] = "Grand Magus Telestra",
+    [26763] = "Anomalus",
+    [26794] = "Ormorok the Tree-Shaper",
+    [26723] = "Keristrasza",
+    [26796] = "Commander Stoutbeard",
+    [26798] = "Commander Kolurg",
+
+    -- The Obsidian Sanctum
+    [30452] = "Tenebron",
+    [30451] = "Shadron",
+    [30449] = "Vesperon",
+    [28860] = "Sartharion",
+
+    -- The Oculus
+    [27654] = "Drakos the Interrogator",
+    [27447] = "Varos Cloudstrider",
+    [27655] = "Mage-Lord Urom",
+    [27656] = "Ley-Guardian Eregos",
+
+    -- The Violet Hold
+    [29315] = "Erekem",
+    [29316] = "Moragg",
+    [29313] = "Ichoron",
+    [29266] = "Xevozz",
+    [29312] = "Lavanthor",
+    [29314] = "Zuramat the Obliterator",
+    [31134] = "Cyanigosa",
+
+    -- Ulduar
+
+    -- Utgarde Keep
+    [23953] = "Prince Keleseth",
+    [24200] = "Skarvald the Constructor",
+    [24201] = "Dalronn the Controller",
+    [23954] = "Ingvar the Plunderer",
+
+    -- Utgarde Pinnacle
+    [26668] = "Svala Sorrowgrave",
+    [26687] = "Gortok Palehoof",
+    [26693] = "Skadi the Ruthless",
+    [26861] = "King Ymiron",
   }
 
   AutoBiographer_Databases.InstanceLocationDatabase = {
@@ -550,8 +647,20 @@ function AutoBiographer_Databases.Initialiaze()
     [564] = Coordinates.New(530, 1948, 71.06, 46.45), -- Black Temple
     [565] = Coordinates.New(530, 1949, 69.19, 24.00), -- Gruul's Lair
     [568] = Coordinates.New(0, 1942, 81.87, 64.34), -- Zul'Aman
+    [574] = Coordinates.New(571, 117, 57.34, 47.01), -- Utgarde Keep
+    [575] = Coordinates.New(571, 117, 57.72, 46.49), -- Utgarde Pinnacle
+    [576] = Coordinates.New(571, 114, 27.5, 26.03), -- The Nexus
+    [578] = Coordinates.New(571, 114, 27.52, 26.54), -- The Oculus
     [580] = Coordinates.New(0, 1957, 44.27, 45.62), -- Sunwell Plateau
     [585] = Coordinates.New(0, 1957, 61.14, 30.80), -- Magisters' Terrace
+    [595] = Coordinates.New(1, 1446, 61.42, 62.64), -- The Culling of Stratholme
+    [599] = Coordinates.New(571, 120, 39.66, 26.93), -- Halls of Stone
+    [600] = Coordinates.New(571, 121, 28.64, 86.94), -- Drak'Tharon Keep
+    [601] = Coordinates.New(571, 115, 26.01, 50.83), -- Azjol-Nerub
+    [602] = Coordinates.New(571, 120, 45.25, 21.61), -- Halls of Lightning
+    [604] = Coordinates.New(571, 121, 76.43, 21.43), -- Gundrak
+    [608] = Coordinates.New(571, 125, 67.86, 69.43), -- The Violet Hold
+    [619] = Coordinates.New(571, 115, 28.46, 51.71), -- Ahn'haket: The Old Kingdom
   }
 end
 

@@ -529,12 +529,28 @@ function AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex, firstIndex, 
 				if (WorldMapFrame:GetMapID() ~= 1945) then
 					WorldMapFrame:SetMapID(1945)
 				end
-				
+				-- TODO: Don't delete existing icons.
 				for j = eventIndex - 1, firstIndex, -1 do
 					local otherEvent = AutoBiographer_Controller.CharacterData.Events[j]
 					local otherMapCoordinates = Event.GetMapCoordinates(otherEvent)
 					if (otherMapCoordinates and AutoBiographer_WorldMapOverlayWindow.EventIndexToIconMap[j] and
 							AutoBiographer_WorldMapOverlayWindow.EventIndexToIconMap[j].IsShownOnMap and otherMapCoordinates.InstanceId ~= 530) then
+						HbdPins:RemoveWorldMapIcon(AutoBiographer_WorldMapOverlayWindow, AutoBiographer_WorldMapOverlayWindow.EventIndexToIconMap[j])
+						AutoBiographer_WorldMapOverlayWindow.EventIndexToIconMap[j].IsShownOnMap = false
+					end
+				end
+      elseif ((currentEventsExpansion == nil or currentEventsExpansion < 3) and currentEventsLevel >= 68 and mapCoordinates.InstanceId == 571) then
+				currentEventsExpansion = 3
+        -- TODO: Set map to all Azeroth and only delete outlands icons.
+				if (WorldMapFrame:GetMapID() ~= 113) then
+					WorldMapFrame:SetMapID(113)
+				end
+				
+				for j = eventIndex - 1, firstIndex, -1 do
+					local otherEvent = AutoBiographer_Controller.CharacterData.Events[j]
+					local otherMapCoordinates = Event.GetMapCoordinates(otherEvent)
+					if (otherMapCoordinates and AutoBiographer_WorldMapOverlayWindow.EventIndexToIconMap[j] and
+							AutoBiographer_WorldMapOverlayWindow.EventIndexToIconMap[j].IsShownOnMap and otherMapCoordinates.InstanceId ~= 571) then
 						HbdPins:RemoveWorldMapIcon(AutoBiographer_WorldMapOverlayWindow, AutoBiographer_WorldMapOverlayWindow.EventIndexToIconMap[j])
 						AutoBiographer_WorldMapOverlayWindow.EventIndexToIconMap[j].IsShownOnMap = false
 					end
@@ -664,6 +680,8 @@ function AutoBiographer_WorldMapOverlayWindow_TransformCoordinates(currentEvents
 		return Coordinates.New(0, 1419, 59.56, 58.66) -- Dark portal in Blasted Lands.
 	elseif (currentEventsExpansion == 2 and mapCoordinates.InstanceId ~= 530) then
 		return Coordinates.New(530, 1944, 89.34, 50.22) -- Dark portal in Hellfire Peninsula.
+  elseif (currentEventsExpansion == 3 and mapCoordinates.InstanceId ~= 571) then
+		return Coordinates.New(571, 113, 80.6, 94.67) -- Off southern tip of Howling Fjord.
 	end
 
 	return mapCoordinates;
