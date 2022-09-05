@@ -33,7 +33,13 @@ Copy-Item ".\Icons" -Destination "$tempSubDirectoryPath" -Recurse
 Copy-Item ".\Libs" -Destination "$tempSubDirectoryPath" -Recurse
 Copy-Item ".\UI" -Destination "$tempSubDirectoryPath" -Recurse
 
-Compress-Archive -Path "$tempDirectoryPath\*" -DestinationPath "$outputFilePath"
+$7zipPath = "$env:ProgramFiles\7-Zip\7z.exe"
+if (-not (Test-Path -Path $7zipPath -PathType Leaf)) {
+  throw "7 zip file '$7zipPath' not found"
+}
+
+Set-Alias 7zip $7zipPath
+7zip a $outputFilePath $tempSubDirectoryPath
 
 Remove-Item $tempDirectoryPath -Recurse
 
