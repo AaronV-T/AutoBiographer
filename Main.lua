@@ -700,7 +700,7 @@ function EM.EventHandlers.PLAYER_MONEY(self)
 
     if (not moneyAllocatedToMail) then
       AutoBiographer_Controller:AddLog("Delta money (" .. tostring(deltaMoney) .. ") did not match scanned messages.", AutoBiographerEnum.LogLevel.Warning)
-      print("Delta money did not match scanned messages.")
+      if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then print("AutoBiographer: Delta money (" .. tostring(deltaMoney) .. ") did not match scanned messages.") end
     end
   elseif (self.MerchantIsOpen) then
     if (deltaMoney > 0) then
@@ -1380,6 +1380,16 @@ function EM:ClearCharacterData(doNotRequireConfirmation, doNotReloadUI)
   else
     AutoBiographer_ConfirmWindow.New("Clear character data?", clearFunc)
   end
+end
+
+function EM:GetDistanceFromTarget()
+  local playerPosition = HelperFunctions.GetCoordinatesByUnitId("player")
+  local targetPosition = HelperFunctions.GetCoordinatesByUnitId("target")
+
+  local xDist = HelperFunctions.Round(targetPosition.X - playerPosition.X, 2)
+  local yDist = HelperFunctions.Round(targetPosition.Y - playerPosition.Y, 2)
+  local dist = HelperFunctions.Round(math.sqrt(xDist * xDist + yDist * yDist), 2)
+  print(tostring(xDist) .. ", " .. tostring(yDist) .. " (" .. tostring(dist) .. ")")
 end
 
 function EM:GetPosition()

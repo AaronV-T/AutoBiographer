@@ -1727,7 +1727,7 @@ function AutoBiographer_StatisticsWindow:Update()
       end
     end
   else
-    print("Unsupported Statistics Display Mode. This should not happen!")
+    print("AutoBiographer: Unsupported Statistics Display Mode. This should not happen!")
     return
   end
 

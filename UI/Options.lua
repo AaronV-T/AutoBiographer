@@ -83,6 +83,6 @@ end
 
 AutoBiographer_OptionWindow.name = "AutoBiographer"
 AutoBiographer_OptionWindow.cancel = function() AutoBiographer_OptionWindow:LoadOptions() end
-AutoBiographer_OptionWindow.default = function() print("Not implemented.") end
+AutoBiographer_OptionWindow.default = function() print("AutoBiographer: Not implemented.") end
 AutoBiographer_OptionWindow.okay = function() AutoBiographer_OptionWindow:SaveOptions() end
 InterfaceOptions_AddCategory(AutoBiographer_OptionWindow)
