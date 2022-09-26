@@ -488,9 +488,13 @@ function AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex, firstIndex, 
 
   local event = AutoBiographer_Controller.CharacterData.Events[eventIndex]
 
-  AutoBiographer_WorldMapOverlayWindow.ProgressFs:SetText("Progress: " .. string.format("%.f%%", ((eventIndex - firstIndex + 1) / (#AutoBiographer_Controller.CharacterData.Events - firstIndex + 1))* 100))
+  local progress = ((eventIndex - firstIndex + 1) / (#AutoBiographer_Controller.CharacterData.Events - firstIndex + 1))* 100
+  local extraSpaces = ""
+  if (progress < 10) then extraSpaces = "  " end
+  AutoBiographer_WorldMapOverlayWindow.ProgressFs:SetText("Progress: " .. extraSpaces .. string.format("%.1f%%", progress))
+
   if (event.SubType == AutoBiographerEnum.EventSubType.LevelUp) then
-    local extraSpaces = ""
+    extraSpaces = ""
     if (event.LevelNum < 10) then extraSpaces = "  " end
 		currentEventsLevel = event.LevelNum
     AutoBiographer_WorldMapOverlayWindow.LevelFs:SetText("Level: " .. extraSpaces .. event.LevelNum)

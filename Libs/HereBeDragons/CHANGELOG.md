@@ -1,8 +1,10 @@
 # Lib: HereBeDragons
 
-## [2.08-release-4-gc32dc23](https://github.com/Nevcairiel/HereBeDragons/tree/c32dc2388d6be8ebb6913a3db750c2e655d80733) (2022-08-09)
-[Full Changelog](https://github.com/Nevcairiel/HereBeDragons/compare/2.08-release...c32dc2388d6be8ebb6913a3db750c2e655d80733) [Previous Releases](https://github.com/Nevcairiel/HereBeDragons/releases)
+## [2.09-release](https://github.com/Nevcairiel/HereBeDragons/tree/2.09-release) (2022-08-29)
+[Full Changelog](https://github.com/Nevcairiel/HereBeDragons/compare/2.08-release...2.09-release) [Previous Releases](https://github.com/Nevcairiel/HereBeDragons/releases)
 
+- Unify WoW version checks  
+- Update TOC  
 - Move DK starting area override into transforms  
     The instance ID overrides were meant for dynamic phasing, not  
     permanently instanced zones, which the transform was designed for  
