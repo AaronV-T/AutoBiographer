@@ -330,7 +330,6 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
     edgeSize = 10,
     insets = {left = 3, right = 3, top = 3, bottom = 3}
   })
-  frame.EventsPerSecondEb:SetFont("Fonts\\FRIZQT__.TTF", 11)
   frame.EventsPerSecondEb:SetAutoFocus(false)
   frame.EventsPerSecondEb:SetMultiLine(false)
   frame.EventsPerSecondEb:SetNumeric(true)
@@ -351,7 +350,6 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
     edgeSize = 10,
     insets = {left = 3, right = 3, top = 3, bottom = 3}
   })
-  frame.StartingLevelEb:SetFont("Fonts\\FRIZQT__.TTF", 11)
   frame.StartingLevelEb:SetAutoFocus(false)
   frame.StartingLevelEb:SetMultiLine(false)
   frame.StartingLevelEb:SetNumeric(true)

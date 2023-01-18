@@ -1,2 +1,3 @@
+Remove events from changing talent spec.
 Make map events more efficient.
 Progressive map events WotLK improvement (use Azeroth map, move icons instead of delete)

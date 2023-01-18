@@ -1091,7 +1091,6 @@ function AutoBiographer_StatisticsWindow:Initialize()
     edgeSize = 10,
     insets = {left = 3, right = 3, top = 3, bottom = 3}
   })
-  frame.SubFrame.MinimumLevelEb:SetFont("Fonts\\FRIZQT__.TTF", 11)
   frame.SubFrame.MinimumLevelEb:SetAutoFocus(false)
   frame.SubFrame.MinimumLevelEb:SetMultiLine(false)
   frame.SubFrame.MinimumLevelEb:SetNumeric(true)
@@ -1135,7 +1134,6 @@ function AutoBiographer_StatisticsWindow:Initialize()
     edgeSize = 10,
     insets = {left = 3, right = 3, top = 3, bottom = 3}
   })
-  frame.SubFrame.MaximumLevelEb:SetFont("Fonts\\FRIZQT__.TTF", 11)
   frame.SubFrame.MaximumLevelEb:SetAutoFocus(false)
   frame.SubFrame.MaximumLevelEb:SetMultiLine(false)
   frame.SubFrame.MaximumLevelEb:SetNumeric(true)
@@ -1332,7 +1330,7 @@ function AutoBiographer_MainWindow:Update()
         info.text, info.arg1, info.arg2 = "Total", 1, 9999
         UIDropDownMenu_AddButton(info)
         
-        for i = 0, 6 do
+        for i = 0, 7 do
           local includeThisRange = false
           for j = 1, 10 do
             if (Controller.CharacterData.Levels[(i * 10) + j]) then includeThisRange = true end
