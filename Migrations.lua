@@ -391,3 +391,29 @@ table.insert(MM.Migrations,
     end
   )
 )
+
+table.insert(MM.Migrations, 
+  AutoBiographer_Migration:New(
+    14,
+    function(eventManager, controller)
+      -- Delete duplicate spell learned events.
+      local seenSpellIds = {}
+      local indexesToDelete = {}
+      for i = 1, #controller.CharacterData.Events do
+        local event = controller.CharacterData.Events[i]
+
+        if (event.Type == AutoBiographerEnum.EventType.Spell and event.SubType == AutoBiographerEnum.EventSubType.SpellLearned) then
+          local spellId = event.SpellId
+          if (seenSpellIds[spellId] == nil) then
+            seenSpellIds[spellId] = true
+          else
+            indexesToDelete[i] = true
+          end
+        end
+      end
+
+      HelperFunctions.RemoveElementsFromArrayAtIndexes(controller.CharacterData.Events, indexesToDelete)
+      controller:AddLog("Deleted " .. #HelperFunctions.GetKeysFromTable(indexesToDelete) .. " duplicate spell learned events.", AutoBiographerEnum.LogLevel.Information)
+    end
+  )
+)

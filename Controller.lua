@@ -715,9 +715,8 @@ function Controller:OnSpellLearned(timestamp, coordinates, spellId, spellName, s
 
   if (not self.CharacterData.Catalogs.SpellCatalog[spellId]) then
     self.CharacterData.Catalogs.SpellCatalog[spellId] = CatalogSpell.New(spellId, spellName, spellRank)
+    self:AddEvent(SpellLearnedEvent.New(timestamp, coordinates, spellId))
   end
-  
-  self:AddEvent(SpellLearnedEvent.New(timestamp, coordinates, spellId))
 end
 
 function Controller:OnSpellStartedCasting(timestamp, coordinates, spellId, spellName, spellRank)

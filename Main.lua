@@ -177,7 +177,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
       BattlegroundStatuses = {},
       CurrentSubZone = nil,
       CurrentZone = nil,
-      DatabaseVersion = 13,
+      DatabaseVersion = 14,
       GuildName = nil,
       GuildRankIndex = nil,
       GuildRankName = nil,
@@ -1398,6 +1398,17 @@ function EM:GetPosition()
 end
 
 function EM:Test()
-  local position = HelperFunctions.GetCoordinatesByUnitId("player")
-  HelperFunctions.PrintKeysAndValuesFromTable(position)
+  local spellCounts = {}
+  for k, spell in pairs(Controller.CharacterData.Catalogs.SpellCatalog) do
+    if (spellCounts[spell.Name] == nil) then
+      spellCounts[spell.Name] = 1
+    else
+      spellCounts[spell.Name] = spellCounts[spell.Name] + 1
+    end
+    
+    print(spell.Name)
+  end
+  for name, count in pairs(spellCounts) do    
+    print(name .. ": " .. count)
+  end
 end
