@@ -773,6 +773,10 @@ function AutoBiographer_MainWindow:Initialize()
   frame.ScrollFrame.Content.DeathsToPlayersFs:SetPoint("TOPLEFT", 20, topPoint)
   topPoint = topPoint - 15
 
+  frame.ScrollFrame.Content.DeathsToUnknownFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  frame.ScrollFrame.Content.DeathsToUnknownFs:SetPoint("TOPLEFT", 20, topPoint)
+  topPoint = topPoint - 15
+
   -- Experience Stats
   topPoint = topPoint - 15
   frame.ScrollFrame.Content.ExperienceHeaderFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
@@ -1434,13 +1438,15 @@ function AutoBiographer_MainWindow:Update()
   local deathsToGameObjects = Controller:GetDeathsByDeathTrackingType(AutoBiographerEnum.DeathTrackingType.DeathToGameObject, self.DisplayMinLevel, self.DisplayMaxLevel)
   local deathsToPets = Controller:GetDeathsByDeathTrackingType(AutoBiographerEnum.DeathTrackingType.DeathToPet, self.DisplayMinLevel, self.DisplayMaxLevel)
   local deathsToPlayers = Controller:GetDeathsByDeathTrackingType(AutoBiographerEnum.DeathTrackingType.DeathToPlayer, self.DisplayMinLevel, self.DisplayMaxLevel)
-  local totalDeaths = deathsToCreatures + deathsToEnvironment + deathsToGameObjects + deathsToPets + deathsToPlayers
+  local deathsToUnknown = Controller:GetDeathsByDeathTrackingType(AutoBiographerEnum.DeathTrackingType.DeathToUnknown, self.DisplayMinLevel, self.DisplayMaxLevel)
+  local totalDeaths = deathsToCreatures + deathsToEnvironment + deathsToGameObjects + deathsToPets + deathsToPlayers + deathsToUnknown
   self.ScrollFrame.Content.TotalDeathsFs:SetText("Total Deaths: " .. HF.CommaValue(totalDeaths) .. ".")
   self.ScrollFrame.Content.DeathsToCreaturesFs:SetText("Deaths to Creatures: " .. HF.CommaValue(deathsToCreatures) .. ".")
   self.ScrollFrame.Content.DeathsToEnvironmentFs:SetText("Deaths to Environment: " .. HF.CommaValue(deathsToEnvironment) .. ".")
   self.ScrollFrame.Content.DeathsToGameObjectsFs:SetText("Deaths to Game Objects: " .. HF.CommaValue(deathsToGameObjects) .. ".")
   self.ScrollFrame.Content.DeathsToPetsFs:SetText("Deaths to Pets: " .. HF.CommaValue(deathsToPets) .. ".")
   self.ScrollFrame.Content.DeathsToPlayersFs:SetText("Deaths to Players: " .. HF.CommaValue(deathsToPlayers) .. ".")
+  self.ScrollFrame.Content.DeathsToUnknownFs:SetText("Deaths to Unknown: " .. HF.CommaValue(deathsToUnknown) .. ".")
 
   -- Experience Stats
   local experienceFromKills = Controller:GetExperienceByExperienceTrackingType(AutoBiographerEnum.ExperienceTrackingType.Kill, self.DisplayMinLevel, self.DisplayMaxLevel)

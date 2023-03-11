@@ -14,6 +14,7 @@ function HF.GetCatalogIdFromGuid(guid)
   elseif splitGuid[1] == "Pet" then return "pet" .. splitGuid[6] -- petID
   elseif splitGuid[1] == "Creature" then return tonumber(splitGuid[6]) -- ID
   elseif splitGuid[1] == "Vehicle" then return "v" .. splitGuid[6] -- vID
+  elseif guid == "" then return "_unknown_"
   else error("Unsupported GUID: '" .. guid .. "'.")
   end
 end
@@ -45,7 +46,9 @@ function HF.GetGameVersion()
 end
 
 function HF.GetUnitTypeFromCatalogUnitId(cuid)
-  if (string.match(cuid, "go%d+")) then
+  if (cuid == "_unknown_") then
+    return AutoBiographerEnum.UnitType.Unknown
+  elseif (string.match(cuid, "go%d+")) then
     return AutoBiographerEnum.UnitType.GameObject
   elseif (string.match(cuid, "%w+%-%w+")) then
     return AutoBiographerEnum.UnitType.Player

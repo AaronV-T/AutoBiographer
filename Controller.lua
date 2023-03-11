@@ -582,16 +582,27 @@ function Controller:OnDeath(timestamp, coordinates, killerCatalogUnitId, killerL
   local deathTrackingType
   if (killerCatalogUnitId == nil) then 
     deathTrackingType = AutoBiographerEnum.DeathTrackingType.DeathToEnvironment
-  elseif (HelperFunctions.GetUnitTypeFromCatalogUnitId(killerCatalogUnitId) == AutoBiographerEnum.UnitType.Creature) then
-    deathTrackingType = AutoBiographerEnum.DeathTrackingType.DeathToCreature
-  elseif (HelperFunctions.GetUnitTypeFromCatalogUnitId(killerCatalogUnitId) == AutoBiographerEnum.UnitType.GameObject) then
-    deathTrackingType = AutoBiographerEnum.DeathTrackingType.DeathToGameObject
-  elseif (HelperFunctions.GetUnitTypeFromCatalogUnitId(killerCatalogUnitId) == AutoBiographerEnum.UnitType.Pet) then
-    deathTrackingType = AutoBiographerEnum.DeathTrackingType.DeathToPet
-  elseif (HelperFunctions.GetUnitTypeFromCatalogUnitId(killerCatalogUnitId) == AutoBiographerEnum.UnitType.Player) then
-    deathTrackingType = AutoBiographerEnum.DeathTrackingType.DeathToPlayer
+  else
+    local killerUnitType = HelperFunctions.GetUnitTypeFromCatalogUnitId(killerCatalogUnitId)
+
+    if (killerUnitType == AutoBiographerEnum.UnitType.Creature) then
+      deathTrackingType = AutoBiographerEnum.DeathTrackingType.DeathToCreature
+    elseif (killerUnitType == AutoBiographerEnum.UnitType.GameObject) then
+      deathTrackingType = AutoBiographerEnum.DeathTrackingType.DeathToGameObject
+    elseif (killerUnitType == AutoBiographerEnum.UnitType.Pet) then
+      deathTrackingType = AutoBiographerEnum.DeathTrackingType.DeathToPet
+    elseif (killerUnitType == AutoBiographerEnum.UnitType.Player) then
+      deathTrackingType = AutoBiographerEnum.DeathTrackingType.DeathToPlayer
+    elseif (killerUnitType == AutoBiographerEnum.UnitType.Unknown) then
+      deathTrackingType = AutoBiographerEnum.DeathTrackingType.DeathToUnknown
+    end
   end
   
+  if (not deathTrackingType) then
+    Controller:AddLog("Death not tracked. killerCatalogUnitId: '" .. tostring(killerCatalogUnitId) .. "'.", AutoBiographerEnum.LogLevel.Warning)
+    return
+  end
+
   DeathStatistics.Increment(self:GetCurrentLevelStatistics().DeathStatistics, deathTrackingType)
 end
 

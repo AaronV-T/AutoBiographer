@@ -21,6 +21,7 @@ AutoBiographerEnum = {
     DeathToPet = 2,
     DeathToPlayer = 3,
     DeathToGameObject = 4,
+    DeathToUnknown = 5,
   },
   EventType = {
     Battleground = 0,
@@ -150,5 +151,6 @@ AutoBiographerEnum = {
     Pet = 1,
     Player = 2,
     GameObject = 3,
+    Unknown = 4,
   }
 }

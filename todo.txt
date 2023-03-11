@@ -1,3 +1,6 @@
-Remove events from changing talent spec.
+Time played message spam with Details/Hardcore 1.14.3
+Mailbox still believed open bug.
+Add new battlegrounds.
+Screenshot achievements.
 Make map events more efficient.
 Progressive map events WotLK improvement (use Azeroth map, move icons instead of delete)
