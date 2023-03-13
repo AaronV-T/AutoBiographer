@@ -32,7 +32,9 @@ AutoBiographer_EventManager = {
     OtherPlayerJoinedGroup = {}, -- Dict<UnitGuid, TempTimestamp>
     StartedCasting = nil,
   },
+  TimePlayedMessageChatFramesToRegister = nil,
   TimePlayedMessageIsUnregistered = nil,
+  TimePlayedMessageLastTimestamp = nil,
   TradeInfo = nil,
   ZoneChangedNewAreaEventHasFired = false
 }
@@ -638,14 +640,15 @@ function EM.EventHandlers.PLAYER_LEVEL_UP(self, newLevel, ...)
   self:UpdateTimestamps(self.PersistentPlayerInfo.CurrentZone, self.PersistentPlayerInfo.CurrentSubZone)
   self.NewLevelToAddToHistory = newLevel
   
-  if (AutoBiographer_Settings.Options["ShowTimePlayedOnLevelUp"] == false) then
-    for i = 1, 10 do 
-      _G["ChatFrame" .. i]:UnregisterEvent("TIME_PLAYED_MSG")
+  local delay = 0.25
+  C_Timer.After(delay, function()
+    if (self.TimePlayedMessageLastTimestamp and GetTime() - self.TimePlayedMessageLastTimestamp <= delay) then
+      return
     end
-    self.TimePlayedMessageIsUnregistered = true
-  end
-  
-  RequestTimePlayed()
+
+    local showMessage = AutoBiographer_Settings.Options["ShowTimePlayedOnLevelUp"]
+    EM:RequestTimePlayed(showMessage)
+  end)
 end
 
 function EM.EventHandlers.PLAYER_LOGIN(self)
@@ -835,12 +838,14 @@ function EM.EventHandlers.UPDATE_BATTLEFIELD_STATUS(self, battleFieldIndex)
   end
 end
 
-function EM.EventHandlers.TIME_PLAYED_MSG(self, totalTimePlayed, levelTimePlayed) 
-  if (self.TimePlayedMessageIsUnregistered) then
-    for i = 1, 10 do 
-      _G["ChatFrame" .. i]:RegisterEvent("TIME_PLAYED_MSG")
+function EM.EventHandlers.TIME_PLAYED_MSG(self, totalTimePlayed, levelTimePlayed)
+  self.TimePlayedMessageLastTimestamp = GetTime()
+
+  if (self.TimePlayedMessageChatFramesToRegister) then
+    for i = 1, #self.TimePlayedMessageChatFramesToRegister do
+      _G["ChatFrame" .. self.TimePlayedMessageChatFramesToRegister[i]]:RegisterEvent("TIME_PLAYED_MSG")
     end
-    self.TimePlayedMessageIsUnregistered = false
+    self.TimePlayedMessageChatFramesToRegister = nil
   end
 
   if self.NewLevelToAddToHistory ~= nil then
@@ -857,6 +862,7 @@ function EM.EventHandlers.TIME_PLAYED_MSG(self, totalTimePlayed, levelTimePlayed
   self.PersistentPlayerInfo.LastTotalTimePlayed = totalTimePlayed
   if (timeSinceLastTotalTimePlayed > 300) then
     print ("There are approximately " .. HelperFunctions.Round(timeSinceLastTotalTimePlayed / 60) .. " minutes of play time on this character unaccounted for by AutoBiographer. Some events or statistics may not have been tracked.")
+    -- TODO: Add debug event here.
   end
 end
 
@@ -1071,13 +1077,24 @@ function EM:OnStoppedCasting()
   self.TemporaryTimestamps.StartedCasting = nil
 end
 
-function EM:RequestTimePlayedInterval()
-  for i = 1, 10 do 
-    _G["ChatFrame" .. i]:UnregisterEvent("TIME_PLAYED_MSG")
+function EM:RequestTimePlayed(showMessage)
+  if (not showMessage) then
+    self.TimePlayedMessageChatFramesToRegister = {}
+    for i = 1, 10 do
+      if (_G["ChatFrame" .. i]:IsEventRegistered("TIME_PLAYED_MSG")) then
+        table.insert(self.TimePlayedMessageChatFramesToRegister, i)
+        _G["ChatFrame" .. i]:UnregisterEvent("TIME_PLAYED_MSG")
+      end
+    end
   end
-  self.TimePlayedMessageIsUnregistered = true
-
+  
   RequestTimePlayed()
+end
+
+function EM:RequestTimePlayedInterval()
+  if (not self.TimePlayedMessageLastTimestamp or GetTime() - self.TimePlayedMessageLastTimestamp >= 30) then
+    EM:RequestTimePlayed(false)
+  end
 
   C_Timer.After(60, function()
     EM:RequestTimePlayedInterval()
