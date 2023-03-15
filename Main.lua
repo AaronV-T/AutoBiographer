@@ -521,9 +521,7 @@ function EM.EventHandlers.LEARNED_SPELL_IN_TAB(self, spellId, skillInfoIndex, is
 end
 
 function EM.EventHandlers.MAIL_CLOSED(self, arg1, arg2)
-  self.MailboxIsOpen = false
-  self.MailboxMessages = nil
-  self.MailInboxUpdatedAfterOpen = nil
+  EM:MailboxClosed()
 end
 
 function EM.EventHandlers.MAIL_SHOW(self, arg1, arg2)
@@ -630,6 +628,12 @@ end
 function EM.EventHandlers.PLAYER_GUILD_UPDATE(self, unitId)
   if (not self.PlayerEnteringWorldHasFired or unitId ~= "player") then return end
   self:UpdatePlayerGuildInfo()
+end
+
+function EM.EventHandlers.PLAYER_INTERACTION_MANAGER_FRAME_HIDE(self, type)
+  if (type == 17) then
+    EM:MailboxClosed()
+  end
 end
 
 function EM.EventHandlers.PLAYER_LEAVING_WORLD(self)
@@ -1024,6 +1028,12 @@ end)
 
 -- *** Miscellaneous Member Functions ***
 
+function EM:MailboxClosed()
+  self.MailboxIsOpen = false
+  self.MailboxMessages = nil
+  self.MailInboxUpdatedAfterOpen = nil
+end
+
 function EM:MailMoneyTakenFromMultipleMessages(messages)
   for i = 1, #messages do
     self:MailMoneyTakenFromOneMessage(messages[i])
@@ -1361,9 +1371,12 @@ function EM:UpdateTimestamps(zone, subZone)
 end
 
 -- Register each event for which we have an event handler.
+EM.GameVersion = HelperFunctions.GetGameVersion()
 EM.Frame = CreateFrame("Frame")
 for eventName,_ in pairs(EM.EventHandlers) do
-	EM.Frame:RegisterEvent(eventName)
+  if (EM.GameVersion > 2 or eventName ~= "PLAYER_INTERACTION_MANAGER_FRAME_HIDE") then
+	  EM.Frame:RegisterEvent(eventName)
+  end
 end
 EM.Frame:SetScript("OnEvent", function(_, event, ...) EM:OnEvent(_, event, ...) end)
 
@@ -1415,17 +1428,5 @@ function EM:GetPosition()
 end
 
 function EM:Test()
-  local spellCounts = {}
-  for k, spell in pairs(Controller.CharacterData.Catalogs.SpellCatalog) do
-    if (spellCounts[spell.Name] == nil) then
-      spellCounts[spell.Name] = 1
-    else
-      spellCounts[spell.Name] = spellCounts[spell.Name] + 1
-    end
-    
-    print(spell.Name)
-  end
-  for name, count in pairs(spellCounts) do    
-    print(name .. ": " .. count)
-  end
+  print("MailboxIsOpen: " .. tostring(self.MailboxIsOpen))
 end
