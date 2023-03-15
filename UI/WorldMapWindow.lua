@@ -14,6 +14,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
   local frame = AutoBiographer_WorldMapOverlayWindow
   frame:SetSize(400, 125)
   frame:SetPoint("BOTTOMRIGHT", WorldMapFrame.ScrollContainer, "BOTTOMRIGHT")
+  frame:SetFrameStrata("TOOLTIP")
 
   frame:EnableKeyboard(true)
   frame:EnableMouse(true)
@@ -322,6 +323,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
   frame.EventsPerSecondEb = CreateFrame("EditBox", nil, frame, BackdropTemplateMixin and "BackdropTemplate");
   frame.EventsPerSecondEb:SetSize(30, 20)
   frame.EventsPerSecondEb:SetPoint("LEFT", frame.ShowAnimationCb, 160, 0)
+  frame.EventsPerSecondEb:SetFontObject(GameTooltipTextSmall)
   frame.EventsPerSecondEb:SetBackdrop({
     bgFile = "",
     edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -342,6 +344,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
   frame.StartingLevelEb = CreateFrame("EditBox", nil, frame, BackdropTemplateMixin and "BackdropTemplate");
   frame.StartingLevelEb:SetSize(30, 20)
   frame.StartingLevelEb:SetPoint("BOTTOM", frame.EventsPerSecondEb, "TOP", 0, 1)
+  frame.StartingLevelEb:SetFontObject(GameTooltipTextSmall)
   frame.StartingLevelEb:SetBackdrop({
     bgFile = "",
     edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -475,11 +478,20 @@ function AutoBiographer_WorldMapOverlayWindow_ShowEvents()
   AutoBiographer_WorldMapOverlayWindow.StartingLevelEb:SetNumber(startingLevel)
 
   AutoBiographer_WorldMapOverlayWindow.EventIndexToIconMap = {}
+  AutoBiographer_WorldMapOverlayWindow.EventsShown = 0
+  AutoBiographer_WorldMapOverlayWindow.LastDelayedEventShownTime = nil
+  AutoBiographer_WorldMapOverlayWindow.MinimumEventsPerSecondShown = nil
+  AutoBiographer_WorldMapOverlayWindow.ShowEventsStartTime = GetTime()
   AutoBiographer_WorldMapOverlayWindow_ShowEvent(startingIndex, startingIndex, delayBetweenEvents * eventsToShowPerDelay, eventsToShowPerDelay, {}, nil, startingLevel)
 end
 
-function AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex, firstIndex, delay, eventsToShowPerDelay, eventsShownPerMapId, currentEventsExpansion, currentEventsLevel)
+function AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex, firstIndex, delay, eventsToShowPerDelay, eventsShownPerMapId, currentEventsExpansion, currentEventsLevel, isBatchedCall)
   if (not AutoBiographer_WorldMapOverlayWindow.EventsAreShown or eventIndex > #AutoBiographer_Controller.CharacterData.Events) then
+    if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then
+      local averageEventsPerSecondShown = HelperFunctions.Round(AutoBiographer_WorldMapOverlayWindow.EventsShown / (GetTime() - AutoBiographer_WorldMapOverlayWindow.ShowEventsStartTime), 2)
+      print("[AutoBiographer] Events/Second -- Avg: " .. averageEventsPerSecondShown .. ". Min: " .. tostring(AutoBiographer_WorldMapOverlayWindow.MinimumEventsPerSecondShown))
+    end
+
     AutoBiographer_WorldMapOverlayWindow_UpdateCurrentEventIndicator(nil)
     return
   end
@@ -500,24 +512,24 @@ function AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex, firstIndex, 
 
   local mapCoordinates = Event.GetMapCoordinates(event)
   if (not mapCoordinates or not AutoBiographer_Settings.MapEventDisplayFilters[event.SubType]) then
-    AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex + 1, firstIndex, delay, eventsToShowPerDelay, eventsShownPerMapId, currentEventsExpansion, currentEventsLevel)
+    AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex + 1, firstIndex, delay, eventsToShowPerDelay, eventsShownPerMapId, currentEventsExpansion, currentEventsLevel, false)
     return
   end
 
-	-- if (AutoBiographer_WorldMapOverlayWindow.TempEventsSinceLastDeltaTimeCalculation == nil) then
-	-- 	AutoBiographer_WorldMapOverlayWindow.TempEventsSinceLastDeltaTimeCalculation = 0
-	-- else
-	-- 	AutoBiographer_WorldMapOverlayWindow.TempEventsSinceLastDeltaTimeCalculation = AutoBiographer_WorldMapOverlayWindow.TempEventsSinceLastDeltaTimeCalculation + 1
-	-- end
+  AutoBiographer_WorldMapOverlayWindow.EventsShown = AutoBiographer_WorldMapOverlayWindow.EventsShown + 1
 
-	-- if (AutoBiographer_WorldMapOverlayWindow.TempEventsSinceLastDeltaTimeCalculation % 1 == 0) then
-	-- 	local deltaTime = 0
-	-- 	if (AutoBiographer_WorldMapOverlayWindow.TempLastTime) then
-	-- 		deltaTime = string.format("%." .. 3 .. "f", GetTime() - AutoBiographer_WorldMapOverlayWindow.TempLastTime)
-	-- 	end
-	-- 	AutoBiographer_WorldMapOverlayWindow.TempLastTime = GetTime()
-	-- 	AutoBiographer_WorldMapOverlayWindow.ProgressFs:SetText("dt: " .. deltaTime .. "s, ")
-	-- end
+  if (not isBatchedCall) then
+    local thisEventShownTime = GetTime()
+    if (AutoBiographer_WorldMapOverlayWindow.LastDelayedEventShownTime) then
+      local deltaTime = thisEventShownTime - AutoBiographer_WorldMapOverlayWindow.LastDelayedEventShownTime
+      local currentEventsPerSecond = HelperFunctions.Round((1 / deltaTime) * eventsToShowPerDelay, 2);
+      --AutoBiographer_WorldMapOverlayWindow.ProgressFs:SetText("EPS: " .. currentEventsPerSecond .. "")
+      if (not AutoBiographer_WorldMapOverlayWindow.MinimumEventsPerSecondShown or currentEventsPerSecond < AutoBiographer_WorldMapOverlayWindow.MinimumEventsPerSecondShown) then
+        AutoBiographer_WorldMapOverlayWindow.MinimumEventsPerSecondShown = currentEventsPerSecond
+      end
+    end
+    AutoBiographer_WorldMapOverlayWindow.LastDelayedEventShownTime = thisEventShownTime
+  end
 
   if (AutoBiographer_Settings.MapEventFollowExpansions) then
 		if (currentEventsLevel ~= nil) then
@@ -659,21 +671,16 @@ function AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex, firstIndex, 
   AutoBiographer_WorldMapOverlayWindow.EventIndexToIconMap[eventIndex] = icon
   eventsShownPerMapId[mapCoordinates.MapId] = eventsShownPerMapId[mapCoordinates.MapId] + 1
 
-  local eventsShown = 0
-  for k, v in pairs(eventsShownPerMapId) do
-    eventsShown = eventsShown + v
-  end
-
-  if (eventsShown % eventsToShowPerDelay == 0) then
+  if (AutoBiographer_WorldMapOverlayWindow.EventsShown % eventsToShowPerDelay == 0) then
     if (AutoBiographer_Settings.MapEventShowCircle) then
       AutoBiographer_WorldMapOverlayWindow_UpdateCurrentEventIndicator(mapCoordinates)
     end
 
     C_Timer.After(delay, function()
-      AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex + 1, firstIndex, delay, eventsToShowPerDelay, eventsShownPerMapId, currentEventsExpansion, currentEventsLevel)
+      AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex + 1, firstIndex, delay, eventsToShowPerDelay, eventsShownPerMapId, currentEventsExpansion, currentEventsLevel, false)
     end)
   else
-    AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex + 1, firstIndex, delay, eventsToShowPerDelay, eventsShownPerMapId, currentEventsExpansion, currentEventsLevel)
+    AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex + 1, firstIndex, delay, eventsToShowPerDelay, eventsShownPerMapId, currentEventsExpansion, currentEventsLevel, true)
   end
 end
 

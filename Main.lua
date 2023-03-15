@@ -707,7 +707,7 @@ function EM.EventHandlers.PLAYER_MONEY(self)
 
     if (not moneyAllocatedToMail) then
       AutoBiographer_Controller:AddLog("Delta money (" .. tostring(deltaMoney) .. ") did not match scanned messages.", AutoBiographerEnum.LogLevel.Warning)
-      if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then print("AutoBiographer: Delta money (" .. tostring(deltaMoney) .. ") did not match scanned messages.") end
+      if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then print("[AutoBiographer] Delta money (" .. tostring(deltaMoney) .. ") did not match scanned messages.") end
     end
   elseif (self.MerchantIsOpen) then
     if (deltaMoney > 0) then

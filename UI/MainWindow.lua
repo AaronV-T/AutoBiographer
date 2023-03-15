@@ -1087,6 +1087,7 @@ function AutoBiographer_StatisticsWindow:Initialize()
   frame.SubFrame.MinimumLevelEb = CreateFrame("EditBox", nil, frame.SubFrame, BackdropTemplateMixin and "BackdropTemplate");
   frame.SubFrame.MinimumLevelEb:SetSize(20, 20)
   frame.SubFrame.MinimumLevelEb:SetPoint("LEFT", frame.SubFrame.MinimumLevelFs, "RIGHT", 2, 0)
+  frame.SubFrame.MinimumLevelEb:SetFontObject(GameTooltipTextSmall)
   frame.SubFrame.MinimumLevelEb:SetBackdrop({
     bgFile = "",
     edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -1130,6 +1131,7 @@ function AutoBiographer_StatisticsWindow:Initialize()
   frame.SubFrame.MaximumLevelEb = CreateFrame("EditBox", nil, frame.SubFrame, BackdropTemplateMixin and "BackdropTemplate");
   frame.SubFrame.MaximumLevelEb:SetSize(20, 20)
   frame.SubFrame.MaximumLevelEb:SetPoint("LEFT", frame.SubFrame.MaximumLevelFs, "RIGHT", 2, 0)
+  frame.SubFrame.MaximumLevelEb:SetFontObject(GameTooltipTextSmall)
   frame.SubFrame.MaximumLevelEb:SetBackdrop({
     bgFile = "",
     edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -1731,7 +1733,7 @@ function AutoBiographer_StatisticsWindow:Update()
       end
     end
   else
-    print("AutoBiographer: Unsupported Statistics Display Mode. This should not happen!")
+    print("[AutoBiographer] Unsupported Statistics Display Mode. This should not happen!")
     return
   end
 
