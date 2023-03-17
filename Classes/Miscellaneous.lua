@@ -1,13 +1,14 @@
 -- *** Kill ***
 
 Kill = {}
-function Kill.New(groupGotAssistOrKillingBlow, playerGotAssist, playerGotKillingBlow, playerHasTag, catalogUnitId)
+function Kill.New(groupGotAssistOrKillingBlow, playerGotAssist, playerGotKillingBlow, playerHasTag, catalogUnitId, playerOrGroupDamagePercentage)
   return {
     CatalogUnitId = catalogUnitId,
     GroupGotAssistOrKillingBlow = groupGotAssistOrKillingBlow,
     PlayerHasTag = playerHasTag,
     PlayerGotAssist = playerGotAssist,
-    PlayerGotKillingBlow= playerGotKillingBlow
+    PlayerGotKillingBlow = playerGotKillingBlow,
+    PlayerOrGroupDamagePercentage = playerOrGroupDamagePercentage
   }
 end
 

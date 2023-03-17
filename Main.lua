@@ -49,6 +49,17 @@ function SlashCmdList.AUTOBIOGRAPHER()
   AutoBiographer_MainWindow:Toggle()
 end
 
+SLASH_AUTOBIOGRAPHERVERIFY1, SLASH_AUTOBIOGRAPHERVERIFY2 = "/autobiographerverify", "/abverify"
+function SlashCmdList.AUTOBIOGRAPHERVERIFY()
+  -- Print % time of character /played that autobiographer has been running.
+  -- Print expected character level.
+
+  local totalsKillStatistics = Controller:GetAggregatedKillStatisticsTotals(1, 100)
+  local totalTaggedKills = KillStatistics.GetSum(totalsKillStatistics, { AutoBiographerEnum.KillTrackingType.TaggedAssist, AutoBiographerEnum.KillTrackingType.TaggedGroupAssistOrKillingBlow, AutoBiographerEnum.KillTrackingType.TaggedKillingBlow })
+  local taggedKillsWithGroupMinorityDamage = KillStatistics.GetSum(totalsKillStatistics, { AutoBiographerEnum.KillTrackingType.TaggedKillWithGroupMinorityDamage })
+  print("[AutoBiographer] Tagged Kills: " .. HelperFunctions.CommaValue(totalTaggedKills) .. ". Tagged Kills With Majority Damage From Outside Group: " .. HelperFunctions.CommaValue(taggedKillsWithGroupMinorityDamage) .. ".")
+end
+
 -- *** Locals ***
 
 local damagedUnits = {}
@@ -395,7 +406,32 @@ function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
         Controller:UpdateCatalogUnit(CatalogUnit.New(damagerCatalogUnitId, UnitClass(damagerUnitId), UnitClassification(damagerUnitId), UnitCreatureFamily(damagerUnitId), UnitCreatureType(damagerUnitId), UnitName(damagerUnitId), UnitRace(damagerUnitId), nil, HelperFunctions.GetUnitTypeFromCatalogUnitId(damagerCatalogUnitId)))
       end
     end
-    
+
+    -- Set damage flags.
+    if (damagedUnits[destGuid] == nil or unitWasOutOfCombat) then   
+      local firstObservedDamageCausedByPlayerOrGroup = playerCausedThisEvent or playerPetCausedThisEvent or groupMemberCausedThisEvent
+      
+      damagedUnits[destGuid] = {
+        DamageTakenFromGroup = 0,
+        DamageTakenFromPlayerOrPet = 0,
+        DamageTakenTotal = 0,
+        FirstObservedDamageCausedByPlayerOrGroup = firstObservedDamageCausedByPlayerOrGroup,
+        GroupHasDamaged = nil,
+        IsTapDenied = nil,
+        LastUnitGuidWhoCausedDamage = nil,
+        PlayerHasDamaged = nil,
+        PlayerPetHasDamaged = nil,
+        UnitHealthMax = nil
+      }
+    else
+      if (damagedUnitId ~= nil) then
+        damagedUnits[destGuid].IsTapDenied = UnitIsTapDenied(damagedUnitId)
+        --if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog(destName .. " (" .. damagedUnitId .. ") tap denied: " .. tostring(damagedUnits[destGuid].IsTapDenied), AutoBiographerEnum.LogLevel.Verbose) end
+      end
+    end
+
+    local damagedUnit = damagedUnits[destGuid]
+
     local damagedUnitId = FindUnitIdByUnitGUID(destGuid)
     local unitWasOutOfCombat = nil
     if (damagedUnitId ~= nil) then 
@@ -405,51 +441,39 @@ function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
       if (Controller:CatalogUnitIsIncomplete(damagedCatalogUnitId)) then
         Controller:UpdateCatalogUnit(CatalogUnit.New(damagedCatalogUnitId, UnitClass(damagedUnitId), UnitClassification(damagedUnitId), UnitCreatureFamily(damagedUnitId), UnitCreatureType(damagedUnitId), UnitName(damagedUnitId), UnitRace(damagedUnitId), nil, HelperFunctions.GetUnitTypeFromCatalogUnitId(damagedCatalogUnitId)))
       end
+
+      if (damagedUnit.UnitHealthMax == nil) then
+        damagedUnit.UnitHealthMax = UnitHealthMax(damagedUnitId)
+      end
     end
     
-    -- Process event's damage amount if the damage was dealt or taken by the player or his pet.
-    if (playerCausedThisEvent or destGuid == self.PersistentPlayerInfo.PlayerGuid or playerPetCausedThisEvent or destGuid == UnitGUID("pet")) then
-      if (string.find(event, "SWING") == 1) then
-        amount, overKill, school, resisted, blocked, absorbed, critical, glancing, crushing, isOffHand = select(12, CombatLogGetCurrentEventInfo())
-      elseif (string.find(event, "SPELL") == 1) then
-        spellId, spellName, spellSchool, amount, overKill, school, resisted, blocked, absorbed, critical, glancing, crushing, isOffHand = select(12, CombatLogGetCurrentEventInfo())
-      end
+    -- Process event's damage amount.
+    if (string.find(event, "SWING") == 1) then
+      amount, overKill, school, resisted, blocked, absorbed, critical, glancing, crushing, isOffHand = select(12, CombatLogGetCurrentEventInfo())
+    elseif (string.find(event, "RANGE") == 1 or string.find(event, "SPELL") == 1) then
+      spellId, spellName, spellSchool, amount, overKill, school, resisted, blocked, absorbed, critical, glancing, crushing, isOffHand = select(12, CombatLogGetCurrentEventInfo())
+    end
+    
+    if (amount) then
+      if (overKill < -1 and AutoBiographer_Settings.Options["EnableDebugLogging"]) then print("[AutoBiographer] OverKill is " .. tostring(overKill)) end
+      if (not overKill or overKill < 0) then overKill = 0 end -- -1 means none
       
-      if (amount) then 
-        if (not overKill or overKill == -1) then overKill = 0 end
-        
-        if (playerCausedThisEvent) then 
-          Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageDealt, amount, overKill)
-        elseif (destGuid == self.PersistentPlayerInfo.PlayerGuid) then 
-          Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageTaken, amount, overKill)
-        elseif (playerPetCausedThisEvent) then 
-          Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.PetDamageDealt, amount, overKill)
-        elseif (destGuid == UnitGUID("pet")) then 
-          Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.PetDamageTaken, amount, overKill)  
-        end
+      damagedUnit.DamageTakenTotal = damagedUnit.DamageTakenTotal + amount - overKill
+
+      if (playerCausedThisEvent) then 
+        Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageDealt, amount, overKill)
+        damagedUnit.DamageTakenFromPlayerOrPet = damagedUnit.DamageTakenFromPlayerOrPet + amount - overKill
+      elseif (destGuid == self.PersistentPlayerInfo.PlayerGuid) then
+        Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageTaken, amount, overKill)
+      elseif (playerPetCausedThisEvent) then 
+        Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.PetDamageDealt, amount, overKill)
+        damagedUnit.DamageTakenFromPlayerOrPet = damagedUnit.DamageTakenFromPlayerOrPet + amount - overKill
+      elseif (destGuid == UnitGUID("pet")) then
+        Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.PetDamageTaken, amount, overKill)
+      elseif (groupMemberCausedThisEvent) then
+        damagedUnit.DamageTakenFromGroup = damagedUnit.DamageTakenFromGroup + amount - overKill
       end
     end
-    
-    -- Set damage flags.
-    if (damagedUnits[destGuid] == nil or unitWasOutOfCombat) then   
-      local firstObservedDamageCausedByPlayerOrGroup = playerCausedThisEvent or playerPetCausedThisEvent or groupMemberCausedThisEvent
-      
-      damagedUnits[destGuid] = {
-        FirstObservedDamageCausedByPlayerOrGroup = firstObservedDamageCausedByPlayerOrGroup,
-        GroupHasDamaged = nil,
-        IsTapDenied = nil,
-        LastUnitGuidWhoCausedDamage = nil,
-        PlayerHasDamaged = nil,
-        PlayerPetHasDamaged = nil
-      }
-    else
-      if (damagedUnitId ~= nil) then
-        damagedUnits[destGuid].IsTapDenied = UnitIsTapDenied(damagedUnitId)
-        --if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog(destName .. " (" .. damagedUnitId .. ") tap denied: " .. tostring(damagedUnits[destGuid].IsTapDenied), AutoBiographerEnum.LogLevel.Verbose) end
-      end
-    end
-    
-    local damagedUnit = damagedUnits[destGuid]
     
     if (playerCausedThisEvent) then damagedUnit.PlayerHasDamaged = true
     elseif (playerPetCausedThisEvent) then damagedUnit.PlayerPetHasDamaged = true
@@ -463,7 +487,7 @@ function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
     -- Process event's heal amount.
     if (sourceGuid == self.PersistentPlayerInfo.PlayerGuid or destGuid == self.PersistentPlayerInfo.PlayerGuid) then
       spellId, spellName, spellSchool, amount, overKill, school, resisted, blocked, absorbed, critical, glancing, crushing, isOffHand = select(12, CombatLogGetCurrentEventInfo())
-      
+
       if (amount) then 
         if (not overKill or overKill == -1) then overKill = 0 end
         
@@ -499,7 +523,11 @@ function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
   
   if (deadUnit.PlayerHasDamaged or deadUnit.PlayerPetHasDamaged or weHadTag) then
     if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog(destName .. " Died.  Tagged: " .. tostring(weHadTag) .. ". FODCBPOG: " .. tostring(deadUnit.FirstObservedDamageCausedByPlayerOrGroup) .. ". ITD: "  .. tostring(deadUnit.IsTapDenied) .. ". PHD: " .. tostring(deadUnit.PlayerHasDamaged) .. ". PPHD: " .. tostring(deadUnit.PlayerPetHasDamaged).. ". GHD: "  .. tostring(deadUnit.GroupHasDamaged)  .. ". LastDmg: " .. tostring(deadUnit.LastUnitGuidWhoCausedDamage), AutoBiographerEnum.LogLevel.Debug) end
-    local kill = Kill.New(deadUnit.GroupHasDamaged, deadUnit.PlayerHasDamaged or deadUnit.PlayerPetHasDamaged, IsUnitGUIDPlayerOrPlayerPet(deadUnit.LastUnitGuidWhoCausedDamage), weHadTag, HelperFunctions.GetCatalogIdFromGuid(destGuid))
+
+    -- local playerOrGroupDmgOfHealthMax = HelperFunctions.Round(100 * ((deadUnit.DamageTakenFromPlayerOrPet + deadUnit.DamageTakenFromGroup) / deadUnit.UnitHealthMax)) -- This throws an error if unit dies in 1 hit.
+    local playerOrGroupDmgOfTotal = HelperFunctions.Round(100 * ((deadUnit.DamageTakenFromPlayerOrPet + deadUnit.DamageTakenFromGroup) / deadUnit.DamageTakenTotal))
+    -- print("Player/group dmg of max health: " .. playerOrGroupDmgOfHealthMax .. "%. Player/group dmg of total: " .. playerOrGroupDmgOfTotal .. "%.")
+    local kill = Kill.New(deadUnit.GroupHasDamaged, deadUnit.PlayerHasDamaged or deadUnit.PlayerPetHasDamaged, IsUnitGUIDPlayerOrPlayerPet(deadUnit.LastUnitGuidWhoCausedDamage), weHadTag, HelperFunctions.GetCatalogIdFromGuid(destGuid), playerOrGroupDmgOfTotal)
     Controller:OnKill(time(), HelperFunctions.GetCoordinatesByUnitId("player"), kill)
   end
   

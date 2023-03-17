@@ -2,3 +2,8 @@ Add new battlegrounds.
 Screenshot achievements.
 Make map events more efficient.
 Progressive map events WotLK improvement (use Azeroth map, move icons instead of delete)
+% of time played with addon running. Warning if percentage is low.
+Make stats sort more obvious.
+Item aquisitions by mail/trade.
+Estimated level. https://wowpedia.fandom.com/wiki/Experience_to_level#Vanilla_/_Classic_table
+Fish caught misc stat.

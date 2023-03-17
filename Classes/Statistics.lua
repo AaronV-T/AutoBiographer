@@ -196,12 +196,18 @@ function KillStatistics.AddKill(ks, kill)
   if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then AutoBiographer_Controller:AddLog("killTrackingType: " .. tostring(killTrackingType) .. ".", AutoBiographerEnum.LogLevel.Debug) end
 
   if (not killTrackingType) then
-    AutoBiographer_Controller:AddLog("Kill statistic not recorded; failed to find killTrackingType.", AutoBiographerEnum.LogLevel.Warning)
+    local messsage = "Kill statistic not recorded; failed to find killTrackingType."
+    if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then print("[AutoBiographer] " .. messsage) end
+    AutoBiographer_Controller:AddLog(messsage, AutoBiographerEnum.LogLevel.Warning)
   end
 
   if (ks[killTrackingType] == nil) then ks[killTrackingType] = 0 end
-
   ks[killTrackingType] = ks[killTrackingType] + 1
+
+  if (kill.PlayerOrGroupDamagePercentage < 50) then
+    if (ks[AutoBiographerEnum.KillTrackingType.TaggedKillWithGroupMinorityDamage] == nil) then ks[AutoBiographerEnum.KillTrackingType.TaggedKillWithGroupMinorityDamage] = 0 end
+    ks[AutoBiographerEnum.KillTrackingType.TaggedKillWithGroupMinorityDamage] = ks[AutoBiographerEnum.KillTrackingType.TaggedKillWithGroupMinorityDamage] + 1
+  end
 end
 
 function KillStatistics.GetSum(ks, killTrackingTypes)

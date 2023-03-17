@@ -93,6 +93,7 @@ AutoBiographerEnum = {
     UntaggedAssist = 3,
     UntaggedGroupAssistOrKillingBlow = 4,
     UntaggedKillingBlow = 5,
+    TaggedKillWithGroupMinorityDamage = 6, -- Special type, not mutually exclusive with other tagged kill stats.
   },
   LogLevel = {
     Verbose = 0,

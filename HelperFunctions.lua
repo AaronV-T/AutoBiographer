@@ -175,6 +175,29 @@ end
 
 -- Text Formatting Helpers
 
+function HF.AbbreviatedValue(n)
+  local sign = 1
+  if (n < 0) then
+    sign = -1
+    n = -n
+  end
+  
+  local c = ""
+  local val = n
+  if (n >= 1000000000) then
+    c = "B"
+    val = val / 1000000000
+  elseif (n >= 1000000) then
+    c = "M"
+    val = val / 1000000
+  elseif (n >= 1000) then
+    c = "K"
+    val = val / 1000
+  end
+
+  return tostring(HF.Round(val, 0)) .. c
+end
+
 function HF.CommaValue(n) -- credit http://richard.warburton.it
 	local left,num,right = string.match(n,'^([^%d]*%d)(%d*)(.-)$')
 	return left..(num:reverse():gsub('(%d%d%d)','%1,'):reverse())..right

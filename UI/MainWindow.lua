@@ -482,7 +482,7 @@ end
 
 function AutoBiographer_MainWindow:Initialize()
   local frame = self
-  frame:SetSize(800, 600) 
+  frame:SetSize(800, 650) 
   frame:SetPoint("CENTER") 
   
   frame:EnableKeyboard(true)
@@ -788,6 +788,10 @@ function AutoBiographer_MainWindow:Initialize()
   frame.ScrollFrame.Content.ExperienceFromKillsFs:SetPoint("TOPLEFT", 10, topPoint)
   topPoint = topPoint - 15
 
+  frame.ScrollFrame.Content.ExperienceFromKillsBaseFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  frame.ScrollFrame.Content.ExperienceFromKillsBaseFs:SetPoint("TOPLEFT", 20, topPoint)
+  topPoint = topPoint - 15
+
   frame.ScrollFrame.Content.ExperienceFromRestedBonusFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   frame.ScrollFrame.Content.ExperienceFromRestedBonusFs:SetPoint("TOPLEFT", 20, topPoint)
   topPoint = topPoint - 15
@@ -834,12 +838,20 @@ function AutoBiographer_MainWindow:Initialize()
   frame.ScrollFrame.Content.KillsHeaderFs:SetText("Kills")
   topPoint = topPoint - 20
 
-  frame.ScrollFrame.Content.TaggedKillingBlowsFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-  frame.ScrollFrame.Content.TaggedKillingBlowsFs:SetPoint("TOPLEFT", 10, topPoint)
+  frame.ScrollFrame.Content.TotalTaggedKillsFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  frame.ScrollFrame.Content.TotalTaggedKillsFs:SetPoint("TOPLEFT", 10, topPoint)
   topPoint = topPoint - 15
 
-  frame.ScrollFrame.Content.OtherTaggedKillsFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-  frame.ScrollFrame.Content.OtherTaggedKillsFs:SetPoint("TOPLEFT", 10, topPoint)
+  frame.ScrollFrame.Content.TaggedKillingBlowsFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  frame.ScrollFrame.Content.TaggedKillingBlowsFs:SetPoint("TOPLEFT", 20, topPoint)
+  topPoint = topPoint - 15
+
+  frame.ScrollFrame.Content.TaggedKillAssistsFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  frame.ScrollFrame.Content.TaggedKillAssistsFs:SetPoint("TOPLEFT", 20, topPoint)
+  topPoint = topPoint - 15
+
+  frame.ScrollFrame.Content.TaggedGroupKillsFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  frame.ScrollFrame.Content.TaggedGroupKillsFs:SetPoint("TOPLEFT", 20, topPoint)
   topPoint = topPoint - 15
 
   -- Miscellaneous Stats
@@ -1415,24 +1427,24 @@ function AutoBiographer_MainWindow:Update()
   -- Damage Stats
   local damageDealtAmount, damageDealtOver = Controller:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageDealt, self.DisplayMinLevel, self.DisplayMaxLevel)
   local petDamageDealtAmount, petDamageDealtOver = Controller:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.PetDamageDealt, self.DisplayMinLevel, self.DisplayMaxLevel)
-  local damageDealtText = "Damage Dealt: " .. HF.CommaValue(damageDealtAmount) .. " (" .. HF.CommaValue(damageDealtOver) .. " over)."
-  if (petDamageDealtAmount > 0) then damageDealtText = damageDealtText .. " Pet Damage Dealt: " .. HF.CommaValue(petDamageDealtAmount) .. " (" .. HF.CommaValue(petDamageDealtOver) .. " over)." end
+  local damageDealtText = "Damage Dealt: " .. HF.CommaValue(damageDealtAmount) .. " (" .. HF.AbbreviatedValue(damageDealtAmount - damageDealtOver) .. " effective, " .. HF.AbbreviatedValue(damageDealtOver) .. " over)."
+  if (petDamageDealtAmount > 0) then damageDealtText = damageDealtText .. " Pet Damage Dealt: " .. HF.AbbreviatedValue(petDamageDealtAmount) .. " (" .. HF.AbbreviatedValue(petDamageDealtAmount - petDamageDealtOver) .. " effective, " .. HF.AbbreviatedValue(petDamageDealtOver) .. " over)." end
   self.ScrollFrame.Content.DamageDealtFs:SetText(damageDealtText)
   
   local damageTakenAmount, damageTakenOver = Controller:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageTaken, self.DisplayMinLevel, self.DisplayMaxLevel)
   local petDamageTakenAmount, petDamageTakenOver = Controller:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.PetDamageTaken, self.DisplayMinLevel, self.DisplayMaxLevel)
-  local damageTakenText = "Damage Taken: " .. HF.CommaValue(damageTakenAmount) .. " (" .. HF.CommaValue(damageTakenOver) .. " over)."
-  if (petDamageTakenAmount > 0) then damageTakenText = damageTakenText .. " Pet Damage Taken: " .. HF.CommaValue(petDamageTakenAmount) .. " (" .. HF.CommaValue(petDamageTakenOver) .. " over)." end
+  local damageTakenText = "Damage Taken: " .. HF.CommaValue(damageTakenAmount) .. " (" .. HF.AbbreviatedValue(damageTakenAmount - damageTakenOver) .. " effective, " .. HF.AbbreviatedValue(damageTakenOver) .. " over)."
+  if (petDamageTakenAmount > 0) then damageTakenText = damageTakenText .. " Pet Damage Taken: " .. HF.AbbreviatedValue(petDamageTakenAmount) .. " (" .. HF.AbbreviatedValue(petDamageTakenAmount - petDamageTakenOver) .. " effective, " .. HF.AbbreviatedValue(petDamageTakenOver) .. " over)." end
   self.ScrollFrame.Content.DamageTakenFs:SetText(damageTakenText)
   
   local healingOtherAmount, healingOtherOver = Controller:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.HealingDealtToOthers, self.DisplayMinLevel, self.DisplayMaxLevel)
-  self.ScrollFrame.Content.HealingOtherFs:SetText("Healing Dealt to Others: " .. HF.CommaValue(healingOtherAmount) .. " (" .. HF.CommaValue(healingOtherOver) .. " over).")
+  self.ScrollFrame.Content.HealingOtherFs:SetText("Healing Dealt to Others: " .. HF.CommaValue(healingOtherAmount) .. " (" .. HF.AbbreviatedValue(healingOtherAmount - healingOtherOver) .. " effective, " .. HF.AbbreviatedValue(healingOtherOver) .. " over).")
   
   local healingSelfAmount, healingSelfOver = Controller:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.HealingDealtToSelf, self.DisplayMinLevel, self.DisplayMaxLevel)
-  self.ScrollFrame.Content.HealingSelfFs:SetText("Healing Dealt to Self: " .. HF.CommaValue(healingSelfAmount) .. " (" .. HF.CommaValue(healingSelfOver) .. " over).")
+  self.ScrollFrame.Content.HealingSelfFs:SetText("Healing Dealt to Self: " .. HF.CommaValue(healingSelfAmount) .. " (" .. HF.AbbreviatedValue(healingSelfAmount - healingSelfOver) .. " effective, " .. HF.AbbreviatedValue(healingSelfOver) .. " over).")
   
   local healingTakenAmount, healingTakenOver = Controller:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.HealingTaken, self.DisplayMinLevel, self.DisplayMaxLevel)
-  self.ScrollFrame.Content.HealingTakenFs:SetText("Healing Taken: " .. HF.CommaValue(healingTakenAmount) .. " (" .. HF.CommaValue(healingTakenOver) .. " over).")
+  self.ScrollFrame.Content.HealingTakenFs:SetText("Healing Taken: " .. HF.CommaValue(healingTakenAmount) .. " (" .. HF.AbbreviatedValue(healingTakenAmount - healingTakenOver) .. " effective, " .. HF.AbbreviatedValue(healingTakenOver) .. " over).")
   
   -- Death Stats
   local deathsToCreatures = Controller:GetDeathsByDeathTrackingType(AutoBiographerEnum.DeathTrackingType.DeathToCreature, self.DisplayMinLevel, self.DisplayMaxLevel)
@@ -1452,15 +1464,15 @@ function AutoBiographer_MainWindow:Update()
 
   -- Experience Stats
   local experienceFromKills = Controller:GetExperienceByExperienceTrackingType(AutoBiographerEnum.ExperienceTrackingType.Kill, self.DisplayMinLevel, self.DisplayMaxLevel)
-  self.ScrollFrame.Content.ExperienceFromKillsFs:SetText("Experience From Kills: " .. HF.CommaValue(experienceFromKills) .. ".")
-      
   local experienceFromRestedBonus = Controller:GetExperienceByExperienceTrackingType(AutoBiographerEnum.ExperienceTrackingType.RestedBonus, self.DisplayMinLevel, self.DisplayMaxLevel)
-  self.ScrollFrame.Content.ExperienceFromRestedBonusFs:SetText("Experience From Rested Bonus: " .. HF.CommaValue(experienceFromRestedBonus) .. ".")
-  
   local experienceFromGroupBonus = Controller:GetExperienceByExperienceTrackingType(AutoBiographerEnum.ExperienceTrackingType.GroupBonus, self.DisplayMinLevel, self.DisplayMaxLevel)
-  self.ScrollFrame.Content.ExperienceFromGroupBonusFs:SetText("Experience From Group Bonus: " .. HF.CommaValue(experienceFromGroupBonus) .. ".")
-  
   local experienceLostToRaidPenalty = Controller:GetExperienceByExperienceTrackingType(AutoBiographerEnum.ExperienceTrackingType.RaidPenalty, self.DisplayMinLevel, self.DisplayMaxLevel)
+  local experienceFromKillsBase = experienceFromKills - experienceFromRestedBonus - experienceFromGroupBonus + experienceLostToRaidPenalty
+
+  self.ScrollFrame.Content.ExperienceFromKillsFs:SetText("Experience From Kills (Total): " .. HF.CommaValue(experienceFromKills) .. ".")
+  self.ScrollFrame.Content.ExperienceFromKillsBaseFs:SetText("Experience From Kills (Base): " .. HF.CommaValue(experienceFromKillsBase) .. ".")
+  self.ScrollFrame.Content.ExperienceFromRestedBonusFs:SetText("Experience From Rested Bonus: " .. HF.CommaValue(experienceFromRestedBonus) .. ".")
+  self.ScrollFrame.Content.ExperienceFromGroupBonusFs:SetText("Experience From Group Bonus: " .. HF.CommaValue(experienceFromGroupBonus) .. ".")
   self.ScrollFrame.Content.ExperienceLostToRaidPenaltyFs:SetText("Experience Lost To Raid Penalty: " .. HF.CommaValue(experienceLostToRaidPenalty) .. ".")
   
   local experienceFromQuests = Controller:GetExperienceByExperienceTrackingType(AutoBiographerEnum.ExperienceTrackingType.Quest, self.DisplayMinLevel, self.DisplayMaxLevel)
@@ -1481,11 +1493,18 @@ function AutoBiographer_MainWindow:Update()
   
   -- Kill Stats
   local totalsKillStatistics = Controller:GetAggregatedKillStatisticsTotals(self.DisplayMinLevel, self.DisplayMaxLevel)
-  local taggedKillingBlows = KillStatistics.GetSum(totalsKillStatistics, { AutoBiographerEnum.KillTrackingType.TaggedKillingBlow })
-  self.ScrollFrame.Content.TaggedKillingBlowsFs:SetText("Tagged Killing Blows: " .. HF.CommaValue(taggedKillingBlows) .. ".")
+
+  local totalTaggedKills = KillStatistics.GetSum(totalsKillStatistics, { AutoBiographerEnum.KillTrackingType.TaggedAssist, AutoBiographerEnum.KillTrackingType.TaggedGroupAssistOrKillingBlow, AutoBiographerEnum.KillTrackingType.TaggedKillingBlow })
+  self.ScrollFrame.Content.TotalTaggedKillsFs:SetText("Total Tagged Kills: " .. HF.CommaValue(totalTaggedKills) .. ".")
   
-  local otherTaggedKills = KillStatistics.GetSum(totalsKillStatistics, { AutoBiographerEnum.KillTrackingType.TaggedAssist, AutoBiographerEnum.KillTrackingType.TaggedGroupAssistOrKillingBlow, AutoBiographerEnum.KillTrackingType.TaggedKillingBlow })
-  self.ScrollFrame.Content.OtherTaggedKillsFs:SetText("Tagged Killing Blows and Assists: " .. HF.CommaValue(otherTaggedKills) .. ".")
+  local taggedKillingBlows = KillStatistics.GetSum(totalsKillStatistics, { AutoBiographerEnum.KillTrackingType.TaggedKillingBlow })
+  self.ScrollFrame.Content.TaggedKillingBlowsFs:SetText("Killing Blows: " .. HF.CommaValue(taggedKillingBlows) .. ".")
+  
+  local taggedAssists = KillStatistics.GetSum(totalsKillStatistics, { AutoBiographerEnum.KillTrackingType.TaggedAssist })
+  self.ScrollFrame.Content.TaggedKillAssistsFs:SetText("Kill Assists: " .. HF.CommaValue(taggedAssists) .. ".")
+
+  local taggedGroupKills = KillStatistics.GetSum(totalsKillStatistics, { AutoBiographerEnum.KillTrackingType.TaggedGroupAssistOrKillingBlow })
+  self.ScrollFrame.Content.TaggedGroupKillsFs:SetText("Group Kills without Player Damage: " .. HF.CommaValue(taggedGroupKills) .. ".")
 
   -- Miscellaneous Stats
   local duelsWon = Controller:GetOtherPlayerStatByOtherPlayerTrackingType(AutoBiographerEnum.OtherPlayerTrackingType.DuelsLostToPlayer, self.DisplayMinLevel, self.DisplayMaxLevel)
