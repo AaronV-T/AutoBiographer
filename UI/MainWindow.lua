@@ -1,4 +1,5 @@
 local Controller = AutoBiographer_Controller
+local EM = AutoBiographer_EventManager
 local HF = HelperFunctions
 
 AutoBiographer_MainWindow = CreateFrame("Frame", "AutoBiographerMain", UIParent, "BasicFrameTemplateWithInset")
@@ -7,6 +8,7 @@ AutoBiographer_MainWindow:SetFrameStrata("HIGH")
 AutoBiographer_DebugWindow = CreateFrame("Frame", "AutoBiographerDebug", AutoBiographer_MainWindow, "BasicFrameTemplate")
 AutoBiographer_EventWindow = CreateFrame("Frame", "AutoBiographerEvent", AutoBiographer_MainWindow, "BasicFrameTemplate")
 AutoBiographer_StatisticsWindow = CreateFrame("Frame", "AutoBiographerStatistics", AutoBiographer_MainWindow, "BasicFrameTemplate")
+AutoBiographer_VerificationWindow = CreateFrame("Frame", "AutoBiographerVerification", AutoBiographer_MainWindow, "BasicFrameTemplate")
 
 --
 --
@@ -612,8 +614,8 @@ function AutoBiographer_MainWindow:Initialize()
   
   -- Buttons
   frame.ScrollFrame.Content.EventsBtn = CreateFrame("Button", nil, frame.ScrollFrame.Content, "UIPanelButtonTemplate");
-  frame.ScrollFrame.Content.EventsBtn:SetPoint("CENTER", frame.ScrollFrame.Content, "TOP", -225, -25);
-  frame.ScrollFrame.Content.EventsBtn:SetSize(140, 40);
+  frame.ScrollFrame.Content.EventsBtn:SetPoint("CENTER", frame.ScrollFrame.Content, "TOP", -260, -25);
+  frame.ScrollFrame.Content.EventsBtn:SetSize(120, 35);
   frame.ScrollFrame.Content.EventsBtn:SetText("Events");
   frame.ScrollFrame.Content.EventsBtn:SetNormalFontObject("GameFontNormalLarge");
   frame.ScrollFrame.Content.EventsBtn:SetHighlightFontObject("GameFontHighlightLarge");
@@ -624,8 +626,8 @@ function AutoBiographer_MainWindow:Initialize()
   )
 
   frame.ScrollFrame.Content.StatisticsBtn = CreateFrame("Button", nil, frame.ScrollFrame.Content, "UIPanelButtonTemplate");
-  frame.ScrollFrame.Content.StatisticsBtn:SetPoint("CENTER", frame.ScrollFrame.Content, "TOP", -75, -25);
-  frame.ScrollFrame.Content.StatisticsBtn:SetSize(140, 40);
+  frame.ScrollFrame.Content.StatisticsBtn:SetPoint("CENTER", frame.ScrollFrame.Content, "TOP", -130, -25);
+  frame.ScrollFrame.Content.StatisticsBtn:SetSize(120, 35);
   frame.ScrollFrame.Content.StatisticsBtn:SetText("Statistics");
   frame.ScrollFrame.Content.StatisticsBtn:SetNormalFontObject("GameFontNormalLarge");
   frame.ScrollFrame.Content.StatisticsBtn:SetHighlightFontObject("GameFontHighlightLarge");
@@ -634,10 +636,22 @@ function AutoBiographer_MainWindow:Initialize()
       AutoBiographer_StatisticsWindow:Toggle()
     end
   )
+
+  frame.ScrollFrame.Content.DebugBtn = CreateFrame("Button", nil, frame.ScrollFrame.Content, "UIPanelButtonTemplate");
+  frame.ScrollFrame.Content.DebugBtn:SetPoint("CENTER", frame.ScrollFrame.Content, "TOP", 0, -25);
+  frame.ScrollFrame.Content.DebugBtn:SetSize(120, 35);
+  frame.ScrollFrame.Content.DebugBtn:SetText("Verify");
+  frame.ScrollFrame.Content.DebugBtn:SetNormalFontObject("GameFontNormalLarge");
+  frame.ScrollFrame.Content.DebugBtn:SetHighlightFontObject("GameFontHighlightLarge");
+  frame.ScrollFrame.Content.DebugBtn:SetScript("OnClick", 
+    function(self)
+      AutoBiographer_VerificationWindow:Toggle()
+    end
+  )
   
   frame.ScrollFrame.Content.OptionsBtn = CreateFrame("Button", nil, frame.ScrollFrame.Content, "UIPanelButtonTemplate");
-  frame.ScrollFrame.Content.OptionsBtn:SetPoint("CENTER", frame.ScrollFrame.Content, "TOP", 75, -25);
-  frame.ScrollFrame.Content.OptionsBtn:SetSize(140, 40);
+  frame.ScrollFrame.Content.OptionsBtn:SetPoint("CENTER", frame.ScrollFrame.Content, "TOP", 130, -25);
+  frame.ScrollFrame.Content.OptionsBtn:SetSize(120, 35);
   frame.ScrollFrame.Content.OptionsBtn:SetText("Options");
   frame.ScrollFrame.Content.OptionsBtn:SetNormalFontObject("GameFontNormalLarge");
   frame.ScrollFrame.Content.OptionsBtn:SetHighlightFontObject("GameFontHighlightLarge");
@@ -650,8 +664,8 @@ function AutoBiographer_MainWindow:Initialize()
   )
   
   frame.ScrollFrame.Content.DebugBtn = CreateFrame("Button", nil, frame.ScrollFrame.Content, "UIPanelButtonTemplate");
-  frame.ScrollFrame.Content.DebugBtn:SetPoint("CENTER", frame.ScrollFrame.Content, "TOP", 225, -25);
-  frame.ScrollFrame.Content.DebugBtn:SetSize(140, 40);
+  frame.ScrollFrame.Content.DebugBtn:SetPoint("CENTER", frame.ScrollFrame.Content, "TOP", 260, -25);
+  frame.ScrollFrame.Content.DebugBtn:SetSize(120, 35);
   frame.ScrollFrame.Content.DebugBtn:SetText("Debug");
   frame.ScrollFrame.Content.DebugBtn:SetNormalFontObject("GameFontNormalLarge");
   frame.ScrollFrame.Content.DebugBtn:SetHighlightFontObject("GameFontHighlightLarge");
@@ -667,10 +681,10 @@ function AutoBiographer_MainWindow:Initialize()
   frame.ScrollFrame.Content.TimePlayedThisLevelFS = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   frame.ScrollFrame.Content.TimePlayedThisLevelFS:SetPoint("LEFT", frame.ScrollFrame.Content, "TOP", 50, -65)
 
-  local topPoint = -60
+  local topPoint = -55
 
   -- Arena Stats
-  if (gameVersion >= 2) then
+  if (gameVersion == 2) then
     topPoint = topPoint - 15
     frame.ScrollFrame.Content.ArenaHeaderFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     frame.ScrollFrame.Content.ArenaHeaderFs:SetPoint("TOPLEFT", 10, topPoint)
@@ -691,29 +705,31 @@ function AutoBiographer_MainWindow:Initialize()
   end
 
   -- Battleground Stats
-  topPoint = topPoint - 15
-  frame.ScrollFrame.Content.BattlegroundHeaderFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-  frame.ScrollFrame.Content.BattlegroundHeaderFs:SetPoint("TOPLEFT", 10, topPoint)
-  frame.ScrollFrame.Content.BattlegroundHeaderFs:SetText("Battlegrounds")
-  topPoint = topPoint - 20
+  if (gameVersion < 3) then
+    topPoint = topPoint - 15
+    frame.ScrollFrame.Content.BattlegroundHeaderFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    frame.ScrollFrame.Content.BattlegroundHeaderFs:SetPoint("TOPLEFT", 10, topPoint)
+    frame.ScrollFrame.Content.BattlegroundHeaderFs:SetText("Battlegrounds")
+    topPoint = topPoint - 20
 
-  frame.ScrollFrame.Content.AvStatsFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-  frame.ScrollFrame.Content.AvStatsFs:SetPoint("TOPLEFT", 10, topPoint)
-  topPoint = topPoint - 15
+    frame.ScrollFrame.Content.AvStatsFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    frame.ScrollFrame.Content.AvStatsFs:SetPoint("TOPLEFT", 10, topPoint)
+    topPoint = topPoint - 15
 
-  frame.ScrollFrame.Content.AbStatsFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-  frame.ScrollFrame.Content.AbStatsFs:SetPoint("TOPLEFT", 10, topPoint)
-  topPoint = topPoint - 15
+    frame.ScrollFrame.Content.AbStatsFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    frame.ScrollFrame.Content.AbStatsFs:SetPoint("TOPLEFT", 10, topPoint)
+    topPoint = topPoint - 15
 
-  if (gameVersion >= 2) then
-    frame.ScrollFrame.Content.EotsStatsFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    frame.ScrollFrame.Content.EotsStatsFs:SetPoint("TOPLEFT", 10, topPoint)
+    if (gameVersion == 2) then
+      frame.ScrollFrame.Content.EotsStatsFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+      frame.ScrollFrame.Content.EotsStatsFs:SetPoint("TOPLEFT", 10, topPoint)
+      topPoint = topPoint - 15
+    end
+
+    frame.ScrollFrame.Content.WsgStatsFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    frame.ScrollFrame.Content.WsgStatsFs:SetPoint("TOPLEFT", 10, topPoint)
     topPoint = topPoint - 15
   end
-
-  frame.ScrollFrame.Content.WsgStatsFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-  frame.ScrollFrame.Content.WsgStatsFs:SetPoint("TOPLEFT", 10, topPoint)
-  topPoint = topPoint - 15
 
   -- Damage Stats
   topPoint = topPoint - 15
@@ -1235,6 +1251,163 @@ end
 
 --
 --
+-- Verification Window Initialization
+--
+--
+
+function AutoBiographer_VerificationWindow:Initialize()
+  local frame = self
+  frame:SetSize(750, 585)
+  frame:SetPoint("CENTER")
+
+  frame:EnableKeyboard(true)
+  frame:EnableMouse(true)
+  frame:SetMovable(true)
+
+  frame:SetScript("OnHide", function(self)
+    if (self.isMoving) then
+      self:StopMovingOrSizing()
+      self.isMoving = false
+    end
+  end)
+
+  frame:SetScript("OnKeyDown", function(self, key)
+    if (key == "ESCAPE") then
+      frame:SetPropagateKeyboardInput(false)
+      frame:Hide()
+    elseif (key == "END") then
+      frame:SetPropagateKeyboardInput(false)
+      local sliderMin, sliderMax = frame.ScrollFrame.Scrollbar:GetMinMaxValues()
+      frame.ScrollFrame.Scrollbar:SetValue(sliderMax)
+    elseif (key == "HOME") then
+      frame:SetPropagateKeyboardInput(false)
+      local sliderMin, sliderMax = frame.ScrollFrame.Scrollbar:GetMinMaxValues()
+      frame.ScrollFrame.Scrollbar:SetValue(sliderMin)
+    elseif (key == "PAGEDOWN") then
+      frame:SetPropagateKeyboardInput(false)
+      local sliderMin, sliderMax = frame.ScrollFrame.Scrollbar:GetMinMaxValues()
+      local sliderCurrentValue = frame.ScrollFrame.Scrollbar:GetValue()
+
+      local sliderNextValue = sliderCurrentValue + frame.ScrollFrame:GetHeight()
+
+      if (sliderNextValue > sliderMax) then
+        sliderNextValue = sliderMax
+      elseif (sliderNextValue < sliderMin) then
+        sliderNextValue = sliderMin
+      end
+
+      frame.ScrollFrame.Scrollbar:SetValue(sliderNextValue)
+    elseif (key == "PAGEUP") then
+      frame:SetPropagateKeyboardInput(false)
+      local sliderMin, sliderMax = frame.ScrollFrame.Scrollbar:GetMinMaxValues()
+      local sliderCurrentValue = frame.ScrollFrame.Scrollbar:GetValue()
+
+      local sliderNextValue = sliderCurrentValue - frame.ScrollFrame:GetHeight()
+
+      if (sliderNextValue > sliderMax) then
+        sliderNextValue = sliderMax
+      elseif (sliderNextValue < sliderMin) then
+        sliderNextValue = sliderMin
+      end
+
+      frame.ScrollFrame.Scrollbar:SetValue(sliderNextValue)
+    else
+      frame:SetPropagateKeyboardInput(true)
+    end
+  end)
+
+  frame:SetScript("OnMouseDown", function(self, button)
+    if (button == "LeftButton" and not self.isMoving) then
+      self:StartMoving()
+      self.isMoving = true
+    end
+  end)
+
+  frame:SetScript("OnMouseUp", function(self, button)
+    if (button == "LeftButton" and self.isMoving) then
+      self:StopMovingOrSizing()
+      self.isMoving = false
+    end
+  end)
+
+  frame:SetScript("OnMouseWheel", function(self, direction)
+    local sliderMin, sliderMax = frame.ScrollFrame.Scrollbar:GetMinMaxValues()
+    local sliderCurrentValue = frame.ScrollFrame.Scrollbar:GetValue()
+
+    local sliderNextValue = sliderCurrentValue - (frame.ScrollFrame.Scrollbar.scrollStep * direction)
+
+    if (sliderNextValue > sliderMax) then
+      sliderNextValue = sliderMax
+    elseif (sliderNextValue < sliderMin) then
+      sliderNextValue = sliderMin
+    end
+
+    frame.ScrollFrame.Scrollbar:SetValue(sliderNextValue)
+  end)
+
+  frame.Title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  frame.Title:SetPoint("LEFT", frame.TitleBg, "LEFT", 5, 0);
+  frame.Title:SetText("AutoBiographer Verification Window")
+  
+  --scrollframe
+  frame.ScrollFrame = CreateFrame("ScrollFrame", nil, frame) 
+  frame.ScrollFrame:SetPoint("TOPLEFT", 10, -25) 
+  frame.ScrollFrame:SetPoint("BOTTOMRIGHT", -10, 10) 
+
+  --scrollbar
+  frame.ScrollFrame.Scrollbar = CreateFrame("Slider", nil, frame.ScrollFrame, "UIPanelScrollBarTemplate") 
+  frame.ScrollFrame.Scrollbar:SetPoint("TOPLEFT", frame, "TOPRIGHT", -25, -40)
+  frame.ScrollFrame.Scrollbar:SetPoint("BOTTOMLEFT", frame, "BOTTOMRIGHT", -25, 22)
+  frame.ScrollFrame.Scrollbar:SetMinMaxValues(1, 1)
+  frame.ScrollFrame.Scrollbar:SetValueStep(1)
+  frame.ScrollFrame.Scrollbar.scrollStep = 15
+  frame.ScrollFrame.Scrollbar:SetValue(0)
+  frame.ScrollFrame.Scrollbar:SetWidth(16)
+  frame.ScrollFrame.Scrollbar:SetScript("OnValueChanged",
+    function (self, value) 
+      self:GetParent():SetVerticalScroll(value) 
+    end
+  )
+  local scrollbg = frame.ScrollFrame.Scrollbar:CreateTexture(nil, "BACKGROUND") 
+  scrollbg:SetAllPoints(scrollbar) 
+  scrollbg:SetTexture(0, 0, 0, 0.4) 
+  
+  --content frame 
+  frame.ScrollFrame.Content = CreateFrame("Frame", nil, frame.ScrollFrame)
+  frame.ScrollFrame.Content:SetSize(1, 1)
+  frame.ScrollFrame.Content.ChildrenCount = 0
+  frame.ScrollFrame:SetScrollChild(frame.ScrollFrame.Content)
+
+  local topPoint = -55
+
+  frame.ScrollFrame.Content.PercentageTimeTrackedFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  frame.ScrollFrame.Content.PercentageTimeTrackedFs:SetPoint("TOPLEFT", 10, topPoint)
+  topPoint = topPoint - 15
+
+  frame.ScrollFrame.Content.TaggedKillsFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  frame.ScrollFrame.Content.TaggedKillsFs:SetPoint("TOPLEFT", 10, topPoint)
+  topPoint = topPoint - 15
+
+  frame.ScrollFrame.Content.ExpectedlevelFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  frame.ScrollFrame.Content.ExpectedlevelFs:SetPoint("TOPLEFT", 10, topPoint)
+  topPoint = topPoint - 15
+  
+  frame.Toggle = function(self)
+    if (self:IsVisible()) then
+      self:Hide()
+    else
+      self:Update()
+      self:Show()
+      self:SetFrameLevel(150)
+    end
+  end
+
+  frame:Hide()
+  return frame
+end
+
+--
+--
 -- Debug Window Update
 --
 --
@@ -1385,7 +1558,7 @@ function AutoBiographer_MainWindow:Update()
   end
   
   -- Arena Stats
-  if (self.ScrollFrame.Content.Arena2v2StatsFs) then
+  if (self.ScrollFrame.Content.ArenaHeaderFs) then
     local arenaRegistered2v2Joined, arenaRegistered2v2Losses, arenaRegistered2v2Wins = Controller:GetArenaStatsByRegistrationTypeAndTeamSize(true, 2, self.DisplayMinLevel, self.DisplayMaxLevel)
     local arenaUnregistered2v2Joined, arenaUnregistered2v2Losses, arenaUnregistered2v2Wins = Controller:GetArenaStatsByRegistrationTypeAndTeamSize(false, 2, self.DisplayMinLevel, self.DisplayMaxLevel)
     local arenaRegistered2v2StatsText = "2v2 Rated - Wins: " .. HF.CommaValue(arenaRegistered2v2Wins) .. ". Losses: " .. HF.CommaValue(arenaRegistered2v2Losses) .. ". Incomplete: " .. HF.CommaValue(arenaRegistered2v2Joined - arenaRegistered2v2Losses - arenaRegistered2v2Wins) .. "."
@@ -1406,23 +1579,25 @@ function AutoBiographer_MainWindow:Update()
   end
 
   -- Battleground Stats
-  local avJoined, avLosses, avWins = Controller:GetBattlegroundStatsByBattlegroundId(1, self.DisplayMinLevel, self.DisplayMaxLevel)
-  local avStatsText = "Alterac Valley - Wins: " .. HF.CommaValue(avWins) .. ". Losses: " .. HF.CommaValue(avLosses) .. ". Incomplete: " .. HF.CommaValue(avJoined - avLosses - avWins) .. "."
-  self.ScrollFrame.Content.AvStatsFs:SetText(avStatsText)
+  if (self.ScrollFrame.Content.BattlegroundHeaderFs) then
+    local avJoined, avLosses, avWins = Controller:GetBattlegroundStatsByBattlegroundId(1, self.DisplayMinLevel, self.DisplayMaxLevel)
+    local avStatsText = "Alterac Valley - Wins: " .. HF.CommaValue(avWins) .. ". Losses: " .. HF.CommaValue(avLosses) .. ". Incomplete: " .. HF.CommaValue(avJoined - avLosses - avWins) .. "."
+    self.ScrollFrame.Content.AvStatsFs:SetText(avStatsText)
 
-  local abJoined, abLosses, abWins = Controller:GetBattlegroundStatsByBattlegroundId(3, self.DisplayMinLevel, self.DisplayMaxLevel)
-  local abStatsText = "Arathi Basin - Wins: " .. HF.CommaValue(abWins) .. ". Losses: " .. HF.CommaValue(abLosses) .. ". Incomplete: " .. HF.CommaValue(abJoined - abLosses - abWins) .. "."
-  self.ScrollFrame.Content.AbStatsFs:SetText(abStatsText)
+    local abJoined, abLosses, abWins = Controller:GetBattlegroundStatsByBattlegroundId(3, self.DisplayMinLevel, self.DisplayMaxLevel)
+    local abStatsText = "Arathi Basin - Wins: " .. HF.CommaValue(abWins) .. ". Losses: " .. HF.CommaValue(abLosses) .. ". Incomplete: " .. HF.CommaValue(abJoined - abLosses - abWins) .. "."
+    self.ScrollFrame.Content.AbStatsFs:SetText(abStatsText)
 
-  if (self.ScrollFrame.Content.EotsStatsFs) then
-    local eotsJoined, eotsLosses, eotsWins = Controller:GetBattlegroundStatsByBattlegroundId(4, self.DisplayMinLevel, self.DisplayMaxLevel)
-    local eotsStatsText = "Eye of the Storm - Wins: " .. HF.CommaValue(eotsWins) .. ". Losses: " .. HF.CommaValue(eotsLosses) .. ". Incomplete: " .. HF.CommaValue(eotsJoined - eotsLosses - eotsWins) .. "."
-    self.ScrollFrame.Content.EotsStatsFs:SetText(eotsStatsText)
+    if (self.ScrollFrame.Content.EotsStatsFs) then
+      local eotsJoined, eotsLosses, eotsWins = Controller:GetBattlegroundStatsByBattlegroundId(4, self.DisplayMinLevel, self.DisplayMaxLevel)
+      local eotsStatsText = "Eye of the Storm - Wins: " .. HF.CommaValue(eotsWins) .. ". Losses: " .. HF.CommaValue(eotsLosses) .. ". Incomplete: " .. HF.CommaValue(eotsJoined - eotsLosses - eotsWins) .. "."
+      self.ScrollFrame.Content.EotsStatsFs:SetText(eotsStatsText)
+    end
+
+    local wsgJoined, wsgLosses, wsgWins = Controller:GetBattlegroundStatsByBattlegroundId(2, self.DisplayMinLevel, self.DisplayMaxLevel)
+    local wsgStatsText = "Warsong Gulch - Wins: " .. HF.CommaValue(wsgWins) .. ". Losses: " .. HF.CommaValue(wsgLosses) .. ". Incomplete: " .. HF.CommaValue(wsgJoined - wsgLosses - wsgWins) .. "."
+    self.ScrollFrame.Content.WsgStatsFs:SetText(wsgStatsText)
   end
-
-  local wsgJoined, wsgLosses, wsgWins = Controller:GetBattlegroundStatsByBattlegroundId(2, self.DisplayMinLevel, self.DisplayMaxLevel)
-  local wsgStatsText = "Warsong Gulch - Wins: " .. HF.CommaValue(wsgWins) .. ". Losses: " .. HF.CommaValue(wsgLosses) .. ". Incomplete: " .. HF.CommaValue(wsgJoined - wsgLosses - wsgWins) .. "."
-  self.ScrollFrame.Content.WsgStatsFs:SetText(wsgStatsText)
 
   -- Damage Stats
   local damageDealtAmount, damageDealtOver = Controller:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageDealt, self.DisplayMinLevel, self.DisplayMaxLevel)
@@ -1834,4 +2009,17 @@ function AutoBiographer_StatisticsWindow:Update()
   local scrollbarMaxValue = (#tableData.Rows * 15) - self.SubFrame.ScrollFrame:GetHeight();
   if (scrollbarMaxValue <= 0) then scrollbarMaxValue = 1 end
   self.SubFrame.ScrollFrame.Scrollbar:SetMinMaxValues(1, scrollbarMaxValue)
+end
+
+function AutoBiographer_VerificationWindow:Update()
+  local timeTrackedLoggedIn = Controller:GetTimeForTimeTrackingType(AutoBiographerEnum.TimeTrackingType.LoggedIn, 1, 100)
+  local percentageTimeTracked = HelperFunctions.Round(100 * (timeTrackedLoggedIn / EM.PersistentPlayerInfo.LastTotalTimePlayed), 0)
+  self.ScrollFrame.Content.PercentageTimeTrackedFs:SetText("Percentage of time played that AutoBiographer has tracked: " .. percentageTimeTracked .. "%.")
+
+  local totalsKillStatistics = Controller:GetAggregatedKillStatisticsTotals(1, 100)
+  local totalTaggedKills = KillStatistics.GetSum(totalsKillStatistics, { AutoBiographerEnum.KillTrackingType.TaggedAssist, AutoBiographerEnum.KillTrackingType.TaggedGroupAssistOrKillingBlow, AutoBiographerEnum.KillTrackingType.TaggedKillingBlow })
+  local taggedKillsWithGroupMinorityDamage = KillStatistics.GetSum(totalsKillStatistics, { AutoBiographerEnum.KillTrackingType.TaggedKillWithGroupMinorityDamage })
+  self.ScrollFrame.Content.TaggedKillsFs:SetText("Tagged Kills: " .. HelperFunctions.CommaValue(totalTaggedKills) .. ". Tagged Kills With Majority Damage From Outside Group: " .. HelperFunctions.CommaValue(taggedKillsWithGroupMinorityDamage) .. ".")
+
+  self.ScrollFrame.Content.ExpectedlevelFs:SetText("Expected  Level: " .. "?" .. ".")
 end

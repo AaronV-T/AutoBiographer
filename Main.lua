@@ -49,17 +49,6 @@ function SlashCmdList.AUTOBIOGRAPHER()
   AutoBiographer_MainWindow:Toggle()
 end
 
-SLASH_AUTOBIOGRAPHERVERIFY1, SLASH_AUTOBIOGRAPHERVERIFY2 = "/autobiographerverify", "/abverify"
-function SlashCmdList.AUTOBIOGRAPHERVERIFY()
-  -- Print % time of character /played that autobiographer has been running.
-  -- Print expected character level.
-
-  local totalsKillStatistics = Controller:GetAggregatedKillStatisticsTotals(1, 100)
-  local totalTaggedKills = KillStatistics.GetSum(totalsKillStatistics, { AutoBiographerEnum.KillTrackingType.TaggedAssist, AutoBiographerEnum.KillTrackingType.TaggedGroupAssistOrKillingBlow, AutoBiographerEnum.KillTrackingType.TaggedKillingBlow })
-  local taggedKillsWithGroupMinorityDamage = KillStatistics.GetSum(totalsKillStatistics, { AutoBiographerEnum.KillTrackingType.TaggedKillWithGroupMinorityDamage })
-  print("[AutoBiographer] Tagged Kills: " .. HelperFunctions.CommaValue(totalTaggedKills) .. ". Tagged Kills With Majority Damage From Outside Group: " .. HelperFunctions.CommaValue(taggedKillsWithGroupMinorityDamage) .. ".")
-end
-
 -- *** Locals ***
 
 local damagedUnits = {}
@@ -227,6 +216,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   AutoBiographer_MainWindow:Initialize()
   AutoBiographer_OptionWindow:Initialize()
   AutoBiographer_StatisticsWindow:Initialize()
+  AutoBiographer_VerificationWindow:Initialize()
 
   AutoBiographer_WorldMapOverlayWindow_Initialize()
   AutoBiographer_WorldMapOverlayWindowToggleButton:Initialize()
@@ -455,6 +445,8 @@ function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
     end
     
     if (amount) then
+      --fix: "attempt to compare boolen with number" in DK starter area
+      if (type(overKill) == "boolean" and AutoBiographer_Settings.Options["EnableDebugLogging"]) then print("[AutoBiographer] OverKill is boolean. Event: " .. event) end
       if (overKill < -1 and AutoBiographer_Settings.Options["EnableDebugLogging"]) then print("[AutoBiographer] OverKill is " .. tostring(overKill)) end
       if (not overKill or overKill < 0) then overKill = 0 end -- -1 means none
       
@@ -892,9 +884,10 @@ function EM.EventHandlers.TIME_PLAYED_MSG(self, totalTimePlayed, levelTimePlayed
 
   local timeSinceLastTotalTimePlayed = totalTimePlayed - self.PersistentPlayerInfo.LastTotalTimePlayed
   self.PersistentPlayerInfo.LastTotalTimePlayed = totalTimePlayed
-  if (timeSinceLastTotalTimePlayed > 300) then
+  if (timeSinceLastTotalTimePlayed > 120) then
     print ("There are approximately " .. HelperFunctions.Round(timeSinceLastTotalTimePlayed / 60) .. " minutes of play time on this character unaccounted for by AutoBiographer. Some events or statistics may not have been tracked.")
     -- TODO: Add debug event here.
+    -- TODO: Scan money and items to check for changes.
   end
 end
 
