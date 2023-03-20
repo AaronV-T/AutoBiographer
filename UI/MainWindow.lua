@@ -1388,9 +1388,11 @@ function AutoBiographer_VerificationWindow:Initialize()
   frame.ScrollFrame.Content.TaggedKillsFs:SetPoint("TOPLEFT", 10, topPoint)
   topPoint = topPoint - 15
 
-  frame.ScrollFrame.Content.ExpectedlevelFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-  frame.ScrollFrame.Content.ExpectedlevelFs:SetPoint("TOPLEFT", 10, topPoint)
-  topPoint = topPoint - 15
+  if (HelperFunctions.GetGameVersion() == 1) then
+    frame.ScrollFrame.Content.ExpectedlevelFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    frame.ScrollFrame.Content.ExpectedlevelFs:SetPoint("TOPLEFT", 10, topPoint)
+    topPoint = topPoint - 15
+  end
   
   frame.Toggle = function(self)
     if (self:IsVisible()) then
@@ -2013,13 +2015,28 @@ end
 
 function AutoBiographer_VerificationWindow:Update()
   local timeTrackedLoggedIn = Controller:GetTimeForTimeTrackingType(AutoBiographerEnum.TimeTrackingType.LoggedIn, 1, 100)
-  local percentageTimeTracked = HelperFunctions.Round(100 * (timeTrackedLoggedIn / EM.PersistentPlayerInfo.LastTotalTimePlayed), 0)
+  local percentageTimeTracked = HF.Round(100 * (timeTrackedLoggedIn / EM.PersistentPlayerInfo.LastTotalTimePlayed), 0)
   self.ScrollFrame.Content.PercentageTimeTrackedFs:SetText("Percentage of time played that AutoBiographer has tracked: " .. percentageTimeTracked .. "%.")
 
   local totalsKillStatistics = Controller:GetAggregatedKillStatisticsTotals(1, 100)
   local totalTaggedKills = KillStatistics.GetSum(totalsKillStatistics, { AutoBiographerEnum.KillTrackingType.TaggedAssist, AutoBiographerEnum.KillTrackingType.TaggedGroupAssistOrKillingBlow, AutoBiographerEnum.KillTrackingType.TaggedKillingBlow })
   local taggedKillsWithGroupMinorityDamage = KillStatistics.GetSum(totalsKillStatistics, { AutoBiographerEnum.KillTrackingType.TaggedKillWithGroupMinorityDamage })
-  self.ScrollFrame.Content.TaggedKillsFs:SetText("Tagged Kills: " .. HelperFunctions.CommaValue(totalTaggedKills) .. ". Tagged Kills With Majority Damage From Outside Group: " .. HelperFunctions.CommaValue(taggedKillsWithGroupMinorityDamage) .. ".")
+  self.ScrollFrame.Content.TaggedKillsFs:SetText("Tagged Kills: " .. HF.CommaValue(totalTaggedKills) .. ". Tagged Kills With Majority Damage From Outside Group: " .. HF.CommaValue(taggedKillsWithGroupMinorityDamage) .. ".")
 
-  self.ScrollFrame.Content.ExpectedlevelFs:SetText("Expected  Level: " .. "?" .. ".")
+  if (self.ScrollFrame.Content.ExpectedlevelFs) then
+    local experienceFromKills = Controller:GetExperienceByExperienceTrackingType(AutoBiographerEnum.ExperienceTrackingType.Kill, 1, 100)
+    local experienceFromQuests = Controller:GetExperienceByExperienceTrackingType(AutoBiographerEnum.ExperienceTrackingType.Quest, 1, 100)
+    local experienceFromDiscovery = Controller:GetExperienceByExperienceTrackingType(AutoBiographerEnum.ExperienceTrackingType.Discovery, 1, 100)
+    local totalExperience = experienceFromKills + experienceFromQuests + experienceFromDiscovery
+    local xpToLevel = 0
+    local expectedLevel = 1
+    for i = 1, #AutoBiographer_Databases.XpPerLevelDatabase do
+      if (xpToLevel + AutoBiographer_Databases.XpPerLevelDatabase[i] > totalExperience) then
+        expectedLevel = i + ((totalExperience - xpToLevel) / AutoBiographer_Databases.XpPerLevelDatabase[i])
+        break
+      end
+      xpToLevel = xpToLevel + AutoBiographer_Databases.XpPerLevelDatabase[i]
+    end
+    self.ScrollFrame.Content.ExpectedlevelFs:SetText("Expected  Level: " .. HF.Round(expectedLevel, 2) .. ".")
+  end
 end
