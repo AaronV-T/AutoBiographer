@@ -1197,6 +1197,9 @@ function AutoBiographer_StatisticsWindow:Initialize()
   frame.SubFrame.MaximumLevelEb:SetNumber(Controller:GetCurrentLevelNum())
   frame.SubFrame.MaximumLevelEb.DebounceCount = 0
 
+  frame.SubFrame.SortColumnNameFs = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  frame.SubFrame.SortColumnNameFs:SetPoint("TOPLEFT", frame.SubFrame, 10, -10)
+
   -- Table Headers
   frame.SubFrame.TableHeaders = {}
 
@@ -1940,6 +1943,9 @@ function AutoBiographer_StatisticsWindow:Update()
       return rowA[self.SubFrame.OrderColumnIndex] > rowB[self.SubFrame.OrderColumnIndex]
     end
   end)
+
+  -- Sort column description.
+  self.SubFrame.SortColumnNameFs:SetText("Sorting by '" .. tableData.HeaderValues[self.SubFrame.OrderColumnIndex] .. "' " .. self.SubFrame.OrderDirection .. ".")
   
   -- Setup table headers.
   for k, headerFrame in pairs(self.SubFrame.TableHeaders) do

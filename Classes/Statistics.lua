@@ -196,9 +196,10 @@ function KillStatistics.AddKill(ks, kill)
   if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then AutoBiographer_Controller:AddLog("killTrackingType: " .. tostring(killTrackingType) .. ".", AutoBiographerEnum.LogLevel.Debug) end
 
   if (not killTrackingType) then
-    local messsage = "Kill statistic not recorded; failed to find killTrackingType."
-    if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then print("[AutoBiographer] " .. messsage) end
-    AutoBiographer_Controller:AddLog(messsage, AutoBiographerEnum.LogLevel.Warning)
+    local message = "Kill statistic not recorded; failed to find killTrackingType."
+    if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then print("[AutoBiographer] " .. message) end
+    AutoBiographer_Controller:AddLog(message, AutoBiographerEnum.LogLevel.Warning)
+    return
   end
 
   if (ks[killTrackingType] == nil) then ks[killTrackingType] = 0 end

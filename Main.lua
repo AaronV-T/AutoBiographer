@@ -106,7 +106,7 @@ end
 
 local function IsUnitGUIDInOurPartyOrRaid(unitGuid)
   for i = 1, #validUnitIds do
-    if ((string.match(validUnitIds[i], "party%d") or string.match(validUnitIds[i], "raid%d")) and not string.match(validUnitIds[i], "target")) then
+    if ((string.match(validUnitIds[i], "party") or string.match(validUnitIds[i], "raid")) and not string.match(validUnitIds[i], "target")) then
         if (UnitGUID(validUnitIds[i]) == unitGuid) then return true end
     end
 	end
@@ -614,6 +614,12 @@ function EM.EventHandlers.PLAYER_ENTERING_WORLD(self)
   if (not self.PersistentPlayerInfo.PlayerGuid) then
     -- This is probably the first time this character has logged in while using the addon.
     self.PersistentPlayerInfo.PlayerGuid = UnitGUID("player")
+    
+    if (UnitLevel("player") == 1 and UnitXP("player") == 0) then
+      print("\124cFFFFD700[AutoBiographer] Events and statistics are being tracked.")
+    else
+      print("\124cFFFFD700[AutoBiographer] Events and statistics are being tracked. Any events and statistics that occurred previously on this character are not tracked.")
+    end
   elseif (self.PersistentPlayerInfo.PlayerGuid ~= UnitGUID("player")) then
     -- The character was probably deleted and a new character was made with the same name.
     AutoBiographer_ConfirmWindow.New("If you have deleted and remade a\ncharacter with the same name, click accept\nand AutoBiographer will\ndelete its stored data for " .. UnitName("player") .. ".", 
@@ -885,7 +891,7 @@ function EM.EventHandlers.TIME_PLAYED_MSG(self, totalTimePlayed, levelTimePlayed
   local timeSinceLastTotalTimePlayed = totalTimePlayed - self.PersistentPlayerInfo.LastTotalTimePlayed
   self.PersistentPlayerInfo.LastTotalTimePlayed = totalTimePlayed
   if (timeSinceLastTotalTimePlayed > 120) then
-    print ("There are approximately " .. HelperFunctions.Round(timeSinceLastTotalTimePlayed / 60) .. " minutes of play time on this character unaccounted for by AutoBiographer. Some events or statistics may not have been tracked.")
+    print ("\124cFFFF0000[AutoBiographer] There are approximately " .. HelperFunctions.Round(timeSinceLastTotalTimePlayed / 60) .. " minutes of play time on this character unaccounted for by AutoBiographer. Some events or statistics may not have been tracked.")
     -- TODO: Add debug event here.
     -- TODO: Scan money and items to check for changes.
   end
