@@ -445,10 +445,7 @@ function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
     end
     
     if (amount) then
-      --fix: "attempt to compare boolen with number" in DK starter area
-      if (type(overKill) == "boolean" and AutoBiographer_Settings.Options["EnableDebugLogging"]) then print("[AutoBiographer] OverKill is boolean. Event: " .. event) end
-      if (overKill < -1 and AutoBiographer_Settings.Options["EnableDebugLogging"]) then print("[AutoBiographer] OverKill is " .. tostring(overKill)) end
-      if (not overKill or overKill < 0) then overKill = 0 end -- -1 means none
+      if (not overKill or overKill == -1) then overKill = 0 end -- -1 means none, nil means INSTAKILL or other non-DAMAGE type
       
       damagedUnit.DamageTakenTotal = damagedUnit.DamageTakenTotal + amount - overKill
 
