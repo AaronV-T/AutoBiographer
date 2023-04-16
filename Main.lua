@@ -789,7 +789,14 @@ function EM.EventHandlers.UPDATE_BATTLEFIELD_STATUS(self, battleFieldIndex)
     end
 
     if (battlegroundId == nil) then
-      Controller:AddLog("Unsupported battleground map name '" .. tostring(mapName) .. "'.", AutoBiographerEnum.LogLevel.Warning)
+      if (mapName == "Random Battleground") then
+        for i = 1, #AutoBiographer_Databases.BattlegroundDatabase do
+          self.PersistentPlayerInfo.BattlegroundStatuses[i] = status
+        end
+      else
+        Controller:AddLog("Unsupported battleground map name '" .. tostring(mapName) .. "'.", AutoBiographerEnum.LogLevel.Warning)
+      end
+
       return
     end
   end
