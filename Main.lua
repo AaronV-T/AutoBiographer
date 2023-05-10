@@ -259,23 +259,9 @@ end
 function EM.EventHandlers.CHAT_MSG_LOOT(self, text, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, arg17, arg18, arg19, arg20, arg21)
   if (string.find(text, "You") ~= 1) then return end
   
-  local itemAcquisitionMethod = nil
-  if (string.find(text, "You create") == 1) then
-    itemAcquisitionMethod = AutoBiographerEnum.ItemAcquisitionMethod.Create
-  elseif (string.find(text, "You receive loot") == 1) then
-    itemAcquisitionMethod = AutoBiographerEnum.ItemAcquisitionMethod.Loot
-  elseif (self.MerchantIsOpen) then
-    itemAcquisitionMethod = AutoBiographerEnum.ItemAcquisitionMethod.Merchant
-  else
-    itemAcquisitionMethod = AutoBiographerEnum.ItemAcquisitionMethod.Other
-  end
-  
-  local id = nil
-  for idMatch in string.gmatch(text, "item:%d+") do
-    id = string.sub(idMatch, 6, #idMatch)
-  end
-  
-  if (not id) then 
+  local id = HelperFunctions.GetItemIdFromTextWithChatItemLink(text)
+  if (not id) then
+    if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then print("[AutoBiographer] Unable to get itemId from text: '" .. text .. "'.") end
     Controller:AddLog("Unable to get itemId from text: '" .. text .. "'.", AutoBiographerEnum.LogLevel.Warning)
     return
   end
@@ -297,10 +283,26 @@ function EM.EventHandlers.CHAT_MSG_LOOT(self, text, arg2, arg3, arg4, arg5, arg6
   for quantityText in string.gmatch(text, "x%d+.") do
     quantity = tonumber(string.sub(quantityText, 2, #quantityText - 1))
   end
+
+  local itemAcquisitionMethod = nil
+  if (string.find(text, "You create") == 1) then
+    itemAcquisitionMethod = AutoBiographerEnum.ItemAcquisitionMethod.Create
+  elseif (string.find(text, "You receive loot") == 1) then
+    itemAcquisitionMethod = AutoBiographerEnum.ItemAcquisitionMethod.Loot
+  elseif (string.find(text, "You receive item") == 1) then
+    if (self:WasTradeRecentlyMade() and self.TradeInfo.OtherPlayerTradeItems[id] == quantity) then
+      itemAcquisitionMethod = AutoBiographerEnum.ItemAcquisitionMethod.Trade
+    elseif (self.MerchantIsOpen) then
+      itemAcquisitionMethod = AutoBiographerEnum.ItemAcquisitionMethod.Merchant
+    end
+  end
+
+  if (not itemAcquisitionMethod) then
+    itemAcquisitionMethod = AutoBiographerEnum.ItemAcquisitionMethod.Other
+  end
   
   Controller:OnAcquiredItem(time(), HelperFunctions.GetCoordinatesByUnitId("player"), itemAcquisitionMethod, catalogItem, quantity)
 end
-
 
 function EM.EventHandlers.CHAT_MSG_MONEY(self, text, arg2, arg3, arg4, arg5)
   if (string.find(text, "You") ~= 1) then return end
@@ -736,7 +738,7 @@ function EM.EventHandlers.PLAYER_MONEY(self)
     if (deltaMoney > 0) then
       Controller:OnGainedMoney(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.MoneyAcquisitionMethod.Merchant, deltaMoney)
     end
-  elseif (self.TradeInfo and not self.TradeInfo.Canceled and self.TradeInfo.Closed and GetTime() - self.TradeInfo.ClosedTimestamp < 1) then
+  elseif (self:WasTradeRecentlyMade()) then
     local tradeDeltaMoney = 0
     if (self.TradeInfo.OtherPlayerTradeMoney) then tradeDeltaMoney = tradeDeltaMoney + self.TradeInfo.OtherPlayerTradeMoney end
     if (self.TradeInfo.PlayerTradeMoney) then tradeDeltaMoney = tradeDeltaMoney - self.TradeInfo.PlayerTradeMoney end
@@ -903,18 +905,32 @@ end
 
 function EM.EventHandlers.TRADE_ACCEPT_UPDATE(self, playerAccepts, otherPlayerAccepts)
   --print("TRADE_ACCEPT_UPDATE, " .. tostring(playerAccepts) .. ", " .. tostring(otherPlayerAccepts))
-  if (self.TradeInfo == nil) then return end
+  if (self.TradeInfo == nil or playerAccepts == 0 or otherPlayerAccepts == 0) then return end
 
   self.TradeInfo.OtherPlayerTradeMoney = tonumber(GetTargetTradeMoney())
   self.TradeInfo.PlayerTradeMoney = tonumber(GetPlayerTradeMoney())
+
+  self.TradeInfo.OtherPlayerTradeItems = {}
+  for i = 1, 6 do
+    local name, texture, quantity, quality, isUsable, enchant = GetTradeTargetItemInfo(i)
+    local chatItemLink = GetTradeTargetItemLink(i)
+
+    if (not chatItemLink) then break end
+    
+    local itemId = HelperFunctions.GetItemIdFromTextWithChatItemLink(chatItemLink)
+    self.TradeInfo.OtherPlayerTradeItems[itemId] = quantity
+  end
+
+  self.TradeInfo.AcceptedByBoth = true
+  self.TradeInfo.AcceptedByBothTimestamp = GetTime()
 end
 
 function EM.EventHandlers.TRADE_CLOSED(self)
   --print("TRADE_CLOSED")
-  if (self.TradeInfo == nil) then return end
+  -- if (self.TradeInfo == nil) then return end
 
-  self.TradeInfo.Closed = true
-  self.TradeInfo.ClosedTimestamp = GetTime()
+  -- self.TradeInfo.Closed = true
+  -- self.TradeInfo.ClosedTimestamp = GetTime()
 end
 
 function EM.EventHandlers.TRADE_REQUEST_CANCEL(self)
@@ -1399,6 +1415,10 @@ function EM:UpdateTimestamps(zone, subZone)
     Controller:AddOtherPlayerInGroupTime(HelperFunctions.GetCatalogIdFromGuid(k), HelperFunctions.SubtractFloats(GetTime(), v))
     self.TemporaryTimestamps.OtherPlayerJoinedGroup[k] = GetTime()
   end
+end
+
+function EM:WasTradeRecentlyMade()
+  return self.TradeInfo and not self.TradeInfo.Canceled and self.TradeInfo.AcceptedByBoth and GetTime() - self.TradeInfo.AcceptedByBothTimestamp < 1
 end
 
 -- Register each event for which we have an event handler.

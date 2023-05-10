@@ -843,6 +843,14 @@ function AutoBiographer_MainWindow:Initialize()
   frame.ScrollFrame.Content.ItemsLootedFs:SetPoint("TOPLEFT", 10, topPoint)
   topPoint = topPoint - 15
 
+  frame.ScrollFrame.Content.ItemsTradeFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  frame.ScrollFrame.Content.ItemsTradeFs:SetPoint("TOPLEFT", 10, topPoint)
+  topPoint = topPoint - 15
+
+  frame.ScrollFrame.Content.ItemsVendorFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  frame.ScrollFrame.Content.ItemsVendorFs:SetPoint("TOPLEFT", 10, topPoint)
+  topPoint = topPoint - 15
+
   frame.ScrollFrame.Content.ItemsOtherFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   frame.ScrollFrame.Content.ItemsOtherFs:SetPoint("TOPLEFT", 10, topPoint)
   topPoint = topPoint - 15
@@ -1668,6 +1676,12 @@ function AutoBiographer_MainWindow:Update()
   local itemsLooted = Controller:GetItemCountForAcquisitionMethod(AutoBiographerEnum.ItemAcquisitionMethod.Loot, self.DisplayMinLevel, self.DisplayMaxLevel)
   self.ScrollFrame.Content.ItemsLootedFs:SetText("Items Looted: " .. HF.CommaValue(itemsLooted) .. ".")
   
+  local itemsTrade = Controller:GetItemCountForAcquisitionMethod(AutoBiographerEnum.ItemAcquisitionMethod.Trade, self.DisplayMinLevel, self.DisplayMaxLevel)
+  self.ScrollFrame.Content.ItemsTradeFs:SetText("Items Acquired By Trade: " .. HF.CommaValue(itemsTrade) .. ".")
+
+  local itemsMerchant = Controller:GetItemCountForAcquisitionMethod(AutoBiographerEnum.ItemAcquisitionMethod.Merchant, self.DisplayMinLevel, self.DisplayMaxLevel)
+  self.ScrollFrame.Content.ItemsVendorFs:SetText("Items Acquired From Vendors: " .. HF.CommaValue(itemsMerchant) .. ".")
+  
   local itemsOther = Controller:GetItemCountForAcquisitionMethod(AutoBiographerEnum.ItemAcquisitionMethod.Other, self.DisplayMinLevel, self.DisplayMaxLevel)
   self.ScrollFrame.Content.ItemsOtherFs:SetText("Items Acquired By Other Means: " .. HF.CommaValue(itemsOther) .. ".")
   
@@ -1774,8 +1788,8 @@ function AutoBiographer_StatisticsWindow:Update()
   if (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.Items) then
     local itemStatisticsByItem = Controller:GetAggregatedItemStatisticsDictionary(minLevel, maxLevel)
     tableData = {
-      HeaderValues = { "Item Name", "Created", "Looted", "Other", "Vendor" },
-      RowOffsets = { 0, 225, 300, 375, 450, 525 },
+      HeaderValues = { "Item Name", "Created", "Looted", "Other", "Trade", "Vendor" },
+      RowOffsets = { 0, 225, 300, 375, 450, 525, 600 },
       Rows = {},
     }
     for catalogItemId, itemStatistics in pairs(itemStatisticsByItem) do
@@ -1792,6 +1806,7 @@ function AutoBiographer_StatisticsWindow:Update()
           ItemStatistics.GetSum(itemStatistics, { AutoBiographerEnum.ItemAcquisitionMethod.Create }),
           ItemStatistics.GetSum(itemStatistics, { AutoBiographerEnum.ItemAcquisitionMethod.Loot }),
           ItemStatistics.GetSum(itemStatistics, { AutoBiographerEnum.ItemAcquisitionMethod.Other }),
+          ItemStatistics.GetSum(itemStatistics, { AutoBiographerEnum.ItemAcquisitionMethod.Trade }),
           ItemStatistics.GetSum(itemStatistics, { AutoBiographerEnum.ItemAcquisitionMethod.Merchant }),
         }
         table.insert(tableData.Rows, row)

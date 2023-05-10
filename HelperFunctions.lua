@@ -59,6 +59,12 @@ function HF.GetUnitTypeFromCatalogUnitId(cuid)
   end
 end
 
+function HF.GetItemIdFromTextWithChatItemLink(textWithChatItemLink)
+  for idMatch in string.gmatch(textWithChatItemLink, "item:%d+") do
+    return string.sub(idMatch, 6, #idMatch)
+  end
+end
+
 -- Lua Helpers
 
 function HF.RemoveElementsFromArrayAtIndexes(array, indexesToRemove)
