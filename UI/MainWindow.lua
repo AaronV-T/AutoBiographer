@@ -835,12 +835,24 @@ function AutoBiographer_MainWindow:Initialize()
   frame.ScrollFrame.Content.ItemsHeaderFs:SetText("Items")
   topPoint = topPoint - 20
 
+  frame.ScrollFrame.Content.ItemsAuctionHouseFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  frame.ScrollFrame.Content.ItemsAuctionHouseFs:SetPoint("TOPLEFT", 10, topPoint)
+  topPoint = topPoint - 15
+
   frame.ScrollFrame.Content.ItemsCreatedFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   frame.ScrollFrame.Content.ItemsCreatedFs:SetPoint("TOPLEFT", 10, topPoint)
   topPoint = topPoint - 15
 
   frame.ScrollFrame.Content.ItemsLootedFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   frame.ScrollFrame.Content.ItemsLootedFs:SetPoint("TOPLEFT", 10, topPoint)
+  topPoint = topPoint - 15
+
+  frame.ScrollFrame.Content.ItemsMailFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  frame.ScrollFrame.Content.ItemsMailFs:SetPoint("TOPLEFT", 10, topPoint)
+  topPoint = topPoint - 15
+
+  frame.ScrollFrame.Content.ItemsMailCodFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  frame.ScrollFrame.Content.ItemsMailCodFs:SetPoint("TOPLEFT", 10, topPoint)
   topPoint = topPoint - 15
 
   frame.ScrollFrame.Content.ItemsTradeFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -1670,18 +1682,27 @@ function AutoBiographer_MainWindow:Update()
   self.ScrollFrame.Content.ExperienceFromDiscoveryFs:SetText("Experience From Discovery: " .. HF.CommaValue(experienceFromDiscovery) .. ".")
   
   -- Item Stats
+  local itemsAuctionHouse = Controller:GetItemCountForAcquisitionMethod(AutoBiographerEnum.ItemAcquisitionMethod.AuctionHouse, self.DisplayMinLevel, self.DisplayMaxLevel)
+  self.ScrollFrame.Content.ItemsAuctionHouseFs:SetText("Items Acquired From Auction House: " .. HF.CommaValue(itemsAuctionHouse) .. ".")
+
   local itemsCreated = Controller:GetItemCountForAcquisitionMethod(AutoBiographerEnum.ItemAcquisitionMethod.Create, self.DisplayMinLevel, self.DisplayMaxLevel)
   self.ScrollFrame.Content.ItemsCreatedFs:SetText("Items Created: " .. HF.CommaValue(itemsCreated) .. ".")
   
   local itemsLooted = Controller:GetItemCountForAcquisitionMethod(AutoBiographerEnum.ItemAcquisitionMethod.Loot, self.DisplayMinLevel, self.DisplayMaxLevel)
   self.ScrollFrame.Content.ItemsLootedFs:SetText("Items Looted: " .. HF.CommaValue(itemsLooted) .. ".")
+
+  local itemsMail = Controller:GetItemCountForAcquisitionMethod(AutoBiographerEnum.ItemAcquisitionMethod.Mail, self.DisplayMinLevel, self.DisplayMaxLevel)
+  self.ScrollFrame.Content.ItemsMailFs:SetText("Items Acquired From Mail (Direct): " .. HF.CommaValue(itemsMail) .. ".")
+
+  local itemsMailCod = Controller:GetItemCountForAcquisitionMethod(AutoBiographerEnum.ItemAcquisitionMethod.MailCod, self.DisplayMinLevel, self.DisplayMaxLevel)
+  self.ScrollFrame.Content.ItemsMailCodFs:SetText("Items Acquired From Mail (COD): " .. HF.CommaValue(itemsMailCod) .. ".")
   
   local itemsTrade = Controller:GetItemCountForAcquisitionMethod(AutoBiographerEnum.ItemAcquisitionMethod.Trade, self.DisplayMinLevel, self.DisplayMaxLevel)
   self.ScrollFrame.Content.ItemsTradeFs:SetText("Items Acquired By Trade: " .. HF.CommaValue(itemsTrade) .. ".")
 
   local itemsMerchant = Controller:GetItemCountForAcquisitionMethod(AutoBiographerEnum.ItemAcquisitionMethod.Merchant, self.DisplayMinLevel, self.DisplayMaxLevel)
   self.ScrollFrame.Content.ItemsVendorFs:SetText("Items Acquired From Vendors: " .. HF.CommaValue(itemsMerchant) .. ".")
-  
+
   local itemsOther = Controller:GetItemCountForAcquisitionMethod(AutoBiographerEnum.ItemAcquisitionMethod.Other, self.DisplayMinLevel, self.DisplayMaxLevel)
   self.ScrollFrame.Content.ItemsOtherFs:SetText("Items Acquired By Other Means: " .. HF.CommaValue(itemsOther) .. ".")
   
@@ -1788,8 +1809,8 @@ function AutoBiographer_StatisticsWindow:Update()
   if (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.Items) then
     local itemStatisticsByItem = Controller:GetAggregatedItemStatisticsDictionary(minLevel, maxLevel)
     tableData = {
-      HeaderValues = { "Item Name", "Created", "Looted", "Other", "Trade", "Vendor" },
-      RowOffsets = { 0, 225, 300, 375, 450, 525, 600 },
+      HeaderValues = { "Item Name", "AH", "COD", "Create", "Loot", "Mail", "Other", "Trade", "Vendor" },
+      RowOffsets = { 0, 225, 275, 325, 375, 425, 475, 525, 575, 625 },
       Rows = {},
     }
     for catalogItemId, itemStatistics in pairs(itemStatisticsByItem) do
@@ -1803,8 +1824,11 @@ function AutoBiographer_StatisticsWindow:Update()
 
         local row = {
           itemName,
+          ItemStatistics.GetSum(itemStatistics, { AutoBiographerEnum.ItemAcquisitionMethod.AuctionHouse }),
+          ItemStatistics.GetSum(itemStatistics, { AutoBiographerEnum.ItemAcquisitionMethod.MailCod }),
           ItemStatistics.GetSum(itemStatistics, { AutoBiographerEnum.ItemAcquisitionMethod.Create }),
           ItemStatistics.GetSum(itemStatistics, { AutoBiographerEnum.ItemAcquisitionMethod.Loot }),
+          ItemStatistics.GetSum(itemStatistics, { AutoBiographerEnum.ItemAcquisitionMethod.Mail }),
           ItemStatistics.GetSum(itemStatistics, { AutoBiographerEnum.ItemAcquisitionMethod.Other }),
           ItemStatistics.GetSum(itemStatistics, { AutoBiographerEnum.ItemAcquisitionMethod.Trade }),
           ItemStatistics.GetSum(itemStatistics, { AutoBiographerEnum.ItemAcquisitionMethod.Merchant }),

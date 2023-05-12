@@ -292,7 +292,39 @@ function EM.EventHandlers.CHAT_MSG_LOOT(self, text, arg2, arg3, arg4, arg5, arg6
   elseif (string.find(text, "You receive item") == 1) then
     if (self:WasTradeRecentlyMade() and self.TradeInfo.OtherPlayerTradeItems[id] == quantity) then
       itemAcquisitionMethod = AutoBiographerEnum.ItemAcquisitionMethod.Trade
-    elseif (self.MerchantIsOpen) then
+    end
+
+    if (not itemAcquisitionMethod and self.MailboxIsOpen) then
+      for i = 1, #self.MailboxMessages do
+        local message = self.MailboxMessages[i]
+        local matchingMessageItem = self:GetItemWithIdAndQuantity(message.items, id, quantity)
+        if (matchingMessageItem) then
+          local isCanceledOrExpiredAuctionHouseListing = false
+          if (message.isFromAuctionHouse) then
+            if (message.auctionHouseMessageType == AutoBiographerEnum.AuctionHouseMessageType.Bought) then
+              itemAcquisitionMethod = AutoBiographerEnum.ItemAcquisitionMethod.AuctionHouse
+            elseif (message.auctionHouseMessageType == AutoBiographerEnum.AuctionHouseMessageType.Canceled or
+                    message.auctionHouseMessageType == AutoBiographerEnum.AuctionHouseMessageType.Expired) then
+              isCanceledOrExpiredAuctionHouseListing = true
+            end
+          elseif (message.isCod) then
+            itemAcquisitionMethod = AutoBiographerEnum.ItemAcquisitionMethod.MailCod
+          else
+            itemAcquisitionMethod = AutoBiographerEnum.ItemAcquisitionMethod.Mail
+          end
+        
+          matchingMessageItem.quantity = 0
+
+          if (isCanceledOrExpiredAuctionHouseListing) then
+            return
+          else
+            break
+          end
+        end
+      end
+    end
+    
+    if (not itemAcquisitionMethod and self.MerchantIsOpen) then
       itemAcquisitionMethod = AutoBiographerEnum.ItemAcquisitionMethod.Merchant
     end
   end
@@ -1075,6 +1107,18 @@ end)
 
 -- *** Miscellaneous Member Functions ***
 
+function EM:GetItemWithIdAndQuantity(tab, id, quantity)
+  if tab == nil then return nil end
+
+  for k,v in pairs(tab) do
+    if (v.id and tostring(v.id) == tostring(id) and v.quantity and tostring(v.quantity) == tostring(quantity)) then
+      return v
+    end
+  end
+
+  return nil
+end
+
 function EM:MailboxClosed()
   self.MailboxIsOpen = false
   self.MailboxMessages = nil
@@ -1203,8 +1247,13 @@ function EM:UpdateMailboxMessages()
 
     local message = {
       money = money,
-      sender = sender
+      sender = sender,
+      items = {},
     }
+
+    if (codAmount and codAmount > 0) then
+      message.isCod = true
+    end
  
     if (sender and string.find(sender, "Auction House")) then
       message.isFromAuctionHouse = true
@@ -1233,6 +1282,18 @@ function EM:UpdateMailboxMessages()
       message.isCodPayment = true
     end
     
+    for j = 1, ATTACHMENTS_MAX_RECEIVE do
+      local name, itemId, texture, count, quality, canUse = GetInboxItem(i, j)
+      if (itemId) then
+        local item = {
+          id = itemId,
+          quantity = count,
+        }
+
+        table.insert(message.items, item)
+      end
+    end
+
     table.insert(mailboxMessages, message)
   end
 
