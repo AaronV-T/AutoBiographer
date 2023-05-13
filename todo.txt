@@ -1,7 +1,8 @@
+Misc stats: fishing attempts and successful.
+Misc stat: friendly players buffed.
+Print milestones.
+Notes (on players, mobs, map, general purpose, etc).
 Screenshot achievements.
 Make map events more efficient.
 Add WotLK raids.
 Progressive map events WotLK improvement (use Azeroth map, move icons instead of delete)
-Make stats sort more obvious.
-Item aquisitions by mail/trade.
-Fish caught misc stat.

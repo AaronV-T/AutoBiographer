@@ -290,8 +290,12 @@ function EM.EventHandlers.CHAT_MSG_LOOT(self, text, arg2, arg3, arg4, arg5, arg6
   elseif (string.find(text, "You receive loot") == 1) then
     itemAcquisitionMethod = AutoBiographerEnum.ItemAcquisitionMethod.Loot
   elseif (string.find(text, "You receive item") == 1) then
-    if (self:WasTradeRecentlyMade() and self.TradeInfo.OtherPlayerTradeItems[id] == quantity) then
-      itemAcquisitionMethod = AutoBiographerEnum.ItemAcquisitionMethod.Trade
+    if (self:WasTradeRecentlyMade() and self.TradeInfo.OtherPlayerTradeItems) then
+      local matchingTradeItem = self:GetItemWithIdAndQuantity(self.TradeInfo.OtherPlayerTradeItems, id, quantity)
+      if (matchingTradeItem) then
+        itemAcquisitionMethod = AutoBiographerEnum.ItemAcquisitionMethod.Trade
+        matchingTradeItem.quantity = 0
+      end
     end
 
     if (not itemAcquisitionMethod and self.MailboxIsOpen) then
@@ -937,8 +941,14 @@ end
 
 function EM.EventHandlers.TRADE_ACCEPT_UPDATE(self, playerAccepts, otherPlayerAccepts)
   --print("TRADE_ACCEPT_UPDATE, " .. tostring(playerAccepts) .. ", " .. tostring(otherPlayerAccepts))
-  if (self.TradeInfo == nil or playerAccepts == 0 or otherPlayerAccepts == 0) then return end
 
+  -- Trade events are not consistent, items/money may be traded before TRADE_ACCEPT_UPDATE fires with both arguments set and before TRADE_CLOSED fires.
+  if ((playerAccepts == 0 and otherPlayerAccepts == 0) or GetTradePlayerItemLink(7) or GetTradeTargetItemLink(7)) then
+    self.TradeInfo = nil
+    return
+  end
+  
+  self.TradeInfo = {}
   self.TradeInfo.OtherPlayerTradeMoney = tonumber(GetTargetTradeMoney())
   self.TradeInfo.PlayerTradeMoney = tonumber(GetPlayerTradeMoney())
 
@@ -950,19 +960,21 @@ function EM.EventHandlers.TRADE_ACCEPT_UPDATE(self, playerAccepts, otherPlayerAc
     if (not chatItemLink) then break end
     
     local itemId = HelperFunctions.GetItemIdFromTextWithChatItemLink(chatItemLink)
-    self.TradeInfo.OtherPlayerTradeItems[itemId] = quantity
-  end
+    local item = {
+      id = itemId,
+      quantity = quantity,
+    }
 
-  self.TradeInfo.AcceptedByBoth = true
-  self.TradeInfo.AcceptedByBothTimestamp = GetTime()
+    table.insert(self.TradeInfo.OtherPlayerTradeItems, item)
+  end
 end
 
 function EM.EventHandlers.TRADE_CLOSED(self)
   --print("TRADE_CLOSED")
-  -- if (self.TradeInfo == nil) then return end
+  if (self.TradeInfo == nil) then return end
 
-  -- self.TradeInfo.Closed = true
-  -- self.TradeInfo.ClosedTimestamp = GetTime()
+  self.TradeInfo.Closed = true
+  self.TradeInfo.ClosedTimestamp = GetTime()
 end
 
 function EM.EventHandlers.TRADE_REQUEST_CANCEL(self)
@@ -972,9 +984,10 @@ function EM.EventHandlers.TRADE_REQUEST_CANCEL(self)
   self.TradeInfo.Canceled = true
 end
 
-function EM.EventHandlers.TRADE_SHOW(self)
-  self.TradeInfo = {}
-end
+-- function EM.EventHandlers.TRADE_SHOW(self)
+--   --print("TRADE_SHOW")
+--   self.TradeInfo = {}
+-- end
 
 function EM.EventHandlers.UNIT_COMBAT(self, unitId, action, ind, dmg, dmgType)
   --print(unitId .. ". " .. action .. ". " .. ind .. ". " .. dmg .. ". " .. dmgType)
@@ -1479,7 +1492,7 @@ function EM:UpdateTimestamps(zone, subZone)
 end
 
 function EM:WasTradeRecentlyMade()
-  return self.TradeInfo and not self.TradeInfo.Canceled and self.TradeInfo.AcceptedByBoth and GetTime() - self.TradeInfo.AcceptedByBothTimestamp < 1
+  return self.TradeInfo and not self.TradeInfo.Canceled and (not self.TradeInfo.Closed or GetTime() - self.TradeInfo.ClosedTimestamp < 1)
 end
 
 -- Register each event for which we have an event handler.
