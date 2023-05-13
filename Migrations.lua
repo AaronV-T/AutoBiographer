@@ -417,3 +417,12 @@ table.insert(MM.Migrations,
     end
   )
 )
+
+table.insert(MM.Migrations, 
+  AutoBiographer_Migration:New(
+    15,
+    function(eventManager, controller)
+      if (AutoBiographer_Settings.Options["EnableMilestoneMessages"] == nil) then AutoBiographer_Settings.Options["EnableMilestoneMessages"] = true end
+    end
+  )
+)

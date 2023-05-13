@@ -1,6 +1,5 @@
 Misc stats: fishing attempts and successful.
 Misc stat: friendly players buffed.
-Print milestones.
 Notes (on players, mobs, map, general purpose, etc).
 Screenshot achievements.
 Make map events more efficient.

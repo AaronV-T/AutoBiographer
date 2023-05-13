@@ -140,6 +140,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
       MinimapPos = -25,
       Options = { -- Dict<string?, bool>
         EnableDebugLogging = false,
+        EnableMilestoneMessages = true,
         ShowFriendlyPlayerToolTips = true,
         ShowKillCountOnUnitToolTips = true,
         ShowMinimapButton = true,
@@ -179,7 +180,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
       BattlegroundStatuses = {},
       CurrentSubZone = nil,
       CurrentZone = nil,
-      DatabaseVersion = 14,
+      DatabaseVersion = 15,
       GuildName = nil,
       GuildRankIndex = nil,
       GuildRankName = nil,

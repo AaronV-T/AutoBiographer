@@ -573,6 +573,35 @@ end
 function Controller:OnDamageOrHealing(damageOrHealingCategory, amount, overkill)
   if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog("DamageOrHealingCategory: " .. tostring(damageOrHealingCategory) .. ". Amount: " .. tostring(amount) .. ", over: " .. tostring(overkill), AutoBiographerEnum.LogLevel.Debug) end
   DamageStatistics.Add(self:GetCurrentLevelStatistics().DamageStatistics, damageOrHealingCategory, amount, overkill)
+
+  if (AutoBiographer_Settings.Options["EnableMilestoneMessages"]) then
+    local damageOrHealingMilestoneThreshold
+    if (self:GetCurrentLevelNum() < 30) then
+      damageOrHealingMilestoneThreshold = 100000
+    elseif (self:GetCurrentLevelNum() < 60) then
+      damageOrHealingMilestoneThreshold = 1000000
+    elseif (self:GetCurrentLevelNum() < 70) then
+      damageOrHealingMilestoneThreshold = 5000000
+    elseif (self:GetCurrentLevelNum() < 80) then
+      damageOrHealingMilestoneThreshold = 10000000
+    else
+      damageOrHealingMilestoneThreshold = 20000000
+    end
+
+    if (damageOrHealingCategory == AutoBiographerEnum.DamageOrHealingCategory.DamageDealt) then
+      local damageDealtAmount = self:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageDealt, 1, self:GetCurrentLevelNum())
+      if (damageDealtAmount % damageOrHealingMilestoneThreshold < amount) then
+        print("\124cFFFFD700[AutoBiographer] You have dealt " .. HelperFunctions.CommaValue(HelperFunctions.Round(damageDealtAmount / damageOrHealingMilestoneThreshold) * damageOrHealingMilestoneThreshold) .. " damage!")
+      end
+    elseif (damageOrHealingCategory == AutoBiographerEnum.DamageOrHealingCategory.HealingDealtToOthers or
+            damageOrHealingCategory == AutoBiographerEnum.DamageOrHealingCategory.HealingDealtToSelf) then
+      local healingOtherAmount = self:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.HealingDealtToOthers, 1, self:GetCurrentLevelNum())
+      local healingSelfAmount = self:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.HealingDealtToSelf, 1, self:GetCurrentLevelNum())
+      local healingTotalAmount = healingOtherAmount + healingSelfAmount
+      if (healingTotalAmount % damageOrHealingMilestoneThreshold < amount) then
+        print("\124cFFFFD700[AutoBiographer] You have done " .. HelperFunctions.CommaValue(HelperFunctions.Round(healingTotalAmount / damageOrHealingMilestoneThreshold) * damageOrHealingMilestoneThreshold) .. " healing!")     end
+    end
+  end
 end
 
 function Controller:OnDeath(timestamp, coordinates, killerCatalogUnitId, killerLevel)
@@ -651,6 +680,13 @@ end
 function Controller:OnJump(timestamp)
   if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog("Jump.", AutoBiographerEnum.LogLevel.Debug) end
   MiscellaneousStatistics.Add(self:GetCurrentLevelStatistics().MiscellaneousStatistics, AutoBiographerEnum.MiscellaneousTrackingType.Jumps, 1)
+  
+  if (AutoBiographer_Settings.Options["EnableMilestoneMessages"]) then
+    local jumpCount = self:GetMiscellaneousStatByMiscellaneousTrackingType(AutoBiographerEnum.MiscellaneousTrackingType.Jumps, 1, self:GetCurrentLevelNum())
+    if (jumpCount % 1000 == 0) then
+      print("\124cFFFFD700[AutoBiographer] You have jumped " .. HelperFunctions.CommaValue(jumpCount) .. " times!")
+    end
+  end
 end
 
 function Controller:OnKill(timestamp, coordinates, kill)
@@ -672,6 +708,14 @@ function Controller:OnKill(timestamp, coordinates, kill)
     
     if (AutoBiographer_Databases.BossDatabase[kill.CatalogUnitId]) then
       Controller:OnBossKill(time(), HelperFunctions.GetCoordinatesByUnitId("player"), kill.CatalogUnitId, self.CharacterData.Catalogs.UnitCatalog[kill.CatalogUnitId].Name, hasKilledUnitBefore)
+    end
+
+    if (AutoBiographer_Settings.Options["EnableMilestoneMessages"]) then
+      local totalsKillStatistics = self:GetAggregatedKillStatisticsTotals(1, self:GetCurrentLevelNum())
+      local totalTaggedKills = KillStatistics.GetSum(totalsKillStatistics, { AutoBiographerEnum.KillTrackingType.TaggedAssist, AutoBiographerEnum.KillTrackingType.TaggedGroupAssistOrKillingBlow, AutoBiographerEnum.KillTrackingType.TaggedKillingBlow })
+      if (totalTaggedKills % 1000 == 0) then
+        print("\124cFFFFD700[AutoBiographer] You have " .. HelperFunctions.CommaValue(totalTaggedKills) .. " tagged kills!")
+      end
     end
   end
 end
@@ -714,6 +758,15 @@ function Controller:OnQuestTurnedIn(timestamp, coordinates, questId, questTitle,
 
   if (not self:GetCurrentLevelStatistics().QuestStatisticsByQuest[questId]) then self:GetCurrentLevelStatistics().QuestStatisticsByQuest[questId] = QuestStatistics.New() end
   QuestStatistics.Increment(self:GetCurrentLevelStatistics().QuestStatisticsByQuest[questId], AutoBiographerEnum.QuestTrackingType.Completed)
+
+  if (AutoBiographer_Settings.Options["EnableMilestoneMessages"]) then
+    local aggregatedQuestStatisticsDictionary = self:GetAggregatedQuestStatisticsDictionary(1, self:GetCurrentLevelNum())
+    local totalsQuestStatistics = self:GetAggregatedQuestStatisticsTotals(1, self:GetCurrentLevelNum(), aggregatedQuestStatisticsDictionary)
+    local totalQuestsCompleted = QuestStatistics.GetSum(totalsQuestStatistics, { AutoBiographerEnum.QuestTrackingType.Completed })
+    if (totalQuestsCompleted % 100 == 0) then
+      print("\124cFFFFD700[AutoBiographer] You have completed " .. HelperFunctions.CommaValue(totalQuestsCompleted) .. " quests!")
+    end
+  end
 end
 
 function Controller:OnReputationLevelChanged(timestamp, coordinates, faction, reputationLevel)

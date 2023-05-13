@@ -47,10 +47,16 @@ function AutoBiographer_OptionWindow:Initialize()
   self.fsShowTimePlayedOnLevelUp:SetPoint("LEFT", self, "TOPLEFT", 40, -230)
   self.fsShowTimePlayedOnLevelUp:SetText("Show time played upon leveling up.")
   
+  self.cbEnableMilestoneMessages = CreateFrame("CheckButton", nil, self, "UICheckButtonTemplate") 
+  self.cbEnableMilestoneMessages:SetPoint("LEFT", self, "TOPLEFT", 10, -260)
+  self.fsEnableMilestoneMessages = self:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  self.fsEnableMilestoneMessages:SetPoint("LEFT", self, "TOPLEFT", 40, -260)
+  self.fsEnableMilestoneMessages:SetText("Enable milestone messages.")
+
   self.cbEnableDebugLogging = CreateFrame("CheckButton", nil, self, "UICheckButtonTemplate") 
-  self.cbEnableDebugLogging:SetPoint("LEFT", self, "TOPLEFT", 10, -260)
+  self.cbEnableDebugLogging:SetPoint("LEFT", self, "TOPLEFT", 10, -290)
   self.fsEnableDebugLogging = self:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-  self.fsEnableDebugLogging:SetPoint("LEFT", self, "TOPLEFT", 40, -260)
+  self.fsEnableDebugLogging:SetPoint("LEFT", self, "TOPLEFT", 40, -290)
   self.fsEnableDebugLogging:SetText("Enable debug logging (this can negatively affect performance).")
   
   self:LoadOptions()
@@ -58,6 +64,7 @@ end
 
 function AutoBiographer_OptionWindow:LoadOptions()
   self.cbEnableDebugLogging:SetChecked(AutoBiographer_Settings.Options["EnableDebugLogging"])
+  self.cbEnableMilestoneMessages:SetChecked(AutoBiographer_Settings.Options["EnableMilestoneMessages"])
   self.cbFriendlyPlayerTooltip:SetChecked(AutoBiographer_Settings.Options["ShowFriendlyPlayerToolTips"])
   self.cbKillCountTooltip:SetChecked(AutoBiographer_Settings.Options["ShowKillCountOnUnitToolTips"])
   self.cbScreenshotOnLevelUp:SetChecked(AutoBiographer_Settings.Options["TakeScreenshotOnLevelUp"])
@@ -69,6 +76,7 @@ end
 
 function AutoBiographer_OptionWindow:SaveOptions()
   AutoBiographer_Settings.Options["EnableDebugLogging"] = self.cbEnableDebugLogging:GetChecked()
+  AutoBiographer_Settings.Options["EnableMilestoneMessages"] = self.cbEnableMilestoneMessages:GetChecked()
   AutoBiographer_Settings.Options["ShowFriendlyPlayerToolTips"] = self.cbFriendlyPlayerTooltip:GetChecked()
   AutoBiographer_Settings.Options["ShowKillCountOnUnitToolTips"] = self.cbKillCountTooltip:GetChecked()
   AutoBiographer_Settings.Options["TakeScreenshotOnLevelUp"] = self.cbScreenshotOnLevelUp:GetChecked()
