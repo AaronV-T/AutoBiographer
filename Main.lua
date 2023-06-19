@@ -145,6 +145,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
         ShowKillCountOnUnitToolTips = true,
         ShowMinimapButton = true,
         ShowTimePlayedOnLevelUp = true,
+        TakeScreenshotOnAchievementEarned = false,
         TakeScreenshotOnBossKill = true,
         TakeScreenshotOnLevelUp = true,
         TakeScreenshotOnlyOnFirstBossKill = true,
@@ -180,7 +181,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
       BattlegroundStatuses = {},
       CurrentSubZone = nil,
       CurrentZone = nil,
-      DatabaseVersion = 15,
+      DatabaseVersion = 16,
       GuildName = nil,
       GuildRankIndex = nil,
       GuildRankName = nil,
@@ -235,6 +236,11 @@ function EM.EventHandlers.BOSS_KILL(self, bossId, bossName)
   end
 
   Controller:OnBossKill(time(), HelperFunctions.GetCoordinatesByUnitId("player"), bossId, bossName, hasKilledBossBefore)
+end
+
+function EM.EventHandlers.ACHIEVEMENT_EARNED(self, arg1)
+  --print("ACHIEVEMENT_EARNED. " .. tostring(arg1))
+  Controller:OnAchievementEarned(arg1)
 end
 
 function EM.EventHandlers.AUCTION_HOUSE_CLOSED(self, arg1, arg2)

@@ -426,3 +426,12 @@ table.insert(MM.Migrations,
     end
   )
 )
+
+table.insert(MM.Migrations,
+  AutoBiographer_Migration:New(
+    16,
+    function(eventManager, controller)
+      if (AutoBiographer_Settings.Options["TakeScreenshotOnAchievementEarned"] == nil) then AutoBiographer_Settings.Options["TakeScreenshotOnAchievementEarned"] = false end
+    end
+  )
+)

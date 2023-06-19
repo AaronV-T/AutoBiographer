@@ -1,6 +1,7 @@
 AutoBiographer_Controller = {
   CharacterData = {},
-  Logs = {}, 
+  Logs = {},
+  Temp = {},
 }
 
 local Controller = AutoBiographer_Controller
@@ -463,6 +464,12 @@ end
 
 -- *** Events ***
 
+function Controller:OnAchievementEarned(achievementId)
+  if (AutoBiographer_Settings.Options["TakeScreenshotOnAchievementEarned"]) then 
+    self:TakeScreenshot(1.0)
+  end
+end
+
 function Controller:OnAcquiredItem(timestamp, coordinates, itemAcquisitionMethod, catalogItem, quantity)
   if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog("AcquiredItem: " .. CatalogItem.ToString(catalogItem) .. ". Quantity: " .. tostring(quantity) .. ". Method: " .. tostring(itemAcquisitionMethod) .. ".", AutoBiographerEnum.LogLevel.Debug) end
   
@@ -742,7 +749,7 @@ function Controller:OnLevelUp(timestamp, coordinates, levelNum, totalTimePlayedA
   if (timestamp) then
     self:AddEvent(LevelUpEvent.New(timestamp, coordinates, levelNum))
     if (AutoBiographer_Settings.Options["TakeScreenshotOnLevelUp"] and levelNum > 1) then 
-      self:TakeScreenshot(1.15)
+      self:TakeScreenshot(1.0)
     end
   end
 end
@@ -835,6 +842,12 @@ function Controller:TakeScreenshot(secondsToDelay)
   if (not secondsToDelay) then secondsToDelay = 0 end
 
   C_Timer.After(secondsToDelay, function()
+    if (self.Temp.LastScreenshotTimestamp and GetTime() - self.Temp.LastScreenshotTimestamp < 1) then
+      if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then print("[AutoBiographer] Skipping screenshot, another was just taken.") end
+      return
+    end
+
+    self.Temp.LastScreenshotTimestamp = GetTime()
     Screenshot()
     if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog("Screenshot captured after" .. tostring(secondsToDelay) .. "s delay .", AutoBiographerEnum.LogLevel.Debug) end
   end)

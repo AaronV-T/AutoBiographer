@@ -1,7 +1,7 @@
+Notes (on players, mobs, map, general purpose, etc).
+Track autoattacks/shots. Track results (hit, miss, dodge, parry) and damage done of attacks and spells.
 Misc stats: fishing attempts and successful.
 Misc stat: friendly players buffed.
-Notes (on players, mobs, map, general purpose, etc).
-Screenshot achievements.
 Make map events more efficient.
 Add WotLK raids.
 Progressive map events WotLK improvement (use Azeroth map, move icons instead of delete)

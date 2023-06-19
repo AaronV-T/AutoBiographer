@@ -40,7 +40,7 @@ It also keeps track of the following statistics:
  - XP from discovery, kills, and quests.
 
 Additional Features:
- - Automatic screenshot capturing on leveling up and killing bosses.
+ - Automatic screenshot capturing on leveling up, killing bosses, and earning achievements.
  - Showing coordinates of events on the map, giving a visual history of your character's adventures.
  
 ## Possible Future Features
