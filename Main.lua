@@ -456,7 +456,6 @@ function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
         LastUnitGuidWhoCausedDamage = nil,
         PlayerHasDamaged = nil,
         PlayerPetHasDamaged = nil,
-        UnitHealthMax = nil
       }
     else
       if (damagedUnitId ~= nil) then
@@ -475,10 +474,6 @@ function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
       local damagedCatalogUnitId = HelperFunctions.GetCatalogIdFromGuid(destGuid)
       if (Controller:CatalogUnitIsIncomplete(damagedCatalogUnitId)) then
         Controller:UpdateCatalogUnit(CatalogUnit.New(damagedCatalogUnitId, UnitClass(damagedUnitId), UnitClassification(damagedUnitId), UnitCreatureFamily(damagedUnitId), UnitCreatureType(damagedUnitId), UnitName(damagedUnitId), UnitRace(damagedUnitId), nil, HelperFunctions.GetUnitTypeFromCatalogUnitId(damagedCatalogUnitId)))
-      end
-
-      if (damagedUnit.UnitHealthMax == nil) then
-        damagedUnit.UnitHealthMax = UnitHealthMax(damagedUnitId)
       end
     end
     
@@ -558,9 +553,7 @@ function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
   if (deadUnit.PlayerHasDamaged or deadUnit.PlayerPetHasDamaged or weHadTag) then
     if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog(destName .. " Died.  Tagged: " .. tostring(weHadTag) .. ". FODCBPOG: " .. tostring(deadUnit.FirstObservedDamageCausedByPlayerOrGroup) .. ". ITD: "  .. tostring(deadUnit.IsTapDenied) .. ". PHD: " .. tostring(deadUnit.PlayerHasDamaged) .. ". PPHD: " .. tostring(deadUnit.PlayerPetHasDamaged).. ". GHD: "  .. tostring(deadUnit.GroupHasDamaged)  .. ". LastDmg: " .. tostring(deadUnit.LastUnitGuidWhoCausedDamage), AutoBiographerEnum.LogLevel.Debug) end
 
-    -- local playerOrGroupDmgOfHealthMax = HelperFunctions.Round(100 * ((deadUnit.DamageTakenFromPlayerOrPet + deadUnit.DamageTakenFromGroup) / deadUnit.UnitHealthMax)) -- This throws an error if unit dies in 1 hit.
     local playerOrGroupDmgOfTotal = HelperFunctions.Round(100 * ((deadUnit.DamageTakenFromPlayerOrPet + deadUnit.DamageTakenFromGroup) / deadUnit.DamageTakenTotal))
-    -- print("Player/group dmg of max health: " .. playerOrGroupDmgOfHealthMax .. "%. Player/group dmg of total: " .. playerOrGroupDmgOfTotal .. "%.")
     local kill = Kill.New(deadUnit.GroupHasDamaged, deadUnit.PlayerHasDamaged or deadUnit.PlayerPetHasDamaged, IsUnitGUIDPlayerOrPlayerPet(deadUnit.LastUnitGuidWhoCausedDamage), weHadTag, HelperFunctions.GetCatalogIdFromGuid(destGuid), playerOrGroupDmgOfTotal)
     Controller:OnKill(time(), HelperFunctions.GetCoordinatesByUnitId("player"), kill)
   end

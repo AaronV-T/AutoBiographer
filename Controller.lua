@@ -596,19 +596,70 @@ function Controller:OnDamageOrHealing(damageOrHealingCategory, amount, overkill)
     end
 
     if (damageOrHealingCategory == AutoBiographerEnum.DamageOrHealingCategory.DamageDealt) then
-      local damageDealtAmount = self:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageDealt, 1, self:GetCurrentLevelNum())
-      if (damageDealtAmount % damageOrHealingMilestoneThreshold < amount) then
-        print("\124cFFFFD700[AutoBiographer] You have dealt " .. HelperFunctions.CommaValue(HelperFunctions.Round(damageDealtAmount / damageOrHealingMilestoneThreshold) * damageOrHealingMilestoneThreshold) .. " damage!")
+      if (self.Temp.LastMilestoneMessageDamageCheckTimestamp and GetTime() - self.Temp.LastMilestoneMessageDamageCheckTimestamp < 1) then
+        if (not self.Temp.IsPendingMilestoneMessageDamageCheck) then
+          self.Temp.IsPendingMilestoneMessageDamageCheck = true
+          C_Timer.After(GetTime() - self.Temp.LastMilestoneMessageDamageCheckTimestamp, function()
+            Controller:CheckDamageForMilestoneMessage(amount, damageOrHealingMilestoneThreshold)
+          end)
+        end
+      else
+        Controller:CheckDamageForMilestoneMessage(amount, damageOrHealingMilestoneThreshold)
       end
     elseif (damageOrHealingCategory == AutoBiographerEnum.DamageOrHealingCategory.HealingDealtToOthers or
             damageOrHealingCategory == AutoBiographerEnum.DamageOrHealingCategory.HealingDealtToSelf) then
-      local healingOtherAmount = self:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.HealingDealtToOthers, 1, self:GetCurrentLevelNum())
-      local healingSelfAmount = self:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.HealingDealtToSelf, 1, self:GetCurrentLevelNum())
-      local healingTotalAmount = healingOtherAmount + healingSelfAmount
-      if (healingTotalAmount % damageOrHealingMilestoneThreshold < amount) then
-        print("\124cFFFFD700[AutoBiographer] You have done " .. HelperFunctions.CommaValue(HelperFunctions.Round(healingTotalAmount / damageOrHealingMilestoneThreshold) * damageOrHealingMilestoneThreshold) .. " healing!")     end
+      if (self.Temp.LastMilestoneMessageHealingCheckTimestamp and GetTime() - self.Temp.LastMilestoneMessageHealingCheckTimestamp < 1) then
+        if (not self.Temp.IsPendingMilestoneMessageHealingCheck) then
+          self.Temp.IsPendingMilestoneMessageHealingCheck = true
+          C_Timer.After(GetTime() - self.Temp.LastMilestoneMessageHealingCheckTimestamp, function()
+            Controller:CheckHealingForMilestoneMessage(amount, damageOrHealingMilestoneThreshold)
+          end)
+        end
+      else
+        Controller:CheckHealingForMilestoneMessage(amount, damageOrHealingMilestoneThreshold)
+      end
     end
   end
+end
+
+function Controller:CheckDamageForMilestoneMessage(thisAmount, threshold)
+  self.Temp.IsPendingMilestoneMessageDamageCheck = false
+  self.Temp.LastMilestoneMessageDamageCheckTimestamp = GetTime()
+
+  local totalDamage = self:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageDealt, 1, self:GetCurrentLevelNum())
+
+  local damageDifference = thisAmount
+  if (self.Temp.LastMilestoneMessageDamageCheckTotalDamageDealt ~= nil) then
+    damageDifference = totalDamage - self.Temp.LastMilestoneMessageDamageCheckTotalDamageDealt
+  end
+
+  -- print("Total damage: " .. totalDamage .. ". Last total damage: " .. tostring(self.Temp.LastMilestoneMessageDamageCheckTotalDamageDealt) .. ". Damage difference: " .. damageDifference)
+  if (totalDamage % threshold < damageDifference) then
+    print("\124cFFFFD700[AutoBiographer] You have dealt " .. HelperFunctions.CommaValue(HelperFunctions.Round(totalDamage / threshold) * threshold) .. " damage!")
+  end
+
+  self.Temp.LastMilestoneMessageDamageCheckTotalDamageDealt = totalDamage
+end
+
+function Controller:CheckHealingForMilestoneMessage(thisAmount, threshold)
+  self.Temp.IsPendingMilestoneMessageHealingCheck = false
+  self.Temp.LastMilestoneMessageHealingCheckTimestamp = GetTime()
+
+  local healingOtherAmount = self:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.HealingDealtToOthers, 1, self:GetCurrentLevelNum())
+  local healingSelfAmount = self:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.HealingDealtToSelf, 1, self:GetCurrentLevelNum())
+  local totalHealing = healingOtherAmount + healingSelfAmount
+
+  local healingDifference = thisAmount
+  if (self.Temp.LastMilestoneMessageDamageCheckTotalHealingDealt ~= nil) then
+    healingDifference = totalHealing - self.Temp.LastMilestoneMessageDamageCheckTotalHealingDealt
+  end
+
+  -- print("Total healing: " .. totalHealing .. ". Last total healing: " .. tostring(self.Temp.LastMilestoneMessageDamageCheckTotalHealingDealt) .. ". Healing difference: " .. healingDifference)
+  if (totalHealing % threshold < healingDifference) then
+    print("\124cFFFFD700[AutoBiographer] You have done " .. HelperFunctions.CommaValue(HelperFunctions.Round(totalHealing / threshold) * threshold) .. " healing!")
+  end
+
+  self.Temp.LastMilestoneMessageDamageCheckTotalHealingDealt = totalHealing
 end
 
 function Controller:OnDeath(timestamp, coordinates, killerCatalogUnitId, killerLevel)
@@ -718,13 +769,38 @@ function Controller:OnKill(timestamp, coordinates, kill)
     end
 
     if (AutoBiographer_Settings.Options["EnableMilestoneMessages"]) then
-      local totalsKillStatistics = self:GetAggregatedKillStatisticsTotals(1, self:GetCurrentLevelNum())
-      local totalTaggedKills = KillStatistics.GetSum(totalsKillStatistics, { AutoBiographerEnum.KillTrackingType.TaggedAssist, AutoBiographerEnum.KillTrackingType.TaggedGroupAssistOrKillingBlow, AutoBiographerEnum.KillTrackingType.TaggedKillingBlow })
-      if (totalTaggedKills % 1000 == 0) then
-        print("\124cFFFFD700[AutoBiographer] You have " .. HelperFunctions.CommaValue(totalTaggedKills) .. " tagged kills!")
+      if (self.Temp.LastMilestoneMessageKillsCheckTimestamp and GetTime() - self.Temp.LastMilestoneMessageKillsCheckTimestamp < 1) then
+        if (not self.Temp.IsPendingMilestoneMessageKillsCheck) then
+          self.Temp.IsPendingMilestoneMessageKillsCheck = true
+          C_Timer.After(GetTime() - self.Temp.LastMilestoneMessageKillsCheckTimestamp, function()
+            Controller:CheckKillsForMilestoneMessage()
+          end)
+        end
+      else
+        Controller:CheckKillsForMilestoneMessage()
       end
     end
   end
+end
+
+function Controller:CheckKillsForMilestoneMessage()
+  self.Temp.IsPendingMilestoneMessageKillsCheck = false
+  self.Temp.LastMilestoneMessageKillsCheckTimestamp = GetTime()
+
+  local totalsKillStatistics = self:GetAggregatedKillStatisticsTotals(1, self:GetCurrentLevelNum())
+  local totalTaggedKills = KillStatistics.GetSum(totalsKillStatistics, { AutoBiographerEnum.KillTrackingType.TaggedAssist, AutoBiographerEnum.KillTrackingType.TaggedGroupAssistOrKillingBlow, AutoBiographerEnum.KillTrackingType.TaggedKillingBlow })
+
+  local killDifference = 1
+  if (self.Temp.LastMilestoneMessageKillsCheckTotalTaggedKills ~= nil) then
+    killDifference = totalTaggedKills - self.Temp.LastMilestoneMessageKillsCheckTotalTaggedKills
+  end
+
+  local threshold = 1000
+  if (totalTaggedKills % threshold < killDifference) then
+    print("\124cFFFFD700[AutoBiographer] You have " .. HelperFunctions.CommaValue(HelperFunctions.Round(totalTaggedKills / threshold) * threshold) .. " tagged kills!")
+  end
+
+  self.Temp.LastMilestoneMessageKillsCheckTotalTaggedKills = totalTaggedKills
 end
 
 function Controller:OnLeftGuild(timestamp, guildName)
