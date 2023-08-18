@@ -828,6 +828,65 @@ function Controller:OnLevelUp(timestamp, coordinates, levelNum, totalTimePlayedA
       self:TakeScreenshot(1.0)
     end
   end
+
+  if (AutoBiographer_Settings.Options["ShowLowRankCombatSkillWarnings"]) then 
+    C_Timer.After(10, function()
+      self:CheckForLowRankSkills()
+    end)
+  end
+end
+
+function Controller:CheckForLowRankSkills()
+  local mainHandItemLink = GetInventoryItemLink("player", 16)
+  local mainHandItemSubType = nil
+  if (mainHandItemLink) then
+    _, _, _, _, _, _, mainHandItemSubType, _, _, _, _ = GetItemInfo(mainHandItemLink)
+  end
+
+  local offHandItemLink = GetInventoryItemLink("player", 17)
+  local offHandItemSubType = nil
+  if (offHandItemLink) then
+    _, _, _, _, _, _, offHandItemSubType, _, _, _, _ = GetItemInfo(offHandItemLink)
+  end
+
+  local rangedItemLink = GetInventoryItemLink("player", 18)
+  local rangedItemSubType = nil
+  if (rangedItemLink) then
+    _, _, _, _, _, _, rangedItemSubType, _, _, _, _ = GetItemInfo(rangedItemLink)
+  end
+
+  local lowRankSkills = {}
+  for skillIndex = 1, GetNumSkillLines() do
+    local skillName, isHeader, isExpanded, skillRank, numTempPoints, skillModifier,
+      skillMaxRank, isAbandonable, stepCost, rankCost, minLevel, skillCostType,
+      skillDescription = GetSkillLineInfo(skillIndex)
+    
+    if (not isHeader and skillRank < skillMaxRank - 10 and
+        (skillName == "Defense" or skillName == mainHandItemSubType or skillName == offHandItemSubType or skillName == rangedItemSubType)) then
+      -- print(string.format("Skill: %s - %s", skillName, skillRank))
+      lowRankSkills[#lowRankSkills + 1] = {
+        skillName = skillName,
+        skillRank = skillRank,
+        skillMaxRank = skillMaxRank,
+      }
+    end
+  end
+
+  if (#lowRankSkills == 0) then
+    return
+  end
+
+  local lowRankSkillsString = ""
+  for i = 1, #lowRankSkills do
+    if (i > 1) then
+      lowRankSkillsString = lowRankSkillsString .. ", "
+    end
+
+    lowRankSkillsString = lowRankSkillsString .. lowRankSkills[i].skillName .. " (" .. lowRankSkills[i].skillRank .. "/" .. lowRankSkills[i].skillMaxRank .. ")"
+  end
+
+  local pluralS = #lowRankSkills ~= 1 and "s" or ""
+  print("\124cFFFFD700[AutoBiographer] Your character has a low rank in " .. #lowRankSkills .. " important combat skill" .. pluralS .. ": " .. lowRankSkillsString)
 end
 
 function Controller:OnMoneyChanged(timestamp, coordinates, deltaMoney)

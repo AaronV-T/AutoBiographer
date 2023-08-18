@@ -435,3 +435,12 @@ table.insert(MM.Migrations,
     end
   )
 )
+
+table.insert(MM.Migrations, 
+  AutoBiographer_Migration:New(
+    17,
+    function(eventManager, controller)
+      if (AutoBiographer_Settings.Options["ShowLowRankCombatSkillWarnings"] == nil) then AutoBiographer_Settings.Options["ShowLowRankCombatSkillWarnings"] = true end
+    end
+  )
+)

@@ -1,3 +1,4 @@
+Show tips to transfer data after character transfer.
 Notes (on players, mobs, map, general purpose, etc).
 Track autoattacks/shots. Track results (hit, miss, dodge, parry) and damage done of attacks and spells.
 Misc stats: fishing attempts and successful.

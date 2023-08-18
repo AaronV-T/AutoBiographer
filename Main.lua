@@ -143,6 +143,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
         EnableMilestoneMessages = true,
         ShowFriendlyPlayerToolTips = true,
         ShowKillCountOnUnitToolTips = true,
+        ShowLowRankCombatSkillWarnings = true,
         ShowMinimapButton = true,
         ShowTimePlayedOnLevelUp = true,
         TakeScreenshotOnAchievementEarned = false,
@@ -181,7 +182,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
       BattlegroundStatuses = {},
       CurrentSubZone = nil,
       CurrentZone = nil,
-      DatabaseVersion = 16,
+      DatabaseVersion = 17,
       GuildName = nil,
       GuildRankIndex = nil,
       GuildRankName = nil,
@@ -1553,5 +1554,5 @@ function EM:GetPosition()
 end
 
 function EM:Test()
-  print("MailboxIsOpen: " .. tostring(self.MailboxIsOpen))
+  Controller:CheckForLowRankSkills()
 end
