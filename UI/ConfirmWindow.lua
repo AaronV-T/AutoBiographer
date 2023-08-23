@@ -2,7 +2,10 @@ AutoBiographer_ConfirmWindow = {}
 function AutoBiographer_ConfirmWindow.New(message, callback)
   local window = CreateFrame("Frame", "Confirm", UIParent, "BasicFrameTemplate") 
   window:SetSize(350, 250) 
-  window:SetPoint("CENTER") 
+  window:SetPoint("CENTER")
+
+  window:SetFrameStrata("HIGH")
+  window:SetFrameLevel(999)
   
   if (not window:IsVisible()) then
     window:Hide()

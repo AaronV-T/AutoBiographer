@@ -2,9 +2,9 @@
 ## Title: AutoBiographer
 ## Notes: Tracks character milestones and statistics.
 ## Author: Tollski
-## Version: 3.0.11
+## Version: 3.0.12
 ## SavedVariables: AUTOBIOGRAPHER_SETTINGS
-## SavedVariablesPerCharacter: AUTOBIOGRAPHER_CATALOGS_CHAR, AUTOBIOGRAPHER_EVENTS_CHAR, AUTOBIOGRAPHER_INFO_CHAR, AUTOBIOGRAPHER_LEVELS_CHAR
+## SavedVariablesPerCharacter: AUTOBIOGRAPHER_CATALOGS_CHAR, AUTOBIOGRAPHER_EVENTS_CHAR, AUTOBIOGRAPHER_INFO_CHAR, AUTOBIOGRAPHER_LEVELS_CHAR, AUTOBIOGRAPHER_NOTES_CHAR
 
 Libs/HereBeDragons/LibStub/LibStub.lua
 Libs/HereBeDragons/CallbackHandler-1.0/CallbackHandler-1.0.lua
@@ -23,6 +23,7 @@ Migrations.lua
 Classes/Catalog.lua
 Classes/Event.lua
 Classes/Miscellaneous.lua
+Classes/Notes.lua
 Classes/Statistics.lua
 
 UI/ConfirmWindow.lua

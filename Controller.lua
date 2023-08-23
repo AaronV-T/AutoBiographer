@@ -395,6 +395,10 @@ function Controller:GetMoneyForAcquisitionMethod(moneyAcquisitionMethod, minLeve
   return sum
 end
 
+function Controller:GetNotes()
+  return self.CharacterData.Notes
+end
+
 function Controller:GetOtherPlayerStatByOtherPlayerTrackingType(otherPlayerTrackingType, minLevel, maxLevel)
   local sum = 0
   for k,v in pairs(self.CharacterData.Levels) do

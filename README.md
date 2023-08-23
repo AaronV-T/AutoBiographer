@@ -42,6 +42,8 @@ It also keeps track of the following statistics:
 Additional Features:
  - Automatic screenshot capturing on leveling up, killing bosses, and earning achievements.
  - Showing coordinates of events on the map, giving a visual history of your character's adventures.
+ - Showing occasional reminders for low rank combat skills.
+ - Allows players to create notes.
  
 ## Possible Future Features
 

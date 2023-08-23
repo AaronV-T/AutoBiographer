@@ -258,8 +258,20 @@ function HF.SecondsToTimeString(totalSeconds)
   return returnString
 end
 
-function HF.TimestampToDateString(timestamp)
+function HF.ShortenString(s, length)
+  s = s:gsub("\n\r?", " ")
+  if (s:len() > length) then
+    s = s:sub(0, length) .. "..."
+  end
+  return s
+end
+
+function HF.TimestampToDateString(timestamp, excludeHoursAndSeconds)
   if timestamp == nil then return "" end
   
+  if (excludeHoursAndSeconds) then
+    return date("%y-%m-%d", timestamp)
+  end
+
   return date("%m/%d/%y %H:%M:%S", timestamp)
 end

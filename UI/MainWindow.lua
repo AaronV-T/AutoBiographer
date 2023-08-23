@@ -7,18 +7,20 @@ AutoBiographer_MainWindow:SetFrameStrata("HIGH")
 
 AutoBiographer_DebugWindow = CreateFrame("Frame", "AutoBiographerDebug", AutoBiographer_MainWindow, "BasicFrameTemplate")
 AutoBiographer_EventWindow = CreateFrame("Frame", "AutoBiographerEvent", AutoBiographer_MainWindow, "BasicFrameTemplate")
+AutoBiographer_NoteDetailsWindow = CreateFrame("Frame", "AutoBiographerNoteDetail", AutoBiographer_MainWindow, "BasicFrameTemplate")
+AutoBiographer_NotesWindow = CreateFrame("Frame", "AutoBiographerNotes", AutoBiographer_MainWindow, "BasicFrameTemplate")
 AutoBiographer_StatisticsWindow = CreateFrame("Frame", "AutoBiographerStatistics", AutoBiographer_MainWindow, "BasicFrameTemplate")
 AutoBiographer_VerificationWindow = CreateFrame("Frame", "AutoBiographerVerification", AutoBiographer_MainWindow, "BasicFrameTemplate")
 
 --
 --
--- Debug Window Initialization
+-- Window Initialization Helper
 --
 --
-
-function AutoBiographer_DebugWindow:Initialize()
-  local frame = self
-  frame:SetSize(750, 585)
+AutioBiographer_WindowHelper = {}
+function AutioBiographer_WindowHelper:InitialzationHelper(window, width, height, frameLevel, windowTitle, scrollFrameYOffset)
+  local frame = window
+  frame:SetSize(width, height) 
   frame:SetPoint("CENTER")
 
   frame:EnableKeyboard(true)
@@ -106,13 +108,23 @@ function AutoBiographer_DebugWindow:Initialize()
     frame.ScrollFrame.Scrollbar:SetValue(sliderNextValue)
   end)
 
+  frame.Toggle = function(self)
+    if (self:IsVisible()) then
+      self:Hide()
+    else
+      self:Update()
+      self:Show()
+      self:SetFrameLevel(frameLevel)
+    end
+  end
+
   frame.Title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   frame.Title:SetPoint("LEFT", frame.TitleBg, "LEFT", 5, 0);
-  frame.Title:SetText("AutoBiographer Debug Window")
+  frame.Title:SetText("AutoBiographer " .. windowTitle .. " Window")
   
   --scrollframe 
   frame.ScrollFrame = CreateFrame("ScrollFrame", nil, frame) 
-  frame.ScrollFrame:SetPoint("TOPLEFT", 10, -25) 
+  frame.ScrollFrame:SetPoint("TOPLEFT", 10, scrollFrameYOffset) 
   frame.ScrollFrame:SetPoint("BOTTOMRIGHT", -10, 10) 
 
   --scrollbar 
@@ -131,27 +143,29 @@ function AutoBiographer_DebugWindow:Initialize()
   )
   local scrollbg = frame.ScrollFrame.Scrollbar:CreateTexture(nil, "BACKGROUND") 
   scrollbg:SetAllPoints(scrollbar) 
-  scrollbg:SetTexture(0, 0, 0, 0.4) 
-  
+  scrollbg:SetTexture(0, 0, 0, 0.4)
+
   --content frame 
   frame.ScrollFrame.Content = CreateFrame("Frame", nil, frame.ScrollFrame)
-  frame.ScrollFrame.Content:SetSize(1, 1)
-  frame.ScrollFrame.Content.ChildrenCount = 0
+  frame.ScrollFrame.Content:SetSize(width - 25, height)
   frame.ScrollFrame:SetScrollChild(frame.ScrollFrame.Content)
+end
+
+--
+--
+-- Debug Window Initialization
+--
+--
+
+function AutoBiographer_DebugWindow:Initialize()
+  local frame = self
+  AutioBiographer_WindowHelper:InitialzationHelper(frame, 750, 585, 250, "Debug", -25)
+
+  frame.ScrollFrame.Content.ChildrenCount = 0
 
   frame.LogsUpdated = function(self) -- This is called when a new debug log is added.
     if (self:IsVisible()) then
       self:Update()
-    end
-  end
-
-  frame.Toggle = function(self)
-    if (self:IsVisible()) then
-      self:Hide()
-    else
-      self:Update()
-      self:Show()
-      self:SetFrameLevel(250)
     end
   end
   
@@ -167,112 +181,18 @@ end
 
 function AutoBiographer_EventWindow:Initialize()
   local frame = self
-  frame:SetSize(750, 585) 
-  frame:SetPoint("CENTER") 
-  
-  frame:EnableKeyboard(true)
-  frame:EnableMouse(true)
-  frame:SetMovable(true)
-
-  frame:SetScript("OnHide", function(self)
-    if (self.isMoving) then
-      self:StopMovingOrSizing()
-      self.isMoving = false
-    end
-  end)
-
-  frame:SetScript("OnKeyDown", function(self, key)
-    if (key == "ESCAPE") then
-      frame:SetPropagateKeyboardInput(false)
-      frame:Hide()
-    elseif (key == "END") then
-      frame:SetPropagateKeyboardInput(false)
-      local sliderMin, sliderMax = frame.SubFrame.ScrollFrame.Scrollbar:GetMinMaxValues()
-      frame.SubFrame.ScrollFrame.Scrollbar:SetValue(sliderMax)
-    elseif (key == "HOME") then
-      frame:SetPropagateKeyboardInput(false)
-      local sliderMin, sliderMax = frame.SubFrame.ScrollFrame.Scrollbar:GetMinMaxValues()
-      frame.SubFrame.ScrollFrame.Scrollbar:SetValue(sliderMin)
-    elseif (key == "PAGEDOWN") then
-      frame:SetPropagateKeyboardInput(false)
-      local sliderMin, sliderMax = frame.SubFrame.ScrollFrame.Scrollbar:GetMinMaxValues()
-      local sliderCurrentValue = frame.SubFrame.ScrollFrame.Scrollbar:GetValue()
-
-      local sliderNextValue = sliderCurrentValue + frame.SubFrame.ScrollFrame:GetHeight()
-
-      if (sliderNextValue > sliderMax) then
-        sliderNextValue = sliderMax
-      elseif (sliderNextValue < sliderMin) then
-        sliderNextValue = sliderMin
-      end
-
-      frame.SubFrame.ScrollFrame.Scrollbar:SetValue(sliderNextValue)
-    elseif (key == "PAGEUP") then
-      frame:SetPropagateKeyboardInput(false)
-      local sliderMin, sliderMax = frame.SubFrame.ScrollFrame.Scrollbar:GetMinMaxValues()
-      local sliderCurrentValue = frame.SubFrame.ScrollFrame.Scrollbar:GetValue()
-
-      local sliderNextValue = sliderCurrentValue - frame.SubFrame.ScrollFrame:GetHeight()
-
-      if (sliderNextValue > sliderMax) then
-        sliderNextValue = sliderMax
-      elseif (sliderNextValue < sliderMin) then
-        sliderNextValue = sliderMin
-      end
-
-      frame.SubFrame.ScrollFrame.Scrollbar:SetValue(sliderNextValue)
-    else
-      frame:SetPropagateKeyboardInput(true)
-    end
-  end)
-
-  frame:SetScript("OnMouseDown", function(self, button)
-    if (button == "LeftButton" and not self.isMoving) then
-      self:StartMoving()
-      self.isMoving = true
-    end
-  end)
-
-  frame:SetScript("OnMouseUp", function(self, button)
-    if (button == "LeftButton" and self.isMoving) then
-      self:StopMovingOrSizing()
-      self.isMoving = false
-    end
-  end)
-
-  frame:SetScript("OnMouseWheel", function(self, direction)
-    local sliderMin, sliderMax = frame.SubFrame.ScrollFrame.Scrollbar:GetMinMaxValues()
-    local sliderCurrentValue = frame.SubFrame.ScrollFrame.Scrollbar:GetValue()
-
-    local sliderNextValue = sliderCurrentValue - (frame.SubFrame.ScrollFrame.Scrollbar.scrollStep * direction)
-
-    if (sliderNextValue > sliderMax) then
-      sliderNextValue = sliderMax
-    elseif (sliderNextValue < sliderMin) then
-      sliderNextValue = sliderMin
-    end
-
-    frame.SubFrame.ScrollFrame.Scrollbar:SetValue(sliderNextValue)
-  end)
-
-  frame.Title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-  frame.Title:SetPoint("LEFT", frame.TitleBg, "LEFT", 5, 0);
-  frame.Title:SetText("AutoBiographer Event Window")
-  
-  frame.SubFrame = CreateFrame("Frame", "AutoBiographerEventSub", frame)
-  frame.SubFrame:SetPoint("TOPLEFT", 10, -25) 
-  frame.SubFrame:SetPoint("BOTTOMRIGHT", -10, 10) 
+  AutioBiographer_WindowHelper:InitialzationHelper(frame, 750, 585, 150, "Event", -80)
   
   local gameVersion = HelperFunctions.GetGameVersion()
 
   -- Filter Check Boxes
   local leftPoint = -300
-  local fsArenaAndBattleground = frame.SubFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-  fsArenaAndBattleground:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -15)
+  local fsArenaAndBattleground = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  fsArenaAndBattleground:SetPoint("CENTER", frame, "TOP", leftPoint, -40)
   fsArenaAndBattleground:SetText("Arena\n& BG")
   if (gameVersion < 2) then fsArenaAndBattleground:SetText("BG") end
-  local cbArenaAndBattleground = CreateFrame("CheckButton", nil, frame.SubFrame, "UICheckButtonTemplate") 
-  cbArenaAndBattleground:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -40)
+  local cbArenaAndBattleground = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate") 
+  cbArenaAndBattleground:SetPoint("CENTER", frame, "TOP", leftPoint, -65)
   cbArenaAndBattleground:SetChecked(AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.ArenaJoined])
   cbArenaAndBattleground:SetScript("OnClick", function(self, event, arg1)
     AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.ArenaJoined] = self:GetChecked()
@@ -285,11 +205,11 @@ function AutoBiographer_EventWindow:Initialize()
   end)
 
   leftPoint = leftPoint + 50
-  local fsBossKill = frame.SubFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-  fsBossKill:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -15)
+  local fsBossKill = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  fsBossKill:SetPoint("CENTER", frame, "TOP", leftPoint, -40)
   fsBossKill:SetText("Boss\nKill")
-  local cbBossKill= CreateFrame("CheckButton", nil, frame.SubFrame, "UICheckButtonTemplate") 
-  cbBossKill:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -40)
+  local cbBossKill= CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate") 
+  cbBossKill:SetPoint("CENTER", frame, "TOP", leftPoint, -65)
   cbBossKill:SetChecked(AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.BossKill])
   cbBossKill:SetScript("OnClick", function(self, event, arg1)
     AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.BossKill] = self:GetChecked()
@@ -297,11 +217,11 @@ function AutoBiographer_EventWindow:Initialize()
   end)
   
   leftPoint = leftPoint + 50
-  local fsFirstAcquiredItem = frame.SubFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-  fsFirstAcquiredItem:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -15) 
+  local fsFirstAcquiredItem = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  fsFirstAcquiredItem:SetPoint("CENTER", frame, "TOP", leftPoint, -40) 
   fsFirstAcquiredItem:SetText("First\nItem")
-  local cbFirstAcquiredItem = CreateFrame("CheckButton", nil, frame.SubFrame, "UICheckButtonTemplate") 
-  cbFirstAcquiredItem:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -40)
+  local cbFirstAcquiredItem = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate") 
+  cbFirstAcquiredItem:SetPoint("CENTER", frame, "TOP", leftPoint, -65)
   cbFirstAcquiredItem:SetChecked(AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.FirstAcquiredItem])
   cbFirstAcquiredItem:SetScript("OnClick", function(self, event, arg1)
     AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.FirstAcquiredItem] = self:GetChecked()
@@ -309,11 +229,11 @@ function AutoBiographer_EventWindow:Initialize()
   end)
   
   leftPoint = leftPoint + 50
-  local fsFirstKill = frame.SubFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-  fsFirstKill:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -15)
+  local fsFirstKill = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  fsFirstKill:SetPoint("CENTER", frame, "TOP", leftPoint, -40)
   fsFirstKill:SetText("First\nKill")
-  local cbFirstKill = CreateFrame("CheckButton", nil, frame.SubFrame, "UICheckButtonTemplate") 
-  cbFirstKill:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -40)
+  local cbFirstKill = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate") 
+  cbFirstKill:SetPoint("CENTER", frame, "TOP", leftPoint, -65)
   cbFirstKill:SetChecked(AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.FirstKill])
   cbFirstKill:SetScript("OnClick", function(self, event, arg1)
     AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.FirstKill] = self:GetChecked()
@@ -321,11 +241,11 @@ function AutoBiographer_EventWindow:Initialize()
   end)
   
   leftPoint = leftPoint + 50
-  local fsGuild = frame.SubFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-  fsGuild:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -15)
+  local fsGuild = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  fsGuild:SetPoint("CENTER", frame, "TOP", leftPoint, -40)
   fsGuild:SetText("Guild")
-  local cbGuild = CreateFrame("CheckButton", nil, frame.SubFrame, "UICheckButtonTemplate") 
-  cbGuild:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -40)
+  local cbGuild = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate") 
+  cbGuild:SetPoint("CENTER", frame, "TOP", leftPoint, -65)
   cbGuild:SetChecked(AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.GuildJoined])
   cbGuild:SetScript("OnClick", function(self, event, arg1)
     AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.GuildJoined] = self:GetChecked()
@@ -335,11 +255,11 @@ function AutoBiographer_EventWindow:Initialize()
   end)
   
   leftPoint = leftPoint + 50
-  local fsLevelUp = frame.SubFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-  fsLevelUp:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -15)
+  local fsLevelUp = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  fsLevelUp:SetPoint("CENTER", frame, "TOP", leftPoint, -40)
   fsLevelUp:SetText("Level\nUp")
-  local cbLevelUp= CreateFrame("CheckButton", nil, frame.SubFrame, "UICheckButtonTemplate") 
-  cbLevelUp:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -40)
+  local cbLevelUp= CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate") 
+  cbLevelUp:SetPoint("CENTER", frame, "TOP", leftPoint, -65)
   cbLevelUp:SetChecked(AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.LevelUp])
   cbLevelUp:SetScript("OnClick", function(self, event, arg1)
     AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.LevelUp] = self:GetChecked()
@@ -347,11 +267,11 @@ function AutoBiographer_EventWindow:Initialize()
   end)
   
   leftPoint = leftPoint + 50
-  local fsPlayerDeath = frame.SubFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-  fsPlayerDeath:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -15)
+  local fsPlayerDeath = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  fsPlayerDeath:SetPoint("CENTER", frame, "TOP", leftPoint, -40)
   fsPlayerDeath:SetText("Player\nDeath")
-  local cbPlayerDeath = CreateFrame("CheckButton", nil, frame.SubFrame, "UICheckButtonTemplate") 
-  cbPlayerDeath:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -40)
+  local cbPlayerDeath = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate") 
+  cbPlayerDeath:SetPoint("CENTER", frame, "TOP", leftPoint, -65)
   cbPlayerDeath:SetChecked(AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.PlayerDeath])
   cbPlayerDeath:SetScript("OnClick", function(self, event, arg1)
     AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.PlayerDeath] = self:GetChecked()
@@ -359,11 +279,11 @@ function AutoBiographer_EventWindow:Initialize()
   end)
   
   leftPoint = leftPoint + 50
-  local fsQuestTurnIn = frame.SubFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-  fsQuestTurnIn:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -15)
+  local fsQuestTurnIn = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  fsQuestTurnIn:SetPoint("CENTER", frame, "TOP", leftPoint, -40)
   fsQuestTurnIn:SetText("Quest")
-  local cbQuestTurnIn = CreateFrame("CheckButton", nil, frame.SubFrame, "UICheckButtonTemplate") 
-  cbQuestTurnIn:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -40)
+  local cbQuestTurnIn = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate") 
+  cbQuestTurnIn:SetPoint("CENTER", frame, "TOP", leftPoint, -65)
   cbQuestTurnIn:SetChecked(AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.QuestTurnIn])
   cbQuestTurnIn:SetScript("OnClick", function(self, event, arg1)
     AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.QuestTurnIn] = self:GetChecked()
@@ -371,11 +291,11 @@ function AutoBiographer_EventWindow:Initialize()
   end)
   
   leftPoint = leftPoint + 50
-  local fsReputationLevelChanged = frame.SubFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-  fsReputationLevelChanged:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -15)
+  local fsReputationLevelChanged = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  fsReputationLevelChanged:SetPoint("CENTER", frame, "TOP", leftPoint, -40)
   fsReputationLevelChanged:SetText("Rep\nChanged")
-  local cbReputationLevelChanged= CreateFrame("CheckButton", nil, frame.SubFrame, "UICheckButtonTemplate") 
-  cbReputationLevelChanged:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -40)
+  local cbReputationLevelChanged= CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate") 
+  cbReputationLevelChanged:SetPoint("CENTER", frame, "TOP", leftPoint, -65)
   cbReputationLevelChanged:SetChecked(AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.ReputationLevelChanged])
   cbReputationLevelChanged:SetScript("OnClick", function(self, event, arg1)
     AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.ReputationLevelChanged] = self:GetChecked()
@@ -383,11 +303,11 @@ function AutoBiographer_EventWindow:Initialize()
   end)
   
   leftPoint = leftPoint + 50
-  local fsSkillMilestone = frame.SubFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-  fsSkillMilestone:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -15)
+  local fsSkillMilestone = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  fsSkillMilestone:SetPoint("CENTER", frame, "TOP", leftPoint, -40)
   fsSkillMilestone:SetText("Skill")
-  local cbSkillMilestone = CreateFrame("CheckButton", nil, frame.SubFrame, "UICheckButtonTemplate") 
-  cbSkillMilestone:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -40)
+  local cbSkillMilestone = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate") 
+  cbSkillMilestone:SetPoint("CENTER", frame, "TOP", leftPoint, -65)
   cbSkillMilestone:SetChecked(AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.SkillMilestone])
   cbSkillMilestone:SetScript("OnClick", function(self, event, arg1)
     AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.SkillMilestone] = self:GetChecked()
@@ -395,11 +315,11 @@ function AutoBiographer_EventWindow:Initialize()
   end)
   
   leftPoint = leftPoint + 50
-  local fsSpellLearned = frame.SubFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-  fsSpellLearned:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -15)
+  local fsSpellLearned = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  fsSpellLearned:SetPoint("CENTER", frame, "TOP", leftPoint, -40)
   fsSpellLearned:SetText("Spell")
-  local cbSpellLearned= CreateFrame("CheckButton", nil, frame.SubFrame, "UICheckButtonTemplate") 
-  cbSpellLearned:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -40)
+  local cbSpellLearned= CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate") 
+  cbSpellLearned:SetPoint("CENTER", frame, "TOP", leftPoint, -65)
   cbSpellLearned:SetChecked(AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.SpellLearned])
   cbSpellLearned:SetScript("OnClick", function(self, event, arg1)
     AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.SpellLearned] = self:GetChecked()
@@ -407,11 +327,11 @@ function AutoBiographer_EventWindow:Initialize()
   end)
   
   leftPoint = leftPoint + 50
-  local fsSubZoneFirstVisit = frame.SubFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-  fsSubZoneFirstVisit:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -15)
+  local fsSubZoneFirstVisit = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  fsSubZoneFirstVisit:SetPoint("CENTER", frame, "TOP", leftPoint, -40)
   fsSubZoneFirstVisit:SetText("Sub\nZone")
-  local cbSubZoneFirstVisit = CreateFrame("CheckButton", nil, frame.SubFrame, "UICheckButtonTemplate") 
-  cbSubZoneFirstVisit:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -40)
+  local cbSubZoneFirstVisit = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate") 
+  cbSubZoneFirstVisit:SetPoint("CENTER", frame, "TOP", leftPoint, -65)
   cbSubZoneFirstVisit:SetChecked(AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.SubZoneFirstVisit])
   cbSubZoneFirstVisit:SetScript("OnClick", function(self, event, arg1)
     AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.SubZoneFirstVisit] = self:GetChecked()
@@ -419,58 +339,21 @@ function AutoBiographer_EventWindow:Initialize()
   end)
   
   leftPoint = leftPoint + 50
-  local fsZoneFirstVisit = frame.SubFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-  fsZoneFirstVisit:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -15)
+  local fsZoneFirstVisit = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  fsZoneFirstVisit:SetPoint("CENTER", frame, "TOP", leftPoint, -40)
   fsZoneFirstVisit:SetText("Zone")
-  local cbZoneFirstVisit = CreateFrame("CheckButton", nil, frame.SubFrame, "UICheckButtonTemplate") 
-  cbZoneFirstVisit:SetPoint("CENTER", frame.SubFrame, "TOP", leftPoint, -40)
+  local cbZoneFirstVisit = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate") 
+  cbZoneFirstVisit:SetPoint("CENTER", frame, "TOP", leftPoint, -65)
   cbZoneFirstVisit:SetChecked(AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.ZoneFirstVisit])
   cbZoneFirstVisit:SetScript("OnClick", function(self, event, arg1)
     AutoBiographer_Settings.EventDisplayFilters[AutoBiographerEnum.EventSubType.ZoneFirstVisit] = self:GetChecked()
     frame:Update()
   end)
   
-  --scrollframe 
-  frame.SubFrame.ScrollFrame = CreateFrame("ScrollFrame", nil, frame.SubFrame) 
-  frame.SubFrame.ScrollFrame:SetPoint("TOPLEFT", 10, -65) 
-  frame.SubFrame.ScrollFrame:SetPoint("BOTTOMRIGHT", -10, 10) 
-
-  --scrollbar 
-  frame.SubFrame.ScrollFrame.Scrollbar = CreateFrame("Slider", nil, frame.SubFrame.ScrollFrame, "UIPanelScrollBarTemplate")
-  frame.SubFrame.ScrollFrame.Scrollbar:SetPoint("TOPLEFT", frame.SubFrame, "TOPRIGHT", -15, -17)
-  frame.SubFrame.ScrollFrame.Scrollbar:SetPoint("BOTTOMLEFT", frame.SubFrame, "BOTTOMRIGHT", -15, 12)
-  frame.SubFrame.ScrollFrame.Scrollbar:SetMinMaxValues(1, 1)
-  frame.SubFrame.ScrollFrame.Scrollbar:SetValueStep(1)
-  frame.SubFrame.ScrollFrame.Scrollbar.scrollStep = 15
-  frame.SubFrame.ScrollFrame.Scrollbar:SetValue(0)
-  frame.SubFrame.ScrollFrame.Scrollbar:SetWidth(16)
-  frame.SubFrame.ScrollFrame.Scrollbar:SetScript("OnValueChanged",
-    function (self, value) 
-      self:GetParent():SetVerticalScroll(value) 
-    end
-  ) 
-  local scrollbg = frame.SubFrame.ScrollFrame.Scrollbar:CreateTexture(nil, "BACKGROUND") 
-  scrollbg:SetAllPoints(frame.SubFrame.ScrollFrame.Scrollbar) 
-  scrollbg:SetTexture(0, 0, 0, 0.4) 
-
-   --content frame
-   frame.SubFrame.ScrollFrame.Content = CreateFrame("Frame", nil, frame.SubFrame.ScrollFrame)
-   frame.SubFrame.ScrollFrame.Content:SetSize(1, 1)
-   frame.SubFrame.ScrollFrame.Content.FontStringsPool = {
-     Allocated = {},
-     UnAllocated = {},
-   }
-   frame.SubFrame.ScrollFrame:SetScrollChild(frame.SubFrame.ScrollFrame.Content)
-
-  frame.Toggle = function(self)
-    if (self:IsVisible()) then
-      self:Hide()
-    else
-      self:Update()
-      self:Show()
-      self:SetFrameLevel(150)
-    end
-  end
+  frame.ScrollFrame.Content.FontStringsPool = {
+    Allocated = {},
+    UnAllocated = {},
+  }
 
   frame:Hide()
   return frame
@@ -484,133 +367,7 @@ end
 
 function AutoBiographer_MainWindow:Initialize()
   local frame = self
-  frame:SetSize(800, 650) 
-  frame:SetPoint("CENTER") 
-  
-  frame:EnableKeyboard(true)
-  frame:EnableMouse(true)
-  frame:SetMovable(true)
-
-  frame:SetScript("OnHide", function(self)
-    if (self.isMoving) then
-      self:StopMovingOrSizing()
-      self.isMoving = false
-    end
-  end)
-
-  frame:SetScript("OnKeyDown", function(self, key)
-    if (key == "ESCAPE") then
-      frame:SetPropagateKeyboardInput(false)
-      frame:Hide()
-    elseif (key == "END") then
-      frame:SetPropagateKeyboardInput(false)
-      local sliderMin, sliderMax = frame.ScrollFrame.Scrollbar:GetMinMaxValues()
-      frame.ScrollFrame.Scrollbar:SetValue(sliderMax)
-    elseif (key == "HOME") then
-      frame:SetPropagateKeyboardInput(false)
-      local sliderMin, sliderMax = frame.ScrollFrame.Scrollbar:GetMinMaxValues()
-      frame.ScrollFrame.Scrollbar:SetValue(sliderMin)
-    elseif (key == "PAGEDOWN") then
-      frame:SetPropagateKeyboardInput(false)
-      local sliderMin, sliderMax = frame.ScrollFrame.Scrollbar:GetMinMaxValues()
-      local sliderCurrentValue = frame.ScrollFrame.Scrollbar:GetValue()
-
-      local sliderNextValue = sliderCurrentValue + frame.ScrollFrame:GetHeight()
-
-      if (sliderNextValue > sliderMax) then
-        sliderNextValue = sliderMax
-      elseif (sliderNextValue < sliderMin) then
-        sliderNextValue = sliderMin
-      end
-
-      frame.ScrollFrame.Scrollbar:SetValue(sliderNextValue)
-    elseif (key == "PAGEUP") then
-      frame:SetPropagateKeyboardInput(false)
-      local sliderMin, sliderMax = frame.ScrollFrame.Scrollbar:GetMinMaxValues()
-      local sliderCurrentValue = frame.ScrollFrame.Scrollbar:GetValue()
-
-      local sliderNextValue = sliderCurrentValue - frame.ScrollFrame:GetHeight()
-
-      if (sliderNextValue > sliderMax) then
-        sliderNextValue = sliderMax
-      elseif (sliderNextValue < sliderMin) then
-        sliderNextValue = sliderMin
-      end
-
-      frame.ScrollFrame.Scrollbar:SetValue(sliderNextValue)
-    else
-      frame:SetPropagateKeyboardInput(true)
-    end
-  end)
-
-  frame:SetScript("OnMouseDown", function(self, button)
-    if (button == "LeftButton" and not self.isMoving) then
-     self:StartMoving()
-     self.isMoving = true
-    end
-  end)
-
-  frame:SetScript("OnMouseUp", function(self, button)
-    if (button == "LeftButton" and self.isMoving) then
-     self:StopMovingOrSizing()
-     self.isMoving = false
-    end
-  end)
-
-  frame:SetScript("OnMouseWheel", function(self, direction)
-    local sliderMin, sliderMax = frame.ScrollFrame.Scrollbar:GetMinMaxValues()
-    local sliderCurrentValue = frame.ScrollFrame.Scrollbar:GetValue()
-
-    local sliderNextValue = sliderCurrentValue - (frame.ScrollFrame.Scrollbar.scrollStep * direction)
-
-    if (sliderNextValue > sliderMax) then
-      sliderNextValue = sliderMax
-    elseif (sliderNextValue < sliderMin) then
-      sliderNextValue = sliderMin
-    end
-
-    frame.ScrollFrame.Scrollbar:SetValue(sliderNextValue)
-  end)
-  
-  frame.Title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight");
-  frame.Title:SetPoint("LEFT", frame.TitleBg, "LEFT", 5, 0);
-  frame.Title:SetText("AutoBiographer Main Window")
-
-   --scrollframe 
-  frame.ScrollFrame = CreateFrame("ScrollFrame", nil, frame) 
-  frame.ScrollFrame:SetPoint("TOPLEFT", 10, -25) 
-  frame.ScrollFrame:SetPoint("BOTTOMRIGHT", -10, 10) 
-
-  --scrollbar 
-  frame.ScrollFrame.Scrollbar = CreateFrame("Slider", nil, frame.ScrollFrame, "UIPanelScrollBarTemplate")
-  frame.ScrollFrame.Scrollbar:SetPoint("TOPLEFT", frame, "TOPRIGHT", -25, -45)
-  frame.ScrollFrame.Scrollbar:SetPoint("BOTTOMLEFT", frame, "BOTTOMRIGHT", -25, 22)
-  frame.ScrollFrame.Scrollbar:SetValueStep(1)
-  frame.ScrollFrame.Scrollbar.scrollStep = 15
-  frame.ScrollFrame.Scrollbar:SetValue(0)
-  frame.ScrollFrame.Scrollbar:SetWidth(16)
-  frame.ScrollFrame.Scrollbar:SetScript("OnValueChanged",
-    function (self, value) 
-      self:GetParent():SetVerticalScroll(value) 
-    end
-  )
-  
-  frame.Toggle = function(self)
-    if (self:IsVisible()) then
-      self:Hide()
-    else
-      self:Update()
-      self:Show()
-      self:SetFrameLevel(100)
-    end
-  end
-
-  -- Content Frame 
-  frame.ScrollFrame.Content = CreateFrame("Frame", nil, frame.ScrollFrame) 
-  frame.ScrollFrame.Content:SetSize(775, 600)
-  frame.ScrollFrame.Content:SetPoint("TOPLEFT", frame.ScrollFrame, "TOPRIGHT", 0, 0) 
-  frame.ScrollFrame.Content:SetPoint("BOTTOMLEFT", frame.ScrollFrame, "BOTTOMRIGHT", 0, 0)
-  frame.ScrollFrame:SetScrollChild(frame.ScrollFrame.Content)
+  AutioBiographer_WindowHelper:InitialzationHelper(frame, 800, 650, 100, "Main", -25)
   
   -- Buttons
   frame.ScrollFrame.Content.EventsBtn = CreateFrame("Button", nil, frame.ScrollFrame.Content, "UIPanelButtonTemplate");
@@ -640,12 +397,12 @@ function AutoBiographer_MainWindow:Initialize()
   frame.ScrollFrame.Content.DebugBtn = CreateFrame("Button", nil, frame.ScrollFrame.Content, "UIPanelButtonTemplate");
   frame.ScrollFrame.Content.DebugBtn:SetPoint("CENTER", frame.ScrollFrame.Content, "TOP", 0, -25);
   frame.ScrollFrame.Content.DebugBtn:SetSize(120, 35);
-  frame.ScrollFrame.Content.DebugBtn:SetText("Verify");
+  frame.ScrollFrame.Content.DebugBtn:SetText("Notes");
   frame.ScrollFrame.Content.DebugBtn:SetNormalFontObject("GameFontNormalLarge");
   frame.ScrollFrame.Content.DebugBtn:SetHighlightFontObject("GameFontHighlightLarge");
   frame.ScrollFrame.Content.DebugBtn:SetScript("OnClick", 
     function(self)
-      AutoBiographer_VerificationWindow:Toggle()
+      AutoBiographer_NotesWindow:Toggle()
     end
   )
   
@@ -996,123 +753,128 @@ end
 
 --
 --
+-- Note Detail Window Initialization
+--
+--
+
+function AutoBiographer_NoteDetailsWindow:Initialize()
+  local frame = self
+  AutioBiographer_WindowHelper:InitialzationHelper(frame, 600, 450, 200, "Note Details", -25)
+
+  frame.ScrollFrame.Content.ContentEditBoxScrollFrame = CreateFrame("ScrollFrame", nil, frame.ScrollFrame.Content, "InputScrollFrameTemplate")
+  frame.ScrollFrame.Content.ContentEditBoxScrollFrame:SetSize(500, 300)
+  frame.ScrollFrame.Content.ContentEditBoxScrollFrame:SetPoint("TOP", frame.ScrollFrame.Content, "TOP", 0, -25)
+  frame.ScrollFrame.Content.ContentEditBoxScrollFrame.EditBox:SetWidth(frame.ScrollFrame.Content.ContentEditBoxScrollFrame:GetWidth())
+  frame.ScrollFrame.Content.ContentEditBoxScrollFrame.EditBox:SetFontObject("ChatFontNormal")
+  frame.ScrollFrame.Content.ContentEditBoxScrollFrame.EditBox:SetMaxLetters(1024)
+  --frame.ScrollFrame.Content.ContentEditBoxScrollFrame.CharCount:Hide()
+
+  frame.ScrollFrame.Content.CreateNoteBtn = CreateFrame("Button", nil, frame.ScrollFrame.Content, "UIPanelButtonTemplate");
+  frame.ScrollFrame.Content.CreateNoteBtn:SetPoint("BOTTOM", frame.ScrollFrame.Content, "BOTTOM", 0, 50);
+  frame.ScrollFrame.Content.CreateNoteBtn:SetSize(250, 35);
+  frame.ScrollFrame.Content.CreateNoteBtn:SetText("Save Note and Close Window");
+  frame.ScrollFrame.Content.CreateNoteBtn:SetNormalFontObject("GameFontNormalLarge");
+  frame.ScrollFrame.Content.CreateNoteBtn:SetHighlightFontObject("GameFontHighlightLarge");
+  frame.ScrollFrame.Content.CreateNoteBtn:SetScript("OnClick", 
+    function(self)
+      Note.Update(AutoBiographer_NoteDetailsWindow.SelectedNote, frame.ScrollFrame.Content.ContentEditBoxScrollFrame.EditBox:GetText())
+
+      AutoBiographer_NotesWindow:Update()
+      AutoBiographer_NoteDetailsWindow:Toggle()
+    end
+  )
+
+  frame:Hide()
+  return frame
+end
+
+--
+--
+-- Notes Window Initialization
+--
+--
+
+function AutoBiographer_NotesWindow:Initialize()
+  local frame = self
+  AutioBiographer_WindowHelper:InitialzationHelper(frame, 750, 585, 150, "Notes", -60)
+
+  frame.CreateNoteBtn = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate");
+  frame.CreateNoteBtn:SetPoint("CENTER", frame, "TOP", 0, -40);
+  frame.CreateNoteBtn:SetSize(120, 35);
+  frame.CreateNoteBtn:SetText("Create Note");
+  frame.CreateNoteBtn:SetNormalFontObject("GameFontNormalLarge");
+  frame.CreateNoteBtn:SetHighlightFontObject("GameFontHighlightLarge");
+  frame.CreateNoteBtn:SetScript("OnClick", 
+    function(self)
+      local newNote = Note.New("")
+      table.insert(Controller:GetNotes().GenericNotes, newNote)
+      AutoBiographer_NoteDetailsWindow.SelectedNote = newNote
+      
+      AutoBiographer_NotesWindow:Update()
+
+      if (AutoBiographer_NoteDetailsWindow:IsVisible()) then
+        AutoBiographer_NoteDetailsWindow:Update()
+      else
+        AutoBiographer_NoteDetailsWindow:Toggle()
+      end
+    end
+  )
+
+  local createdTimestampHeaderFs = self.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  createdTimestampHeaderFs:SetPoint("TOPLEFT", 5, 0)
+  createdTimestampHeaderFs:SetText("Created")
+
+  local lastUpdatedTimestampHeaderFs = self.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  lastUpdatedTimestampHeaderFs:SetPoint("TOPLEFT", 80, 0)
+  lastUpdatedTimestampHeaderFs:SetText("Updated")
+
+  local actionsHeaderFs = self.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  actionsHeaderFs:SetPoint("TOPLEFT", 155, 0)
+  actionsHeaderFs:SetText("Actions")
+
+  local contentHeaderFs = self.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  contentHeaderFs:SetPoint("TOPLEFT", 260, 0)
+  contentHeaderFs:SetText("Note Content")
+
+  frame.ScrollFrame.Content.ButtonsPool = {
+    Allocated = {},
+    UnAllocated = {},
+  }
+
+  frame.ScrollFrame.Content.FontStringsPool = {
+    Allocated = {},
+    UnAllocated = {},
+  }
+
+  frame:Hide()
+  return frame
+end
+
+--
+--
 -- Statistics Window Initialization
 --
 --
 
 function AutoBiographer_StatisticsWindow:Initialize()
   local frame = self
-  frame:SetSize(750, 585) 
-  frame:SetPoint("CENTER") 
-  
-  frame:EnableKeyboard(true)
-  frame:EnableMouse(true)
-  frame:SetMovable(true)
-
-  frame:SetScript("OnHide", function(self)
-    if (self.isMoving) then
-      self:StopMovingOrSizing()
-      self.isMoving = false
-    end
-  end)
-
-  frame:SetScript("OnKeyDown", function(self, key)
-    if (key == "ESCAPE") then
-      frame:SetPropagateKeyboardInput(false)
-      frame:Hide()
-    elseif (key == "END") then
-      frame:SetPropagateKeyboardInput(false)
-      local sliderMin, sliderMax = frame.SubFrame.ScrollFrame.Scrollbar:GetMinMaxValues()
-      frame.SubFrame.ScrollFrame.Scrollbar:SetValue(sliderMax)
-    elseif (key == "HOME") then
-      frame:SetPropagateKeyboardInput(false)
-      local sliderMin, sliderMax = frame.SubFrame.ScrollFrame.Scrollbar:GetMinMaxValues()
-      frame.SubFrame.ScrollFrame.Scrollbar:SetValue(sliderMin)
-    elseif (key == "PAGEDOWN") then
-      frame:SetPropagateKeyboardInput(false)
-      local sliderMin, sliderMax = frame.SubFrame.ScrollFrame.Scrollbar:GetMinMaxValues()
-      local sliderCurrentValue = frame.SubFrame.ScrollFrame.Scrollbar:GetValue()
-
-      local sliderNextValue = sliderCurrentValue + frame.SubFrame.ScrollFrame:GetHeight()
-
-      if (sliderNextValue > sliderMax) then
-        sliderNextValue = sliderMax
-      elseif (sliderNextValue < sliderMin) then
-        sliderNextValue = sliderMin
-      end
-
-      frame.SubFrame.ScrollFrame.Scrollbar:SetValue(sliderNextValue)
-    elseif (key == "PAGEUP") then
-      frame:SetPropagateKeyboardInput(false)
-      local sliderMin, sliderMax = frame.SubFrame.ScrollFrame.Scrollbar:GetMinMaxValues()
-      local sliderCurrentValue = frame.SubFrame.ScrollFrame.Scrollbar:GetValue()
-
-      local sliderNextValue = sliderCurrentValue - frame.SubFrame.ScrollFrame:GetHeight()
-
-      if (sliderNextValue > sliderMax) then
-        sliderNextValue = sliderMax
-      elseif (sliderNextValue < sliderMin) then
-        sliderNextValue = sliderMin
-      end
-
-      frame.SubFrame.ScrollFrame.Scrollbar:SetValue(sliderNextValue)
-    else
-      frame:SetPropagateKeyboardInput(true)
-    end
-  end)
-
-  frame:SetScript("OnMouseDown", function(self, button)
-    if (button == "LeftButton" and not self.isMoving) then
-      self:StartMoving()
-      self.isMoving = true
-    end
-  end)
-
-  frame:SetScript("OnMouseUp", function(self, button)
-    if (button == "LeftButton" and self.isMoving) then
-      self:StopMovingOrSizing()
-      self.isMoving = false
-    end
-  end)
-
-  frame:SetScript("OnMouseWheel", function(self, direction)
-    local sliderMin, sliderMax = frame.SubFrame.ScrollFrame.Scrollbar:GetMinMaxValues()
-    local sliderCurrentValue = frame.SubFrame.ScrollFrame.Scrollbar:GetValue()
-
-    local sliderNextValue = sliderCurrentValue - (frame.SubFrame.ScrollFrame.Scrollbar.scrollStep * direction)
-
-    if (sliderNextValue > sliderMax) then
-      sliderNextValue = sliderMax
-    elseif (sliderNextValue < sliderMin) then
-      sliderNextValue = sliderMin
-    end
-
-    frame.SubFrame.ScrollFrame.Scrollbar:SetValue(sliderNextValue)
-  end)
-
-  frame.Title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-  frame.Title:SetPoint("LEFT", frame.TitleBg, "LEFT", 5, 0);
-  frame.Title:SetText("AutoBiographer Statistics Window")
-  
-  frame.SubFrame = CreateFrame("Frame", "AutoBiographerEventSub", frame)
-  frame.SubFrame:SetPoint("TOPLEFT", 10, -25) 
-  frame.SubFrame:SetPoint("BOTTOMRIGHT", -10, 10) 
+  AutioBiographer_WindowHelper:InitialzationHelper(frame, 750, 585, 150, "Statistics", -90)
   
   -- Dropdown
-  frame.SubFrame.Dropdown = CreateFrame("Frame", nil, frame.SubFrame, "UIDropDownMenuTemplate")
-  frame.SubFrame.Dropdown:SetSize(100, 25)
-  frame.SubFrame.Dropdown:SetPoint("LEFT", frame.SubFrame, "TOP", -frame.SubFrame.Dropdown:GetWidth(), -15)
+  frame.Dropdown = CreateFrame("Frame", nil, frame, "UIDropDownMenuTemplate")
+  frame.Dropdown:SetSize(100, 25)
+  frame.Dropdown:SetPoint("LEFT", frame, "TOP", -frame.Dropdown:GetWidth(), -40)
 
   if (not frame.DropdownText) then frame.DropdownText = "Kills" end
   if (not frame.StatisticsDisplayMode) then frame.StatisticsDisplayMode = AutoBiographerEnum.StatisticsDisplayMode.Kills end
   
-  UIDropDownMenu_Initialize(frame.SubFrame.Dropdown, function(frame, level, menuList)
+  UIDropDownMenu_Initialize(frame.Dropdown, function(frame, level, menuList)
     local info = UIDropDownMenu_CreateInfo()
     info.func = function(frame, arg1, arg2, checked)
       AutoBiographer_StatisticsWindow.DropdownText = frame.value   
       AutoBiographer_StatisticsWindow.StatisticsDisplayMode = arg1
-      AutoBiographer_StatisticsWindow.SubFrame.OrderColumnIndex = 1
-      AutoBiographer_StatisticsWindow.SubFrame.OrderDirection = "ASC"
+      AutoBiographer_StatisticsWindow.OrderColumnIndex = 1
+      AutoBiographer_StatisticsWindow.OrderDirection = "ASC"
       AutoBiographer_StatisticsWindow:Update()
     end
   
@@ -1129,14 +891,14 @@ function AutoBiographer_StatisticsWindow:Initialize()
   end)
 
   -- Level Range
-  frame.SubFrame.MinimumLevelFs = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-  frame.SubFrame.MinimumLevelFs:SetPoint("LEFT", frame.SubFrame.Dropdown, "RIGHT", 60, 0)
-  frame.SubFrame.MinimumLevelFs:SetText("Minimum Level:")
-  frame.SubFrame.MinimumLevelEb = CreateFrame("EditBox", nil, frame.SubFrame, BackdropTemplateMixin and "BackdropTemplate");
-  frame.SubFrame.MinimumLevelEb:SetSize(20, 20)
-  frame.SubFrame.MinimumLevelEb:SetPoint("LEFT", frame.SubFrame.MinimumLevelFs, "RIGHT", 2, 0)
-  frame.SubFrame.MinimumLevelEb:SetFontObject(GameTooltipTextSmall)
-  frame.SubFrame.MinimumLevelEb:SetBackdrop({
+  frame.MinimumLevelFs = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  frame.MinimumLevelFs:SetPoint("LEFT", frame.Dropdown, "RIGHT", 60, 0)
+  frame.MinimumLevelFs:SetText("Minimum Level:")
+  frame.MinimumLevelEb = CreateFrame("EditBox", nil, frame, BackdropTemplateMixin and "BackdropTemplate");
+  frame.MinimumLevelEb:SetSize(20, 20)
+  frame.MinimumLevelEb:SetPoint("LEFT", frame.MinimumLevelFs, "RIGHT", 2, 0)
+  frame.MinimumLevelEb:SetFontObject(GameTooltipTextSmall)
+  frame.MinimumLevelEb:SetBackdrop({
     bgFile = "",
     edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
     tile = "true",
@@ -1144,43 +906,43 @@ function AutoBiographer_StatisticsWindow:Initialize()
     edgeSize = 10,
     insets = {left = 3, right = 3, top = 3, bottom = 3}
   })
-  frame.SubFrame.MinimumLevelEb:SetAutoFocus(false)
-  frame.SubFrame.MinimumLevelEb:SetMultiLine(false)
-  frame.SubFrame.MinimumLevelEb:SetNumeric(true)
-  frame.SubFrame.MinimumLevelEb:SetScript("OnEscapePressed", function() frame.SubFrame.MinimumLevelEb:ClearFocus() end)
-  frame.SubFrame.MinimumLevelEb:SetScript("OnTextChanged", function(arg1, arg2)
+  frame.MinimumLevelEb:SetAutoFocus(false)
+  frame.MinimumLevelEb:SetMultiLine(false)
+  frame.MinimumLevelEb:SetNumeric(true)
+  frame.MinimumLevelEb:SetScript("OnEscapePressed", function() frame.MinimumLevelEb:ClearFocus() end)
+  frame.MinimumLevelEb:SetScript("OnTextChanged", function(arg1, arg2)
     if (not arg2) then
       return
     end
 
-    frame.SubFrame.MinimumLevelEb.DebounceCount = frame.SubFrame.MinimumLevelEb.DebounceCount + 1
+    frame.MinimumLevelEb.DebounceCount = frame.MinimumLevelEb.DebounceCount + 1
     C_Timer.After(2, function()
-      frame.SubFrame.MinimumLevelEb.DebounceCount = frame.SubFrame.MinimumLevelEb.DebounceCount - 1
+      frame.MinimumLevelEb.DebounceCount = frame.MinimumLevelEb.DebounceCount - 1
 
-      if (frame.SubFrame.MinimumLevelEb.DebounceCount == 0) then
-        frame.SubFrame.MinimumLevelEb:ClearFocus()
+      if (frame.MinimumLevelEb.DebounceCount == 0) then
+        frame.MinimumLevelEb:ClearFocus()
 
-        if (frame.SubFrame.MinimumLevelEb:GetNumber() < 1) then
-          frame.SubFrame.MinimumLevelEb:SetNumber(1)
-        elseif (frame.SubFrame.MinimumLevelEb:GetNumber() > frame.SubFrame.MaximumLevelEb:GetNumber()) then
-          frame.SubFrame.MinimumLevelEb:SetNumber(frame.SubFrame.MaximumLevelEb:GetNumber())
+        if (frame.MinimumLevelEb:GetNumber() < 1) then
+          frame.MinimumLevelEb:SetNumber(1)
+        elseif (frame.MinimumLevelEb:GetNumber() > frame.MaximumLevelEb:GetNumber()) then
+          frame.MinimumLevelEb:SetNumber(frame.MaximumLevelEb:GetNumber())
         end
     
         frame:Update()
       end
     end)
   end)
-  frame.SubFrame.MinimumLevelEb:SetNumber(1)
-  frame.SubFrame.MinimumLevelEb.DebounceCount = 0
+  frame.MinimumLevelEb:SetNumber(1)
+  frame.MinimumLevelEb.DebounceCount = 0
 
-  frame.SubFrame.MaximumLevelFs = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-  frame.SubFrame.MaximumLevelFs:SetPoint("LEFT", frame.SubFrame.MinimumLevelEb, "RIGHT", 15, 0)
-  frame.SubFrame.MaximumLevelFs:SetText("Maximum Level:")
-  frame.SubFrame.MaximumLevelEb = CreateFrame("EditBox", nil, frame.SubFrame, BackdropTemplateMixin and "BackdropTemplate");
-  frame.SubFrame.MaximumLevelEb:SetSize(20, 20)
-  frame.SubFrame.MaximumLevelEb:SetPoint("LEFT", frame.SubFrame.MaximumLevelFs, "RIGHT", 2, 0)
-  frame.SubFrame.MaximumLevelEb:SetFontObject(GameTooltipTextSmall)
-  frame.SubFrame.MaximumLevelEb:SetBackdrop({
+  frame.MaximumLevelFs = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  frame.MaximumLevelFs:SetPoint("LEFT", frame.MinimumLevelEb, "RIGHT", 15, 0)
+  frame.MaximumLevelFs:SetText("Maximum Level:")
+  frame.MaximumLevelEb = CreateFrame("EditBox", nil, frame, BackdropTemplateMixin and "BackdropTemplate");
+  frame.MaximumLevelEb:SetSize(20, 20)
+  frame.MaximumLevelEb:SetPoint("LEFT", frame.MaximumLevelFs, "RIGHT", 2, 0)
+  frame.MaximumLevelEb:SetFontObject(GameTooltipTextSmall)
+  frame.MaximumLevelEb:SetBackdrop({
     bgFile = "",
     edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
     tile = "true",
@@ -1188,85 +950,48 @@ function AutoBiographer_StatisticsWindow:Initialize()
     edgeSize = 10,
     insets = {left = 3, right = 3, top = 3, bottom = 3}
   })
-  frame.SubFrame.MaximumLevelEb:SetAutoFocus(false)
-  frame.SubFrame.MaximumLevelEb:SetMultiLine(false)
-  frame.SubFrame.MaximumLevelEb:SetNumeric(true)
-  frame.SubFrame.MaximumLevelEb:SetScript("OnEscapePressed", function() frame.SubFrame.MaximumLevelEb:ClearFocus() end)
-  frame.SubFrame.MaximumLevelEb:SetScript("OnTextChanged", function(arg1, arg2)
+  frame.MaximumLevelEb:SetAutoFocus(false)
+  frame.MaximumLevelEb:SetMultiLine(false)
+  frame.MaximumLevelEb:SetNumeric(true)
+  frame.MaximumLevelEb:SetScript("OnEscapePressed", function() frame.MaximumLevelEb:ClearFocus() end)
+  frame.MaximumLevelEb:SetScript("OnTextChanged", function(arg1, arg2)
     if (not arg2) then
       return
     end
 
-    frame.SubFrame.MaximumLevelEb.DebounceCount = frame.SubFrame.MaximumLevelEb.DebounceCount + 1
+    frame.MaximumLevelEb.DebounceCount = frame.MaximumLevelEb.DebounceCount + 1
     C_Timer.After(2, function()
-      frame.SubFrame.MaximumLevelEb.DebounceCount = frame.SubFrame.MaximumLevelEb.DebounceCount - 1
+      frame.MaximumLevelEb.DebounceCount = frame.MaximumLevelEb.DebounceCount - 1
 
-      if (frame.SubFrame.MaximumLevelEb.DebounceCount == 0) then
-        frame.SubFrame.MaximumLevelEb:ClearFocus()
+      if (frame.MaximumLevelEb.DebounceCount == 0) then
+        frame.MaximumLevelEb:ClearFocus()
         
-        if (frame.SubFrame.MaximumLevelEb:GetNumber() > Controller:GetCurrentLevelNum()) then
-          frame.SubFrame.MaximumLevelEb:SetNumber(Controller:GetCurrentLevelNum())
-        elseif (frame.SubFrame.MaximumLevelEb:GetNumber() < frame.SubFrame.MinimumLevelEb:GetNumber()) then
-          frame.SubFrame.MaximumLevelEb:SetNumber(frame.SubFrame.MinimumLevelEb:GetNumber())
+        if (frame.MaximumLevelEb:GetNumber() > Controller:GetCurrentLevelNum()) then
+          frame.MaximumLevelEb:SetNumber(Controller:GetCurrentLevelNum())
+        elseif (frame.MaximumLevelEb:GetNumber() < frame.MinimumLevelEb:GetNumber()) then
+          frame.MaximumLevelEb:SetNumber(frame.MinimumLevelEb:GetNumber())
         end
     
         frame:Update()
       end
     end)
   end)
-  frame.SubFrame.MaximumLevelEb:SetNumber(Controller:GetCurrentLevelNum())
-  frame.SubFrame.MaximumLevelEb.DebounceCount = 0
+  frame.MaximumLevelEb:SetNumber(Controller:GetCurrentLevelNum())
+  frame.MaximumLevelEb.DebounceCount = 0
 
-  frame.SubFrame.SortColumnNameFs = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-  frame.SubFrame.SortColumnNameFs:SetPoint("TOPLEFT", frame.SubFrame, 10, -10)
+  frame.SortColumnNameFs = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  frame.SortColumnNameFs:SetPoint("TOPLEFT", frame, 10, -35)
 
   -- Table Headers
-  frame.SubFrame.TableHeaders = {}
+  frame.TableHeaders = {}
 
-  self.SubFrame.OrderColumnIndex = 1
-  self.SubFrame.OrderDirection = "ASC"
-
-  --scrollframe 
-  frame.SubFrame.ScrollFrame = CreateFrame("ScrollFrame", nil, frame.SubFrame) 
-  frame.SubFrame.ScrollFrame:SetPoint("TOPLEFT", 10, -65) 
-  frame.SubFrame.ScrollFrame:SetPoint("BOTTOMRIGHT", -10, 10) 
-
-  --scrollbar 
-  frame.SubFrame.ScrollFrame.Scrollbar = CreateFrame("Slider", nil, frame.SubFrame.ScrollFrame, "UIPanelScrollBarTemplate")
-  frame.SubFrame.ScrollFrame.Scrollbar:SetPoint("TOPLEFT", frame.SubFrame, "TOPRIGHT", -15, -17)
-  frame.SubFrame.ScrollFrame.Scrollbar:SetPoint("BOTTOMLEFT", frame.SubFrame, "BOTTOMRIGHT", -15, 12)
-  frame.SubFrame.ScrollFrame.Scrollbar:SetMinMaxValues(1, 1)
-  frame.SubFrame.ScrollFrame.Scrollbar:SetValueStep(1)
-  frame.SubFrame.ScrollFrame.Scrollbar.scrollStep = 15
-  frame.SubFrame.ScrollFrame.Scrollbar:SetValue(0)
-  frame.SubFrame.ScrollFrame.Scrollbar:SetWidth(16)
-  frame.SubFrame.ScrollFrame.Scrollbar:SetScript("OnValueChanged",
-    function (self, value) 
-      self:GetParent():SetVerticalScroll(value) 
-    end
-  ) 
-  local scrollbg = frame.SubFrame.ScrollFrame.Scrollbar:CreateTexture(nil, "BACKGROUND") 
-  scrollbg:SetAllPoints(frame.SubFrame.ScrollFrame.Scrollbar) 
-  scrollbg:SetTexture(0, 0, 0, 0.4) 
-
-  --content frame
-  frame.SubFrame.ScrollFrame.Content = CreateFrame("Frame", nil, frame.SubFrame.ScrollFrame)
-  frame.SubFrame.ScrollFrame.Content:SetSize(1, 1)
-  frame.SubFrame.ScrollFrame.Content.FontStringsPool = {
+  self.OrderColumnIndex = 1
+  self.OrderDirection = "ASC"
+  
+  frame.ScrollFrame.Content.FontStringsPool = {
     Allocated = {},
     UnAllocated = {},
   }
-  frame.SubFrame.ScrollFrame:SetScrollChild(frame.SubFrame.ScrollFrame.Content)
-
-  frame.Toggle = function(self)
-    if (self:IsVisible()) then
-      self:Hide()
-    else
-      self:Update()
-      self:Show()
-      self:SetFrameLevel(200)
-    end
-  end
 
   frame:Hide()
   return frame
@@ -1280,126 +1005,7 @@ end
 
 function AutoBiographer_VerificationWindow:Initialize()
   local frame = self
-  frame:SetSize(750, 585)
-  frame:SetPoint("CENTER")
-
-  frame:EnableKeyboard(true)
-  frame:EnableMouse(true)
-  frame:SetMovable(true)
-
-  frame:SetScript("OnHide", function(self)
-    if (self.isMoving) then
-      self:StopMovingOrSizing()
-      self.isMoving = false
-    end
-  end)
-
-  frame:SetScript("OnKeyDown", function(self, key)
-    if (key == "ESCAPE") then
-      frame:SetPropagateKeyboardInput(false)
-      frame:Hide()
-    elseif (key == "END") then
-      frame:SetPropagateKeyboardInput(false)
-      local sliderMin, sliderMax = frame.ScrollFrame.Scrollbar:GetMinMaxValues()
-      frame.ScrollFrame.Scrollbar:SetValue(sliderMax)
-    elseif (key == "HOME") then
-      frame:SetPropagateKeyboardInput(false)
-      local sliderMin, sliderMax = frame.ScrollFrame.Scrollbar:GetMinMaxValues()
-      frame.ScrollFrame.Scrollbar:SetValue(sliderMin)
-    elseif (key == "PAGEDOWN") then
-      frame:SetPropagateKeyboardInput(false)
-      local sliderMin, sliderMax = frame.ScrollFrame.Scrollbar:GetMinMaxValues()
-      local sliderCurrentValue = frame.ScrollFrame.Scrollbar:GetValue()
-
-      local sliderNextValue = sliderCurrentValue + frame.ScrollFrame:GetHeight()
-
-      if (sliderNextValue > sliderMax) then
-        sliderNextValue = sliderMax
-      elseif (sliderNextValue < sliderMin) then
-        sliderNextValue = sliderMin
-      end
-
-      frame.ScrollFrame.Scrollbar:SetValue(sliderNextValue)
-    elseif (key == "PAGEUP") then
-      frame:SetPropagateKeyboardInput(false)
-      local sliderMin, sliderMax = frame.ScrollFrame.Scrollbar:GetMinMaxValues()
-      local sliderCurrentValue = frame.ScrollFrame.Scrollbar:GetValue()
-
-      local sliderNextValue = sliderCurrentValue - frame.ScrollFrame:GetHeight()
-
-      if (sliderNextValue > sliderMax) then
-        sliderNextValue = sliderMax
-      elseif (sliderNextValue < sliderMin) then
-        sliderNextValue = sliderMin
-      end
-
-      frame.ScrollFrame.Scrollbar:SetValue(sliderNextValue)
-    else
-      frame:SetPropagateKeyboardInput(true)
-    end
-  end)
-
-  frame:SetScript("OnMouseDown", function(self, button)
-    if (button == "LeftButton" and not self.isMoving) then
-      self:StartMoving()
-      self.isMoving = true
-    end
-  end)
-
-  frame:SetScript("OnMouseUp", function(self, button)
-    if (button == "LeftButton" and self.isMoving) then
-      self:StopMovingOrSizing()
-      self.isMoving = false
-    end
-  end)
-
-  frame:SetScript("OnMouseWheel", function(self, direction)
-    local sliderMin, sliderMax = frame.ScrollFrame.Scrollbar:GetMinMaxValues()
-    local sliderCurrentValue = frame.ScrollFrame.Scrollbar:GetValue()
-
-    local sliderNextValue = sliderCurrentValue - (frame.ScrollFrame.Scrollbar.scrollStep * direction)
-
-    if (sliderNextValue > sliderMax) then
-      sliderNextValue = sliderMax
-    elseif (sliderNextValue < sliderMin) then
-      sliderNextValue = sliderMin
-    end
-
-    frame.ScrollFrame.Scrollbar:SetValue(sliderNextValue)
-  end)
-
-  frame.Title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-  frame.Title:SetPoint("LEFT", frame.TitleBg, "LEFT", 5, 0);
-  frame.Title:SetText("AutoBiographer Verification Window")
-  
-  --scrollframe
-  frame.ScrollFrame = CreateFrame("ScrollFrame", nil, frame) 
-  frame.ScrollFrame:SetPoint("TOPLEFT", 10, -25) 
-  frame.ScrollFrame:SetPoint("BOTTOMRIGHT", -10, 10) 
-
-  --scrollbar
-  frame.ScrollFrame.Scrollbar = CreateFrame("Slider", nil, frame.ScrollFrame, "UIPanelScrollBarTemplate") 
-  frame.ScrollFrame.Scrollbar:SetPoint("TOPLEFT", frame, "TOPRIGHT", -25, -40)
-  frame.ScrollFrame.Scrollbar:SetPoint("BOTTOMLEFT", frame, "BOTTOMRIGHT", -25, 22)
-  frame.ScrollFrame.Scrollbar:SetMinMaxValues(1, 1)
-  frame.ScrollFrame.Scrollbar:SetValueStep(1)
-  frame.ScrollFrame.Scrollbar.scrollStep = 15
-  frame.ScrollFrame.Scrollbar:SetValue(0)
-  frame.ScrollFrame.Scrollbar:SetWidth(16)
-  frame.ScrollFrame.Scrollbar:SetScript("OnValueChanged",
-    function (self, value) 
-      self:GetParent():SetVerticalScroll(value) 
-    end
-  )
-  local scrollbg = frame.ScrollFrame.Scrollbar:CreateTexture(nil, "BACKGROUND") 
-  scrollbg:SetAllPoints(scrollbar) 
-  scrollbg:SetTexture(0, 0, 0, 0.4) 
-  
-  --content frame 
-  frame.ScrollFrame.Content = CreateFrame("Frame", nil, frame.ScrollFrame)
-  frame.ScrollFrame.Content:SetSize(1, 1)
-  frame.ScrollFrame.Content.ChildrenCount = 0
-  frame.ScrollFrame:SetScrollChild(frame.ScrollFrame.Content)
+  AutioBiographer_WindowHelper:InitialzationHelper(frame, 750, 585, 150, "Verification", -25)
 
   local topPoint = -55
 
@@ -1415,16 +1021,6 @@ function AutoBiographer_VerificationWindow:Initialize()
     frame.ScrollFrame.Content.ExpectedlevelFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     frame.ScrollFrame.Content.ExpectedlevelFs:SetPoint("TOPLEFT", 10, topPoint)
     topPoint = topPoint - 15
-  end
-  
-  frame.Toggle = function(self)
-    if (self:IsVisible()) then
-      self:Hide()
-    else
-      self:Update()
-      self:Show()
-      self:SetFrameLevel(150)
-    end
   end
 
   frame:Hide()
@@ -1476,34 +1072,34 @@ end
 
 function AutoBiographer_EventWindow:Update()
   -- Release previous font strings.
-  for i = 1, #self.SubFrame.ScrollFrame.Content.FontStringsPool.Allocated, 1 do
-    local fs = self.SubFrame.ScrollFrame.Content.FontStringsPool.Allocated[i]
+  for i = 1, #self.ScrollFrame.Content.FontStringsPool.Allocated, 1 do
+    local fs = self.ScrollFrame.Content.FontStringsPool.Allocated[i]
     fs:Hide()
     fs:SetText("")
-    table.insert(self.SubFrame.ScrollFrame.Content.FontStringsPool.UnAllocated, fs)
+    table.insert(self.ScrollFrame.Content.FontStringsPool.UnAllocated, fs)
   end
-  self.SubFrame.ScrollFrame.Content.FontStringsPool.Allocated = {}
+  self.ScrollFrame.Content.FontStringsPool.Allocated = {}
 
   local events = Controller:GetEvents()
-
   for i = 1, #events, 1 do
     if (AutoBiographer_Settings.EventDisplayFilters[events[i].SubType]) then
-      local fs = table.remove(self.SubFrame.ScrollFrame.Content.FontStringsPool.UnAllocated)
+      local fs = table.remove(self.ScrollFrame.Content.FontStringsPool.UnAllocated)
       if (not fs) then
-        fs = self.SubFrame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        fs = self.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
       end
       
-      fs:SetPoint("TOPLEFT", 5, -15 * #self.SubFrame.ScrollFrame.Content.FontStringsPool.Allocated) 
+      fs:SetPoint("TOPLEFT", self.ScrollFrame.Content, 5, -15 * #self.ScrollFrame.Content.FontStringsPool.Allocated)
       fs:SetText(Controller:GetEventString(events[i]))
       fs:Show()
-      table.insert(self.SubFrame.ScrollFrame.Content.FontStringsPool.Allocated, fs)
+      table.insert(self.ScrollFrame.Content.FontStringsPool.Allocated, fs)
+      --print("Showing: " .. Controller:GetEventString(events[i]))
     end
   end
   
-  local scrollbarMaxValue = (#self.SubFrame.ScrollFrame.Content.FontStringsPool.Allocated * 15) - self.SubFrame.ScrollFrame:GetHeight();
+  local scrollbarMaxValue = (#self.ScrollFrame.Content.FontStringsPool.Allocated * 15) - self.ScrollFrame:GetHeight();
   if (scrollbarMaxValue <= 0) then scrollbarMaxValue = 1 end
-  self.SubFrame.ScrollFrame.Scrollbar:SetMinMaxValues(1, scrollbarMaxValue)
-  self.SubFrame.ScrollFrame.Scrollbar:SetValue(scrollbarMaxValue)
+  self.ScrollFrame.Scrollbar:SetMinMaxValues(1, scrollbarMaxValue)
+  self.ScrollFrame.Scrollbar:SetValue(scrollbarMaxValue)
 end
 
 --
@@ -1794,14 +1390,152 @@ end
 
 --
 --
+-- Note Details Window Update
+--
+--
+
+function AutoBiographer_NoteDetailsWindow:Update()
+  self.ScrollFrame.Content.ContentEditBoxScrollFrame.EditBox:SetText(self.SelectedNote.Content)
+end
+
+--
+--
+-- Notes Window Update
+--
+--
+
+function AutoBiographer_NotesWindow:Update()
+  local genericNotes = Controller:GetNotes().GenericNotes
+  local sortedGenericNotes = {}
+  for i = 1, #genericNotes, 1 do
+    table.insert(sortedGenericNotes, genericNotes[i])
+  end
+
+  table.sort(sortedGenericNotes, function(rowA, rowB)
+    return rowA.LastUpdatedTimestamp > rowB.LastUpdatedTimestamp
+  end)
+
+  for i = 1, #self.ScrollFrame.Content.ButtonsPool.Allocated, 1 do
+    local button = self.ScrollFrame.Content.ButtonsPool.Allocated[i]
+    button:Hide()
+    table.insert(self.ScrollFrame.Content.ButtonsPool.UnAllocated, fs)
+  end
+
+  for i = 1, #self.ScrollFrame.Content.FontStringsPool.Allocated, 1 do
+    local fs = self.ScrollFrame.Content.FontStringsPool.Allocated[i]
+    fs:Hide()
+    fs:SetText("")
+    table.insert(self.ScrollFrame.Content.FontStringsPool.UnAllocated, fs)
+  end
+  self.ScrollFrame.Content.FontStringsPool.Allocated = {}
+
+  for i = 1, #sortedGenericNotes, 1 do
+    local font = "GameFontHighlight"
+
+    local createdTimestampFs = table.remove(self.ScrollFrame.Content.FontStringsPool.UnAllocated)
+    if (not createdTimestampFs) then
+      createdTimestampFs = self.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", font)
+    end
+    createdTimestampFs:SetPoint("TOPLEFT", 5, -15 * i)
+    createdTimestampFs:SetText(HelperFunctions.TimestampToDateString(sortedGenericNotes[i].CreatedTimestamp, true))
+    createdTimestampFs:Show()
+    table.insert(self.ScrollFrame.Content.FontStringsPool.Allocated, createdTimestampFs)
+
+    local lastUpdatedTimestampFs = table.remove(self.ScrollFrame.Content.FontStringsPool.UnAllocated)
+    if (not lastUpdatedTimestampFs) then
+      lastUpdatedTimestampFs = self.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", font)
+    end
+    lastUpdatedTimestampFs:SetPoint("TOPLEFT", 80, -15 * i)
+    lastUpdatedTimestampFs:SetText(HelperFunctions.TimestampToDateString(sortedGenericNotes[i].LastUpdatedTimestamp, true))
+    lastUpdatedTimestampFs:Show()
+    table.insert(self.ScrollFrame.Content.FontStringsPool.Allocated, lastUpdatedTimestampFs)
+
+    local deleteNoteButton = table.remove(self.ScrollFrame.Content.ButtonsPool.UnAllocated)
+    if (not deleteNoteButton) then
+      deleteNoteButton = CreateFrame("Button", nil, self.ScrollFrame.Content, "UIPanelButtonTemplate")
+    end
+    deleteNoteButton:SetPoint("TOPLEFT", 155, -15 * i);
+    deleteNoteButton:SetSize(50, 15)
+    deleteNoteButton:SetText("Delete")
+    deleteNoteButton:SetNormalFontObject("GameFontNormal")
+    deleteNoteButton:SetHighlightFontObject("GameFontHighlight")
+    deleteNoteButton:SetScript("OnClick",
+      function(self)
+        local noteToDelete = sortedGenericNotes[i]
+
+        AutoBiographer_ConfirmWindow.New("Confirm note deletion:\n'" .. HelperFunctions.ShortenString(noteToDelete.Content, 30) .. "'", 
+          function(deleteConfirmed)
+            if (deleteConfirmed) then
+              local indexToDelete = -1
+              for j = 1, #genericNotes, 1 do
+                if (genericNotes[j] == noteToDelete) then indexToDelete = j end
+              end
+
+              local indexesToDelete = {}
+              indexesToDelete[indexToDelete] = true
+              HelperFunctions.RemoveElementsFromArrayAtIndexes(genericNotes, indexesToDelete)
+
+              AutoBiographer_NotesWindow:Update()
+
+              if (AutoBiographer_NoteDetailsWindow.SelectedNote == noteToDelete and AutoBiographer_NoteDetailsWindow:IsVisible()) then
+                AutoBiographer_NoteDetailsWindow:Toggle()
+              end
+            end
+          end
+        )
+      end
+    )
+    deleteNoteButton:Show()
+    table.insert(self.ScrollFrame.Content.ButtonsPool.Allocated, deleteNoteButton)
+
+    local noteDetailsButton = table.remove(self.ScrollFrame.Content.ButtonsPool.UnAllocated)
+    if (not noteDetailsButton) then
+      noteDetailsButton = CreateFrame("Button", nil, self.ScrollFrame.Content, "UIPanelButtonTemplate")
+    end
+    noteDetailsButton:SetPoint("TOPLEFT", 210, -15 * i);
+    noteDetailsButton:SetSize(50, 15)
+    noteDetailsButton:SetText("Details")
+    noteDetailsButton:SetNormalFontObject("GameFontNormal")
+    noteDetailsButton:SetHighlightFontObject("GameFontHighlight")
+    noteDetailsButton:SetScript("OnClick",
+      function(self)
+        AutoBiographer_NoteDetailsWindow.SelectedNote = sortedGenericNotes[i]
+
+        if (AutoBiographer_NoteDetailsWindow:IsVisible()) then
+          AutoBiographer_NoteDetailsWindow:Update()
+        else
+          AutoBiographer_NoteDetailsWindow:Toggle()
+        end
+      end
+    )
+    noteDetailsButton:Show()
+    table.insert(self.ScrollFrame.Content.ButtonsPool.Allocated, noteDetailsButton)
+
+    local contentFs = table.remove(self.ScrollFrame.Content.FontStringsPool.UnAllocated)
+    if (not contentFs) then
+      contentFs = self.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", font)
+    end
+    contentFs:SetPoint("TOPLEFT", 260, -15 * i)
+    contentFs:SetText(HelperFunctions.ShortenString(sortedGenericNotes[i].Content, 65))
+    contentFs:Show()
+    table.insert(self.ScrollFrame.Content.FontStringsPool.Allocated, contentFs)
+  end
+  
+  local scrollbarMaxValue = (#sortedGenericNotes * 15) - self.ScrollFrame:GetHeight();
+  if (scrollbarMaxValue <= 0) then scrollbarMaxValue = 1 end
+  self.ScrollFrame.Scrollbar:SetMinMaxValues(1, scrollbarMaxValue)
+end
+
+--
+--
 -- Statistics Window Update
 --
 --
 
 function AutoBiographer_StatisticsWindow:Update()
-  UIDropDownMenu_SetText(self.SubFrame.Dropdown, self.DropdownText)
-  local minLevel = self.SubFrame.MinimumLevelEb:GetNumber()
-  local maxLevel = self.SubFrame.MaximumLevelEb:GetNumber()
+  UIDropDownMenu_SetText(self.Dropdown, self.DropdownText)
+  local minLevel = self.MinimumLevelEb:GetNumber()
+  local maxLevel = self.MaximumLevelEb:GetNumber()
 
   -- Get table data.
   local tableData
@@ -1976,61 +1710,61 @@ function AutoBiographer_StatisticsWindow:Update()
   end
 
   table.sort(tableData.Rows, function(rowA, rowB)
-    if (self.SubFrame.OrderDirection == "ASC") then
-      return rowA[self.SubFrame.OrderColumnIndex] < rowB[self.SubFrame.OrderColumnIndex]
+    if (self.OrderDirection == "ASC") then
+      return rowA[self.OrderColumnIndex] < rowB[self.OrderColumnIndex]
     else
-      return rowA[self.SubFrame.OrderColumnIndex] > rowB[self.SubFrame.OrderColumnIndex]
+      return rowA[self.OrderColumnIndex] > rowB[self.OrderColumnIndex]
     end
   end)
 
   -- Sort column description.
-  self.SubFrame.SortColumnNameFs:SetText("Sorting by '" .. tableData.HeaderValues[self.SubFrame.OrderColumnIndex] .. "' " .. self.SubFrame.OrderDirection .. ".")
+  self.SortColumnNameFs:SetText("Sorting by '" .. tableData.HeaderValues[self.OrderColumnIndex] .. "' " .. self.OrderDirection .. ".")
   
   -- Setup table headers.
-  for k, headerFrame in pairs(self.SubFrame.TableHeaders) do
+  for k, headerFrame in pairs(self.TableHeaders) do
     headerFrame:Hide()
   end
   
   for i = 1, #tableData.HeaderValues do
-    header = CreateFrame("Button", nil, self.SubFrame, "UIPanelButtonTemplate");
-    header:SetPoint("TOPLEFT", self.SubFrame, 25 + tableData.RowOffsets[i], -40);
-    header:SetPoint("BOTTOMRIGHT", self.SubFrame, "TOPLEFT", 25 + tableData.RowOffsets[i + 1], -60);
+    header = CreateFrame("Button", nil, self, "UIPanelButtonTemplate");
+    header:SetPoint("TOPLEFT", self, 25 + tableData.RowOffsets[i], -65);
+    header:SetPoint("BOTTOMRIGHT", self, "TOPLEFT", 25 + tableData.RowOffsets[i + 1], -85);
     header:SetText(tableData.HeaderValues[i]);
     header:SetNormalFontObject("GameFontNormal");
     header:SetHighlightFontObject("GameFontHighlight");
     header:SetScript("OnClick", 
       function(self)
-        if (AutoBiographer_StatisticsWindow.SubFrame.OrderColumnIndex == i) then
-          if (AutoBiographer_StatisticsWindow.SubFrame.OrderDirection == "DESC") then
-            AutoBiographer_StatisticsWindow.SubFrame.OrderDirection = "ASC"
+        if (AutoBiographer_StatisticsWindow.OrderColumnIndex == i) then
+          if (AutoBiographer_StatisticsWindow.OrderDirection == "DESC") then
+            AutoBiographer_StatisticsWindow.OrderDirection = "ASC"
           else
-            AutoBiographer_StatisticsWindow.SubFrame.OrderDirection = "DESC"
+            AutoBiographer_StatisticsWindow.OrderDirection = "DESC"
           end
         else
-          AutoBiographer_StatisticsWindow.SubFrame.OrderColumnIndex = i
-          AutoBiographer_StatisticsWindow.SubFrame.OrderDirection = "DESC"
+          AutoBiographer_StatisticsWindow.OrderColumnIndex = i
+          AutoBiographer_StatisticsWindow.OrderDirection = "DESC"
         end
         AutoBiographer_StatisticsWindow:Update()
       end
     )
-    table.insert(self.SubFrame.TableHeaders, header)
+    table.insert(self.TableHeaders, header)
   end
 
   -- Release previous table body font strings.
-  for i = 1, #self.SubFrame.ScrollFrame.Content.FontStringsPool.Allocated, 1 do
-    local fs = self.SubFrame.ScrollFrame.Content.FontStringsPool.Allocated[i]
+  for i = 1, #self.ScrollFrame.Content.FontStringsPool.Allocated, 1 do
+    local fs = self.ScrollFrame.Content.FontStringsPool.Allocated[i]
     fs:Hide()
     fs:SetText("")
-    table.insert(self.SubFrame.ScrollFrame.Content.FontStringsPool.UnAllocated, fs)
+    table.insert(self.ScrollFrame.Content.FontStringsPool.UnAllocated, fs)
   end
-  self.SubFrame.ScrollFrame.Content.FontStringsPool.Allocated = {}
+  self.ScrollFrame.Content.FontStringsPool.Allocated = {}
 
   -- Setup table body.
   for i = 1, #tableData.Rows, 1 do
     for j = 1, #tableData.Rows[i], 1 do
-      local fs = table.remove(self.SubFrame.ScrollFrame.Content.FontStringsPool.UnAllocated)
+      local fs = table.remove(self.ScrollFrame.Content.FontStringsPool.UnAllocated)
       if (not fs) then
-        fs = self.SubFrame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY")
+        fs = self.ScrollFrame.Content:CreateFontString(nil, "OVERLAY")
       end
       
       if (i % 2 == 0) then
@@ -2039,7 +1773,7 @@ function AutoBiographer_StatisticsWindow:Update()
         fs:SetFontObject("GameFontHighlight")
       end
 
-      fs:SetPoint("TOPLEFT", self.SubFrame.ScrollFrame.Content, 17 + tableData.RowOffsets[j], -15 * (i - 1))
+      fs:SetPoint("TOPLEFT", self.ScrollFrame.Content, 17 + tableData.RowOffsets[j], -15 * (i - 1))
 
       local text = tableData.Rows[i][j]
       local maxTextLength = (tableData.RowOffsets[j + 1] - tableData.RowOffsets[j]) / 7
@@ -2049,13 +1783,13 @@ function AutoBiographer_StatisticsWindow:Update()
 
       fs:SetText(text)
       fs:Show()
-      table.insert(self.SubFrame.ScrollFrame.Content.FontStringsPool.Allocated, fs)
+      table.insert(self.ScrollFrame.Content.FontStringsPool.Allocated, fs)
     end
   end
   
-  local scrollbarMaxValue = (#tableData.Rows * 15) - self.SubFrame.ScrollFrame:GetHeight();
+  local scrollbarMaxValue = (#tableData.Rows * 15) - self.ScrollFrame:GetHeight();
   if (scrollbarMaxValue <= 0) then scrollbarMaxValue = 1 end
-  self.SubFrame.ScrollFrame.Scrollbar:SetMinMaxValues(1, scrollbarMaxValue)
+  self.ScrollFrame.Scrollbar:SetMinMaxValues(1, scrollbarMaxValue)
 end
 
 function AutoBiographer_VerificationWindow:Update()

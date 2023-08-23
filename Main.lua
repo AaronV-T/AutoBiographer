@@ -46,7 +46,25 @@ local Controller = AutoBiographer_Controller
 
 SLASH_AUTOBIOGRAPHER1, SLASH_AUTOBIOGRAPHER2 = "/autobiographer", "/ab"
 function SlashCmdList.AUTOBIOGRAPHER()
-  AutoBiographer_MainWindow:Toggle()
+  if (not AutoBiographer_MainWindow:IsShown()) then
+    AutoBiographer_MainWindow:Toggle()
+  end
+end
+
+SLASH_AUTOBIOGRAPHERVERIFY1, SLASH_AUTOBIOGRAPHERVERIFY2 = "/autobiographerverify", "/abverify"
+function SlashCmdList.AUTOBIOGRAPHERVERIFY()
+  if (not AutoBiographer_MainWindow:IsShown()) then
+    AutoBiographer_MainWindow:Toggle()
+  end
+
+  if (not AutoBiographer_VerificationWindow:IsShown()) then
+    AutoBiographer_VerificationWindow:Toggle()
+  end
+end
+
+SLASH_AUTOBIOGRAPHERTEST1, SLASH_AUTOBIOGRAPHERTEST2 = "/autobiographertest", "/abtest"
+function SlashCmdList.AUTOBIOGRAPHERTEST()
+  EM:Test()
 end
 
 -- *** Locals ***
@@ -169,11 +187,15 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   if type(_G["AUTOBIOGRAPHER_LEVELS_CHAR"]) ~= "table" then
 		_G["AUTOBIOGRAPHER_LEVELS_CHAR"] = {}
 	end
+  if type(_G["AUTOBIOGRAPHER_NOTES_CHAR"]) ~= "table" then
+		_G["AUTOBIOGRAPHER_NOTES_CHAR"] = Notes.New()
+	end
   
   Controller.CharacterData = {
     Catalogs = _G["AUTOBIOGRAPHER_CATALOGS_CHAR"],
     Events = _G["AUTOBIOGRAPHER_EVENTS_CHAR"],
-    Levels = _G["AUTOBIOGRAPHER_LEVELS_CHAR"]
+    Levels = _G["AUTOBIOGRAPHER_LEVELS_CHAR"],
+    Notes = _G["AUTOBIOGRAPHER_NOTES_CHAR"]
   }
   
   if type(_G["AUTOBIOGRAPHER_INFO_CHAR"]) ~= "table" then
@@ -217,6 +239,8 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   AutoBiographer_DebugWindow:Initialize()
   AutoBiographer_EventWindow:Initialize()
   AutoBiographer_MainWindow:Initialize()
+  AutoBiographer_NoteDetailsWindow:Initialize()
+  AutoBiographer_NotesWindow:Initialize()
   AutoBiographer_OptionWindow:Initialize()
   AutoBiographer_StatisticsWindow:Initialize()
   AutoBiographer_VerificationWindow:Initialize()
@@ -1554,5 +1578,5 @@ function EM:GetPosition()
 end
 
 function EM:Test()
-  Controller:CheckForLowRankSkills()
+  AutoBiographer_EventWindow:Toggle()
 end
