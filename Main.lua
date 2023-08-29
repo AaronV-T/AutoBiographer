@@ -1524,9 +1524,7 @@ end
 EM.GameVersion = HelperFunctions.GetGameVersion()
 EM.Frame = CreateFrame("Frame")
 for eventName,_ in pairs(EM.EventHandlers) do
-  if (EM.GameVersion > 2 or eventName ~= "PLAYER_INTERACTION_MANAGER_FRAME_HIDE") then
 	  EM.Frame:RegisterEvent(eventName)
-  end
 end
 EM.Frame:SetScript("OnEvent", function(_, event, ...) EM:OnEvent(_, event, ...) end)
 
@@ -1578,5 +1576,6 @@ function EM:GetPosition()
 end
 
 function EM:Test()
-  AutoBiographer_EventWindow:Toggle()
+  print("[AutoBiographer] Test")
+  Logout()
 end
