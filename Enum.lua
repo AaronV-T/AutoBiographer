@@ -44,6 +44,7 @@ AutoBiographerEnum = {
     Xp = 17,
     Reputation = 18,
     Arena = 19,
+    Custom = 20,
   },
   EventSubType = {
     BossKill = 0,
@@ -66,6 +67,7 @@ AutoBiographerEnum = {
     ArenaJoined = 17,
     ArenaLost = 18,
     ArenaWon = 19,
+    Custom = 20,
   },
   ExperienceTrackingType = {
     Discovery = 0,

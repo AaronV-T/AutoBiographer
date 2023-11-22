@@ -80,6 +80,28 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
   end)
   
   leftPoint = leftPoint + 25
+  frame.CustomIcon = CreateFrame("Frame", nil, frame, BackdropTemplateMixin and "BackdropTemplate")
+  frame.CustomIcon:SetSize(20, 20)
+  frame.CustomIcon:SetPoint("TOPLEFT", frame, "TOPLEFT", leftPoint, -25)
+  frame.CustomIcon:SetBackdrop({bgFile = Event.GetIconPath(CustomEvent.New())})
+  frame.CustomIcon:SetScript("OnEnter", function(self, button)
+    GameTooltip_SetDefaultAnchor(GameTooltip, UIParent)
+    GameTooltip:ClearAllPoints();
+    GameTooltip:SetPoint("TOPRIGHT", frame.CustomIcon, "BOTTOMRIGHT", 0, 0)
+    GameTooltip:SetText("Custom")
+    GameTooltip:Show()
+  end)
+  frame.CustomIcon:SetScript("OnLeave", function(self, button)
+    GameTooltip:Hide()
+  end)
+  frame.CustomCb = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate") 
+  frame.CustomCb:SetPoint("TOPLEFT", frame, "TOPLEFT", leftPoint - 5, -40)
+  frame.CustomCb:SetChecked(AutoBiographer_Settings.MapEventDisplayFilters[AutoBiographerEnum.EventSubType.Custom])
+  frame.CustomCb:SetScript("OnClick", function(self, event, arg1)
+    AutoBiographer_Settings.MapEventDisplayFilters[AutoBiographerEnum.EventSubType.Custom] = self:GetChecked()
+  end)
+
+  leftPoint = leftPoint + 25
   frame.FirstAcquiredItemIcon = CreateFrame("Frame", nil, frame, BackdropTemplateMixin and "BackdropTemplate")
   frame.FirstAcquiredItemIcon:SetSize(20, 20)
   frame.FirstAcquiredItemIcon:SetPoint("TOPLEFT", frame, "TOPLEFT", leftPoint, -25)
@@ -698,6 +720,7 @@ end
 
 function AutoBiographer_WorldMapOverlayWindow_SetOptionsEnabled(enabled)
   AutoBiographer_WorldMapOverlayWindow.BossKillCb:SetEnabled(enabled)
+  AutoBiographer_WorldMapOverlayWindow.CustomCb:SetEnabled(enabled)
   AutoBiographer_WorldMapOverlayWindow.FirstAcquiredItemCb:SetEnabled(enabled)
   AutoBiographer_WorldMapOverlayWindow.FirstKillCb:SetEnabled(enabled)
   AutoBiographer_WorldMapOverlayWindow.LevelUpCb:SetEnabled(enabled)

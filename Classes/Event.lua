@@ -8,7 +8,11 @@ function Event.New(timestamp, type, subType)
 end
 
 function Event.GetIconPath(e)
-  if (e.Type == AutoBiographerEnum.EventType.Death) then
+  if (e.Type == AutoBiographerEnum.EventType.Custom) then
+    if (e.SubType == AutoBiographerEnum.EventSubType.Custom) then
+      return "Interface\\Icons\\inv_misc_note_06"
+    end
+  elseif (e.Type == AutoBiographerEnum.EventType.Death) then
     if (e.SubType == AutoBiographerEnum.EventSubType.PlayerDeath) then
       return "Interface\\Icons\\ability_backstab"
     end
@@ -93,6 +97,8 @@ function Event.ToString(e, catalogs)
     elseif (e.SubType == AutoBiographerEnum.EventSubType.BattlegroundWon) then
       return timestampString .. "You won " .. AutoBiographer_Databases.BattlegroundDatabase[e.BattlegroundId] .. "."
     end
+  elseif (e.Type == AutoBiographerEnum.EventType.Custom) then
+    return timestampString .. "\"" .. e.Text .. "\""
   elseif (e.Type == AutoBiographerEnum.EventType.Death) then
     if (e.SubType == AutoBiographerEnum.EventSubType.PlayerDeath) then
       if (e.KillerCuid == nil) then
@@ -247,6 +253,14 @@ function BossKillEvent.New(timestamp, coordinates, bossId, bossName)
   local newInstance = WorldEvent.New(timestamp, AutoBiographerEnum.EventType.Kill, AutoBiographerEnum.EventSubType.BossKill, coordinates)
   newInstance.BossId = bossId
   newInstance.BossName = bossName
+  
+  return newInstance
+end
+
+CustomEvent = {}
+function CustomEvent.New(timestamp, coordinates, text)
+  local newInstance = WorldEvent.New(timestamp, AutoBiographerEnum.EventType.Custom, AutoBiographerEnum.EventSubType.Custom, coordinates)
+  newInstance.Text = text
   
   return newInstance
 end

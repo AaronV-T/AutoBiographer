@@ -236,6 +236,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   if (AutoBiographer_Settings.Options["ShowMinimapButton"] == false) then AutoBiographer_MinimapButton:Hide()
   else AutoBiographer_MinimapButton:Show() end
 
+  AutoBiographer_CustomEventDetailsWindow:Initialize()
   AutoBiographer_DebugWindow:Initialize()
   AutoBiographer_EventWindow:Initialize()
   AutoBiographer_MainWindow:Initialize()
