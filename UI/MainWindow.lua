@@ -1692,7 +1692,7 @@ function AutoBiographer_StatisticsWindow:Update()
           unitName,
           OtherPlayerStatistics.GetSum(otherPlayerStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.DuelsLostToPlayer }),
           OtherPlayerStatistics.GetSum(otherPlayerStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.DuelsWonAgainstPlayer }),
-          HelperFunctions.Round(OtherPlayerStatistics.GetSum(otherPlayerStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.TimeSpentGroupedWithPlayer }) / 3600, 2),
+          OtherPlayerStatistics.GetSum(otherPlayerStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.TimeSpentGroupedWithPlayer }),
         }
         table.insert(tableData.Rows, row)
       end
@@ -1852,6 +1852,10 @@ function AutoBiographer_StatisticsWindow:Update()
       fs:SetPoint("TOPLEFT", self.ScrollFrame.Content, 17 + tableData.RowOffsets[j], -15 * (i - 1))
 
       local text = tableData.Rows[i][j]
+      if (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.OtherPlayers and j == 4) then
+        text = HelperFunctions.SecondsToTimeString(text, true)
+      end
+
       local maxTextLength = (tableData.RowOffsets[j + 1] - tableData.RowOffsets[j]) / 7
       if (string.len(text) > maxTextLength) then
         text = string.sub(text, 1, maxTextLength - 3) .. "..."

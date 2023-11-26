@@ -209,7 +209,7 @@ function HF.CommaValue(n) -- credit http://richard.warburton.it
 	return left..(num:reverse():gsub('(%d%d%d)','%1,'):reverse())..right
 end
 
-function HF.SecondsToTimeString(totalSeconds)
+function HF.SecondsToTimeString(totalSeconds, shorten)
   if totalSeconds == nil then return "" end
 
   local days = math.floor(totalSeconds / 86400)
@@ -234,26 +234,45 @@ function HF.SecondsToTimeString(totalSeconds)
   
   local returnString = ""
   
-  if printDays then
-    returnString = returnString .. days .. " day"
-    if days ~= 1 then returnString = returnString .. "s" end
-    returnString = returnString .. ", "
+  if (printDays) then
+    returnString = returnString .. days
+    if (shorten) then
+      returnString = returnString .. "d "
+    else
+      returnString = returnString .. " day"
+      if (days ~= 1) then returnString = returnString .. "s" end
+      returnString = returnString .. ", "
+    end
   end
   
-  if printHours then
-    returnString = returnString .. hours .. " hour"
-    if hours ~= 1 then returnString = returnString .. "s" end
-    returnString = returnString .. ", "
+  if (printHours) then
+    returnString = returnString .. hours
+    if (shorten) then
+      returnString = returnString .. "h "
+    else
+      returnString = returnString .. " hour"
+      if (hours ~= 1) then returnString = returnString .. "s" end
+      returnString = returnString .. ", "
+    end
   end
   
-  if printMinutes then
-    returnString = returnString .. minutes .. " minute"
-    if minutes ~= 1 then returnString = returnString .. "s" end
-    returnString = returnString .. ", "
+  if (printMinutes) then
+    returnString = returnString .. minutes
+    if (shorten) then
+      returnString = returnString .. "m "
+    else
+      returnString = returnString .. " minute"
+      if (minutes ~= 1) then returnString = returnString .. "s" end
+      returnString = returnString .. ", "
+    end
   end
   
-  returnString = returnString .. seconds .. " second"
-  if seconds ~= 1 then returnString = returnString .. "s" end
+  if (shorten) then
+    if (returnString:len() > 0) then returnString = returnString:sub(1, -2) end
+  else
+    returnString = returnString .. seconds .. " second"
+    if (seconds ~= 1) then returnString = returnString .. "s" end
+  end
   
   return returnString
 end

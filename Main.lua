@@ -1109,19 +1109,20 @@ hooksecurefunc("AscendStop", function()
 end);
 
 GameTooltip:HookScript("OnTooltipSetUnit", function(self)
-	local catalogUnitId = HelperFunctions.GetCatalogIdFromGuid(UnitGUID("mouseover"))
+  local unitName, unitId = self:GetUnit()
+	local catalogUnitId = HelperFunctions.GetCatalogIdFromGuid(UnitGUID(unitId))
   if (not catalogUnitId) then
     return
   end
-
-	if (AutoBiographer_Settings.Options["ShowKillCountOnUnitToolTips"] and UnitCanAttack("player", "mouseover")) then
+  
+	if (AutoBiographer_Settings.Options["ShowKillCountOnUnitToolTips"] and UnitCanAttack("player", unitId)) then
     local killStatistics = Controller:GetAggregatedKillStatisticsByCatalogUnitId(catalogUnitId, 1, 9999)
-    if (UnitIsPlayer("mouseover")) then
+    if (UnitIsPlayer(unitId)) then
       GameTooltip:AddLine("Killed " .. tostring(KillStatistics.GetSum(killStatistics, { AutoBiographerEnum.KillTrackingType.TaggedKillingBlow, AutoBiographerEnum.KillTrackingType.UntaggedKillingBlow })) .. " times.")
     else
       GameTooltip:AddLine("Killed " .. tostring(KillStatistics.GetSum(killStatistics, { AutoBiographerEnum.KillTrackingType.TaggedAssist, AutoBiographerEnum.KillTrackingType.TaggedGroupAssistOrKillingBlow, AutoBiographerEnum.KillTrackingType.TaggedKillingBlow })) .. " times.")
     end
-  elseif (AutoBiographer_Settings.Options["ShowFriendlyPlayerToolTips"] and not UnitCanAttack("player", "mouseover") and UnitIsPlayer("mouseover")) then
+  elseif (AutoBiographer_Settings.Options["ShowFriendlyPlayerToolTips"] and not UnitCanAttack("player", unitId) and UnitIsPlayer(unitId)) then
     local otherPlayerStatistics = Controller:GetAggregatedOtherPlayerStatisticsByCatalogUnitId(catalogUnitId, 1, 9999)
     local tooltipString = ""
 
@@ -1131,9 +1132,9 @@ GameTooltip:HookScript("OnTooltipSetUnit", function(self)
       tooltipString = tooltipString .. "Duels (W/L): " .. tostring(duelsWon) .. "/" .. tostring(duelsLost) .. ". "
     end
 
-    local timeGrouped = HelperFunctions.Round(OtherPlayerStatistics.GetSum(otherPlayerStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.TimeSpentGroupedWithPlayer }) / 3600, 2)
+    local timeGrouped = OtherPlayerStatistics.GetSum(otherPlayerStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.TimeSpentGroupedWithPlayer })
     if (timeGrouped > 0) then
-      tooltipString = tooltipString .. "Time Grouped: " .. timeGrouped .. "h. "
+      tooltipString = tooltipString .. "Time Grouped: " .. HelperFunctions.SecondsToTimeString(timeGrouped, true) .. ". "
     end
 
     if (tooltipString ~= "") then
