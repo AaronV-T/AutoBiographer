@@ -1114,7 +1114,7 @@ GameTooltip:HookScript("OnTooltipSetUnit", function(self)
   if (not catalogUnitId) then
     return
   end
-  
+
 	if (AutoBiographer_Settings.Options["ShowKillCountOnUnitToolTips"] and UnitCanAttack("player", unitId)) then
     local killStatistics = Controller:GetAggregatedKillStatisticsByCatalogUnitId(catalogUnitId, 1, 9999)
     if (UnitIsPlayer(unitId)) then
@@ -1122,7 +1122,9 @@ GameTooltip:HookScript("OnTooltipSetUnit", function(self)
     else
       GameTooltip:AddLine("Killed " .. tostring(KillStatistics.GetSum(killStatistics, { AutoBiographerEnum.KillTrackingType.TaggedAssist, AutoBiographerEnum.KillTrackingType.TaggedGroupAssistOrKillingBlow, AutoBiographerEnum.KillTrackingType.TaggedKillingBlow })) .. " times.")
     end
-  elseif (AutoBiographer_Settings.Options["ShowFriendlyPlayerToolTips"] and not UnitCanAttack("player", unitId) and UnitIsPlayer(unitId)) then
+  end
+
+  if (AutoBiographer_Settings.Options["ShowFriendlyPlayerToolTips"] and not UnitCanAttack("player", unitId) and UnitIsPlayer(unitId)) then
     local otherPlayerStatistics = Controller:GetAggregatedOtherPlayerStatisticsByCatalogUnitId(catalogUnitId, 1, 9999)
     local tooltipString = ""
 
@@ -1141,6 +1143,14 @@ GameTooltip:HookScript("OnTooltipSetUnit", function(self)
       GameTooltip:AddLine(tooltipString)
     end
 	end
+
+  -- todo: check option
+  if (HelperFunctions.GetUnitTypeFromCatalogUnitId(catalogUnitId) == AutoBiographerEnum.UnitType.Creature) then
+    if (not AutoBiographer_Databases.NpcDatabase[catalogUnitId]) then
+      if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then print("[AutoBiographer] New unit: [" .. catalogUnitId .. "] = " .. unitName) end
+      GameTooltip:AddLine("**New Unit**")
+    end
+  end
 
 	self:Show()
 end)
@@ -1579,5 +1589,4 @@ end
 
 function EM:Test()
   print("[AutoBiographer] Test")
-  Logout()
 end

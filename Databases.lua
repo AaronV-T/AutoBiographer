@@ -663,6 +663,8 @@ function AutoBiographer_Databases.Initialiaze()
     [619] = Coordinates.New(571, 115, 28.46, 51.71), -- Ahn'haket: The Old Kingdom
   }
 
+  AutoBiographer_Databases.NpcDatabase = AutoBiographer_NpcDatabase
+
   AutoBiographer_Databases.XpPerLevelDatabase = {
     [1] = 400,
     [2] = 900,
