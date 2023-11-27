@@ -1123,7 +1123,7 @@ GameTooltip:HookScript("OnTooltipSetItem", function(self)
 
   if (AutoBiographer_Settings.Options["ShowDiscoveryInfoOnToolTips"] and not AutoBiographer_Databases.ItemDatabase[itemId]) then
     if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then print("[AutoBiographer] New item: [" .. itemId .. "] = " .. itemName) end
-    self:AddLine("**New Item**")
+    self:AddLine("Added in SoD")
   end
   
   self:Show()
@@ -1168,7 +1168,7 @@ GameTooltip:HookScript("OnTooltipSetUnit", function(self)
   if (AutoBiographer_Settings.Options["ShowDiscoveryInfoOnToolTips"] and HelperFunctions.GetUnitTypeFromCatalogUnitId(catalogUnitId) == AutoBiographerEnum.UnitType.Creature) then
     if (not AutoBiographer_Databases.NpcDatabase[catalogUnitId]) then
       if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then print("[AutoBiographer] New unit: [" .. catalogUnitId .. "] = " .. unitName) end
-      GameTooltip:AddLine("**New Unit**")
+      GameTooltip:AddLine("Added in SoD")
     end
   end
 
