@@ -1108,6 +1108,27 @@ hooksecurefunc("AscendStop", function()
   end
 end);
 
+GameTooltip:HookScript("OnTooltipSetItem", function(self)
+  local name, link = self:GetItem()
+  local itemId = HelperFunctions.GetItemIdFromTextWithChatItemLink(link)
+  if (not itemId) then
+    if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then print("[AutoBiographer] Unable to get itemId from link: '" .. link .. "'.") end
+    Controller:AddLog("Unable to get itemId from link: '" .. link .. "'.", AutoBiographerEnum.LogLevel.Warning)
+    return
+  end
+
+  itemId = tonumber(itemId)
+  local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemIcon, itemSellPrice, itemClassID, itemSubClassID, bindType, expacID, itemSetID, isCraftingReagent = GetItemInfo(itemId)
+
+  -- todo: check option
+  if (not AutoBiographer_Databases.ItemDatabase[itemId]) then
+    if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then print("[AutoBiographer] New item: [" .. itemId .. "] = " .. itemName) end
+    self:AddLine("**New Item**")
+  end
+  
+  self:Show()
+end)
+
 GameTooltip:HookScript("OnTooltipSetUnit", function(self)
   local unitName, unitId = self:GetUnit()
 	local catalogUnitId = HelperFunctions.GetCatalogIdFromGuid(UnitGUID(unitId))
@@ -1589,4 +1610,10 @@ end
 
 function EM:Test()
   print("[AutoBiographer] Test")
+
+  for catalogUnitId, v in pairs(Controller.CharacterData.Catalogs.UnitCatalog) do
+    if (HelperFunctions.GetUnitTypeFromCatalogUnitId(catalogUnitId) == AutoBiographerEnum.UnitType.Creature and not AutoBiographer_Databases.NpcDatabase[catalogUnitId]) then
+      print(catalogUnitId)
+    end
+  end
 end

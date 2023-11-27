@@ -1,6 +1,6 @@
 -- Data scraped from Wowhead.
 
-AutoBiographer_NpcDatabase ={
+AutoBiographer_NpcDatabase = {
   [3] = "Flesh Eater",
   [6] = "Kobold Vermin",
   [19] = "Benny Questgiver",

@@ -26,6 +26,7 @@ Classes/Miscellaneous.lua
 Classes/Notes.lua
 Classes/Statistics.lua
 
+Data/ItemDatabase_Vanilla.lua
 Data/NpcDatabase_Vanilla.lua
 
 UI/ConfirmWindow.lua
