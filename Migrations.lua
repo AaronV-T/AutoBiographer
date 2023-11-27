@@ -444,3 +444,12 @@ table.insert(MM.Migrations,
     end
   )
 )
+
+table.insert(MM.Migrations, 
+  AutoBiographer_Migration:New(
+    18,
+    function(eventManager, controller)
+      if (AutoBiographer_Settings.Options["ShowDiscoveryInfoOnToolTips"] == nil) then AutoBiographer_Settings.Options["ShowDiscoveryInfoOnToolTips"] = true end
+    end
+  )
+)

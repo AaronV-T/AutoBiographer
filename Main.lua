@@ -159,6 +159,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
       Options = { -- Dict<string?, bool>
         EnableDebugLogging = false,
         EnableMilestoneMessages = true,
+        ShowDiscoveryInfoOnToolTips = true,
         ShowFriendlyPlayerToolTips = true,
         ShowKillCountOnUnitToolTips = true,
         ShowLowRankCombatSkillWarnings = true,
@@ -204,7 +205,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
       BattlegroundStatuses = {},
       CurrentSubZone = nil,
       CurrentZone = nil,
-      DatabaseVersion = 17,
+      DatabaseVersion = 18,
       GuildName = nil,
       GuildRankIndex = nil,
       GuildRankName = nil,
@@ -1120,8 +1121,7 @@ GameTooltip:HookScript("OnTooltipSetItem", function(self)
   itemId = tonumber(itemId)
   local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemIcon, itemSellPrice, itemClassID, itemSubClassID, bindType, expacID, itemSetID, isCraftingReagent = GetItemInfo(itemId)
 
-  -- todo: check option
-  if (not AutoBiographer_Databases.ItemDatabase[itemId]) then
+  if (AutoBiographer_Settings.Options["ShowDiscoveryInfoOnToolTips"] and not AutoBiographer_Databases.ItemDatabase[itemId]) then
     if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then print("[AutoBiographer] New item: [" .. itemId .. "] = " .. itemName) end
     self:AddLine("**New Item**")
   end
@@ -1165,8 +1165,7 @@ GameTooltip:HookScript("OnTooltipSetUnit", function(self)
     end
 	end
 
-  -- todo: check option
-  if (HelperFunctions.GetUnitTypeFromCatalogUnitId(catalogUnitId) == AutoBiographerEnum.UnitType.Creature) then
+  if (AutoBiographer_Settings.Options["ShowDiscoveryInfoOnToolTips"] and HelperFunctions.GetUnitTypeFromCatalogUnitId(catalogUnitId) == AutoBiographerEnum.UnitType.Creature) then
     if (not AutoBiographer_Databases.NpcDatabase[catalogUnitId]) then
       if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then print("[AutoBiographer] New unit: [" .. catalogUnitId .. "] = " .. unitName) end
       GameTooltip:AddLine("**New Unit**")
@@ -1613,7 +1612,7 @@ function EM:Test()
 
   for catalogUnitId, v in pairs(Controller.CharacterData.Catalogs.UnitCatalog) do
     if (HelperFunctions.GetUnitTypeFromCatalogUnitId(catalogUnitId) == AutoBiographerEnum.UnitType.Creature and not AutoBiographer_Databases.NpcDatabase[catalogUnitId]) then
-      print(catalogUnitId)
+      print(catalogUnitId .. ": " .. v.Name)
     end
   end
 end
