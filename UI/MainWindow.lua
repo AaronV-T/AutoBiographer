@@ -167,7 +167,7 @@ function AutoBiographer_CustomEventDetailsWindow:Initialize()
   frame.ScrollFrame.Content.ContentEditBoxScrollFrame:SetPoint("TOP", frame.ScrollFrame.Content, "TOP", 0, -25)
   frame.ScrollFrame.Content.ContentEditBoxScrollFrame.EditBox:SetWidth(frame.ScrollFrame.Content.ContentEditBoxScrollFrame:GetWidth())
   frame.ScrollFrame.Content.ContentEditBoxScrollFrame.EditBox:SetFontObject("ChatFontNormal")
-  frame.ScrollFrame.Content.ContentEditBoxScrollFrame.EditBox:SetMaxLetters(64)
+  frame.ScrollFrame.Content.ContentEditBoxScrollFrame.EditBox:SetMaxLetters(512)
   --frame.ScrollFrame.Content.ContentEditBoxScrollFrame.CharCount:Hide()
 
   frame.ScrollFrame.Content.CreateEventBtn = CreateFrame("Button", nil, frame.ScrollFrame.Content, "UIPanelButtonTemplate");
@@ -417,6 +417,11 @@ function AutoBiographer_EventWindow:Initialize()
   end)
   
   frame.ScrollFrame.Content.FontStringsPool = {
+    Allocated = {},
+    UnAllocated = {},
+  }
+
+  frame.ScrollFrame.Content.OverlayFramesPool = {
     Allocated = {},
     UnAllocated = {},
   }
@@ -1147,7 +1152,6 @@ end
 --
 
 function AutoBiographer_EventWindow:Update()
-  -- Release previous font strings.
   for i = 1, #self.ScrollFrame.Content.FontStringsPool.Allocated, 1 do
     local fs = self.ScrollFrame.Content.FontStringsPool.Allocated[i]
     fs:Hide()
@@ -1156,18 +1160,48 @@ function AutoBiographer_EventWindow:Update()
   end
   self.ScrollFrame.Content.FontStringsPool.Allocated = {}
 
+  for i = 1, #self.ScrollFrame.Content.OverlayFramesPool.Allocated, 1 do
+    local overlayFrame = self.ScrollFrame.Content.OverlayFramesPool.Allocated[i]
+    overlayFrame:Hide()
+    table.insert(self.ScrollFrame.Content.OverlayFramesPool.UnAllocated, overlayFrame)
+  end
+  self.ScrollFrame.Content.OverlayFramesPool.Allocated = {}
+
   local events = Controller:GetEvents()
   for i = 1, #events, 1 do
     if (AutoBiographer_Settings.EventDisplayFilters[events[i].SubType]) then
+      local eventString = Controller:GetEventString(events[i])
+
       local fs = table.remove(self.ScrollFrame.Content.FontStringsPool.UnAllocated)
       if (not fs) then
         fs = self.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
       end
       
       fs:SetPoint("TOPLEFT", self.ScrollFrame.Content, 5, -15 * #self.ScrollFrame.Content.FontStringsPool.Allocated)
-      fs:SetText(HelperFunctions.ShortenString(Controller:GetEventString(events[i]), 85))
+      fs:SetText(HelperFunctions.ShortenString(eventString, 85))
       fs:Show()
       table.insert(self.ScrollFrame.Content.FontStringsPool.Allocated, fs)
+
+      local overlayFrame = table.remove(self.ScrollFrame.Content.OverlayFramesPool.UnAllocated)
+      if (not overlayFrame) then
+        overlayFrame = CreateFrame("Frame", nil, self.ScrollFrame.Content, nil)
+      end
+
+      overlayFrame:SetPoint("TOPLEFT", self.ScrollFrame.Content, 5, -15 * #self.ScrollFrame.Content.OverlayFramesPool.Allocated)
+      overlayFrame:SetSize(750, 15)
+      overlayFrame:SetScript("OnEnter", function(self, button)
+        GameTooltip_SetDefaultAnchor(GameTooltip, UIParent)
+        GameTooltip:ClearAllPoints()
+        GameTooltip:SetPoint("TOPRIGHT", overlayFrame, "BOTTOMRIGHT", 0, 0)
+        GameTooltip:SetText(eventString)
+        GameTooltip:Show()
+      end)
+      overlayFrame:SetScript("OnLeave", function(self, button)
+        GameTooltip:Hide()
+      end)
+      overlayFrame:Show()
+      table.insert(self.ScrollFrame.Content.OverlayFramesPool.Allocated, overlayFrame)
+
       --print("Showing: " .. Controller:GetEventString(events[i]))
     end
   end
@@ -1494,8 +1528,9 @@ function AutoBiographer_NotesWindow:Update()
   for i = 1, #self.ScrollFrame.Content.ButtonsPool.Allocated, 1 do
     local button = self.ScrollFrame.Content.ButtonsPool.Allocated[i]
     button:Hide()
-    table.insert(self.ScrollFrame.Content.ButtonsPool.UnAllocated, fs)
+    table.insert(self.ScrollFrame.Content.ButtonsPool.UnAllocated, button)
   end
+  self.ScrollFrame.Content.ButtonsPool.Allocated = {}
 
   for i = 1, #self.ScrollFrame.Content.FontStringsPool.Allocated, 1 do
     local fs = self.ScrollFrame.Content.FontStringsPool.Allocated[i]
