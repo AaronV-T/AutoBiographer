@@ -27,7 +27,7 @@ $tempDirectoryPath = "$outputDirectoryPath\Temp"
 $tempSubDirectoryPath = "$tempDirectoryPath\AutoBiographer"
 New-Item -Path ".\Deploys\Temp" -Name "AutoBiographer" -ItemType "directory" | Out-Null
 
-Copy-Item ".\*" -Destination "$tempSubDirectoryPath" -Include *.lua,*.md,*.toc
+Copy-Item ".\*" -Destination "$tempSubDirectoryPath" -Include *.lua,*.md,*.toc,*.xml
 Copy-Item ".\Classes" -Destination "$tempSubDirectoryPath" -Recurse
 Copy-Item ".\Data" -Destination "$tempSubDirectoryPath" -Recurse
 Copy-Item ".\Icons" -Destination "$tempSubDirectoryPath" -Recurse
