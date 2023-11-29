@@ -1121,7 +1121,7 @@ GameTooltip:HookScript("OnTooltipSetItem", function(self)
   itemId = tonumber(itemId)
   local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemIcon, itemSellPrice, itemClassID, itemSubClassID, bindType, expacID, itemSetID, isCraftingReagent = GetItemInfo(itemId)
 
-  if (AutoBiographer_Settings.Options["ShowDiscoveryInfoOnToolTips"] and not AutoBiographer_Databases.ItemDatabase[itemId]) then
+  if (AutoBiographer_Settings.Options["ShowDiscoveryInfoOnToolTips"] and AutoBiographer_Databases.ItemDatabase and not AutoBiographer_Databases.ItemDatabase[itemId]) then
     if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then print("[AutoBiographer] New item: [" .. itemId .. "] = " .. itemName) end
     self:AddLine("Added in SoD")
   end
@@ -1165,11 +1165,10 @@ GameTooltip:HookScript("OnTooltipSetUnit", function(self)
     end
 	end
 
-  if (AutoBiographer_Settings.Options["ShowDiscoveryInfoOnToolTips"] and HelperFunctions.GetUnitTypeFromCatalogUnitId(catalogUnitId) == AutoBiographerEnum.UnitType.Creature) then
-    if (not AutoBiographer_Databases.NpcDatabase[catalogUnitId]) then
-      if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then print("[AutoBiographer] New unit: [" .. catalogUnitId .. "] = " .. unitName) end
-      GameTooltip:AddLine("Added in SoD")
-    end
+  if (AutoBiographer_Settings.Options["ShowDiscoveryInfoOnToolTips"] and HelperFunctions.GetUnitTypeFromCatalogUnitId(catalogUnitId) == AutoBiographerEnum.UnitType.Creature and
+      AutoBiographer_Databases.NpcDatabase and not AutoBiographer_Databases.NpcDatabase[catalogUnitId]) then
+    if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then print("[AutoBiographer] New unit: [" .. catalogUnitId .. "] = " .. unitName) end
+    GameTooltip:AddLine("Added in SoD")
   end
 
 	self:Show()
