@@ -167,8 +167,14 @@ function AutoBiographer_CustomEventDetailsWindow:Initialize()
   frame.ScrollFrame.Content.ContentEditBoxScrollFrame:SetPoint("TOP", frame.ScrollFrame.Content, "TOP", 0, -25)
   frame.ScrollFrame.Content.ContentEditBoxScrollFrame.EditBox:SetWidth(frame.ScrollFrame.Content.ContentEditBoxScrollFrame:GetWidth())
   frame.ScrollFrame.Content.ContentEditBoxScrollFrame.EditBox:SetFontObject("ChatFontNormal")
-  frame.ScrollFrame.Content.ContentEditBoxScrollFrame.EditBox:SetMaxLetters(512)
+  frame.ScrollFrame.Content.ContentEditBoxScrollFrame.EditBox:SetMaxLetters(500)
   --frame.ScrollFrame.Content.ContentEditBoxScrollFrame.CharCount:Hide()
+
+  frame.ScrollFrame.Content.cbShareEvent = CreateFrame("CheckButton", nil, frame.ScrollFrame.Content, "UICheckButtonTemplate") 
+  frame.ScrollFrame.Content.cbShareEvent:SetPoint("LEFT", frame.ScrollFrame.Content, "BOTTOM", -50, 95)
+  frame.ScrollFrame.Content.fsShareEvent = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  frame.ScrollFrame.Content.fsShareEvent:SetPoint("LEFT", frame.ScrollFrame.Content, "BOTTOM", -20, 95)
+  frame.ScrollFrame.Content.fsShareEvent:SetText("Share with guild.")
 
   frame.ScrollFrame.Content.CreateEventBtn = CreateFrame("Button", nil, frame.ScrollFrame.Content, "UIPanelButtonTemplate");
   frame.ScrollFrame.Content.CreateEventBtn:SetPoint("BOTTOM", frame.ScrollFrame.Content, "BOTTOM", 0, 50);
@@ -178,10 +184,15 @@ function AutoBiographer_CustomEventDetailsWindow:Initialize()
   frame.ScrollFrame.Content.CreateEventBtn:SetHighlightFontObject("GameFontHighlightLarge");
   frame.ScrollFrame.Content.CreateEventBtn:SetScript("OnClick", 
     function(self)
-      Controller:AddEvent(CustomEvent.New(time(), HelperFunctions.GetCoordinatesByUnitId("player"), frame.ScrollFrame.Content.ContentEditBoxScrollFrame.EditBox:GetText()))
+      local text = frame.ScrollFrame.Content.ContentEditBoxScrollFrame.EditBox:GetText()
+      Controller:AddEvent(CustomEvent.New(time(), HelperFunctions.GetCoordinatesByUnitId("player"), text))
 
       AutoBiographer_EventWindow:Update()
       AutoBiographer_CustomEventDetailsWindow:Toggle()
+
+      if (frame.ScrollFrame.Content.cbShareEvent:GetChecked()) then
+        AutoBiographer_MessageManager.SendAddonMessage(AutoBiographerEnum.AddonMessageType.CustomEvent, text)
+      end
     end
   )
 
@@ -837,7 +848,7 @@ function AutoBiographer_NoteDetailsWindow:Initialize()
   frame.ScrollFrame.Content.ContentEditBoxScrollFrame:SetPoint("TOP", frame.ScrollFrame.Content, "TOP", 0, -25)
   frame.ScrollFrame.Content.ContentEditBoxScrollFrame.EditBox:SetWidth(frame.ScrollFrame.Content.ContentEditBoxScrollFrame:GetWidth())
   frame.ScrollFrame.Content.ContentEditBoxScrollFrame.EditBox:SetFontObject("ChatFontNormal")
-  frame.ScrollFrame.Content.ContentEditBoxScrollFrame.EditBox:SetMaxLetters(1024)
+  frame.ScrollFrame.Content.ContentEditBoxScrollFrame.EditBox:SetMaxLetters(1000)
   --frame.ScrollFrame.Content.ContentEditBoxScrollFrame.CharCount:Hide()
 
   frame.ScrollFrame.Content.CreateNoteBtn = CreateFrame("Button", nil, frame.ScrollFrame.Content, "UIPanelButtonTemplate");

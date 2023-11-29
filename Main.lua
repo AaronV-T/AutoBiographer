@@ -39,8 +39,10 @@ AutoBiographer_EventManager = {
   ZoneChangedNewAreaEventHasFired = false
 }
 
+local AceComm = LibStub:GetLibrary("AceComm-3.0")
 local EM = AutoBiographer_EventManager
 local Controller = AutoBiographer_Controller
+local MM = AutoBiographer_MessageManager
 
 -- Slash Commands
 
@@ -670,8 +672,12 @@ function EM.EventHandlers.PLAYER_DEAD(self)
   Controller:OnDeath(time(), HelperFunctions.GetCoordinatesByUnitId("player"), killerCatalogUnitId, killerLevel)
 end
 
-function EM.EventHandlers.PLAYER_ENTERING_WORLD(self)
+function EM.EventHandlers.PLAYER_ENTERING_WORLD(self, isLogin, isReload)
   self.PlayerEnteringWorldHasFired = true
+
+  if (isLogin or isReload) then
+    AceComm:RegisterComm(MM.AddonMessagePrefix, MM.OnAddonMessageReceived)
+  end
 
   if (not self.PersistentPlayerInfo.PlayerGuid) then
     -- This is probably the first time this character has logged in while using the addon.

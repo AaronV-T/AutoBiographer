@@ -1,4 +1,7 @@
 AutoBiographerEnum = {
+  AddonMessageType = {
+    CustomEvent = 10,
+  },
   AuctionHouseMessageType = {
     Bought = 0,
     Canceled = 1,
