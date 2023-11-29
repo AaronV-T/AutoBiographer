@@ -22,6 +22,7 @@ The addon currently records the following events:
  - Leveling up (including the time played at level up and total time played of each level).
  - Reaching a skill milestone (75/150/225/300).
  - Turning in a quest.
+ - Player created custom events.
  
 It also keeps track of the following statistics:
  - Arena and battleground results.
@@ -44,6 +45,7 @@ Additional Features:
  - Showing coordinates of events on the map, giving a visual history of your character's adventures.
  - Showing occasional reminders for low rank combat skills.
  - Allows players to create notes.
+ - Indicating new Season of Discovery items and units in tooltips.
  
 ## Possible Future Features
 
