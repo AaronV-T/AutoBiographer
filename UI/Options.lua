@@ -84,6 +84,13 @@ function AutoBiographer_OptionWindow:Initialize()
   self.fsShowLowRankCombatSkillWarnings:SetText("Show occasional warnings for low rank combat skills.")
   yPos = yPos - 30
 
+  self.cbEnableCustomEventSharing = CreateFrame("CheckButton", nil, self, "UICheckButtonTemplate") 
+  self.cbEnableCustomEventSharing:SetPoint("LEFT", self, "TOPLEFT", 10, yPos)
+  self.fsEnableCustomEventSharing = self:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  self.fsEnableCustomEventSharing:SetPoint("LEFT", self, "TOPLEFT", 40, yPos)
+  self.fsEnableCustomEventSharing:SetText("Allow guild members to share custom events with you.")
+  yPos = yPos - 30
+
   self.cbEnableDebugLogging = CreateFrame("CheckButton", nil, self, "UICheckButtonTemplate") 
   self.cbEnableDebugLogging:SetPoint("LEFT", self, "TOPLEFT", 10, yPos)
   self.fsEnableDebugLogging = self:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -95,6 +102,7 @@ function AutoBiographer_OptionWindow:Initialize()
 end
 
 function AutoBiographer_OptionWindow:LoadOptions()
+  self.cbEnableCustomEventSharing:SetChecked(AutoBiographer_Settings.Options["EnableCustomEventSharing"])
   self.cbEnableDebugLogging:SetChecked(AutoBiographer_Settings.Options["EnableDebugLogging"])
   self.cbEnableMilestoneMessages:SetChecked(AutoBiographer_Settings.Options["EnableMilestoneMessages"])
   self.cbFriendlyPlayerTooltip:SetChecked(AutoBiographer_Settings.Options["ShowFriendlyPlayerToolTips"])
@@ -110,6 +118,7 @@ function AutoBiographer_OptionWindow:LoadOptions()
 end
 
 function AutoBiographer_OptionWindow:SaveOptions()
+  AutoBiographer_Settings.Options["EnableCustomEventSharing"] = self.cbEnableCustomEventSharing:GetChecked()
   AutoBiographer_Settings.Options["EnableDebugLogging"] = self.cbEnableDebugLogging:GetChecked()
   AutoBiographer_Settings.Options["EnableMilestoneMessages"] = self.cbEnableMilestoneMessages:GetChecked()
   AutoBiographer_Settings.Options["ShowFriendlyPlayerToolTips"] = self.cbFriendlyPlayerTooltip:GetChecked()

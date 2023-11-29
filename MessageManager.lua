@@ -23,9 +23,13 @@ function MM.OnAddonMessageReceived(prefix, text, channel, sender, target, zoneCh
   addonMessageType = tonumber(addonMessageType)
 
   if (addonMessageType == AutoBiographerEnum.AddonMessageType.CustomEvent) then
-    local playerName = sender
-    if (UnitName("player") == sender) then playerName = "You" end
-    print("[AutoBiographer] " .. tostring(playerName) .. " shared the following event: \"" .. HelperFunctions.ShortenString(arg1, 500) .. "\"")
+    if (AutoBiographer_Settings.Options["EnableCustomEventSharing"]) then
+      local playerName = sender
+      if (UnitName("player") == sender) then playerName = "You" end
+      print("[AutoBiographer] " .. tostring(playerName) .. " shared the following event: \"" .. HelperFunctions.ShortenString(arg1, 500) .. "\"")
+    elseif (UnitName("player") == sender) then
+      print("[AutoBiographer] You shared a custom event, but you haven't enabled the option for guild members to share custom events with you.")
+    end
   end
 end
 

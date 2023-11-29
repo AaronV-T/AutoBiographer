@@ -1117,6 +1117,7 @@ end
 
 function AutoBiographer_CustomEventDetailsWindow:Update()
   self.ScrollFrame.Content.ContentEditBoxScrollFrame.EditBox:SetText("")
+  self.ScrollFrame.Content.cbShareEvent:SetChecked(false)
 end
 
 --

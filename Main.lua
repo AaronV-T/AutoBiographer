@@ -159,6 +159,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
 			MapEventFollowExpansions = false,
       MinimapPos = -25,
       Options = { -- Dict<string?, bool>
+        EnableCustomEventSharing = true,
         EnableDebugLogging = false,
         EnableMilestoneMessages = true,
         ShowDiscoveryInfoOnToolTips = true,
@@ -207,7 +208,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
       BattlegroundStatuses = {},
       CurrentSubZone = nil,
       CurrentZone = nil,
-      DatabaseVersion = 18,
+      DatabaseVersion = 19,
       GuildName = nil,
       GuildRankIndex = nil,
       GuildRankName = nil,
