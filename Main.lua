@@ -212,6 +212,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
       GuildName = nil,
       GuildRankIndex = nil,
       GuildRankName = nil,
+      HasBeenShownCustomEventReminder = nil,
       LastTotalTimePlayed = nil,
       PlayerGuid = nil,
     }
@@ -586,6 +587,12 @@ function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
     local playerOrGroupDmgOfTotal = HelperFunctions.Round(100 * ((deadUnit.DamageTakenFromPlayerOrPet + deadUnit.DamageTakenFromGroup) / deadUnit.DamageTakenTotal))
     local kill = Kill.New(deadUnit.GroupHasDamaged, deadUnit.PlayerHasDamaged or deadUnit.PlayerPetHasDamaged, IsUnitGUIDPlayerOrPlayerPet(deadUnit.LastUnitGuidWhoCausedDamage), weHadTag, HelperFunctions.GetCatalogIdFromGuid(destGuid), playerOrGroupDmgOfTotal)
     Controller:OnKill(time(), HelperFunctions.GetCoordinatesByUnitId("player"), kill)
+
+    if (not self.PersistentPlayerInfo.HasBeenShownCustomEventReminder and HelperFunctions.GetUnitTypeFromCatalogUnitId(kill.CatalogUnitId) == AutoBiographerEnum.UnitType.Creature and
+        AutoBiographer_Databases.NpcDatabase and not AutoBiographer_Databases.NpcDatabase[kill.CatalogUnitId]) then
+      print("\124cFFFFD700[AutoBiographer] It looks like you killed a new unit that was added in Season of Discovery. You can record and share your personal discoveries by creating custom events in the AutoBiographer Events window.")
+      self.PersistentPlayerInfo.HasBeenShownCustomEventReminder = true
+    end
   end
   
   if (destGuid ~= self.PersistentPlayerInfo.PlayerGuid) then damagedUnits[destGuid] = nil end

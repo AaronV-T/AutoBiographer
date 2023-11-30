@@ -12,6 +12,8 @@ local LibDeflate = LibStub("LibDeflate")
 function MM.OnAddonMessageReceived(prefix, text, channel, sender, target, zoneChannelID, localID, name, instanceID)
   --print(string.format("%s, %s, %s, %s", prefix, text, channel, sender))
 
+  if (channel ~= "GUILD") then return end
+
   local decoded = LibDeflate:DecodeForWoWAddonChannel(text)
   if (not decoded) then return end
   local decompressed = LibDeflate:DecompressDeflate(decoded)
@@ -26,9 +28,9 @@ function MM.OnAddonMessageReceived(prefix, text, channel, sender, target, zoneCh
     if (AutoBiographer_Settings.Options["EnableCustomEventSharing"]) then
       local playerName = sender
       if (UnitName("player") == sender) then playerName = "You" end
-      print("[AutoBiographer] " .. tostring(playerName) .. " shared the following event: \"" .. HelperFunctions.ShortenString(arg1, 500) .. "\"")
+      print("\124cFFFFD700[AutoBiographer] " .. tostring(playerName) .. " shared the following event: \"" .. HelperFunctions.ShortenString(arg1, 500) .. "\"")
     elseif (UnitName("player") == sender) then
-      print("[AutoBiographer] You shared a custom event, but you haven't enabled the option for guild members to share custom events with you.")
+      print("\124cFFFF0000[AutoBiographer] You shared a custom event, but you haven't enabled the option for guild members to share custom events with you.")
     end
   end
 end
@@ -36,7 +38,7 @@ end
 function MM.SendAddonMessage(addonMessageType, arg1)
   local nowTimestamp = GetTime()
   if (MM.SentMessageTimestamps[addonMessageType] and nowTimestamp - MM.SentMessageTimestamps[addonMessageType] < 10) then 
-    print("[AutoBiographer] Message not sent, you are sending messages too quickly.")
+    print("\124cFFFF0000[AutoBiographer] Message not sent, you are sending messages too quickly.")
     return
   end
   MM.SentMessageTimestamps[addonMessageType] = nowTimestamp
