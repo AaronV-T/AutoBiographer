@@ -9753,6 +9753,7 @@ AutoBiographer_NpcDatabase = {
   [15708] = "Master Sergeant Maclure",
   [15709] = "Master Sergeant Moonshadow",
   [15710] = "Tiny Snowman",
+  [15711] = "Black Qiraji Battle Tank",
   [15712] = "Dirt Mound",
   [15713] = "Blue Qiraji Battle Tank",
   [15714] = "Yellow Qiraji Battle Tank",

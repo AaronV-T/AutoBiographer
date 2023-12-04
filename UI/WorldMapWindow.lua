@@ -756,11 +756,7 @@ end
 
 function AutoBiographer_WorldMapOverlayWindowToggleButton:Initialize()
   local frame = AutoBiographer_WorldMapOverlayWindowToggleButton
-  if (WorldMapZoneMinimapDropDown) then
-    frame:SetPoint("TOPRIGHT", WorldMapZoneMinimapDropDown, "TOPLEFT", 13, -3);
-  else
-    frame:SetPoint("LEFT", WorldMapZoomOutButton, "RIGHT", 8, 0);
-  end
+  frame:SetPoint("BOTTOMLEFT", WorldMapFrame.ScrollContainer, "TOPLEFT", 0, 2);
   frame:SetSize(120, 20);
   frame:SetText("Event Window");
   frame:SetNormalFontObject("GameFontNormal");

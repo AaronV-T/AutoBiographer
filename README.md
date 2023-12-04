@@ -12,7 +12,7 @@ Unzip the downloaded `.zip` file and put the `AutoBiographer` folder into your A
 The addon currently records the following events:
  - Acquiring an item you have never before acquired.
  - Changing reputation level with a faction.
- - Dieing (including which unit killed you and their level).
+ - Dying (including which unit killed you and their level).
  - Entering a zone or subzone you have never before entered.
  - Joining, losing, or winning an arena or battleground.
  - Joining a guild, leaving a guild, or changing rank in a guild.

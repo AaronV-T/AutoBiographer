@@ -1,5 +1,7 @@
-Notes (players/mobs, items?, map?).
+event button
 Notice on unknown mobs, items, zones/subzones.
+Notes (players/mobs, items?, map?).
+Add todo list
 Screenshot deaths.
 Show tips to transfer data after character transfer.
 Track autoattacks/shots. Track results (hit, miss, dodge, parry) and damage done of attacks and spells.

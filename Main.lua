@@ -1125,6 +1125,8 @@ end);
 
 GameTooltip:HookScript("OnTooltipSetItem", function(self)
   local name, link = self:GetItem()
+  if (not link) then return end
+
   local itemId = HelperFunctions.GetItemIdFromTextWithChatItemLink(link)
   if (not itemId) then
     if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then print("[AutoBiographer] Unable to get itemId from link: '" .. link .. "'.") end
@@ -1136,7 +1138,6 @@ GameTooltip:HookScript("OnTooltipSetItem", function(self)
   local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemIcon, itemSellPrice, itemClassID, itemSubClassID, bindType, expacID, itemSetID, isCraftingReagent = GetItemInfo(itemId)
 
   if (AutoBiographer_Settings.Options["ShowDiscoveryInfoOnToolTips"] and AutoBiographer_Databases.ItemDatabase and not AutoBiographer_Databases.ItemDatabase[itemId]) then
-    if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then print("[AutoBiographer] New item: [" .. itemId .. "] = " .. itemName) end
     self:AddLine("Added in SoD")
   end
   
@@ -1145,6 +1146,8 @@ end)
 
 GameTooltip:HookScript("OnTooltipSetUnit", function(self)
   local unitName, unitId = self:GetUnit()
+  if (not unitId) then return end
+
 	local catalogUnitId = HelperFunctions.GetCatalogIdFromGuid(UnitGUID(unitId))
   if (not catalogUnitId) then
     return
@@ -1181,7 +1184,6 @@ GameTooltip:HookScript("OnTooltipSetUnit", function(self)
 
   if (AutoBiographer_Settings.Options["ShowDiscoveryInfoOnToolTips"] and HelperFunctions.GetUnitTypeFromCatalogUnitId(catalogUnitId) == AutoBiographerEnum.UnitType.Creature and
       AutoBiographer_Databases.NpcDatabase and not AutoBiographer_Databases.NpcDatabase[catalogUnitId]) then
-    if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then print("[AutoBiographer] New unit: [" .. catalogUnitId .. "] = " .. unitName) end
     GameTooltip:AddLine("Added in SoD")
   end
 
@@ -1623,9 +1625,14 @@ end
 function EM:Test()
   print("[AutoBiographer] Test")
 
-  for catalogUnitId, v in pairs(Controller.CharacterData.Catalogs.UnitCatalog) do
-    if (HelperFunctions.GetUnitTypeFromCatalogUnitId(catalogUnitId) == AutoBiographerEnum.UnitType.Creature and not AutoBiographer_Databases.NpcDatabase[catalogUnitId]) then
-      print(catalogUnitId .. ": " .. v.Name)
+  local QuestieDB = QuestieLoader:ImportModule("QuestieDB")
+  for i = 1, 1000000 do
+    local npc = QuestieDB:GetNPC(i)
+    if (npc and not AutoBiographer_Databases.NpcDatabase[i]) then
+      print (i .. ": " .. npc.name)
+      -- for k, v in pairs(npc) do
+      --   print (k .. ": " .. tostring(v))
+      -- end
     end
   end
 end
