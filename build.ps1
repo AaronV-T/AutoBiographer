@@ -1,3 +1,5 @@
+$addonVersionLineCata = Select-String -Pattern "## Version" -Path ".\AutoBiographer_Cata.toc"
+$addonVersionCata = $addonVersionLineCata.ToString().Substring($addonVersionLineCata.ToString().LastIndexOf(" ") + 1)
 $addonVersionLineTbc = Select-String -Pattern "## Version" -Path ".\AutoBiographer_TBC.toc"
 $addonVersionTbc = $addonVersionLineTbc.ToString().Substring($addonVersionLineTbc.ToString().LastIndexOf(" ") + 1)
 $addonVersionLineVanilla = Select-String -Pattern "## Version" -Path ".\AutoBiographer_Vanilla.toc"
@@ -5,7 +7,7 @@ $addonVersionVanilla = $addonVersionLineVanilla.ToString().Substring($addonVersi
 $addonVersionLineWotlk = Select-String -Pattern "## Version" -Path ".\AutoBiographer_Wrath.toc"
 $addonVersionWotlk = $addonVersionLineWotlk.ToString().Substring($addonVersionLineWotlk.ToString().LastIndexOf(" ") + 1)
 
-if ($addonVersionVanilla -ne $addonVersionTbc -or $addonVersionTbc -ne $addonVersionWotlk) {
+if ($addonVersionVanilla -ne $addonVersionTbc -or $addonVersionTbc -ne $addonVersionWotlk -or $addonVersionWotlk -ne $addonVersionCata) {
   throw "Versions don't match in TOC files."
 }
 
