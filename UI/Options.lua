@@ -137,7 +137,9 @@ function AutoBiographer_OptionWindow:SaveOptions()
 end
 
 AutoBiographer_OptionWindow.name = "AutoBiographer"
-AutoBiographer_OptionWindow.cancel = function() AutoBiographer_OptionWindow:LoadOptions() end
-AutoBiographer_OptionWindow.default = function() print("[AutoBiographer] Not implemented.") end
-AutoBiographer_OptionWindow.okay = function() AutoBiographer_OptionWindow:SaveOptions() end
-InterfaceOptions_AddCategory(AutoBiographer_OptionWindow)
+AutoBiographer_OptionWindow.OnCommit = function() AutoBiographer_OptionWindow:SaveOptions() end
+AutoBiographer_OptionWindow.OnRefresh = function() AutoBiographer_OptionWindow:LoadOptions() end
+
+local autoBiographerOptionsCategory = Settings.RegisterCanvasLayoutCategory(AutoBiographer_OptionWindow, AutoBiographer_OptionWindow.name)
+autoBiographerOptionsCategory.ID = AutoBiographer_OptionWindow.name
+Settings.RegisterAddOnCategory(autoBiographerOptionsCategory)

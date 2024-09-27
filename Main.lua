@@ -1625,14 +1625,23 @@ end
 function EM:Test()
   print("[AutoBiographer] Test")
 
-  local QuestieDB = QuestieLoader:ImportModule("QuestieDB")
-  for i = 1, 1000000 do
-    local npc = QuestieDB:GetNPC(i)
-    if (npc and not AutoBiographer_Databases.NpcDatabase[i]) then
-      print (i .. ": " .. npc.name)
-      -- for k, v in pairs(npc) do
-      --   print (k .. ": " .. tostring(v))
-      -- end
+  local learnedRuneNames = {}
+  local learnedCategories = C_Engraving.GetRuneCategories(true, true)
+  for _, category in pairs(learnedCategories) do
+    local runes = C_Engraving.GetRunesForCategory(category, true)
+    for _, rune in pairs(runes) do
+      print("Learned: " .. rune.name)
+      learnedRuneNames[rune.name] = true
+    end
+  end
+
+  local allCategories = C_Engraving.GetRuneCategories(true, false)
+  for _, category in pairs(allCategories) do
+    local runes = C_Engraving.GetRunesForCategory(category, false)
+    for _, rune in pairs(runes) do
+      if (not learnedRuneNames[rune.name]) then
+        print(rune.name)
+      end
     end
   end
 end
