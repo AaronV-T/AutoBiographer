@@ -1,4 +1,4 @@
-## Interface: 11504
+## Interface: 40400
 ## Title: AutoBiographer
 ## Notes: Tracks character milestones and statistics.
 ## Author: Tollski
@@ -26,9 +26,6 @@ Classes/Event.lua
 Classes/Miscellaneous.lua
 Classes/Notes.lua
 Classes/Statistics.lua
-
-Data/ItemDatabase_Vanilla.lua
-Data/NpcDatabase_Vanilla.lua
 
 UI/ConfirmWindow.lua
 UI/MainWindow.lua

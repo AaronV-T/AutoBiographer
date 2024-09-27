@@ -767,4 +767,8 @@ function AutoBiographer_WorldMapOverlayWindowToggleButton:Initialize()
       AutoBiographer_WorldMapOverlayWindow:Toggle()
     end
   )
+
+  if (HelperFunctions.GetGameVersion() >= 4) then
+    frame:Hide()
+  end
 end
