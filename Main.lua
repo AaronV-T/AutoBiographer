@@ -259,6 +259,8 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   end)
 end
 
+EM.GameVersion = HelperFunctions.GetGameVersion()
+
 function EM.EventHandlers.BOSS_KILL(self, bossId, bossName)
   local hasKilledBossBefore = true
   if (not Catalogs.PlayerHasKilledBoss(Controller.CharacterData.Catalogs, bossId)) then
@@ -607,9 +609,16 @@ function EM.EventHandlers.ITEM_PUSH(self, arg1, arg2, arg3)
   --print(tostring(arg1) .. ", " .. tostring(arg2) .. ", " .. tostring(arg3))
 end
 
-function EM.EventHandlers.LEARNED_SPELL_IN_TAB(self, spellId, skillInfoIndex, isGuildPerkSpell)
-  local name, rank, icon, castTime, minRange, maxRange, id = GetSpellInfo(spellId)
-  Controller:OnSpellLearned(time(), HelperFunctions.GetCoordinatesByUnitId("player"), spellId, name, rank)
+if (EM.GameVersion ~= 2) then
+  function EM.EventHandlers.LEARNED_SPELL_IN_TAB(self, spellId, skillInfoIndex, isGuildPerkSpell)
+    local name, rank, icon, castTime, minRange, maxRange, id = GetSpellInfo(spellId)
+    Controller:OnSpellLearned(time(), HelperFunctions.GetCoordinatesByUnitId("player"), spellId, name, rank)
+  end
+else
+  function EM.EventHandlers.LEARNED_SPELL_IN_SKILL_LINE(self, spellId, skillLineIndex, isGuildPerkSpell)
+    local name, rank, icon, castTime, minRange, maxRange, id = GetSpellInfo(spellId)
+    Controller:OnSpellLearned(time(), HelperFunctions.GetCoordinatesByUnitId("player"), spellId, name, rank)
+  end
 end
 
 function EM.EventHandlers.MAIL_CLOSED(self, arg1, arg2)
@@ -1568,7 +1577,6 @@ function EM:WasTradeRecentlyMade()
 end
 
 -- Register each event for which we have an event handler.
-EM.GameVersion = HelperFunctions.GetGameVersion()
 EM.Frame = CreateFrame("Frame")
 for eventName,_ in pairs(EM.EventHandlers) do
 	  EM.Frame:RegisterEvent(eventName)
@@ -1625,23 +1633,14 @@ end
 function EM:Test()
   print("[AutoBiographer] Test")
 
-  local learnedRuneNames = {}
-  local learnedCategories = C_Engraving.GetRuneCategories(true, true)
-  for _, category in pairs(learnedCategories) do
-    local runes = C_Engraving.GetRunesForCategory(category, true)
-    for _, rune in pairs(runes) do
-      print("Learned: " .. rune.name)
-      learnedRuneNames[rune.name] = true
-    end
-  end
+  local currentLevelStatistics = Controller:GetCurrentLevelStatistics();
+  local currentLevelTotalTimePlayedAtDing = currentLevelStatistics.TotalTimePlayedAtDing;
 
-  local allCategories = C_Engraving.GetRuneCategories(true, false)
-  for _, category in pairs(allCategories) do
-    local runes = C_Engraving.GetRunesForCategory(category, false)
-    for _, rune in pairs(runes) do
-      if (not learnedRuneNames[rune.name]) then
-        print(rune.name)
-      end
+  for levelNum, levelStatistics in pairs(Controller.CharacterData.Levels) do
+    if (levelStatistics ~= currentLevelStatistics) then
+      local percentageOfTotalLevelingTimeAtDing = HelperFunctions.Round(100 * (levelStatistics.TotalTimePlayedAtDing / currentLevelTotalTimePlayedAtDing))
+      local percentageOfTotalLevelingTime = HelperFunctions.Round(100 * (levelStatistics.TimePlayedThisLevel / currentLevelTotalTimePlayedAtDing))
+      print(levelStatistics.LevelNum .. " | " .. percentageOfTotalLevelingTimeAtDing .. "% | " .. HelperFunctions.SecondsToTimeString(levelStatistics.TimePlayedThisLevel) .. " | " .. percentageOfTotalLevelingTime .. "%")
     end
   end
 end

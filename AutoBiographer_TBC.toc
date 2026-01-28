@@ -1,8 +1,8 @@
-## Interface: 20504
+## Interface: 20505
 ## Title: AutoBiographer
 ## Notes: Tracks character milestones and statistics.
 ## Author: Tollski
-## Version: 4.0.1
+## Version: 4.1.0
 ## SavedVariables: AUTOBIOGRAPHER_SETTINGS
 ## SavedVariablesPerCharacter: AUTOBIOGRAPHER_CATALOGS_CHAR, AUTOBIOGRAPHER_EVENTS_CHAR, AUTOBIOGRAPHER_INFO_CHAR, AUTOBIOGRAPHER_LEVELS_CHAR, AUTOBIOGRAPHER_NOTES_CHAR
 
