@@ -5,6 +5,7 @@ AutoBiographer_Controller = {
 }
 
 local Controller = AutoBiographer_Controller
+local Api = AutoBiographer_Api
 
 function Controller:AddEvent(event)
   table.insert(self.CharacterData.Events, event)
@@ -841,29 +842,33 @@ function Controller:OnLevelUp(timestamp, coordinates, levelNum, totalTimePlayedA
 end
 
 function Controller:CheckForLowRankSkills()
+  if (not Api.SupportsLegacySkillLines()) then
+    return
+  end
+
   local mainHandItemLink = GetInventoryItemLink("player", 16)
   local mainHandItemSubType = nil
   if (mainHandItemLink) then
-    _, _, _, _, _, _, mainHandItemSubType, _, _, _, _ = GetItemInfo(mainHandItemLink)
+    _, _, _, _, _, _, mainHandItemSubType, _, _, _, _ = Api.GetItemInfo(mainHandItemLink)
   end
 
   local offHandItemLink = GetInventoryItemLink("player", 17)
   local offHandItemSubType = nil
   if (offHandItemLink) then
-    _, _, _, _, _, _, offHandItemSubType, _, _, _, _ = GetItemInfo(offHandItemLink)
+    _, _, _, _, _, _, offHandItemSubType, _, _, _, _ = Api.GetItemInfo(offHandItemLink)
   end
 
   local rangedItemLink = GetInventoryItemLink("player", 18)
   local rangedItemSubType = nil
   if (rangedItemLink) then
-    _, _, _, _, _, _, rangedItemSubType, _, _, _, _ = GetItemInfo(rangedItemLink)
+    _, _, _, _, _, _, rangedItemSubType, _, _, _, _ = Api.GetItemInfo(rangedItemLink)
   end
 
   local lowRankSkills = {}
-  for skillIndex = 1, GetNumSkillLines() do
+  for skillIndex = 1, Api.GetNumSkillLines() do
     local skillName, isHeader, isExpanded, skillRank, numTempPoints, skillModifier,
       skillMaxRank, isAbandonable, stepCost, rankCost, minLevel, skillCostType,
-      skillDescription = GetSkillLineInfo(skillIndex)
+      skillDescription = Api.GetSkillLineInfo(skillIndex)
     
     if (not isHeader and skillRank < skillMaxRank - 10 and
         (skillName == "Defense" or skillName == mainHandItemSubType or skillName == offHandItemSubType or skillName == rangedItemSubType)) then

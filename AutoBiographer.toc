@@ -1,3 +1,39 @@
-## Interface: 00000
-## Title: AutoBiographer (Unsupported Client)
-## Notes: AutoBiographer only works on Classic clients.
+## Interface: 16001
+## Title: AutoBiographer
+## Notes: Tracks character milestones and statistics.
+## Author: Tollski
+## Version: 4.1.1
+## SavedVariables: AUTOBIOGRAPHER_SETTINGS
+## SavedVariablesPerCharacter: AUTOBIOGRAPHER_CATALOGS_CHAR, AUTOBIOGRAPHER_EVENTS_CHAR, AUTOBIOGRAPHER_INFO_CHAR, AUTOBIOGRAPHER_LEVELS_CHAR, AUTOBIOGRAPHER_NOTES_CHAR
+
+embeds.xml
+
+Libs/HereBeDragons/HereBeDragons-2.0.lua
+Libs/HereBeDragons/HereBeDragons-Pins-2.0.lua
+Libs/HereBeDragons/HereBeDragons-Migrate.lua
+
+Api.lua
+Controller.lua
+Databases.lua
+Enum.lua
+HelperFunctions.lua
+MessageManager.lua
+Migrations.lua
+
+Main.lua
+
+Classes/Catalog.lua
+Classes/Event.lua
+Classes/Miscellaneous.lua
+Classes/Notes.lua
+Classes/Statistics.lua
+
+Data/ItemDatabase_Vanilla.lua
+Data/NpcDatabase_Vanilla.lua
+
+UI/ConfirmWindow.lua
+UI/MainWindow.lua
+UI/MinimapButton.lua
+UI/MinimapButton.xml
+UI/WorldMapWindow.lua
+UI/Options.lua

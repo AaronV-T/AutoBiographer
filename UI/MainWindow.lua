@@ -1,6 +1,7 @@
 local Controller = AutoBiographer_Controller
 local EM = AutoBiographer_EventManager
 local HF = HelperFunctions
+local Api = AutoBiographer_Api
 
 AutoBiographer_MainWindow = CreateFrame("Frame", "AutoBiographerMain", UIParent, "BasicFrameTemplateWithInset")
 AutoBiographer_MainWindow:SetFrameStrata("HIGH")
@@ -1458,25 +1459,25 @@ function AutoBiographer_MainWindow:Update()
 
   -- Money Stats
   local moneyGainedFromAuctionHouseSales = Controller:GetMoneyForAcquisitionMethod(AutoBiographerEnum.MoneyAcquisitionMethod.AuctionHouseSale, self.DisplayMinLevel, self.DisplayMaxLevel)
-  self.ScrollFrame.Content.MoneyGainedFromAuctionHouseSalesFs:SetText("Money Gained from Auction House: " .. GetCoinText(moneyGainedFromAuctionHouseSales) .. ".")
+  self.ScrollFrame.Content.MoneyGainedFromAuctionHouseSalesFs:SetText("Money Gained from Auction House: " .. Api.FormatMoney(moneyGainedFromAuctionHouseSales) .. ".")
 
   local moneyGainedFromLoot = Controller:GetMoneyForAcquisitionMethod(AutoBiographerEnum.MoneyAcquisitionMethod.Loot, self.DisplayMinLevel, self.DisplayMaxLevel)
-  self.ScrollFrame.Content.MoneyGainedFromLootFs:SetText("Money Looted: " .. GetCoinText(moneyGainedFromLoot) .. ".")
+  self.ScrollFrame.Content.MoneyGainedFromLootFs:SetText("Money Looted: " .. Api.FormatMoney(moneyGainedFromLoot) .. ".")
   
   local moneyGainedFromMail = Controller:GetMoneyForAcquisitionMethod(AutoBiographerEnum.MoneyAcquisitionMethod.Mail, self.DisplayMinLevel, self.DisplayMaxLevel)
-  self.ScrollFrame.Content.MoneyGainedFromMailFs:SetText("Money Gained From Mail (Direct): " .. GetCoinText(moneyGainedFromMail) .. ".")
+  self.ScrollFrame.Content.MoneyGainedFromMailFs:SetText("Money Gained From Mail (Direct): " .. Api.FormatMoney(moneyGainedFromMail) .. ".")
 
   local moneyGainedFromMailCod = Controller:GetMoneyForAcquisitionMethod(AutoBiographerEnum.MoneyAcquisitionMethod.MailCod, self.DisplayMinLevel, self.DisplayMaxLevel)
-  self.ScrollFrame.Content.MoneyGainedFromMailCodFs:SetText("Money Gained From Mail (COD): " .. GetCoinText(moneyGainedFromMailCod) .. ".")
+  self.ScrollFrame.Content.MoneyGainedFromMailCodFs:SetText("Money Gained From Mail (COD): " .. Api.FormatMoney(moneyGainedFromMailCod) .. ".")
 
   local moneyGainedFromMerchants = Controller:GetMoneyForAcquisitionMethod(AutoBiographerEnum.MoneyAcquisitionMethod.Merchant, self.DisplayMinLevel, self.DisplayMaxLevel)
-  self.ScrollFrame.Content.MoneyGainedFromMerchantsFs:SetText("Money Gained From Merchants: " .. GetCoinText(moneyGainedFromMerchants) .. ".")
+  self.ScrollFrame.Content.MoneyGainedFromMerchantsFs:SetText("Money Gained From Merchants: " .. Api.FormatMoney(moneyGainedFromMerchants) .. ".")
   
   local moneyGainedFromQuests = Controller:GetMoneyForAcquisitionMethod(AutoBiographerEnum.MoneyAcquisitionMethod.Quest, self.DisplayMinLevel, self.DisplayMaxLevel)
-  self.ScrollFrame.Content.MoneyGainedFromQuestsFs:SetText("Money Gained From Quests: " .. GetCoinText(moneyGainedFromQuests) .. ".")
+  self.ScrollFrame.Content.MoneyGainedFromQuestsFs:SetText("Money Gained From Quests: " .. Api.FormatMoney(moneyGainedFromQuests) .. ".")
 
   local moneyGainedFromTrade = Controller:GetMoneyForAcquisitionMethod(AutoBiographerEnum.MoneyAcquisitionMethod.Trade, self.DisplayMinLevel, self.DisplayMaxLevel)
-  self.ScrollFrame.Content.MoneyGainedFromTradeFs:SetText("Money Gained From Trade: " .. GetCoinText(moneyGainedFromTrade) .. ".")
+  self.ScrollFrame.Content.MoneyGainedFromTradeFs:SetText("Money Gained From Trade: " .. Api.FormatMoney(moneyGainedFromTrade) .. ".")
   
   local moneyGainedFromAuctionHouseDepositReturns = Controller:GetMoneyForAcquisitionMethod(AutoBiographerEnum.MoneyAcquisitionMethod.AuctionHouseDepositReturn, self.DisplayMinLevel, self.DisplayMaxLevel)
   local moneyGainedFromAuctionHouseOutbids = Controller:GetMoneyForAcquisitionMethod(AutoBiographerEnum.MoneyAcquisitionMethod.AuctionHouseOutbid, self.DisplayMinLevel, self.DisplayMaxLevel)
@@ -1484,7 +1485,7 @@ function AutoBiographer_MainWindow:Update()
     moneyGainedFromAuctionHouseOutbids - moneyGainedFromAuctionHouseSales - moneyGainedFromLoot - moneyGainedFromMail - moneyGainedFromMailCod - moneyGainedFromMerchants -
     moneyGainedFromQuests - moneyGainedFromTrade
   if (moneyGainedFromOther < 0) then moneyGainedFromOther = 0 end -- This should not ever happen.
-  self.ScrollFrame.Content.MoneyGainedFromOtherFs:SetText("Money Gained From Other Sources: " .. GetCoinText(moneyGainedFromOther) .. ".")
+  self.ScrollFrame.Content.MoneyGainedFromOtherFs:SetText("Money Gained From Other Sources: " .. Api.FormatMoney(moneyGainedFromOther) .. ".")
   
   -- Time Stats
   local timeSpentAfk = Controller:GetTimeForTimeTrackingType(AutoBiographerEnum.TimeTrackingType.Afk, self.DisplayMinLevel, self.DisplayMaxLevel)

@@ -43,6 +43,7 @@ local AceComm = LibStub:GetLibrary("AceComm-3.0")
 local EM = AutoBiographer_EventManager
 local Controller = AutoBiographer_Controller
 local MM = AutoBiographer_MessageManager
+local Api = AutoBiographer_Api
 
 -- Slash Commands
 
@@ -260,6 +261,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
 end
 
 EM.GameVersion = HelperFunctions.GetGameVersion()
+EM.IsWoWForever = Api.IsWoWForever()
 
 function EM.EventHandlers.BOSS_KILL(self, bossId, bossName)
   local hasKilledBossBefore = true
@@ -306,7 +308,7 @@ function EM.EventHandlers.CHAT_MSG_LOOT(self, text, arg2, arg3, arg4, arg5, arg6
     return
   end
 
-  local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemIcon, itemSellPrice, itemClassID, itemSubClassID, bindType, expacID, itemSetID, isCraftingReagent = GetItemInfo(id)
+  local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemIcon, itemSellPrice, itemClassID, itemSubClassID, bindType, expacID, itemSetID, isCraftingReagent = Api.GetItemInfo(id)
   if (not itemName) then
     for nameMatch in string.gmatch(text, "%[%.+%]") do
       itemName = string.sub(nameMatch, 2, #nameMatch - 1)
@@ -609,14 +611,14 @@ function EM.EventHandlers.ITEM_PUSH(self, arg1, arg2, arg3)
   --print(tostring(arg1) .. ", " .. tostring(arg2) .. ", " .. tostring(arg3))
 end
 
-if (EM.GameVersion ~= 2) then
+if (not EM.IsWoWForever and EM.GameVersion ~= 2) then
   function EM.EventHandlers.LEARNED_SPELL_IN_TAB(self, spellId, skillInfoIndex, isGuildPerkSpell)
-    local name, rank, icon, castTime, minRange, maxRange, id = GetSpellInfo(spellId)
+    local name, rank, icon, castTime, minRange, maxRange, id = Api.GetSpellInfo(spellId)
     Controller:OnSpellLearned(time(), HelperFunctions.GetCoordinatesByUnitId("player"), spellId, name, rank)
   end
 else
   function EM.EventHandlers.LEARNED_SPELL_IN_SKILL_LINE(self, spellId, skillLineIndex, isGuildPerkSpell)
-    local name, rank, icon, castTime, minRange, maxRange, id = GetSpellInfo(spellId)
+    local name, rank, icon, castTime, minRange, maxRange, id = Api.GetSpellInfo(spellId)
     Controller:OnSpellLearned(time(), HelperFunctions.GetCoordinatesByUnitId("player"), spellId, name, rank)
   end
 end
@@ -692,20 +694,22 @@ end
 function EM.EventHandlers.PLAYER_ENTERING_WORLD(self, isLogin, isReload)
   self.PlayerEnteringWorldHasFired = true
 
+  local playerGuid = UnitGUID("player")
+
   if (isLogin or isReload) then
     AceComm:RegisterComm(MM.AddonMessagePrefix, MM.OnAddonMessageReceived)
   end
 
-  if (not self.PersistentPlayerInfo.PlayerGuid) then
+  if (playerGuid and not self.PersistentPlayerInfo.PlayerGuid) then
     -- This is probably the first time this character has logged in while using the addon.
-    self.PersistentPlayerInfo.PlayerGuid = UnitGUID("player")
+    self.PersistentPlayerInfo.PlayerGuid = playerGuid
     
     if (UnitLevel("player") == 1 and UnitXP("player") == 0) then
       print("\124cFFFFD700[AutoBiographer] Events and statistics are being tracked.")
     else
       print("\124cFFFFD700[AutoBiographer] Events and statistics are being tracked. Any events and statistics that occurred previously on this character are not tracked.")
     end
-  elseif (self.PersistentPlayerInfo.PlayerGuid ~= UnitGUID("player")) then
+  elseif (playerGuid and self.PersistentPlayerInfo.PlayerGuid ~= playerGuid) then
     -- The character was probably deleted and a new character was made with the same name.
     AutoBiographer_ConfirmWindow.New("If you have deleted and remade a\ncharacter with the same name, click accept\nand AutoBiographer will\ndelete its stored data for " .. UnitName("player") .. ".", 
       function(deleteConfirmed)
@@ -716,7 +720,7 @@ function EM.EventHandlers.PLAYER_ENTERING_WORLD(self, isLogin, isReload)
           AutoBiographer_ConfirmWindow.New("If you have transferred your character\nto a new realm, click accept\nand AutoBiographer will\nkeep its stored data for " .. UnitName("player") .. ".", 
             function(transferConfirmed)
               if (transferConfirmed) then
-                self.PersistentPlayerInfo.PlayerGuid = UnitGUID("player")
+                self.PersistentPlayerInfo.PlayerGuid = playerGuid
               end
             end
           )
@@ -1096,7 +1100,7 @@ function EM.EventHandlers.UNIT_SPELLCAST_SUCCEEDED(self, unitId, castId, spellId
   if (unitId ~= "player") then return end
   --print("UNIT_SPELLCAST_SUCCEEDED. " .. unitId .. ", " .. tostring(arg2) .. ", " .. tostring(arg3) .. ", " .. tostring(arg4) .. ", " .. tostring(arg5))
   
-  local name, rank, icon, castTime, minRange, maxRange, id = GetSpellInfo(spellId)
+  local name, rank, icon, castTime, minRange, maxRange, id = Api.GetSpellInfo(spellId)
   Controller:OnSpellSuccessfullyCast(time(), HelperFunctions.GetCoordinatesByUnitId("player"), spellId, name, rank)
 end
 
@@ -1132,7 +1136,7 @@ hooksecurefunc("AscendStop", function()
   end
 end);
 
-GameTooltip:HookScript("OnTooltipSetItem", function(self)
+Api.RegisterTooltipHandler("OnTooltipSetItem", "Item", function(self)
   local name, link = self:GetItem()
   if (not link) then return end
 
@@ -1144,7 +1148,7 @@ GameTooltip:HookScript("OnTooltipSetItem", function(self)
   end
 
   itemId = tonumber(itemId)
-  local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemIcon, itemSellPrice, itemClassID, itemSubClassID, bindType, expacID, itemSetID, isCraftingReagent = GetItemInfo(itemId)
+  local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemIcon, itemSellPrice, itemClassID, itemSubClassID, bindType, expacID, itemSetID, isCraftingReagent = Api.GetItemInfo(itemId)
 
   if (AutoBiographer_Settings.Options["ShowDiscoveryInfoOnToolTips"] and AutoBiographer_Databases.ItemDatabase and not AutoBiographer_Databases.ItemDatabase[itemId]) then
     self:AddLine("Added in SoD")
@@ -1153,7 +1157,7 @@ GameTooltip:HookScript("OnTooltipSetItem", function(self)
   self:Show()
 end)
 
-GameTooltip:HookScript("OnTooltipSetUnit", function(self)
+Api.RegisterTooltipHandler("OnTooltipSetUnit", "Unit", function(self)
   local unitName, unitId = self:GetUnit()
   if (not unitId) then return end
 
@@ -1259,7 +1263,7 @@ function EM:OnStartedCasting(spellId)
   
   self.TemporaryTimestamps.StartedCasting = GetTime()
   
-  local name, rank, icon, castTime, minRange, maxRange, id = GetSpellInfo(spellId)
+  local name, rank, icon, castTime, minRange, maxRange, id = Api.GetSpellInfo(spellId)
   Controller:OnSpellStartedCasting(time(), HelperFunctions.GetCoordinatesByUnitId("player"), spellId, name, rank)
 end 
 
