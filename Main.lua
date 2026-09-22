@@ -259,8 +259,6 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   end)
 end
 
-EM.GameVersion = HelperFunctions.GetGameVersion()
-
 function EM.EventHandlers.BOSS_KILL(self, bossId, bossName)
   local hasKilledBossBefore = true
   if (not Catalogs.PlayerHasKilledBoss(Controller.CharacterData.Catalogs, bossId)) then
@@ -609,16 +607,9 @@ function EM.EventHandlers.ITEM_PUSH(self, arg1, arg2, arg3)
   --print(tostring(arg1) .. ", " .. tostring(arg2) .. ", " .. tostring(arg3))
 end
 
-if (EM.GameVersion ~= 2) then
-  function EM.EventHandlers.LEARNED_SPELL_IN_TAB(self, spellId, skillInfoIndex, isGuildPerkSpell)
-    local name, rank, icon, castTime, minRange, maxRange, id = GetSpellInfo(spellId)
-    Controller:OnSpellLearned(time(), HelperFunctions.GetCoordinatesByUnitId("player"), spellId, name, rank)
-  end
-else
-  function EM.EventHandlers.LEARNED_SPELL_IN_SKILL_LINE(self, spellId, skillLineIndex, isGuildPerkSpell)
-    local name, rank, icon, castTime, minRange, maxRange, id = GetSpellInfo(spellId)
-    Controller:OnSpellLearned(time(), HelperFunctions.GetCoordinatesByUnitId("player"), spellId, name, rank)
-  end
+function EM.EventHandlers.LEARNED_SPELL_IN_SKILL_LINE(self, spellId, skillLineIndex, isGuildPerkSpell)
+  local name, rank, icon, castTime, minRange, maxRange, id = GetSpellInfo(spellId)
+  Controller:OnSpellLearned(time(), HelperFunctions.GetCoordinatesByUnitId("player"), spellId, name, rank)
 end
 
 function EM.EventHandlers.MAIL_CLOSED(self, arg1, arg2)
