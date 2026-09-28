@@ -141,5 +141,5 @@ AutoBiographer_OptionWindow.OnCommit = function() AutoBiographer_OptionWindow:Sa
 AutoBiographer_OptionWindow.OnRefresh = function() AutoBiographer_OptionWindow:LoadOptions() end
 
 local autoBiographerOptionsCategory = Settings.RegisterCanvasLayoutCategory(AutoBiographer_OptionWindow, AutoBiographer_OptionWindow.name)
-autoBiographerOptionsCategory.ID = AutoBiographer_OptionWindow.name
+AutoBiographer_OptionWindow.categoryID = autoBiographerOptionsCategory:GetID()
 Settings.RegisterAddOnCategory(autoBiographerOptionsCategory)

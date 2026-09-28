@@ -1,14 +1,23 @@
 <# 
-  Runs the local build, copies the produced zip to the anniversary WoW
+  Runs the local build, copies the produced zip to the selected Classic WoW
   AddOns folder, and expands it there.
 #>
 
-param()
+param(
+  [ValidateSet("anniversary", "classic_era")]
+  [string]$Client = "anniversary"
+)
 
 $repoRoot = Split-Path -Parent $PSCommandPath
 $buildScript = Join-Path $repoRoot "build.ps1"
 $deployDir = Join-Path $repoRoot "Deploys"
-$targetAddOns = Join-Path $repoRoot "..\..\..\..\_anniversary_\Interface\AddOns"
+$clientDirectory = switch ($Client) {
+  "anniversary" { "_anniversary_" }
+  "classic_era" { "_classic_era_" }
+}
+$targetAddOns = Join-Path $repoRoot "..\..\..\..\$clientDirectory\Interface\AddOns"
+
+Write-Host "Deploying to the $Client client."
 
 Write-Host "Running build script..."
 & $buildScript

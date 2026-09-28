@@ -1,4 +1,4 @@
-## Interface: 20505
+## Interface: 20506
 ## Title: AutoBiographer
 ## Notes: Tracks character milestones and statistics.
 ## Author: Tollski

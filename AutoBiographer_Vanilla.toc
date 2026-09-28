@@ -1,4 +1,4 @@
-## Interface: 11508
+## Interface: 11509
 ## Title: AutoBiographer
 ## Notes: Tracks character milestones and statistics.
 ## Author: Tollski

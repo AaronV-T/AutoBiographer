@@ -497,7 +497,7 @@ function AutoBiographer_MainWindow:Initialize()
   frame.ScrollFrame.Content.OptionsBtn:SetHighlightFontObject("GameFontHighlightLarge");
   frame.ScrollFrame.Content.OptionsBtn:SetScript("OnClick", 
     function(self)
-      Settings.OpenToCategory(AutoBiographer_OptionWindow.name)
+      Settings.OpenToCategory(AutoBiographer_OptionWindow.categoryID)
       AutoBiographer_MainWindow:Hide()
     end
   )
