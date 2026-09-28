@@ -1126,19 +1126,26 @@ hooksecurefunc("AscendStop", function()
   end
 end);
 
-Api.RegisterTooltipHandler("OnTooltipSetItem", "Item", function(self)
-  local name, link = self:GetItem()
-  if (not link) then return end
+Api.RegisterTooltipHandler("OnTooltipSetItem", "Item", function(self, data)
+  -- TooltipDataProcessor passes the item ID in data.  In particular, the
+  -- comparison tooltips used by bags do not implement the legacy GetItem().
+  local itemId = data and data.id
+  local link = nil
+  if (not itemId and self.GetItem) then
+    local _, itemLink = self:GetItem()
+    link = itemLink
+    if (link) then
+      itemId = HelperFunctions.GetItemIdFromTextWithChatItemLink(link)
+    end
+  end
 
-  local itemId = HelperFunctions.GetItemIdFromTextWithChatItemLink(link)
   if (not itemId) then
-    if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then print("[AutoBiographer] Unable to get itemId from link: '" .. link .. "'.") end
-    Controller:AddLog("Unable to get itemId from link: '" .. link .. "'.", AutoBiographerEnum.LogLevel.Warning)
+    if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then print("[AutoBiographer] Unable to get itemId from tooltip.") end
+    Controller:AddLog("Unable to get itemId from tooltip.", AutoBiographerEnum.LogLevel.Warning)
     return
   end
 
   itemId = tonumber(itemId)
-  local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, itemSubType, itemStackCount, itemEquipLoc, itemIcon, itemSellPrice, itemClassID, itemSubClassID, bindType, expacID, itemSetID, isCraftingReagent = Api.GetItemInfo(itemId)
 
   if (AutoBiographer_Settings.Options["ShowDiscoveryInfoOnToolTips"] and AutoBiographer_Databases.ItemDatabase and not AutoBiographer_Databases.ItemDatabase[itemId]) then
     self:AddLine("Added in SoD")
