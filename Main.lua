@@ -457,146 +457,150 @@ function EM.EventHandlers.CHAT_MSG_TRADESKILLS(self, text, arg2, arg3, arg4, arg
   --print(arg2)
 end
 
-function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
-  local timestamp, event, hideCaster, sourceGuid, sourceName, sourceFlags, sourceRaidFlags, destGuid, destName, destFlags, destRaidflags = CombatLogGetCurrentEventInfo()
-  
-  if (combatLogDamageEvents[event]) then
-    local playerCausedThisEvent = sourceGuid == self.PersistentPlayerInfo.PlayerGuid
-    local playerPetCausedThisEvent = sourceGuid == UnitGUID("pet")
-    local groupMemberCausedThisEvent = IsUnitGUIDInOurPartyOrRaid(sourceGuid)
+-- WoW Forever does not expose the raw combat-log payload that this legacy
+-- handler requires, so do not define or register it there.
+if (not Api.IsWoWForever()) then
+  function EM.EventHandlers.COMBAT_LOG_EVENT_UNFILTERED(self)
+    local timestamp, event, hideCaster, sourceGuid, sourceName, sourceFlags, sourceRaidFlags, destGuid, destName, destFlags, destRaidflags = CombatLogGetCurrentEventInfo()
     
-    -- Get UnitIds of damager and damaged unit.
-    local damagerUnitId = FindUnitIdByUnitGUID(sourceGuid)
-    if (damagerUnitId ~= nil) then 
-      local damagerCatalogUnitId = HelperFunctions.GetCatalogIdFromGuid(sourceGuid)
-      if (Controller:CatalogUnitIsIncomplete(damagerCatalogUnitId)) then
-        Controller:UpdateCatalogUnit(CatalogUnit.New(damagerCatalogUnitId, UnitClass(damagerUnitId), UnitClassification(damagerUnitId), UnitCreatureFamily(damagerUnitId), UnitCreatureType(damagerUnitId), UnitName(damagerUnitId), UnitRace(damagerUnitId), nil, HelperFunctions.GetUnitTypeFromCatalogUnitId(damagerCatalogUnitId)))
-      end
-    end
-
-    -- Set damage flags.
-    if (damagedUnits[destGuid] == nil or unitWasOutOfCombat) then   
-      local firstObservedDamageCausedByPlayerOrGroup = playerCausedThisEvent or playerPetCausedThisEvent or groupMemberCausedThisEvent
+    if (combatLogDamageEvents[event]) then
+      local playerCausedThisEvent = sourceGuid == self.PersistentPlayerInfo.PlayerGuid
+      local playerPetCausedThisEvent = sourceGuid == UnitGUID("pet")
+      local groupMemberCausedThisEvent = IsUnitGUIDInOurPartyOrRaid(sourceGuid)
       
-      damagedUnits[destGuid] = {
-        DamageTakenFromGroup = 0,
-        DamageTakenFromPlayerOrPet = 0,
-        DamageTakenTotal = 0,
-        FirstObservedDamageCausedByPlayerOrGroup = firstObservedDamageCausedByPlayerOrGroup,
-        GroupHasDamaged = nil,
-        IsTapDenied = nil,
-        LastUnitGuidWhoCausedDamage = nil,
-        PlayerHasDamaged = nil,
-        PlayerPetHasDamaged = nil,
-      }
-    else
-      if (damagedUnitId ~= nil) then
-        damagedUnits[destGuid].IsTapDenied = UnitIsTapDenied(damagedUnitId)
-        --if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog(destName .. " (" .. damagedUnitId .. ") tap denied: " .. tostring(damagedUnits[destGuid].IsTapDenied), AutoBiographerEnum.LogLevel.Verbose) end
+      -- Get UnitIds of damager and damaged unit.
+      local damagerUnitId = FindUnitIdByUnitGUID(sourceGuid)
+      if (damagerUnitId ~= nil) then 
+        local damagerCatalogUnitId = HelperFunctions.GetCatalogIdFromGuid(sourceGuid)
+        if (Controller:CatalogUnitIsIncomplete(damagerCatalogUnitId)) then
+          Controller:UpdateCatalogUnit(CatalogUnit.New(damagerCatalogUnitId, UnitClass(damagerUnitId), UnitClassification(damagerUnitId), UnitCreatureFamily(damagerUnitId), UnitCreatureType(damagerUnitId), UnitName(damagerUnitId), UnitRace(damagerUnitId), nil, HelperFunctions.GetUnitTypeFromCatalogUnitId(damagerCatalogUnitId)))
+        end
       end
-    end
 
-    local damagedUnit = damagedUnits[destGuid]
-
-    local damagedUnitId = FindUnitIdByUnitGUID(destGuid)
-    local unitWasOutOfCombat = nil
-    if (damagedUnitId ~= nil) then 
-      unitWasOutOfCombat = not UnitAffectingCombat(damagedUnitId)
-      
-      local damagedCatalogUnitId = HelperFunctions.GetCatalogIdFromGuid(destGuid)
-      if (Controller:CatalogUnitIsIncomplete(damagedCatalogUnitId)) then
-        Controller:UpdateCatalogUnit(CatalogUnit.New(damagedCatalogUnitId, UnitClass(damagedUnitId), UnitClassification(damagedUnitId), UnitCreatureFamily(damagedUnitId), UnitCreatureType(damagedUnitId), UnitName(damagedUnitId), UnitRace(damagedUnitId), nil, HelperFunctions.GetUnitTypeFromCatalogUnitId(damagedCatalogUnitId)))
-      end
-    end
-    
-    -- Process event's damage amount.
-    if (string.find(event, "SWING") == 1) then
-      amount, overKill, school, resisted, blocked, absorbed, critical, glancing, crushing, isOffHand = select(12, CombatLogGetCurrentEventInfo())
-    elseif (string.find(event, "RANGE") == 1 or string.find(event, "SPELL") == 1) then
-      spellId, spellName, spellSchool, amount, overKill, school, resisted, blocked, absorbed, critical, glancing, crushing, isOffHand = select(12, CombatLogGetCurrentEventInfo())
-    end
-    
-    if (amount) then
-      if (not overKill or overKill == -1) then overKill = 0 end -- -1 means none, nil means INSTAKILL or other non-DAMAGE type
-      
-      damagedUnit.DamageTakenTotal = damagedUnit.DamageTakenTotal + amount - overKill
-
-      if (playerCausedThisEvent) then 
-        Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageDealt, amount, overKill)
-        damagedUnit.DamageTakenFromPlayerOrPet = damagedUnit.DamageTakenFromPlayerOrPet + amount - overKill
-      elseif (destGuid == self.PersistentPlayerInfo.PlayerGuid) then
-        Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageTaken, amount, overKill)
-      elseif (playerPetCausedThisEvent) then 
-        Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.PetDamageDealt, amount, overKill)
-        damagedUnit.DamageTakenFromPlayerOrPet = damagedUnit.DamageTakenFromPlayerOrPet + amount - overKill
-      elseif (destGuid == UnitGUID("pet")) then
-        Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.PetDamageTaken, amount, overKill)
-      elseif (groupMemberCausedThisEvent) then
-        damagedUnit.DamageTakenFromGroup = damagedUnit.DamageTakenFromGroup + amount - overKill
-      end
-    end
-    
-    if (playerCausedThisEvent) then damagedUnit.PlayerHasDamaged = true
-    elseif (playerPetCausedThisEvent) then damagedUnit.PlayerPetHasDamaged = true
-    elseif (groupMemberCausedThisEvent) then damagedUnit.GroupHasDamaged = true
-    end
-    
-    damagedUnit.LastUnitGuidWhoCausedDamage = sourceGuid
-    
-    if (destGuid == self.PersistentPlayerInfo.PlayerGuid) then damagedUnit.LastCombatDamageTakenTimestamp = time() end
-  elseif (combatLogHealEvents[event]) then
-    -- Process event's heal amount.
-    if (sourceGuid == self.PersistentPlayerInfo.PlayerGuid or destGuid == self.PersistentPlayerInfo.PlayerGuid) then
-      spellId, spellName, spellSchool, amount, overKill, school, resisted, blocked, absorbed, critical, glancing, crushing, isOffHand = select(12, CombatLogGetCurrentEventInfo())
-
-      if (amount) then 
-        if (not overKill or overKill == -1) then overKill = 0 end
+      -- Set damage flags.
+      if (damagedUnits[destGuid] == nil or unitWasOutOfCombat) then   
+        local firstObservedDamageCausedByPlayerOrGroup = playerCausedThisEvent or playerPetCausedThisEvent or groupMemberCausedThisEvent
         
-        if (sourceGuid == self.PersistentPlayerInfo.PlayerGuid) then
-          if (destGuid == self.PersistentPlayerInfo.PlayerGuid) then
-            Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.HealingDealtToSelf, amount, overKill)
-          else
-            Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.HealingDealtToOthers, amount, overKill)
+        damagedUnits[destGuid] = {
+          DamageTakenFromGroup = 0,
+          DamageTakenFromPlayerOrPet = 0,
+          DamageTakenTotal = 0,
+          FirstObservedDamageCausedByPlayerOrGroup = firstObservedDamageCausedByPlayerOrGroup,
+          GroupHasDamaged = nil,
+          IsTapDenied = nil,
+          LastUnitGuidWhoCausedDamage = nil,
+          PlayerHasDamaged = nil,
+          PlayerPetHasDamaged = nil,
+        }
+      else
+        if (damagedUnitId ~= nil) then
+          damagedUnits[destGuid].IsTapDenied = UnitIsTapDenied(damagedUnitId)
+          --if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog(destName .. " (" .. damagedUnitId .. ") tap denied: " .. tostring(damagedUnits[destGuid].IsTapDenied), AutoBiographerEnum.LogLevel.Verbose) end
+        end
+      end
+
+      local damagedUnit = damagedUnits[destGuid]
+
+      local damagedUnitId = FindUnitIdByUnitGUID(destGuid)
+      local unitWasOutOfCombat = nil
+      if (damagedUnitId ~= nil) then 
+        unitWasOutOfCombat = not UnitAffectingCombat(damagedUnitId)
+        
+        local damagedCatalogUnitId = HelperFunctions.GetCatalogIdFromGuid(destGuid)
+        if (Controller:CatalogUnitIsIncomplete(damagedCatalogUnitId)) then
+          Controller:UpdateCatalogUnit(CatalogUnit.New(damagedCatalogUnitId, UnitClass(damagedUnitId), UnitClassification(damagedUnitId), UnitCreatureFamily(damagedUnitId), UnitCreatureType(damagedUnitId), UnitName(damagedUnitId), UnitRace(damagedUnitId), nil, HelperFunctions.GetUnitTypeFromCatalogUnitId(damagedCatalogUnitId)))
+        end
+      end
+      
+      -- Process event's damage amount.
+      if (string.find(event, "SWING") == 1) then
+        amount, overKill, school, resisted, blocked, absorbed, critical, glancing, crushing, isOffHand = select(12, CombatLogGetCurrentEventInfo())
+      elseif (string.find(event, "RANGE") == 1 or string.find(event, "SPELL") == 1) then
+        spellId, spellName, spellSchool, amount, overKill, school, resisted, blocked, absorbed, critical, glancing, crushing, isOffHand = select(12, CombatLogGetCurrentEventInfo())
+      end
+      
+      if (amount) then
+        if (not overKill or overKill == -1) then overKill = 0 end -- -1 means none, nil means INSTAKILL or other non-DAMAGE type
+        
+        damagedUnit.DamageTakenTotal = damagedUnit.DamageTakenTotal + amount - overKill
+
+        if (playerCausedThisEvent) then 
+          Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageDealt, amount, overKill)
+          damagedUnit.DamageTakenFromPlayerOrPet = damagedUnit.DamageTakenFromPlayerOrPet + amount - overKill
+        elseif (destGuid == self.PersistentPlayerInfo.PlayerGuid) then
+          Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageTaken, amount, overKill)
+        elseif (playerPetCausedThisEvent) then 
+          Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.PetDamageDealt, amount, overKill)
+          damagedUnit.DamageTakenFromPlayerOrPet = damagedUnit.DamageTakenFromPlayerOrPet + amount - overKill
+        elseif (destGuid == UnitGUID("pet")) then
+          Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.PetDamageTaken, amount, overKill)
+        elseif (groupMemberCausedThisEvent) then
+          damagedUnit.DamageTakenFromGroup = damagedUnit.DamageTakenFromGroup + amount - overKill
+        end
+      end
+      
+      if (playerCausedThisEvent) then damagedUnit.PlayerHasDamaged = true
+      elseif (playerPetCausedThisEvent) then damagedUnit.PlayerPetHasDamaged = true
+      elseif (groupMemberCausedThisEvent) then damagedUnit.GroupHasDamaged = true
+      end
+      
+      damagedUnit.LastUnitGuidWhoCausedDamage = sourceGuid
+      
+      if (destGuid == self.PersistentPlayerInfo.PlayerGuid) then damagedUnit.LastCombatDamageTakenTimestamp = time() end
+    elseif (combatLogHealEvents[event]) then
+      -- Process event's heal amount.
+      if (sourceGuid == self.PersistentPlayerInfo.PlayerGuid or destGuid == self.PersistentPlayerInfo.PlayerGuid) then
+        spellId, spellName, spellSchool, amount, overKill, school, resisted, blocked, absorbed, critical, glancing, crushing, isOffHand = select(12, CombatLogGetCurrentEventInfo())
+
+        if (amount) then 
+          if (not overKill or overKill == -1) then overKill = 0 end
+          
+          if (sourceGuid == self.PersistentPlayerInfo.PlayerGuid) then
+            if (destGuid == self.PersistentPlayerInfo.PlayerGuid) then
+              Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.HealingDealtToSelf, amount, overKill)
+            else
+              Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.HealingDealtToOthers, amount, overKill)
+            end
           end
+          
+          if (destGuid == self.PersistentPlayerInfo.PlayerGuid) then
+            Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.HealingTaken, amount, overKill)
+          end
+          
         end
-        
-        if (destGuid == self.PersistentPlayerInfo.PlayerGuid) then
-          Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.HealingTaken, amount, overKill)
-        end
-        
       end
     end
-  end
 
-  if (event ~= "UNIT_DIED") then return end
-  if (damagedUnits[destGuid] == nil) then return end
-  
-  local deadUnit = damagedUnits[destGuid]
+    if (event ~= "UNIT_DIED") then return end
+    if (damagedUnits[destGuid] == nil) then return end
+    
+    local deadUnit = damagedUnits[destGuid]
 
-  local weHadTag = false
-  if (deadUnit.IsTapDenied) then
-    weHadTag = false
-  elseif (deadUnit.IsTapDenied ~= nil and not deadUnit.IsTapDenied and (deadUnit.PlayerHasDamaged or deadUnit.PlayerPetHasDamaged or deadUnit.GroupHasDamaged)) then
-    weHadTag = true
-  else
-    weHadTag = deadUnit.FirstObservedDamageCausedByPlayerOrGroup
-  end
-  
-  if (deadUnit.PlayerHasDamaged or deadUnit.PlayerPetHasDamaged or weHadTag) then
-    if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog(destName .. " Died.  Tagged: " .. tostring(weHadTag) .. ". FODCBPOG: " .. tostring(deadUnit.FirstObservedDamageCausedByPlayerOrGroup) .. ". ITD: "  .. tostring(deadUnit.IsTapDenied) .. ". PHD: " .. tostring(deadUnit.PlayerHasDamaged) .. ". PPHD: " .. tostring(deadUnit.PlayerPetHasDamaged).. ". GHD: "  .. tostring(deadUnit.GroupHasDamaged)  .. ". LastDmg: " .. tostring(deadUnit.LastUnitGuidWhoCausedDamage), AutoBiographerEnum.LogLevel.Debug) end
-
-    local playerOrGroupDmgOfTotal = HelperFunctions.Round(100 * ((deadUnit.DamageTakenFromPlayerOrPet + deadUnit.DamageTakenFromGroup) / deadUnit.DamageTakenTotal))
-    local kill = Kill.New(deadUnit.GroupHasDamaged, deadUnit.PlayerHasDamaged or deadUnit.PlayerPetHasDamaged, IsUnitGUIDPlayerOrPlayerPet(deadUnit.LastUnitGuidWhoCausedDamage), weHadTag, HelperFunctions.GetCatalogIdFromGuid(destGuid), playerOrGroupDmgOfTotal)
-    Controller:OnKill(time(), HelperFunctions.GetCoordinatesByUnitId("player"), kill)
-
-    if (not self.PersistentPlayerInfo.HasBeenShownCustomEventReminder and HelperFunctions.GetUnitTypeFromCatalogUnitId(kill.CatalogUnitId) == AutoBiographerEnum.UnitType.Creature and
-        AutoBiographer_Databases.NpcDatabase and not AutoBiographer_Databases.NpcDatabase[kill.CatalogUnitId]) then
-      print("\124cFFFFD700[AutoBiographer] It looks like you killed a new unit that was added in Season of Discovery. You can record and share your personal discoveries by creating custom events in the AutoBiographer Events window.")
-      self.PersistentPlayerInfo.HasBeenShownCustomEventReminder = true
+    local weHadTag = false
+    if (deadUnit.IsTapDenied) then
+      weHadTag = false
+    elseif (deadUnit.IsTapDenied ~= nil and not deadUnit.IsTapDenied and (deadUnit.PlayerHasDamaged or deadUnit.PlayerPetHasDamaged or deadUnit.GroupHasDamaged)) then
+      weHadTag = true
+    else
+      weHadTag = deadUnit.FirstObservedDamageCausedByPlayerOrGroup
     end
+    
+    if (deadUnit.PlayerHasDamaged or deadUnit.PlayerPetHasDamaged or weHadTag) then
+      if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog(destName .. " Died.  Tagged: " .. tostring(weHadTag) .. ". FODCBPOG: " .. tostring(deadUnit.FirstObservedDamageCausedByPlayerOrGroup) .. ". ITD: "  .. tostring(deadUnit.IsTapDenied) .. ". PHD: " .. tostring(deadUnit.PlayerHasDamaged) .. ". PPHD: " .. tostring(deadUnit.PlayerPetHasDamaged).. ". GHD: "  .. tostring(deadUnit.GroupHasDamaged)  .. ". LastDmg: " .. tostring(deadUnit.LastUnitGuidWhoCausedDamage), AutoBiographerEnum.LogLevel.Debug) end
+
+      local playerOrGroupDmgOfTotal = HelperFunctions.Round(100 * ((deadUnit.DamageTakenFromPlayerOrPet + deadUnit.DamageTakenFromGroup) / deadUnit.DamageTakenTotal))
+      local kill = Kill.New(deadUnit.GroupHasDamaged, deadUnit.PlayerHasDamaged or deadUnit.PlayerPetHasDamaged, IsUnitGUIDPlayerOrPlayerPet(deadUnit.LastUnitGuidWhoCausedDamage), weHadTag, HelperFunctions.GetCatalogIdFromGuid(destGuid), playerOrGroupDmgOfTotal)
+      Controller:OnKill(time(), HelperFunctions.GetCoordinatesByUnitId("player"), kill)
+
+      if (not self.PersistentPlayerInfo.HasBeenShownCustomEventReminder and HelperFunctions.GetUnitTypeFromCatalogUnitId(kill.CatalogUnitId) == AutoBiographerEnum.UnitType.Creature and
+          AutoBiographer_Databases.NpcDatabase and not AutoBiographer_Databases.NpcDatabase[kill.CatalogUnitId]) then
+        print("\124cFFFFD700[AutoBiographer] It looks like you killed a new unit that was added in Season of Discovery. You can record and share your personal discoveries by creating custom events in the AutoBiographer Events window.")
+        self.PersistentPlayerInfo.HasBeenShownCustomEventReminder = true
+      end
+    end
+    
+    if (destGuid ~= self.PersistentPlayerInfo.PlayerGuid) then damagedUnits[destGuid] = nil end
   end
-  
-  if (destGuid ~= self.PersistentPlayerInfo.PlayerGuid) then damagedUnits[destGuid] = nil end
 end
 
 function EM.EventHandlers.GROUP_ROSTER_UPDATE(self)
@@ -1580,7 +1584,7 @@ end
 -- Register each event for which we have an event handler.
 EM.Frame = CreateFrame("Frame")
 for eventName,_ in pairs(EM.EventHandlers) do
-	  EM.Frame:RegisterEvent(eventName)
+  EM.Frame:RegisterEvent(eventName)
 end
 EM.Frame:SetScript("OnEvent", function(_, event, ...) EM:OnEvent(_, event, ...) end)
 
