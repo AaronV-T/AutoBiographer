@@ -585,12 +585,8 @@ function AutoBiographer_MainWindow:Initialize()
   frame.ScrollFrame.Content.DamageTakenFs:SetPoint("TOPLEFT", 10, topPoint)
   topPoint = topPoint - 15
 
-  frame.ScrollFrame.Content.HealingOtherFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-  frame.ScrollFrame.Content.HealingOtherFs:SetPoint("TOPLEFT", 10, topPoint)
-  topPoint = topPoint - 15
-
-  frame.ScrollFrame.Content.HealingSelfFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-  frame.ScrollFrame.Content.HealingSelfFs:SetPoint("TOPLEFT", 10, topPoint)
+  frame.ScrollFrame.Content.HealingDealtFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  frame.ScrollFrame.Content.HealingDealtFs:SetPoint("TOPLEFT", 10, topPoint)
   topPoint = topPoint - 15
 
   frame.ScrollFrame.Content.HealingTakenFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -960,6 +956,14 @@ function AutoBiographer_StatisticsWindow:Initialize()
       AutoBiographer_StatisticsWindow:Update()
     end
   
+    info.text, info.arg1 = "Damage Dealt", AutoBiographerEnum.StatisticsDisplayMode.DamageDealt
+    UIDropDownMenu_AddButton(info)
+    info.text, info.arg1 = "Damage Taken by Spell", AutoBiographerEnum.StatisticsDisplayMode.DamageTakenBySpell
+    UIDropDownMenu_AddButton(info)
+    info.text, info.arg1 = "Damage Taken by Unit", AutoBiographerEnum.StatisticsDisplayMode.DamageTakenByUnit
+    UIDropDownMenu_AddButton(info)
+    info.text, info.arg1 = "Healing Dealt", AutoBiographerEnum.StatisticsDisplayMode.HealingDealt
+    UIDropDownMenu_AddButton(info)
     info.text, info.arg1 = "Item Aquisitions", AutoBiographerEnum.StatisticsDisplayMode.Items
     UIDropDownMenu_AddButton(info)
     info.text, info.arg1 = "Kills", AutoBiographerEnum.StatisticsDisplayMode.Kills
@@ -1344,24 +1348,22 @@ function AutoBiographer_MainWindow:Update()
 
   -- Damage Stats
   local damageDealtAmount, damageDealtOver = Controller:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageDealt, self.DisplayMinLevel, self.DisplayMaxLevel)
-  local petDamageDealtAmount, petDamageDealtOver = Controller:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.PetDamageDealt, self.DisplayMinLevel, self.DisplayMaxLevel)
   local damageDealtText = "Damage Dealt: " .. HF.CommaValue(damageDealtAmount) .. " (" .. HF.AbbreviatedValue(damageDealtAmount - damageDealtOver) .. " effective, " .. HF.AbbreviatedValue(damageDealtOver) .. " over)."
-  if (petDamageDealtAmount > 0) then damageDealtText = damageDealtText .. " Pet Damage Dealt: " .. HF.AbbreviatedValue(petDamageDealtAmount) .. " (" .. HF.AbbreviatedValue(petDamageDealtAmount - petDamageDealtOver) .. " effective, " .. HF.AbbreviatedValue(petDamageDealtOver) .. " over)." end
   self.ScrollFrame.Content.DamageDealtFs:SetText(damageDealtText)
   
-  local damageTakenAmount, damageTakenOver = Controller:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageTaken, self.DisplayMinLevel, self.DisplayMaxLevel)
-  local petDamageTakenAmount, petDamageTakenOver = Controller:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.PetDamageTaken, self.DisplayMinLevel, self.DisplayMaxLevel)
+  local damageTakenAmount, damageTakenOver = Controller:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageTakenRaw, self.DisplayMinLevel, self.DisplayMaxLevel)
   local damageTakenText = "Damage Taken: " .. HF.CommaValue(damageTakenAmount) .. " (" .. HF.AbbreviatedValue(damageTakenAmount - damageTakenOver) .. " effective, " .. HF.AbbreviatedValue(damageTakenOver) .. " over)."
-  if (petDamageTakenAmount > 0) then damageTakenText = damageTakenText .. " Pet Damage Taken: " .. HF.AbbreviatedValue(petDamageTakenAmount) .. " (" .. HF.AbbreviatedValue(petDamageTakenAmount - petDamageTakenOver) .. " effective, " .. HF.AbbreviatedValue(petDamageTakenOver) .. " over)." end
+  local petDamageTakenAmount, petDamageTakenOver = Controller:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.PetDamageTakenRaw, self.DisplayMinLevel, self.DisplayMaxLevel)
+  if (petDamageTakenAmount > 0 or petDamageTakenOver > 0) then
+    damageTakenText = damageTakenText .. " Pet Damage Taken: " .. HF.CommaValue(petDamageTakenAmount) .. " (" .. HF.AbbreviatedValue(petDamageTakenAmount - petDamageTakenOver) .. " effective, " .. HF.AbbreviatedValue(petDamageTakenOver) .. " over)."
+  end
   self.ScrollFrame.Content.DamageTakenFs:SetText(damageTakenText)
   
-  local healingOtherAmount, healingOtherOver = Controller:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.HealingDealtToOthers, self.DisplayMinLevel, self.DisplayMaxLevel)
-  self.ScrollFrame.Content.HealingOtherFs:SetText("Healing Dealt to Others: " .. HF.CommaValue(healingOtherAmount) .. " (" .. HF.AbbreviatedValue(healingOtherAmount - healingOtherOver) .. " effective, " .. HF.AbbreviatedValue(healingOtherOver) .. " over).")
+  local healingDealtAmount, healingDealtOver = Controller:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.HealingDealt, self.DisplayMinLevel, self.DisplayMaxLevel)
+  local healingDealtText = "Healing Dealt: " .. HF.CommaValue(healingDealtAmount) .. " (" .. HF.AbbreviatedValue(healingDealtAmount - healingDealtOver) .. " effective, " .. HF.AbbreviatedValue(healingDealtOver) .. " over)."
+  self.ScrollFrame.Content.HealingDealtFs:SetText(healingDealtText)
   
-  local healingSelfAmount, healingSelfOver = Controller:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.HealingDealtToSelf, self.DisplayMinLevel, self.DisplayMaxLevel)
-  self.ScrollFrame.Content.HealingSelfFs:SetText("Healing Dealt to Self: " .. HF.CommaValue(healingSelfAmount) .. " (" .. HF.AbbreviatedValue(healingSelfAmount - healingSelfOver) .. " effective, " .. HF.AbbreviatedValue(healingSelfOver) .. " over).")
-  
-  local healingTakenAmount, healingTakenOver = Controller:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.HealingTaken, self.DisplayMinLevel, self.DisplayMaxLevel)
+  local healingTakenAmount, healingTakenOver = Controller:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.HealingTakenRaw, self.DisplayMinLevel, self.DisplayMaxLevel)
   self.ScrollFrame.Content.HealingTakenFs:SetText("Healing Taken: " .. HF.CommaValue(healingTakenAmount) .. " (" .. HF.AbbreviatedValue(healingTakenAmount - healingTakenOver) .. " effective, " .. HF.AbbreviatedValue(healingTakenOver) .. " over).")
   
   -- Death Stats
@@ -1663,7 +1665,63 @@ function AutoBiographer_StatisticsWindow:Update()
   -- Get table data.
   local tableData
   
-  if (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.Items) then
+  if (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.DamageDealt) then
+    local abilitiesBySpellId = Controller:GetAggregatedDamageMeterAbilities({ AutoBiographerEnum.DamageOrHealingCategory.DamageDealt }, minLevel, maxLevel)
+    tableData = {
+      HeaderValues = { "Spell Name", "Effective Damage", "Over Damage" },
+      RowOffsets = { 0, 250, 450, 650 },
+      Rows = {},
+    }
+    for spellId, breakdown in pairs(abilitiesBySpellId) do
+      local catalogSpell = Controller.CharacterData.Catalogs.SpellCatalog[spellId]
+      local spellName = catalogSpell and catalogSpell.Name or ("Spell ID: " .. tostring(spellId))
+      table.insert(tableData.Rows, { spellName, breakdown.Amount - breakdown.Over, breakdown.Over })
+    end
+  elseif (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.DamageTakenBySpell) then
+    local breakdownsByUnitAndSpell = Controller:GetAggregatedDamageTakenBySpell({ AutoBiographerEnum.DamageOrHealingCategory.DamageTaken }, minLevel, maxLevel)
+    tableData = {
+      HeaderValues = { "Spell Name", "Unit Name", "Effective Damage", "Over Damage" },
+      RowOffsets = { 0, 200, 365, 505, 650 },
+      Rows = {},
+    }
+    for unitName, spells in pairs(breakdownsByUnitAndSpell) do
+      for spellId, breakdown in pairs(spells) do
+        local catalogSpell = Controller.CharacterData.Catalogs.SpellCatalog[spellId]
+        local spellName = catalogSpell and catalogSpell.Name or ("Spell ID: " .. tostring(spellId))
+        table.insert(tableData.Rows, { spellName, unitName, breakdown.Amount - breakdown.Over, breakdown.Over })
+      end
+    end
+    local unknownBreakdown = Controller:GetAggregatedDamageTakenUnknownBreakdown(minLevel, maxLevel)
+    if (unknownBreakdown.Amount ~= 0 or unknownBreakdown.Over ~= 0) then
+      table.insert(tableData.Rows, { "Unknown", "Unknown", unknownBreakdown.Amount - unknownBreakdown.Over, unknownBreakdown.Over })
+    end
+  elseif (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.DamageTakenByUnit) then
+    local breakdownsByUnit = Controller:GetAggregatedDamageTakenByUnit({ AutoBiographerEnum.DamageOrHealingCategory.DamageTaken }, minLevel, maxLevel)
+    tableData = {
+      HeaderValues = { "Unit Name", "Effective Damage", "Over Damage" },
+      RowOffsets = { 0, 250, 450, 650 },
+      Rows = {},
+    }
+    for unitName, breakdown in pairs(breakdownsByUnit) do
+      table.insert(tableData.Rows, { unitName, breakdown.Amount - breakdown.Over, breakdown.Over })
+    end
+    local unknownBreakdown = Controller:GetAggregatedDamageTakenUnknownBreakdown(minLevel, maxLevel)
+    if (unknownBreakdown.Amount ~= 0 or unknownBreakdown.Over ~= 0) then
+      table.insert(tableData.Rows, { "Unknown", unknownBreakdown.Amount - unknownBreakdown.Over, unknownBreakdown.Over })
+    end
+  elseif (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.HealingDealt) then
+    local abilitiesBySpellId = Controller:GetAggregatedDamageMeterAbilities({ AutoBiographerEnum.DamageOrHealingCategory.HealingDealt }, minLevel, maxLevel)
+    tableData = {
+      HeaderValues = { "Spell Name", "Effective Healing", "Over Healing" },
+      RowOffsets = { 0, 250, 450, 650 },
+      Rows = {},
+    }
+    for spellId, breakdown in pairs(abilitiesBySpellId) do
+      local catalogSpell = Controller.CharacterData.Catalogs.SpellCatalog[spellId]
+      local spellName = catalogSpell and catalogSpell.Name or ("Spell ID: " .. tostring(spellId))
+      table.insert(tableData.Rows, { spellName, breakdown.Amount - breakdown.Over, breakdown.Over })
+    end
+  elseif (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.Items) then
     local itemStatisticsByItem = Controller:GetAggregatedItemStatisticsDictionary(minLevel, maxLevel)
     tableData = {
       HeaderValues = { "Item Name", "AH", "COD", "Create", "Loot", "Mail", "Other", "Trade", "Vendor" },

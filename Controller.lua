@@ -53,6 +53,76 @@ function Controller:CatalogUnitIsIncomplete(catalogUnitId)
   return self.CharacterData.Catalogs.UnitCatalog[catalogUnitId] == nil or self.CharacterData.Catalogs.UnitCatalog[catalogUnitId].Name == nil
 end
 
+function Controller:GetAggregatedDamageMeterAbilities(damageOrHealingCategories, minLevel, maxLevel)
+  local abilitiesBySpellId = {}
+  for levelNum, levelStatistics in pairs(self.CharacterData.Levels) do
+    if (levelNum >= minLevel and levelNum <= maxLevel) then
+      local damageStatistics = levelStatistics.DamageStatistics
+      for _, damageOrHealingCategory in ipairs(damageOrHealingCategories) do
+        local spells = damageStatistics[damageOrHealingCategory]
+        if (spells) then
+          for spellId, breakdown in pairs(spells) do
+            if (not abilitiesBySpellId[spellId]) then abilitiesBySpellId[spellId] = DamageBreakdown.New() end
+            DamageBreakdown.Add(abilitiesBySpellId[spellId], breakdown.Amount, breakdown.Over)
+          end
+        end
+      end
+    end
+  end
+  return abilitiesBySpellId
+end
+
+function Controller:GetAggregatedDamageTakenBySpell(damageOrHealingCategories, minLevel, maxLevel)
+  local breakdownsByUnitAndSpell = {}
+  for levelNum, levelStatistics in pairs(self.CharacterData.Levels) do
+    if (levelNum >= minLevel and levelNum <= maxLevel) then
+      local damageStatistics = levelStatistics.DamageStatistics
+      for _, damageOrHealingCategory in ipairs(damageOrHealingCategories) do
+        local units = damageStatistics[damageOrHealingCategory]
+        if (units) then
+          for unitName, spells in pairs(units) do
+            if (not breakdownsByUnitAndSpell[unitName]) then breakdownsByUnitAndSpell[unitName] = {} end
+            for spellId, breakdown in pairs(spells) do
+              if (not breakdownsByUnitAndSpell[unitName][spellId]) then breakdownsByUnitAndSpell[unitName][spellId] = DamageBreakdown.New() end
+              DamageBreakdown.Add(breakdownsByUnitAndSpell[unitName][spellId], breakdown.Amount, breakdown.Over)
+            end
+          end
+        end
+      end
+    end
+  end
+  return breakdownsByUnitAndSpell
+end
+
+function Controller:GetAggregatedDamageTakenByUnit(damageOrHealingCategories, minLevel, maxLevel)
+  local breakdownsByUnit = {}
+  for levelNum, levelStatistics in pairs(self.CharacterData.Levels) do
+    if (levelNum >= minLevel and levelNum <= maxLevel) then
+      local damageStatistics = levelStatistics.DamageStatistics
+      for _, damageOrHealingCategory in ipairs(damageOrHealingCategories) do
+        local units = damageStatistics[damageOrHealingCategory]
+        if (units) then
+          for unitName, spells in pairs(units) do
+            if (not breakdownsByUnit[unitName]) then breakdownsByUnit[unitName] = DamageBreakdown.New() end
+            for _, breakdown in pairs(spells) do
+              DamageBreakdown.Add(breakdownsByUnit[unitName], breakdown.Amount, breakdown.Over)
+            end
+          end
+        end
+      end
+    end
+  end
+  return breakdownsByUnit
+end
+
+function Controller:GetAggregatedDamageTakenUnknownBreakdown(minLevel, maxLevel)
+  local rawAmount, rawOver = self:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageTakenRaw, minLevel, maxLevel)
+  local attributedAmount, attributedOver = self:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageTaken, minLevel, maxLevel)
+  local unknownBreakdown = DamageBreakdown.New()
+  unknownBreakdown.Amount = rawAmount - rawOver - (attributedAmount - attributedOver)
+  return unknownBreakdown
+end
+
 function Controller:GetAggregatedItemStatisticsDictionary(minLevel, maxLevel)
   local itemStatisticsDictionary = {}
   for levelNum, levelStatistics in pairs(self.CharacterData.Levels) do
@@ -307,10 +377,9 @@ function Controller:GetDamageOrHealing(damageOrHealingCategory, minLevel, maxLev
   local overSum = 0
   for k,v in pairs(self.CharacterData.Levels) do
     if (k >= minLevel and k <= maxLevel) then
-      if (v.DamageStatistics[damageOrHealingCategory]) then
-        amountSum = amountSum + v.DamageStatistics[damageOrHealingCategory].Amount
-        overSum = overSum + v.DamageStatistics[damageOrHealingCategory].Over
-      end
+      local amount, over = DamageStatistics.GetTotal(v.DamageStatistics, damageOrHealingCategory)
+      amountSum = amountSum + amount
+      overSum = overSum + over
     end
   end
   
@@ -582,9 +651,28 @@ function Controller:OnChangedZone(timestamp, coordinates, zoneName)
   end
 end
 
-function Controller:OnDamageOrHealing(damageOrHealingCategory, amount, overkill)
+function Controller:OnDamageOrHealing(damageOrHealingCategory, unitName, spellId, spellName, amount, overkill)
   if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog("DamageOrHealingCategory: " .. tostring(damageOrHealingCategory) .. ". Amount: " .. tostring(amount) .. ", over: " .. tostring(overkill), AutoBiographerEnum.LogLevel.Debug) end
-  DamageStatistics.Add(self:GetCurrentLevelStatistics().DamageStatistics, damageOrHealingCategory, amount, overkill)
+  local damageStatistics = self:GetCurrentLevelStatistics().DamageStatistics
+  if (damageOrHealingCategory == AutoBiographerEnum.DamageOrHealingCategory.DamageTaken) then
+    if (not unitName or not spellId) then
+      Controller:AddLog("Damage taken was not tracked because its source name or spell ID was nil.", AutoBiographerEnum.LogLevel.Warning)
+      return
+    end
+    if (not self.CharacterData.Catalogs.SpellCatalog[spellId]) then self.CharacterData.Catalogs.SpellCatalog[spellId] = CatalogSpell.New(spellId, spellName, nil) end
+    DamageStatistics.AddDamageTaken(damageStatistics, unitName, spellId, amount, overkill)
+  elseif (damageOrHealingCategory == AutoBiographerEnum.DamageOrHealingCategory.DamageTakenRaw or
+      damageOrHealingCategory == AutoBiographerEnum.DamageOrHealingCategory.HealingTakenRaw or
+      damageOrHealingCategory == AutoBiographerEnum.DamageOrHealingCategory.PetDamageTakenRaw) then
+    DamageStatistics.AddRawBreakdown(damageStatistics, damageOrHealingCategory, amount, overkill)
+  else
+    if (not spellId) then
+      Controller:AddLog("Damage or healing was not tracked because its spell ID was nil.", AutoBiographerEnum.LogLevel.Warning)
+      return
+    end
+    if (not self.CharacterData.Catalogs.SpellCatalog[spellId]) then self.CharacterData.Catalogs.SpellCatalog[spellId] = CatalogSpell.New(spellId, spellName, nil) end
+    DamageStatistics.AddSpellBreakdown(damageStatistics, damageOrHealingCategory, spellId, amount, overkill)
+  end
 
   if (AutoBiographer_Settings.Options["EnableMilestoneMessages"]) then
     local damageOrHealingMilestoneThreshold
@@ -611,8 +699,7 @@ function Controller:OnDamageOrHealing(damageOrHealingCategory, amount, overkill)
       else
         Controller:CheckDamageForMilestoneMessage(amount, damageOrHealingMilestoneThreshold)
       end
-    elseif (damageOrHealingCategory == AutoBiographerEnum.DamageOrHealingCategory.HealingDealtToOthers or
-            damageOrHealingCategory == AutoBiographerEnum.DamageOrHealingCategory.HealingDealtToSelf) then
+    elseif (damageOrHealingCategory == AutoBiographerEnum.DamageOrHealingCategory.HealingDealt) then
       if (self.Temp.LastMilestoneMessageHealingCheckTimestamp and GetTime() - self.Temp.LastMilestoneMessageHealingCheckTimestamp < 1) then
         if (not self.Temp.IsPendingMilestoneMessageHealingCheck) then
           self.Temp.IsPendingMilestoneMessageHealingCheck = true
@@ -650,9 +737,7 @@ function Controller:CheckHealingForMilestoneMessage(thisAmount, threshold)
   self.Temp.IsPendingMilestoneMessageHealingCheck = false
   self.Temp.LastMilestoneMessageHealingCheckTimestamp = GetTime()
 
-  local healingOtherAmount = self:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.HealingDealtToOthers, 1, self:GetCurrentLevelNum())
-  local healingSelfAmount = self:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.HealingDealtToSelf, 1, self:GetCurrentLevelNum())
-  local totalHealing = healingOtherAmount + healingSelfAmount
+  local totalHealing = self:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.HealingDealt, 1, self:GetCurrentLevelNum())
 
   local healingDifference = thisAmount
   if (self.Temp.LastMilestoneMessageDamageCheckTotalHealingDealt ~= nil) then

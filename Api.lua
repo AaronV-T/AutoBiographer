@@ -69,3 +69,66 @@ function Api.GetSkillLineInfo(skillIndex)
     return GetSkillLineInfo(skillIndex)
   end
 end
+
+function Api.GetDamageMeterSessions()
+  if (not C_DamageMeter or not C_DamageMeter.GetAvailableCombatSessions) then
+    return nil
+  end
+
+  local success, sessions = pcall(C_DamageMeter.GetAvailableCombatSessions)
+  if (success) then
+    return sessions
+  end
+end
+
+function Api.GetDamageMeterSessionById(sessionId, meterType)
+  if (not C_DamageMeter or not C_DamageMeter.GetCombatSessionFromID) then
+    return nil, "C_DamageMeter.GetCombatSessionFromID is unavailable."
+  end
+
+  local success, session = pcall(C_DamageMeter.GetCombatSessionFromID, sessionId, meterType)
+  if (success) then
+    return session
+  end
+
+  return nil, session
+end
+
+function Api.GetDamageMeterSessionByType(sessionType, meterType)
+  if (not C_DamageMeter or not C_DamageMeter.GetCombatSessionFromType) then
+    return nil, "C_DamageMeter.GetCombatSessionFromType is unavailable."
+  end
+
+  local success, session = pcall(C_DamageMeter.GetCombatSessionFromType, sessionType, meterType)
+  if (success) then
+    return session
+  end
+
+  return nil, session
+end
+
+function Api.GetDamageMeterSessionSourceById(sessionId, meterType, sourceGuid, sourceCreatureId)
+  if (not C_DamageMeter or not C_DamageMeter.GetCombatSessionSourceFromID) then
+    return nil, "C_DamageMeter.GetCombatSessionSourceFromID is unavailable."
+  end
+
+  local success, source = pcall(C_DamageMeter.GetCombatSessionSourceFromID, sessionId, meterType, sourceGuid, sourceCreatureId)
+  if (success) then
+    return source
+  end
+
+  return nil, source
+end
+
+function Api.GetDamageMeterAvailability()
+  if (not C_DamageMeter or not C_DamageMeter.IsDamageMeterAvailable) then
+    return nil, "C_DamageMeter.IsDamageMeterAvailable is unavailable."
+  end
+
+  local success, available, reason = pcall(C_DamageMeter.IsDamageMeterAvailable)
+  if (success) then
+    return available, reason
+  end
+
+  return nil, available
+end

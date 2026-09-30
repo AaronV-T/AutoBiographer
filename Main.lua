@@ -2,6 +2,12 @@ AutoBiographer_Settings = nil
 
 AutoBiographer_EventManager = {
   AuctionHouseIsOpen = nil,
+  CurrentDamageMeterSessionId = nil,
+  DamageMeterBaselineInitializationPending = false,
+  DamageMeterBaselinesInitialized = false,
+  DamageMeterRecordedTotals = {},
+  DamageMeterResetGeneration = 0,
+  PendingDamageMeterFinalizationSessionId = nil,
   EventHandlers = {},
   LastPlayerDeadEventTimestamp = nil,
   LastPlayerMoney = nil,
@@ -44,6 +50,7 @@ local EM = AutoBiographer_EventManager
 local Controller = AutoBiographer_Controller
 local MM = AutoBiographer_MessageManager
 local Api = AutoBiographer_Api
+local damageMeterSessionRetentionCount = 5
 
 -- Slash Commands
 
@@ -95,7 +102,7 @@ do
     end
 end
 
-local validUnitIds = { "focus", "focuspet", "mouseover", "mouseoverpet", "pet", "player", "target", "targetpet" }
+local validUnitIds = { "focus", "focuspet", "mouseover", "mouseoverpet", "pet", "player", "target", "targetpet", "softenemy" }
 for i = 1, 40 do
 	if i <= 4 then
 		validUnitIds[#validUnitIds + 1] = "party" .. i
@@ -209,7 +216,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
       BattlegroundStatuses = {},
       CurrentSubZone = nil,
       CurrentZone = nil,
-      DatabaseVersion = 19,
+      DatabaseVersion = 20,
       GuildName = nil,
       GuildRankIndex = nil,
       GuildRankName = nil,
@@ -521,19 +528,20 @@ if (not Api.IsWoWForever()) then
       
       if (amount) then
         if (not overKill or overKill == -1) then overKill = 0 end -- -1 means none, nil means INSTAKILL or other non-DAMAGE type
+
+        local damageSpellId = spellId or 6603
+        local damageSpellName = spellName or Api.GetSpellInfo(damageSpellId) or "Attack"
         
         damagedUnit.DamageTakenTotal = damagedUnit.DamageTakenTotal + amount - overKill
 
         if (playerCausedThisEvent) then 
-          Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageDealt, amount, overKill)
+          Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageDealt, nil, damageSpellId, damageSpellName, amount, overKill)
           damagedUnit.DamageTakenFromPlayerOrPet = damagedUnit.DamageTakenFromPlayerOrPet + amount - overKill
         elseif (destGuid == self.PersistentPlayerInfo.PlayerGuid) then
-          Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageTaken, amount, overKill)
+          Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageTaken, sourceName or "Unknown", damageSpellId, damageSpellName, amount, overKill)
         elseif (playerPetCausedThisEvent) then 
-          Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.PetDamageDealt, amount, overKill)
+          Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageDealt, nil, damageSpellId, damageSpellName, amount, overKill)
           damagedUnit.DamageTakenFromPlayerOrPet = damagedUnit.DamageTakenFromPlayerOrPet + amount - overKill
-        elseif (destGuid == UnitGUID("pet")) then
-          Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.PetDamageTaken, amount, overKill)
         elseif (groupMemberCausedThisEvent) then
           damagedUnit.DamageTakenFromGroup = damagedUnit.DamageTakenFromGroup + amount - overKill
         end
@@ -556,15 +564,7 @@ if (not Api.IsWoWForever()) then
           if (not overKill or overKill == -1) then overKill = 0 end
           
           if (sourceGuid == self.PersistentPlayerInfo.PlayerGuid) then
-            if (destGuid == self.PersistentPlayerInfo.PlayerGuid) then
-              Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.HealingDealtToSelf, amount, overKill)
-            else
-              Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.HealingDealtToOthers, amount, overKill)
-            end
-          end
-          
-          if (destGuid == self.PersistentPlayerInfo.PlayerGuid) then
-            Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.HealingTaken, amount, overKill)
+            Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.HealingDealt, nil, spellId, spellName, amount, overKill)
           end
           
         end
@@ -602,6 +602,21 @@ if (not Api.IsWoWForever()) then
     if (destGuid ~= self.PersistentPlayerInfo.PlayerGuid) then damagedUnits[destGuid] = nil end
   end
 end
+
+function EM.EventHandlers.DAMAGE_METER_COMBAT_SESSION_UPDATED(self, meterType, sessionId)
+  --print("DAMAGE_METER_COMBAT_SESSION_UPDATED. " .. tostring(meterType) .. ", " .. tostring(sessionId))
+  self:OnDamageMeterCombatSessionUpdated(meterType, sessionId)
+end
+
+function EM.EventHandlers.DAMAGE_METER_CURRENT_SESSION_UPDATED(self)
+  --print("DAMAGE_METER_CURRENT_SESSION_UPDATED")
+  self:OnDamageMeterCurrentSessionUpdated()
+end
+
+function EM.EventHandlers.DAMAGE_METER_RESET(self)
+  self:OnDamageMeterReset()
+end
+
 
 function EM.EventHandlers.GROUP_ROSTER_UPDATE(self)
   self:UpdateGroupMemberInfo()
@@ -648,6 +663,16 @@ end
 
 function EM.EventHandlers.MERCHANT_SHOW(self, arg1, arg2)
   self.MerchantIsOpen = true
+end
+
+function EM.EventHandlers.PARTY_KILL(self, attackerGuid, targetGuid)
+  -- print("PARTY_KILL. " .. tostring(attackerGuid) .. ", " .. tostring(targetGuid))
+  -- Does this trigger for raid members?
+    -- No, this doesn't trigger even for party members when in a raid group. But it still triggers for the player when in a raid group.
+  -- Does this trigger if a non-party-player kills a mob I had tagged?
+    -- No.
+  -- Does this trigger if a party-player kills a mob that another group had tagged?
+    -- Yes.
 end
 
 function EM.EventHandlers.PLAYER_ALIVE(self) -- Fired when the player releases from death to a graveyard; or accepts a resurrect before releasing their spirit. Also fires when logging in.
@@ -728,10 +753,15 @@ function EM.EventHandlers.PLAYER_ENTERING_WORLD(self, isLogin, isReload)
   self.TemporaryTimestamps.EnteredArea = GetTime()
   self:UpdateGroupMemberInfo()
   self:UpdatePlayerFlags()
+  self:ScheduleDamageMeterSessionBaselines()
 end
 
 function EM.EventHandlers.PLAYER_FLAGS_CHANGED(self, unitId)
   if (unitId == "player") then self:UpdatePlayerFlags() end
+end
+
+function EM.EventHandlers.PLAYER_REGEN_ENABLED(self)
+  self:ScheduleDamageMeterCombatFinalization(self.CurrentDamageMeterSessionId)
 end
 
 function EM.EventHandlers.PLAYER_GUILD_UPDATE(self, unitId)
@@ -1038,7 +1068,30 @@ end
 -- end
 
 function EM.EventHandlers.UNIT_COMBAT(self, unitId, action, ind, dmg, dmgType)
-  --print(unitId .. ". " .. action .. ". " .. ind .. ". " .. dmg .. ". " .. dmgType)
+  --print("UNIT_COMBAT. " .. tostring(unitId) .. ", " .. tostring(action) .. ", " .. tostring(ind) .. ", " .. tostring(dmg) .. ", " .. tostring(dmgType))
+  if (not dmg or dmg <= 0) then return end
+
+  -- UNIT_COMBAT reports incoming effective amounts for the affected unit.
+  -- WOUND is damage received and HEAL is healing received.
+  if (unitId == "player") then
+    if (action == "HEAL") then
+      Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.HealingTakenRaw, nil, nil, nil, dmg, 0)
+    elseif (action == "WOUND") then
+      Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageTakenRaw, nil, nil, nil, dmg, 0)
+    end
+  elseif (unitId == "pet" and action == "WOUND") then
+    Controller:OnDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.PetDamageTakenRaw, nil, nil, nil, dmg, 0)
+  end
+end
+
+function EM.EventHandlers.UNIT_DIED(self, unitGuid)
+  -- print("UNIT_DIED. " .. tostring(unitGuid))
+
+  -- local unitId = FindUnitIdByUnitGUID(unitGuid)
+  -- if (unitId) then
+  --   local unitIsTapDenied = UnitIsTapDenied(unitId)
+  --   print("unitId: " .. tostring(unitId) .. ", tapDenied: " .. tostring(unitIsTapDenied))
+  -- end
 end
 
 function EM.EventHandlers.UNIT_FLAGS(self, unitId)
@@ -1047,7 +1100,7 @@ function EM.EventHandlers.UNIT_FLAGS(self, unitId)
 end
 
 function EM.EventHandlers.UNIT_HEALTH(self, unitId)
-  --print(unitId .. ". " .. tostring(UnitIsTapDenied(unitId)))
+  --print("UNIT_HEALTH. " .. unitId .. ". " .. tostring(UnitIsTapDenied(unitId)))
 end
 
 function EM.EventHandlers.UNIT_SPELLCAST_CHANNEL_START(self, unitId, castId, spellId, arg4, arg5)
@@ -1426,6 +1479,167 @@ function EM:UpdatePlayerGuildInfo()
   self.PersistentPlayerInfo.GuildRankIndex = guildRankIndex
   self.PersistentPlayerInfo.GuildRankName = guildRankName
 end
+
+function EM:ForEachDamageMeterBreakdown(sessionId, callback)
+  local playerGuid = UnitGUID("player")
+  if (not playerGuid or not Enum or not Enum.DamageMeterType) then return end
+
+  local function GetPlainMeterNumber(value)
+    if (issecretvalue and issecretvalue(value)) then return nil end
+    return tonumber(value) or 0
+  end
+
+  local function ForEachAbilityBreakdown(meterType, category)
+    local source = Api.GetDamageMeterSessionSourceById(sessionId, meterType, playerGuid, nil)
+    if (not source or not source.combatSpells or #source.combatSpells == 0) then return end
+
+    for _, spell in ipairs(source.combatSpells) do
+      local spellName = Api.GetSpellInfo(spell.spellID) or ("Spell " .. tostring(spell.spellID))
+      local amount = GetPlainMeterNumber(spell.totalAmount)
+      local over = GetPlainMeterNumber(spell.overkillAmount)
+      if (amount ~= nil and over ~= nil) then callback(category, nil, spell.spellID, spellName, amount, over) end
+    end
+  end
+
+  local function ForEachDamageTakenBreakdown()
+    local source = Api.GetDamageMeterSessionSourceById(sessionId, Enum.DamageMeterType.DamageTaken, playerGuid, nil)
+    if (not source or not source.combatSpells or #source.combatSpells == 0) then return end
+
+    for _, spell in ipairs(source.combatSpells) do
+      local details = spell.combatSpellDetails or {}
+      local sourceName = tostring(details.unitName or spell.creatureName or "Unknown source")
+      local spellName = Api.GetSpellInfo(spell.spellID) or details.spellName or ("Spell " .. tostring(spell.spellID))
+      local amount = GetPlainMeterNumber(spell.totalAmount)
+      local over = GetPlainMeterNumber(spell.overkillAmount)
+      if (amount ~= nil and over ~= nil) then
+        callback(AutoBiographerEnum.DamageOrHealingCategory.DamageTaken, sourceName, spell.spellID, spellName, amount, over)
+      end
+    end
+  end
+
+  ForEachAbilityBreakdown(Enum.DamageMeterType.DamageDone, AutoBiographerEnum.DamageOrHealingCategory.DamageDealt)
+  ForEachAbilityBreakdown(Enum.DamageMeterType.HealingDone, AutoBiographerEnum.DamageOrHealingCategory.HealingDealt)
+  ForEachDamageTakenBreakdown()
+end
+
+function EM:GetDamageMeterRecordedTotal(sessionId, category, unitName, spellId)
+  if (self.DamageMeterRecordedTotals[sessionId] == nil) then self.DamageMeterRecordedTotals[sessionId] = {} end
+  if (self.DamageMeterRecordedTotals[sessionId][category] == nil) then self.DamageMeterRecordedTotals[sessionId][category] = {} end
+
+  local sourceKey = unitName or ""
+  local recordedBySource = self.DamageMeterRecordedTotals[sessionId][category]
+  if (recordedBySource[sourceKey] == nil) then recordedBySource[sourceKey] = {} end
+  if (recordedBySource[sourceKey][spellId] == nil) then recordedBySource[sourceKey][spellId] = DamageBreakdown.New() end
+
+  return recordedBySource[sourceKey][spellId]
+end
+
+function EM:InitializeDamageMeterSessionBaselines()
+  self.DamageMeterBaselineInitializationPending = false
+  self.DamageMeterBaselinesInitialized = true
+  if (not Api.IsWoWForever()) then return end
+
+  -- Blizzard retains these sessions through reloads and relogins, while this
+  -- addon's delta cache is intentionally in-memory only.  Record the current
+  -- values as a baseline so a later update contributes only new values.
+  local sessionIds = {}
+  for _, session in pairs(Api.GetDamageMeterSessions() or {}) do
+    local sessionId = tonumber(session.sessionID)
+    if (sessionId and sessionId > 0) then table.insert(sessionIds, sessionId) end
+  end
+  table.sort(sessionIds, function(a, b) return a > b end)
+
+  for index = 1, math.min(#sessionIds, damageMeterSessionRetentionCount) do
+    local sessionId = sessionIds[index]
+    self:ForEachDamageMeterBreakdown(sessionId, function(category, unitName, spellId, _, amount, over)
+      local recorded = self:GetDamageMeterRecordedTotal(sessionId, category, unitName, spellId)
+      recorded.Amount = amount
+      recorded.Over = over
+    end)
+  end
+
+  self.CurrentDamageMeterSessionId = sessionIds[1]
+  self:TrimDamageMeterRecordedTotals()
+end
+
+function EM:OnDamageMeterCombatSessionUpdated(meterType, sessionId)
+  -- WoW Forever follows each completed-session update with a session ID of 0
+  -- when it clears the current session.  Zero is not a queryable combat
+  -- session, so retain the most recent completed session instead.
+  if (not sessionId or sessionId <= 0) then return end
+
+  self.CurrentDamageMeterSessionId = sessionId
+  if (not UnitAffectingCombat("player")) then
+    self:ScheduleDamageMeterCombatFinalization(sessionId)
+  end
+end
+
+function EM:OnDamageMeterCurrentSessionUpdated()
+  if (not UnitAffectingCombat("player")) then
+    self:ScheduleDamageMeterCombatFinalization(self.CurrentDamageMeterSessionId)
+  end
+end
+
+function EM:OnDamageMeterReset()
+  -- This resets only our temporary delta cache.  Historical AutoBiographer
+  -- statistics remain intact when the Blizzard damage meter is reset.
+  self.CurrentDamageMeterSessionId = nil
+  self.DamageMeterRecordedTotals = {}
+  self.DamageMeterResetGeneration = self.DamageMeterResetGeneration + 1
+  self.PendingDamageMeterFinalizationSessionId = nil
+end
+
+function EM:ScheduleDamageMeterCombatFinalization(sessionId)
+  if (not sessionId or sessionId <= 0 or sessionId == self.PendingDamageMeterFinalizationSessionId) then return end
+
+  self.PendingDamageMeterFinalizationSessionId = sessionId
+  local resetGeneration = self.DamageMeterResetGeneration
+  C_Timer.After(0.05, function()
+    if (resetGeneration ~= EM.DamageMeterResetGeneration) then return end
+    if (EM.PendingDamageMeterFinalizationSessionId == sessionId) then
+      EM.PendingDamageMeterFinalizationSessionId = nil
+    end
+    EM:FinalizeDamageMeterCombat(sessionId)
+  end)
+end
+
+function EM:FinalizeDamageMeterCombat(sessionId)
+  if (not Api.IsWoWForever() or not self.DamageMeterBaselinesInitialized or not sessionId or sessionId <= 0) then return end
+
+  self:ForEachDamageMeterBreakdown(sessionId, function(category, unitName, spellId, spellName, amount, over)
+    local recorded = self:GetDamageMeterRecordedTotal(sessionId, category, unitName, spellId)
+    local amountDelta = amount - recorded.Amount
+    local overDelta = over - recorded.Over
+    if (amountDelta > 0 or overDelta > 0) then
+      Controller:OnDamageOrHealing(category, unitName, spellId, spellName, math.max(amountDelta, 0), math.max(overDelta, 0))
+    end
+
+    recorded.Amount = math.max(recorded.Amount, amount)
+    recorded.Over = math.max(recorded.Over, over)
+  end)
+  self:TrimDamageMeterRecordedTotals()
+end
+
+function EM:ScheduleDamageMeterSessionBaselines()
+  if (self.DamageMeterBaselinesInitialized or self.DamageMeterBaselineInitializationPending) then return end
+
+  self.DamageMeterBaselineInitializationPending = true
+  C_Timer.After(0, function()
+    EM:InitializeDamageMeterSessionBaselines()
+  end)
+end
+
+function EM:TrimDamageMeterRecordedTotals()
+  local sessionIds = {}
+  for sessionId in pairs(self.DamageMeterRecordedTotals) do
+    table.insert(sessionIds, sessionId)
+  end
+  table.sort(sessionIds, function(a, b) return a > b end)
+
+  for index = damageMeterSessionRetentionCount + 1, #sessionIds do
+    self.DamageMeterRecordedTotals[sessionIds[index]] = nil
+  end
+end
  
 function EM:UpdatePlayerFlags()
   -- 
@@ -1638,14 +1852,68 @@ end
 function EM:Test()
   print("[AutoBiographer] Test")
 
-  local currentLevelStatistics = Controller:GetCurrentLevelStatistics();
-  local currentLevelTotalTimePlayedAtDing = currentLevelStatistics.TotalTimePlayedAtDing;
+  local available, availabilityReason = Api.GetDamageMeterAvailability()
+  print("[AutoBiographer] C_DamageMeter available: " .. tostring(available) .. ". " .. tostring(availabilityReason or ""))
+  local cachedSessionCount = 0
+  for _ in pairs(self.DamageMeterRecordedTotals) do cachedSessionCount = cachedSessionCount + 1 end
+  print("[AutoBiographer] Frame events registered: combatSession=" .. tostring(self.Frame:IsEventRegistered("DAMAGE_METER_COMBAT_SESSION_UPDATED")) ..
+    ", currentSession=" .. tostring(self.Frame:IsEventRegistered("DAMAGE_METER_CURRENT_SESSION_UPDATED")) ..
+    ", reset=" .. tostring(self.Frame:IsEventRegistered("DAMAGE_METER_RESET")) ..
+    ", baselineInitialized=" .. tostring(self.DamageMeterBaselinesInitialized) ..
+    ", cachedSessions=" .. tostring(cachedSessionCount) ..
+    ", latestSessionId=" .. tostring(self.CurrentDamageMeterSessionId))
 
-  for levelNum, levelStatistics in pairs(Controller.CharacterData.Levels) do
-    if (levelStatistics ~= currentLevelStatistics) then
-      local percentageOfTotalLevelingTimeAtDing = HelperFunctions.Round(100 * (levelStatistics.TotalTimePlayedAtDing / currentLevelTotalTimePlayedAtDing))
-      local percentageOfTotalLevelingTime = HelperFunctions.Round(100 * (levelStatistics.TimePlayedThisLevel / currentLevelTotalTimePlayedAtDing))
-      print(levelStatistics.LevelNum .. " | " .. percentageOfTotalLevelingTimeAtDing .. "% | " .. HelperFunctions.SecondsToTimeString(levelStatistics.TimePlayedThisLevel) .. " | " .. percentageOfTotalLevelingTime .. "%")
+  if (self.CurrentDamageMeterSessionId and Enum and Enum.DamageMeterType) then
+    local function PrintMeterSessionSources(title, meterType)
+      local session, sessionError = Api.GetDamageMeterSessionById(self.CurrentDamageMeterSessionId, meterType)
+      if (not session) then
+        print("[AutoBiographer] " .. title .. " session: no data. " .. tostring(sessionError or ""))
+        return
+      end
+
+      local sources = session.combatSources or {}
+      print("[AutoBiographer] " .. title .. " session: " .. tostring(#sources) .. " sources.")
+      for index, source in ipairs(sources) do
+        print("  Source " .. tostring(index) .. ": local=" .. tostring(source.isLocalPlayer) .. ", guid=" .. tostring(source.sourceGUID) .. ", name=" .. tostring(source.name) .. ", total=" .. tostring(source.totalAmount))
+        if (source.isLocalPlayer) then
+          local detail, detailError = Api.GetDamageMeterSessionSourceById(self.CurrentDamageMeterSessionId, meterType, source.sourceGUID, nil)
+          local abilityCount = detail and detail.combatSpells and #detail.combatSpells or 0
+          print("    Detail using session source GUID: " .. tostring(abilityCount) .. " ability entries. " .. tostring(detailError or ""))
+        end
+      end
+    end
+
+    PrintMeterSessionSources("Damage Done", Enum.DamageMeterType.DamageDone)
+    PrintMeterSessionSources("Healing Done", Enum.DamageMeterType.HealingDone)
+
+    local function PrintTableFields(prefix, data)
+      local keys = {}
+      for key in pairs(data or {}) do table.insert(keys, key) end
+      table.sort(keys)
+
+      for _, key in ipairs(keys) do
+        local value = data[key]
+        local isSecret = issecretvalue and issecretvalue(value)
+        if (type(value) ~= "table") then
+          print(prefix .. tostring(key) .. " = " .. (isSecret and "<secret>" or tostring(value)))
+        end
+      end
+    end
+
+    local playerGuid = UnitGUID("player")
+    local damageTakenSource, damageTakenError = Api.GetDamageMeterSessionSourceById(self.CurrentDamageMeterSessionId, Enum.DamageMeterType.DamageTaken, playerGuid, nil)
+    if (not damageTakenSource) then
+      print("[AutoBiographer] Damage Taken detail: no data. " .. tostring(damageTakenError or ""))
+    else
+      local combatSpells = damageTakenSource.combatSpells or {}
+      print("[AutoBiographer] Damage Taken detail: " .. tostring(#combatSpells) .. " spell entries.")
+      for index, spell in ipairs(combatSpells) do
+        print("  Damage Taken spell " .. tostring(index) .. ":")
+        PrintTableFields("    spell.", spell)
+        if (spell.combatSpellDetails) then
+          PrintTableFields("    spell.combatSpellDetails.", spell.combatSpellDetails)
+        end
+      end
     end
   end
 end

@@ -107,13 +107,64 @@ end
 
 DamageStatistics = {}
 function DamageStatistics.New()
+  -- {
+  --   [DamageDealt] = Dict<SpellId, DamageBreakdown>,
+  --   [DamageTaken] = Dict<UnitName, Dict<SpellId, DamageBreakdown>>,
+  --   [DamageTakenRaw] = DamageBreakdown,
+  --   [HealingDealt] = Dict<SpellId, DamageBreakdown>,
+  --   [HealingTakenRaw] = DamageBreakdown,
+  --   [PetDamageTakenRaw] = DamageBreakdown,
+  -- }
   return {}
 end
 
-function DamageStatistics.Add(ds, damageOrHealingCategory, amount, over)
+function DamageStatistics.AddDamageTaken(ds, unitName, spellId, amount, over)
+  local damageTaken = AutoBiographerEnum.DamageOrHealingCategory.DamageTaken
+  if (ds[damageTaken] == nil) then ds[damageTaken] = {} end
+  if (ds[damageTaken][unitName] == nil) then ds[damageTaken][unitName] = {} end
+  if (ds[damageTaken][unitName][spellId] == nil) then ds[damageTaken][unitName][spellId] = DamageBreakdown.New() end
+
+  DamageBreakdown.Add(ds[damageTaken][unitName][spellId], amount, over)
+end
+
+function DamageStatistics.AddRawBreakdown(ds, damageOrHealingCategory, amount, over)
   if (ds[damageOrHealingCategory] == nil) then ds[damageOrHealingCategory] = DamageBreakdown.New() end
-  
+
   DamageBreakdown.Add(ds[damageOrHealingCategory], amount, over)
+end
+
+function DamageStatistics.AddSpellBreakdown(ds, damageOrHealingCategory, spellId, amount, over)
+  if (ds[damageOrHealingCategory] == nil) then ds[damageOrHealingCategory] = {} end
+  if (ds[damageOrHealingCategory][spellId] == nil) then ds[damageOrHealingCategory][spellId] = DamageBreakdown.New() end
+
+  DamageBreakdown.Add(ds[damageOrHealingCategory][spellId], amount, over)
+end
+
+function DamageStatistics.GetTotal(ds, damageOrHealingCategory)
+  local amount = 0
+  local over = 0
+  local statistics = ds[damageOrHealingCategory]
+  if (not statistics) then return amount, over end
+
+  if (damageOrHealingCategory == AutoBiographerEnum.DamageOrHealingCategory.DamageTaken) then
+    for _, spells in pairs(statistics) do
+      for _, breakdown in pairs(spells) do
+        amount = amount + breakdown.Amount
+        over = over + breakdown.Over
+      end
+    end
+  elseif (damageOrHealingCategory == AutoBiographerEnum.DamageOrHealingCategory.DamageTakenRaw or
+      damageOrHealingCategory == AutoBiographerEnum.DamageOrHealingCategory.HealingTakenRaw or
+      damageOrHealingCategory == AutoBiographerEnum.DamageOrHealingCategory.PetDamageTakenRaw) then
+    return statistics.Amount, statistics.Over
+  else
+    for _, breakdown in pairs(statistics) do
+      amount = amount + breakdown.Amount
+      over = over + breakdown.Over
+    end
+  end
+
+  return amount, over
 end
 
 -- *** DeathStatistics ***

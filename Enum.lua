@@ -12,11 +12,10 @@ AutoBiographerEnum = {
   DamageOrHealingCategory = {
     DamageDealt = 0,
     DamageTaken = 1,
-    HealingDealtToOthers = 2,
-    HealingDealtToSelf = 3,
-    HealingTaken = 4,
-    PetDamageDealt = 5,
-    PetDamageTaken = 6,
+    DamageTakenRaw = 2,
+    HealingDealt = 3,
+    HealingTakenRaw = 4,
+    PetDamageTakenRaw = 5,
   },
   DeathTrackingType = {
     DeathToCreature = 0,
@@ -142,6 +141,10 @@ AutoBiographerEnum = {
     OtherPlayers = 2,
     Spells = 3,
     Time = 4,
+    DamageDealt = 5,
+    DamageTakenBySpell = 7,
+    DamageTakenByUnit = 6,
+    HealingDealt = 8,
   },
   TimeTrackingType = {
     Afk = 0,
