@@ -875,7 +875,8 @@ function EM.EventHandlers.PLAYER_UNGHOST(self) -- Fired when the player is alive
 end
 
 function EM.EventHandlers.QUEST_TURNED_IN(self, questId, xpGained, moneyGained)
-  Controller:OnQuestTurnedIn(time(), HelperFunctions.GetCoordinatesByUnitId("player"), questId, C_QuestLog.GetQuestInfo(questId), xpGained, moneyGained)
+  local questTitle = Api.GetQuestTitle(questId) or ("Quest " .. tostring(questId))
+  Controller:OnQuestTurnedIn(time(), HelperFunctions.GetCoordinatesByUnitId("player"), questId, questTitle, xpGained, moneyGained)
   
   if (moneyGained and moneyGained > 0) then
     Controller:OnGainedMoney(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.MoneyAcquisitionMethod.Quest, moneyGained)

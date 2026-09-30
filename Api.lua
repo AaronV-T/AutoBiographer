@@ -17,6 +17,16 @@ function Api.GetItemInfo(item)
   end
 end
 
+function Api.GetQuestTitle(questId)
+  if (not C_QuestLog) then return nil end
+
+  local getQuestTitle = C_QuestLog.GetQuestInfo or C_QuestLog.GetTitleForQuestID
+  if (not getQuestTitle) then return nil end
+
+  local success, questTitle = pcall(getQuestTitle, questId)
+  if (success) then return questTitle end
+end
+
 function Api.GetSpellInfo(spellId)
   if (GetSpellInfo) then
     return GetSpellInfo(spellId)
