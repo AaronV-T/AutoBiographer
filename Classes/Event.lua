@@ -102,6 +102,9 @@ function Event.ToString(e, catalogs)
   elseif (e.Type == AutoBiographerEnum.EventType.Death) then
     if (e.SubType == AutoBiographerEnum.EventSubType.PlayerDeath) then
       if (e.KillerCuid == nil) then
+        if (e.EnvironmentalType == "Drowning" or e.EnvironmentalType == "Falling") then
+          return timestampString .. "You died to " .. string.lower(e.EnvironmentalType) .. "."
+        end
         return timestampString .. "You died."
       else
         local unitName = "#" .. e.KillerCuid
@@ -315,10 +318,11 @@ function LevelUpEvent.New(timestamp, coordinates, levelNum)
 end
 
 PlayerDeathEvent = {}
-function PlayerDeathEvent.New(timestamp, coordinates, killerCatalogUnitId, killerLevel)
+function PlayerDeathEvent.New(timestamp, coordinates, killerCatalogUnitId, killerLevel, environmentalType)
   local newInstance = WorldEvent.New(timestamp, AutoBiographerEnum.EventType.Death, AutoBiographerEnum.EventSubType.PlayerDeath, coordinates)
   newInstance.KillerCuid = killerCatalogUnitId
   newInstance.KillerLevel = killerLevel
+  newInstance.EnvironmentalType = environmentalType
   
   return newInstance
 end

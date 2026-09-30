@@ -608,8 +608,16 @@ function AutoBiographer_MainWindow:Initialize()
   frame.ScrollFrame.Content.DeathsToCreaturesFs:SetPoint("TOPLEFT", 20, topPoint)
   topPoint = topPoint - 15
 
+  frame.ScrollFrame.Content.DeathsToDrowningFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  frame.ScrollFrame.Content.DeathsToDrowningFs:SetPoint("TOPLEFT", 20, topPoint)
+  topPoint = topPoint - 15
+
   frame.ScrollFrame.Content.DeathsToEnvironmentFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   frame.ScrollFrame.Content.DeathsToEnvironmentFs:SetPoint("TOPLEFT", 20, topPoint)
+  topPoint = topPoint - 15
+
+  frame.ScrollFrame.Content.DeathsToFallingFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  frame.ScrollFrame.Content.DeathsToFallingFs:SetPoint("TOPLEFT", 20, topPoint)
   topPoint = topPoint - 15
 
   frame.ScrollFrame.Content.DeathsToGameObjectsFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -1368,15 +1376,19 @@ function AutoBiographer_MainWindow:Update()
   
   -- Death Stats
   local deathsToCreatures = Controller:GetDeathsByDeathTrackingType(AutoBiographerEnum.DeathTrackingType.DeathToCreature, self.DisplayMinLevel, self.DisplayMaxLevel)
+  local deathsToDrowning = Controller:GetDeathsByDeathTrackingType(AutoBiographerEnum.DeathTrackingType.DeathToDrowning, self.DisplayMinLevel, self.DisplayMaxLevel)
   local deathsToEnvironment = Controller:GetDeathsByDeathTrackingType(AutoBiographerEnum.DeathTrackingType.DeathToEnvironment, self.DisplayMinLevel, self.DisplayMaxLevel)
+  local deathsToFalling = Controller:GetDeathsByDeathTrackingType(AutoBiographerEnum.DeathTrackingType.DeathToFalling, self.DisplayMinLevel, self.DisplayMaxLevel)
   local deathsToGameObjects = Controller:GetDeathsByDeathTrackingType(AutoBiographerEnum.DeathTrackingType.DeathToGameObject, self.DisplayMinLevel, self.DisplayMaxLevel)
   local deathsToPets = Controller:GetDeathsByDeathTrackingType(AutoBiographerEnum.DeathTrackingType.DeathToPet, self.DisplayMinLevel, self.DisplayMaxLevel)
   local deathsToPlayers = Controller:GetDeathsByDeathTrackingType(AutoBiographerEnum.DeathTrackingType.DeathToPlayer, self.DisplayMinLevel, self.DisplayMaxLevel)
   local deathsToUnknown = Controller:GetDeathsByDeathTrackingType(AutoBiographerEnum.DeathTrackingType.DeathToUnknown, self.DisplayMinLevel, self.DisplayMaxLevel)
-  local totalDeaths = deathsToCreatures + deathsToEnvironment + deathsToGameObjects + deathsToPets + deathsToPlayers + deathsToUnknown
+  local totalDeaths = deathsToCreatures + deathsToDrowning + deathsToEnvironment + deathsToFalling + deathsToGameObjects + deathsToPets + deathsToPlayers + deathsToUnknown
   self.ScrollFrame.Content.TotalDeathsFs:SetText("Total Deaths: " .. HF.CommaValue(totalDeaths) .. ".")
   self.ScrollFrame.Content.DeathsToCreaturesFs:SetText("Deaths to Creatures: " .. HF.CommaValue(deathsToCreatures) .. ".")
+  self.ScrollFrame.Content.DeathsToDrowningFs:SetText("Deaths to Drowning: " .. HF.CommaValue(deathsToDrowning) .. ".")
   self.ScrollFrame.Content.DeathsToEnvironmentFs:SetText("Deaths to Environment: " .. HF.CommaValue(deathsToEnvironment) .. ".")
+  self.ScrollFrame.Content.DeathsToFallingFs:SetText("Deaths to Falling: " .. HF.CommaValue(deathsToFalling) .. ".")
   self.ScrollFrame.Content.DeathsToGameObjectsFs:SetText("Deaths to Game Objects: " .. HF.CommaValue(deathsToGameObjects) .. ".")
   self.ScrollFrame.Content.DeathsToPetsFs:SetText("Deaths to Pets: " .. HF.CommaValue(deathsToPets) .. ".")
   self.ScrollFrame.Content.DeathsToPlayersFs:SetText("Deaths to Players: " .. HF.CommaValue(deathsToPlayers) .. ".")

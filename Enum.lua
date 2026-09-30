@@ -24,6 +24,8 @@ AutoBiographerEnum = {
     DeathToPlayer = 3,
     DeathToGameObject = 4,
     DeathToUnknown = 5,
+    DeathToDrowning = 6,
+    DeathToFalling = 7,
   },
   EventType = {
     Battleground = 0,

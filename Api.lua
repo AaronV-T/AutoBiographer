@@ -77,6 +77,17 @@ function Api.GetDamageMeterSessionSourceById(sessionId, meterType, sourceGuid, s
   return nil, source
 end
 
+function Api.GetDeathRecapEvents()
+  if (not C_DeathRecap or not C_DeathRecap.GetRecapEvents) then
+    return nil, "C_DeathRecap.GetRecapEvents is unavailable."
+  end
+
+  local success, recapEvents = pcall(C_DeathRecap.GetRecapEvents)
+  if (success) then return recapEvents end
+
+  return nil, recapEvents
+end
+
 function Api.GetItemInfo(item)
   if (GetItemInfo) then
     return GetItemInfo(item)

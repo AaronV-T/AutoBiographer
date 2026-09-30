@@ -752,13 +752,19 @@ function Controller:CheckHealingForMilestoneMessage(thisAmount, threshold)
   self.Temp.LastMilestoneMessageDamageCheckTotalHealingDealt = totalHealing
 end
 
-function Controller:OnDeath(timestamp, coordinates, killerCatalogUnitId, killerLevel)
+function Controller:OnDeath(timestamp, coordinates, killerCatalogUnitId, killerLevel, environmentalType)
   if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog("Death: " .. " #" .. tostring(killerCatalogUnitId) .. ".", AutoBiographerEnum.LogLevel.Debug) end
-  self:AddEvent(PlayerDeathEvent.New(timestamp, coordinates, killerCatalogUnitId, killerLevel))
+  self:AddEvent(PlayerDeathEvent.New(timestamp, coordinates, killerCatalogUnitId, killerLevel, environmentalType))
 
   local deathTrackingType
-  if (killerCatalogUnitId == nil) then 
-    deathTrackingType = AutoBiographerEnum.DeathTrackingType.DeathToEnvironment
+  if (killerCatalogUnitId == nil) then
+    if (environmentalType == "Drowning") then
+      deathTrackingType = AutoBiographerEnum.DeathTrackingType.DeathToDrowning
+    elseif (environmentalType == "Falling") then
+      deathTrackingType = AutoBiographerEnum.DeathTrackingType.DeathToFalling
+    else
+      deathTrackingType = AutoBiographerEnum.DeathTrackingType.DeathToEnvironment
+    end
   else
     local killerUnitType = HelperFunctions.GetUnitTypeFromCatalogUnitId(killerCatalogUnitId)
 

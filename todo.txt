@@ -1,3 +1,5 @@
+Level up stat changes
+
 event button
 Notice on unknown mobs, items, zones/subzones.
 Notes (players/mobs, items?, map?).

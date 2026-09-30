@@ -695,6 +695,56 @@ function EM.EventHandlers.PLAYER_DEAD(self)
     return
   end
 
+  if (Api.IsWoWForever()) then
+    -- The death recap is not necessarily available during PLAYER_DEAD itself.
+    -- Its entries are newest first; select the fatal entry when it has an
+    -- overkill value, otherwise use the newest entry that damaged the player.
+    C_Timer.After(0, function()
+      local killerCatalogUnitId = nil
+      local killerLevel = nil
+      local recapEvents = Api.GetDeathRecapEvents()
+      local fallbackEvent = nil
+      local fatalEvent = nil
+
+      for _, recapEvent in ipairs(recapEvents or {}) do
+        if (recapEvent.destGUID == EM.PersistentPlayerInfo.PlayerGuid) then
+          if (fallbackEvent == nil) then fallbackEvent = recapEvent end
+          if (recapEvent.sourceGUID and recapEvent.overkill and recapEvent.overkill >= 0) then
+            fatalEvent = recapEvent
+            break
+          end
+        end
+      end
+
+      local killerEvent = fatalEvent or fallbackEvent
+      local killerGuid = killerEvent and killerEvent.sourceGUID
+      if (killerGuid) then
+        local success, catalogUnitId = pcall(HelperFunctions.GetCatalogIdFromGuid, killerGuid)
+        if (success) then killerCatalogUnitId = catalogUnitId end
+
+        if (killerCatalogUnitId and killerEvent.sourceName and Controller:CatalogUnitIsIncomplete(killerCatalogUnitId)) then
+          Controller:UpdateCatalogUnit(CatalogUnit.New(
+            killerCatalogUnitId,
+            nil,
+            nil,
+            nil,
+            nil,
+            killerEvent.sourceName,
+            nil,
+            nil,
+            HelperFunctions.GetUnitTypeFromCatalogUnitId(killerCatalogUnitId)
+          ))
+        end
+
+        local killerUnitId = FindUnitIdByUnitGUID(killerGuid)
+        if (killerUnitId ~= nil) then killerLevel = UnitLevel(killerUnitId) end
+      end
+
+      Controller:OnDeath(time(), HelperFunctions.GetCoordinatesByUnitId("player"), killerCatalogUnitId, killerLevel, killerEvent and killerEvent.environmentalType)
+    end)
+    return
+  end
+
   local killerCatalogUnitId = nil
   local killerLevel = nil
   if (damagedUnits[self.PersistentPlayerInfo.PlayerGuid]) then
