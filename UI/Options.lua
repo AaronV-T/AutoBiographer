@@ -77,13 +77,6 @@ function AutoBiographer_OptionWindow:Initialize()
   self.fsEnableMilestoneMessages:SetText("Enable milestone messages.")
   yPos = yPos - 30
 
-  self.cbShowLowRankCombatSkillWarnings = CreateFrame("CheckButton", nil, self, "UICheckButtonTemplate") 
-  self.cbShowLowRankCombatSkillWarnings:SetPoint("LEFT", self, "TOPLEFT", 10, yPos)
-  self.fsShowLowRankCombatSkillWarnings = self:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-  self.fsShowLowRankCombatSkillWarnings:SetPoint("LEFT", self, "TOPLEFT", 40, yPos)
-  self.fsShowLowRankCombatSkillWarnings:SetText("Show occasional warnings for low rank combat skills.")
-  yPos = yPos - 30
-
   self.cbEnableCustomEventSharing = CreateFrame("CheckButton", nil, self, "UICheckButtonTemplate") 
   self.cbEnableCustomEventSharing:SetPoint("LEFT", self, "TOPLEFT", 10, yPos)
   self.fsEnableCustomEventSharing = self:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -112,7 +105,6 @@ function AutoBiographer_OptionWindow:LoadOptions()
   self.cbScreenshotOnBossKill:SetChecked(AutoBiographer_Settings.Options["TakeScreenshotOnBossKill"])
   self.cbScreenshotOnlyOnFirstBossKill:SetChecked(AutoBiographer_Settings.Options["TakeScreenshotOnlyOnFirstBossKill"])
   self.cbScreenshotOnAchievementEarned:SetChecked(AutoBiographer_Settings.Options["TakeScreenshotOnAchievementEarned"])
-  self.cbShowLowRankCombatSkillWarnings:SetChecked(AutoBiographer_Settings.Options["ShowLowRankCombatSkillWarnings"])
   self.cbShowMinimapButton:SetChecked(AutoBiographer_Settings.Options["ShowMinimapButton"])
   self.cbShowTimePlayedOnLevelUp:SetChecked(AutoBiographer_Settings.Options["ShowTimePlayedOnLevelUp"])
 end
@@ -128,7 +120,6 @@ function AutoBiographer_OptionWindow:SaveOptions()
   AutoBiographer_Settings.Options["TakeScreenshotOnBossKill"] = self.cbScreenshotOnBossKill:GetChecked()
   AutoBiographer_Settings.Options["TakeScreenshotOnlyOnFirstBossKill"] = self.cbScreenshotOnlyOnFirstBossKill:GetChecked()
   AutoBiographer_Settings.Options["TakeScreenshotOnAchievementEarned"] = self.cbScreenshotOnAchievementEarned:GetChecked()
-  AutoBiographer_Settings.Options["ShowLowRankCombatSkillWarnings"] = self.cbShowLowRankCombatSkillWarnings:GetChecked()
   AutoBiographer_Settings.Options["ShowMinimapButton"] = self.cbShowMinimapButton:GetChecked()
   AutoBiographer_Settings.Options["ShowTimePlayedOnLevelUp"] = self.cbShowTimePlayedOnLevelUp:GetChecked()
   

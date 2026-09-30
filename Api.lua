@@ -62,24 +62,6 @@ function Api.RegisterTooltipHandler(scriptType, tooltipDataType, handler)
   end
 end
 
-function Api.SupportsLegacySkillLines()
-  return GetNumSkillLines ~= nil and GetSkillLineInfo ~= nil
-end
-
-function Api.GetNumSkillLines()
-  if (GetNumSkillLines) then
-    return GetNumSkillLines()
-  end
-
-  return 0
-end
-
-function Api.GetSkillLineInfo(skillIndex)
-  if (GetSkillLineInfo) then
-    return GetSkillLineInfo(skillIndex)
-  end
-end
-
 function Api.GetDamageMeterSessions()
   if (not C_DamageMeter or not C_DamageMeter.GetAvailableCombatSessions) then
     return nil

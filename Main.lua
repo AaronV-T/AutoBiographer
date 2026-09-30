@@ -173,7 +173,6 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
         ShowDiscoveryInfoOnToolTips = true,
         ShowFriendlyPlayerToolTips = true,
         ShowKillCountOnUnitToolTips = true,
-        ShowLowRankCombatSkillWarnings = true,
         ShowMinimapButton = true,
         ShowTimePlayedOnLevelUp = true,
         TakeScreenshotOnAchievementEarned = false,
