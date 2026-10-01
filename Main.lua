@@ -80,6 +80,7 @@ end
 -- *** Locals ***
 
 local damagedUnits = {}
+local deadUnits = {}
 
 local combatLogDamageEvents = { }
 local combatLogHealEvents = { }
@@ -665,13 +666,13 @@ function EM.EventHandlers.MERCHANT_SHOW(self, arg1, arg2)
 end
 
 function EM.EventHandlers.PARTY_KILL(self, attackerGuid, targetGuid)
-  -- print("PARTY_KILL. " .. tostring(attackerGuid) .. ", " .. tostring(targetGuid))
-  -- Does this trigger for raid members?
-    -- No, this doesn't trigger even for party members when in a raid group. But it still triggers for the player when in a raid group.
-  -- Does this trigger if a non-party-player kills a mob I had tagged?
-    -- No.
-  -- Does this trigger if a party-player kills a mob that another group had tagged?
-    -- Yes.
+  print("PARTY_KILL. " .. tostring(attackerGuid) .. ", " .. tostring(targetGuid))
+  if (not Api.IsWoWForever()) then return end
+
+  local deadUnit = self:GetOrCreateDeadUnit(targetGuid, false)
+  if (deadUnit and not (issecretvalue and issecretvalue(attackerGuid)) and IsUnitGUIDPlayerOrPlayerPet(attackerGuid)) then
+    deadUnit.KilledByPlayer = true
+  end
 end
 
 function EM.EventHandlers.PLAYER_ALIVE(self) -- Fired when the player releases from death to a graveyard; or accepts a resurrect before releasing their spirit. Also fires when logging in.
@@ -1135,13 +1136,32 @@ function EM.EventHandlers.UNIT_COMBAT(self, unitId, action, ind, dmg, dmgType)
 end
 
 function EM.EventHandlers.UNIT_DIED(self, unitGuid)
-  -- print("UNIT_DIED. " .. tostring(unitGuid))
+  print("UNIT_DIED. " .. tostring(unitGuid))
+  if (not Api.IsWoWForever()) then return end
 
-  -- local unitId = FindUnitIdByUnitGUID(unitGuid)
-  -- if (unitId) then
-  --   local unitIsTapDenied = UnitIsTapDenied(unitId)
-  --   print("unitId: " .. tostring(unitId) .. ", tapDenied: " .. tostring(unitIsTapDenied))
-  -- end
+  local deadUnit = self:GetOrCreateDeadUnit(unitGuid, true)
+  if (not deadUnit) then return end
+
+  local unitId = FindUnitIdByUnitGUID(unitGuid)
+  if (not unitId) then return end
+
+  deadUnit.CanBeAttacked = UnitCanAttack("player", unitId)
+  deadUnit.IsTapDenied = UnitIsTapDenied(unitId)
+
+  local catalogUnitId = HelperFunctions.GetCatalogIdFromGuid(unitGuid)
+  if (Controller:CatalogUnitIsIncomplete(catalogUnitId)) then
+    Controller:UpdateCatalogUnit(CatalogUnit.New(
+      catalogUnitId,
+      UnitClass(unitId),
+      UnitClassification(unitId),
+      UnitCreatureFamily(unitId),
+      UnitCreatureType(unitId),
+      UnitName(unitId),
+      UnitRace(unitId),
+      nil,
+      HelperFunctions.GetUnitTypeFromCatalogUnitId(catalogUnitId)
+    ))
+  end
 end
 
 function EM.EventHandlers.UNIT_FLAGS(self, unitId)
@@ -1530,6 +1550,55 @@ function EM:UpdatePlayerGuildInfo()
   self.PersistentPlayerInfo.GuildRankName = guildRankName
 end
 
+function EM:FinalizeKill(unitGuid)
+  local deadUnit = deadUnits[unitGuid]
+  deadUnits[unitGuid] = nil
+  if (not deadUnit or deadUnit.CanBeAttacked == false) then return end
+
+  local inInstance = IsInInstance()
+  local playerHasTag = deadUnit.IsTapDenied == false or inInstance
+  if (not playerHasTag and not deadUnit.KilledByPlayer) then return end
+
+  local success, catalogUnitId = pcall(HelperFunctions.GetCatalogIdFromGuid, unitGuid)
+  if (not success or not catalogUnitId) then return end
+
+  if (not Controller.CharacterData.Catalogs.UnitCatalog[catalogUnitId]) then
+    Controller:UpdateCatalogUnit(CatalogUnit.New(
+      catalogUnitId,
+      nil,
+      nil,
+      nil,
+      nil,
+      nil,
+      nil,
+      nil,
+      HelperFunctions.GetUnitTypeFromCatalogUnitId(catalogUnitId)
+    ))
+  end
+
+  local kill = Kill.New(false, playerHasTag and not deadUnit.KilledByPlayer, deadUnit.KilledByPlayer, playerHasTag, catalogUnitId, nil)
+  Controller:OnKill(time(), HelperFunctions.GetCoordinatesByUnitId("player"), kill)
+end
+
+function EM:GetOrCreateDeadUnit(unitGuid, shouldScheduleFinalization)
+  if (not unitGuid or (issecretvalue and issecretvalue(unitGuid))) then return nil end
+
+  local deadUnit = deadUnits[unitGuid]
+  if (not deadUnit) then
+    deadUnit = {}
+    deadUnits[unitGuid] = deadUnit
+  end
+
+  if (shouldScheduleFinalization and not deadUnit.FinalizeScheduled) then
+    deadUnit.FinalizeScheduled = true
+    C_Timer.After(1, function()
+      EM:FinalizeKill(unitGuid)
+    end)
+  end
+
+  return deadUnit
+end
+
 function EM:ForEachDamageMeterBreakdown(sessionId, callback)
   local playerGuid = UnitGUID("player")
   if (not playerGuid or not Enum or not Enum.DamageMeterType) then return end
@@ -1902,68 +1971,6 @@ end
 function EM:Test()
   print("[AutoBiographer] Test")
 
-  local available, availabilityReason = Api.GetDamageMeterAvailability()
-  print("[AutoBiographer] C_DamageMeter available: " .. tostring(available) .. ". " .. tostring(availabilityReason or ""))
-  local cachedSessionCount = 0
-  for _ in pairs(self.DamageMeterRecordedTotals) do cachedSessionCount = cachedSessionCount + 1 end
-  print("[AutoBiographer] Frame events registered: combatSession=" .. tostring(self.Frame:IsEventRegistered("DAMAGE_METER_COMBAT_SESSION_UPDATED")) ..
-    ", currentSession=" .. tostring(self.Frame:IsEventRegistered("DAMAGE_METER_CURRENT_SESSION_UPDATED")) ..
-    ", reset=" .. tostring(self.Frame:IsEventRegistered("DAMAGE_METER_RESET")) ..
-    ", baselineInitialized=" .. tostring(self.DamageMeterBaselinesInitialized) ..
-    ", cachedSessions=" .. tostring(cachedSessionCount) ..
-    ", latestSessionId=" .. tostring(self.CurrentDamageMeterSessionId))
-
-  if (self.CurrentDamageMeterSessionId and Enum and Enum.DamageMeterType) then
-    local function PrintMeterSessionSources(title, meterType)
-      local session, sessionError = Api.GetDamageMeterSessionById(self.CurrentDamageMeterSessionId, meterType)
-      if (not session) then
-        print("[AutoBiographer] " .. title .. " session: no data. " .. tostring(sessionError or ""))
-        return
-      end
-
-      local sources = session.combatSources or {}
-      print("[AutoBiographer] " .. title .. " session: " .. tostring(#sources) .. " sources.")
-      for index, source in ipairs(sources) do
-        print("  Source " .. tostring(index) .. ": local=" .. tostring(source.isLocalPlayer) .. ", guid=" .. tostring(source.sourceGUID) .. ", name=" .. tostring(source.name) .. ", total=" .. tostring(source.totalAmount))
-        if (source.isLocalPlayer) then
-          local detail, detailError = Api.GetDamageMeterSessionSourceById(self.CurrentDamageMeterSessionId, meterType, source.sourceGUID, nil)
-          local abilityCount = detail and detail.combatSpells and #detail.combatSpells or 0
-          print("    Detail using session source GUID: " .. tostring(abilityCount) .. " ability entries. " .. tostring(detailError or ""))
-        end
-      end
-    end
-
-    PrintMeterSessionSources("Damage Done", Enum.DamageMeterType.DamageDone)
-    PrintMeterSessionSources("Healing Done", Enum.DamageMeterType.HealingDone)
-
-    local function PrintTableFields(prefix, data)
-      local keys = {}
-      for key in pairs(data or {}) do table.insert(keys, key) end
-      table.sort(keys)
-
-      for _, key in ipairs(keys) do
-        local value = data[key]
-        local isSecret = issecretvalue and issecretvalue(value)
-        if (type(value) ~= "table") then
-          print(prefix .. tostring(key) .. " = " .. (isSecret and "<secret>" or tostring(value)))
-        end
-      end
-    end
-
-    local playerGuid = UnitGUID("player")
-    local damageTakenSource, damageTakenError = Api.GetDamageMeterSessionSourceById(self.CurrentDamageMeterSessionId, Enum.DamageMeterType.DamageTaken, playerGuid, nil)
-    if (not damageTakenSource) then
-      print("[AutoBiographer] Damage Taken detail: no data. " .. tostring(damageTakenError or ""))
-    else
-      local combatSpells = damageTakenSource.combatSpells or {}
-      print("[AutoBiographer] Damage Taken detail: " .. tostring(#combatSpells) .. " spell entries.")
-      for index, spell in ipairs(combatSpells) do
-        print("  Damage Taken spell " .. tostring(index) .. ":")
-        PrintTableFields("    spell.", spell)
-        if (spell.combatSpellDetails) then
-          PrintTableFields("    spell.combatSpellDetails.", spell.combatSpellDetails)
-        end
-      end
-    end
-  end
+  print("UnitCanAttack " .. tostring(UnitCanAttack("player", "target")))
+  print("UnitIsTapDenied " .. tostring(UnitIsTapDenied("target")))
 end

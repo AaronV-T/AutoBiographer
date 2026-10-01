@@ -235,7 +235,7 @@ function KillStatistics.AddKill(ks, kill)
       killTrackingType = AutoBiographerEnum.KillTrackingType.TaggedGroupAssistOrKillingBlow
     end
 
-    if (kill.PlayerOrGroupDamagePercentage < 50) then
+    if (kill.PlayerOrGroupDamagePercentage and kill.PlayerOrGroupDamagePercentage < 50) then
       if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then print("[AutoBiographer] Tagged Kill With Majority Damage From Outside Group.") end
       if (ks[AutoBiographerEnum.KillTrackingType.TaggedKillWithGroupMinorityDamage] == nil) then ks[AutoBiographerEnum.KillTrackingType.TaggedKillWithGroupMinorityDamage] = 0 end
       ks[AutoBiographerEnum.KillTrackingType.TaggedKillWithGroupMinorityDamage] = ks[AutoBiographerEnum.KillTrackingType.TaggedKillWithGroupMinorityDamage] + 1
