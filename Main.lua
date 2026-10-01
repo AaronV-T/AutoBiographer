@@ -630,7 +630,7 @@ function EM.EventHandlers.ITEM_PUSH(self, arg1, arg2, arg3)
 end
 
 function EM.EventHandlers.LEARNED_SPELL_IN_SKILL_LINE(self, spellId, skillLineIndex, isGuildPerkSpell)
-  local name, rank, icon, castTime, minRange, maxRange, id = GetSpellInfo(spellId)
+  local name, rank, icon, castTime, minRange, maxRange, id = Api.GetSpellInfo(spellId)
   Controller:OnSpellLearned(time(), HelperFunctions.GetCoordinatesByUnitId("player"), spellId, name, rank)
 end
 
