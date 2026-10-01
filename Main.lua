@@ -259,8 +259,10 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   AutoBiographer_StatisticsWindow:Initialize()
   AutoBiographer_VerificationWindow:Initialize()
 
-  AutoBiographer_WorldMapOverlayWindow_Initialize()
-  AutoBiographer_WorldMapOverlayWindowToggleButton:Initialize()
+  if (not (Api.IsWoWForever() and Api.IsGamepadUIEnabled())) then
+    AutoBiographer_WorldMapOverlayWindow_Initialize()
+    AutoBiographer_WorldMapOverlayWindowToggleButton_Initialize()
+  end
 
   C_Timer.After(1, function()
     EM:RequestTimePlayedInterval()
@@ -1971,6 +1973,5 @@ end
 function EM:Test()
   print("[AutoBiographer] Test")
 
-  print("UnitCanAttack " .. tostring(UnitCanAttack("player", "target")))
-  print("UnitIsTapDenied " .. tostring(UnitIsTapDenied("target")))
+  print("C_GamePad.IsEnabled() " .. tostring(C_GamePad.IsEnabled()))
 end

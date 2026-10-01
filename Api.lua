@@ -123,6 +123,10 @@ function Api.GetSpellInfo(spellId)
   end
 end
 
+function Api.IsGamepadUIEnabled()
+  return GetCVar and GetCVar("InputDeviceInterfaceStyle") == "1"
+end
+
 function Api.IsWoWForever()
   local _, _, _, interfaceVersion = GetBuildInfo()
   return interfaceVersion > 16000 and interfaceVersion < 20000

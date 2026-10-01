@@ -1,5 +1,6 @@
 local Hbd = LibStub("HereBeDragons-2.0")
 local HbdPins = LibStub("HereBeDragons-Pins-2.0")
+local Api = AutoBiographer_Api
 
 AutoBiographer_EventMapIconPool = {
   Allocated = {},
@@ -7,7 +8,11 @@ AutoBiographer_EventMapIconPool = {
 }
 
 AutoBiographer_WorldMapOverlayWindow = nil
-AutoBiographer_WorldMapOverlayWindowToggleButton = CreateFrame("Button", "AutoBiographer_WorldMapOverlayWindowToggleButton", WorldMapFrame, "UIPanelButtonTemplate")
+AutoBiographer_WorldMapOverlayWindowToggleButton = nil
+
+if (not (Api.IsWoWForever() and Api.IsGamepadUIEnabled())) then
+  AutoBiographer_WorldMapOverlayWindowToggleButton = CreateFrame("Button", "AutoBiographer_WorldMapOverlayWindowToggleButton", WorldMapFrame, "UIPanelButtonTemplate")
+end
 
 function AutoBiographer_WorldMapOverlayWindow_Initialize()
   AutoBiographer_WorldMapOverlayWindow = CreateFrame("Frame", "AutoBiographer_WorldMapOverlayWindow", WorldMapFrame.ScrollContainer, "BasicFrameTemplate")
@@ -754,7 +759,7 @@ function AutoBiographer_WorldMapOverlayWindow_UpdateCurrentEventIndicator(coordi
   AutoBiographer_WorldMapOverlayWindow.CircleIcon:SetFrameLevel(9999)
 end
 
-function AutoBiographer_WorldMapOverlayWindowToggleButton:Initialize()
+function AutoBiographer_WorldMapOverlayWindowToggleButton_Initialize()
   local frame = AutoBiographer_WorldMapOverlayWindowToggleButton
   frame:SetPoint("BOTTOMLEFT", WorldMapFrame.ScrollContainer, "TOPLEFT", 0, 2);
   frame:SetSize(120, 20);
@@ -768,7 +773,9 @@ function AutoBiographer_WorldMapOverlayWindowToggleButton:Initialize()
     end
   )
 
-  if (HelperFunctions.GetGameVersion() >= 4) then
+  -- The legacy map button causes a Blizzard-UI protected-action warning when
+  -- the Forever Gamepad UI is active.
+  if (HelperFunctions.GetGameVersion() >= 4 or (Api.IsWoWForever() and Api.IsGamepadUIEnabled())) then
     frame:Hide()
   end
 end
