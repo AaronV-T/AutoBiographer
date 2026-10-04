@@ -16,7 +16,9 @@ AutoBiographer_EventManager = {
   MailboxUpdatesRunning = 0,
   MailInboxUpdatedAfterOpen = nil,
   MerchantIsOpen = nil,
+  HasLeveledUpSinceLastStatSnapshot = false,
   NewLevelToAddToHistory = nil,
+  PlayerLevelUpStatSnapshot = nil,
   PersistentPlayerInfo = nil,
   PlayerEnteringWorldHasFired = false,
   PlayerName = nil,
@@ -175,6 +177,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
         ShowFriendlyPlayerToolTips = true,
         ShowKillCountOnUnitToolTips = true,
         ShowMinimapButton = true,
+        ShowLevelUpStatMessages = true,
         ShowTimePlayedOnLevelUp = true,
         TakeScreenshotOnAchievementEarned = false,
         TakeScreenshotOnBossKill = true,
@@ -668,7 +671,7 @@ function EM.EventHandlers.MERCHANT_SHOW(self, arg1, arg2)
 end
 
 function EM.EventHandlers.PARTY_KILL(self, attackerGuid, targetGuid)
-  print("PARTY_KILL. " .. tostring(attackerGuid) .. ", " .. tostring(targetGuid))
+  --print("PARTY_KILL. " .. tostring(attackerGuid) .. ", " .. tostring(targetGuid))
   if (not Api.IsWoWForever()) then return end
 
   local deadUnit = self:GetOrCreateDeadUnit(targetGuid, false)
@@ -764,6 +767,7 @@ end
 
 function EM.EventHandlers.PLAYER_ENTERING_WORLD(self, isLogin, isReload)
   self.PlayerEnteringWorldHasFired = true
+  self:GetPlayerLevelUpStatSnapshot()
 
   local playerGuid = UnitGUID("player")
 
@@ -808,12 +812,17 @@ function EM.EventHandlers.PLAYER_ENTERING_WORLD(self, isLogin, isReload)
   self:ScheduleDamageMeterSessionBaselines()
 end
 
+function EM.EventHandlers.PLAYER_EQUIPMENT_CHANGED(self)
+  self:GetPlayerLevelUpStatSnapshot()
+end
+
 function EM.EventHandlers.PLAYER_FLAGS_CHANGED(self, unitId)
   if (unitId == "player") then self:UpdatePlayerFlags() end
 end
 
 function EM.EventHandlers.PLAYER_REGEN_ENABLED(self)
   self:ScheduleDamageMeterCombatFinalization(self.CurrentDamageMeterSessionId)
+  self:GetPlayerLevelUpStatSnapshot()
 end
 
 function EM.EventHandlers.PLAYER_GUILD_UPDATE(self, unitId)
@@ -831,9 +840,11 @@ function EM.EventHandlers.PLAYER_LEAVING_WORLD(self)
   self:UpdateTimestamps(self.PersistentPlayerInfo.CurrentZone, self.PersistentPlayerInfo.CurrentSubZone)
 end
 
-function EM.EventHandlers.PLAYER_LEVEL_UP(self, newLevel, ...)
+function EM.EventHandlers.PLAYER_LEVEL_UP(self, newLevel)
   self:UpdateTimestamps(self.PersistentPlayerInfo.CurrentZone, self.PersistentPlayerInfo.CurrentSubZone)
   self.NewLevelToAddToHistory = newLevel
+  self.HasLeveledUpSinceLastStatSnapshot = true
+  self:GetPlayerLevelUpStatSnapshot()
   
   local delay = 0.25
   C_Timer.After(delay, function()
@@ -1138,7 +1149,7 @@ function EM.EventHandlers.UNIT_COMBAT(self, unitId, action, ind, dmg, dmgType)
 end
 
 function EM.EventHandlers.UNIT_DIED(self, unitGuid)
-  print("UNIT_DIED. " .. tostring(unitGuid))
+  --print("UNIT_DIED. " .. tostring(unitGuid))
   if (not Api.IsWoWForever()) then return end
 
   local deadUnit = self:GetOrCreateDeadUnit(unitGuid, true)
@@ -1341,6 +1352,79 @@ function EM:GetItemWithIdAndQuantity(tab, id, quantity)
   end
 
   return nil
+end
+
+function EM:GetPlayerLevelUpStatSnapshot()
+  local manaPowerType = (Enum and Enum.PowerType and Enum.PowerType.Mana) or 0
+  -- UnitStat returns base, effective, positive-buff, and negative-buff values.
+  -- Use the base value so equipment does not appear as a level-up stat gain.
+  local strength = UnitStat("player", 1)
+  local agility = UnitStat("player", 2)
+  local stamina = UnitStat("player", 3)
+  local intellect = UnitStat("player", 4)
+  local spirit = UnitStat("player", 5)
+
+  local snapshot = {
+    Health = UnitHealthMax("player") or 0,
+    Mana = UnitPowerMax("player", manaPowerType) or 0,
+    Strength = strength or 0,
+    Agility = agility or 0,
+    Stamina = stamina or 0,
+    Intellect = intellect or 0,
+    Spirit = spirit or 0,
+  }
+
+  if (self:PlayerLevelUpStatSnapshotHasSecretValues(snapshot)) then
+    return nil
+  end
+
+  local previousSnapshot = self.PlayerLevelUpStatSnapshot
+  if (self.HasLeveledUpSinceLastStatSnapshot and previousSnapshot and
+      Api.IsWoWForever() and AutoBiographer_Settings.Options["ShowLevelUpStatMessages"]) then
+    local healthIncrease = snapshot.Health - previousSnapshot.Health
+    local manaIncrease = snapshot.Mana - previousSnapshot.Mana
+    local strengthIncrease = snapshot.Strength - previousSnapshot.Strength
+    local agilityIncrease = snapshot.Agility - previousSnapshot.Agility
+    local staminaIncrease = snapshot.Stamina - previousSnapshot.Stamina
+    local intellectIncrease = snapshot.Intellect - previousSnapshot.Intellect
+    local spiritIncrease = snapshot.Spirit - previousSnapshot.Spirit
+
+    
+    local function printSystemMessage(message)
+      local systemColor = ChatTypeInfo and ChatTypeInfo["SYSTEM"]
+      if (systemColor and DEFAULT_CHAT_FRAME) then
+        DEFAULT_CHAT_FRAME:AddMessage(message, systemColor.r, systemColor.g, systemColor.b)
+      else
+        print(message)
+      end
+    end
+
+    if (healthIncrease > 0 and manaIncrease > 0) then
+      printSystemMessage("You have gained " .. healthIncrease .. " hit points and " .. manaIncrease .. " mana.")
+    elseif (healthIncrease > 0) then
+      printSystemMessage("You have gained " .. healthIncrease .. " hit points.")
+    elseif (manaIncrease > 0) then
+      printSystemMessage("You have gained " .. manaIncrease .. " mana.")
+    end
+    if (strengthIncrease > 0) then printSystemMessage("Your Strength increases by " .. strengthIncrease .. ".") end
+    if (agilityIncrease > 0) then printSystemMessage("Your Agility increases by " .. agilityIncrease .. ".") end
+    if (staminaIncrease > 0) then printSystemMessage("Your Stamina increases by " .. staminaIncrease .. ".") end
+    if (intellectIncrease > 0) then printSystemMessage("Your Intellect increases by " .. intellectIncrease .. ".") end
+    if (spiritIncrease > 0) then printSystemMessage("Your Spirit increases by " .. spiritIncrease .. ".") end
+  end
+
+  self.PlayerLevelUpStatSnapshot = snapshot
+  self.HasLeveledUpSinceLastStatSnapshot = false
+  return snapshot
+end
+
+function EM:PlayerLevelUpStatSnapshotHasSecretValues(snapshot)
+  if (not issecretvalue) then return false end
+
+  return issecretvalue(snapshot.Health) or issecretvalue(snapshot.Mana) or
+    issecretvalue(snapshot.Strength) or issecretvalue(snapshot.Agility) or
+    issecretvalue(snapshot.Stamina) or issecretvalue(snapshot.Intellect) or
+    issecretvalue(snapshot.Spirit)
 end
 
 function EM:MailboxClosed()

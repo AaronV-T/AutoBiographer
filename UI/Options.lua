@@ -69,6 +69,13 @@ function AutoBiographer_OptionWindow:Initialize()
   self.fsShowTimePlayedOnLevelUp:SetPoint("LEFT", self, "TOPLEFT", 40, yPos)
   self.fsShowTimePlayedOnLevelUp:SetText("Show time played upon leveling up.")
   yPos = yPos - 30
+
+  self.cbShowLevelUpStatMessages = CreateFrame("CheckButton", nil, self, "UICheckButtonTemplate")
+  self.cbShowLevelUpStatMessages:SetPoint("LEFT", self, "TOPLEFT", 10, yPos)
+  self.fsShowLevelUpStatMessages = self:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  self.fsShowLevelUpStatMessages:SetPoint("LEFT", self, "TOPLEFT", 40, yPos)
+  self.fsShowLevelUpStatMessages:SetText("Show health and stat gains upon leveling up in WoW Forever.")
+  yPos = yPos - 30
   
   self.cbEnableMilestoneMessages = CreateFrame("CheckButton", nil, self, "UICheckButtonTemplate") 
   self.cbEnableMilestoneMessages:SetPoint("LEFT", self, "TOPLEFT", 10, yPos)
@@ -106,6 +113,7 @@ function AutoBiographer_OptionWindow:LoadOptions()
   self.cbScreenshotOnlyOnFirstBossKill:SetChecked(AutoBiographer_Settings.Options["TakeScreenshotOnlyOnFirstBossKill"])
   self.cbScreenshotOnAchievementEarned:SetChecked(AutoBiographer_Settings.Options["TakeScreenshotOnAchievementEarned"])
   self.cbShowMinimapButton:SetChecked(AutoBiographer_Settings.Options["ShowMinimapButton"])
+  self.cbShowLevelUpStatMessages:SetChecked(AutoBiographer_Settings.Options["ShowLevelUpStatMessages"])
   self.cbShowTimePlayedOnLevelUp:SetChecked(AutoBiographer_Settings.Options["ShowTimePlayedOnLevelUp"])
 end
 
@@ -121,6 +129,7 @@ function AutoBiographer_OptionWindow:SaveOptions()
   AutoBiographer_Settings.Options["TakeScreenshotOnlyOnFirstBossKill"] = self.cbScreenshotOnlyOnFirstBossKill:GetChecked()
   AutoBiographer_Settings.Options["TakeScreenshotOnAchievementEarned"] = self.cbScreenshotOnAchievementEarned:GetChecked()
   AutoBiographer_Settings.Options["ShowMinimapButton"] = self.cbShowMinimapButton:GetChecked()
+  AutoBiographer_Settings.Options["ShowLevelUpStatMessages"] = self.cbShowLevelUpStatMessages:GetChecked()
   AutoBiographer_Settings.Options["ShowTimePlayedOnLevelUp"] = self.cbShowTimePlayedOnLevelUp:GetChecked()
   
   if (AutoBiographer_Settings.Options["ShowMinimapButton"] == false) then AutoBiographer_MinimapButton:Hide()
