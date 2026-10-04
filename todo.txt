@@ -1,20 +1,21 @@
-Level up stat changes
+Misc stat: friendly players buffed. unique players buffed
+Time played with controller.
+more social stuff
+  something while camping
+    Automatically share last milestone? Or maybe suggest some things to share?
+  better sharing of achievements
+Notes and ratings (players, mobs, items?, maps?).
+Add todo list
+Improve UI
+Add event window to map when gamepad ui is enabled
+Add new dungeons and raids locations
 
 event button
 Notice on unknown mobs, items, zones/subzones.
-Notes (players/mobs, items?, map?).
-Add todo list
 Screenshot deaths.
 Show tips to transfer data after character transfer.
 Track autoattacks/shots. Track results (hit, miss, dodge, parry) and damage done of attacks and spells.
 Misc stats: fishing attempts and successful.
-Misc stat: friendly players buffed. unique players buffed
 Make map events more efficient.
 Add WotLK raids.
 Progressive map events WotLK improvement (use Azeroth map, move icons instead of delete)
-
-
-more social stuff
-  something while camping
-  better sharing of achievements
-  
