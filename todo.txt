@@ -1,5 +1,4 @@
 Fix
-  Duels
   Do layers change player GUIDs?
   Not tracking aucion house items correctly
 stat: camp items placed, camp fires placed, times camped?

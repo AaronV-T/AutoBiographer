@@ -126,7 +126,11 @@ end
 
 local function FindUnitGUIDByUnitName(unitName)
 	for i = 1, #validUnitIds do
-    if (UnitName(validUnitIds[i]) == unitName) then return UnitGUID(validUnitIds[i]) end
+    local name, lastName = Api.GetUnitName(validUnitIds[i])
+    if (name and lastName) then name = name .. " " .. lastName end
+    if (name == unitName) then
+      return UnitGUID(validUnitIds[i])
+    end
 	end
 	return nil
 end
@@ -437,22 +441,37 @@ end
 function EM.EventHandlers.CHAT_MSG_SYSTEM(self, text)
   if (not self.PlayerEnteringWorldHasFired) then return end
 
-  if (string.find(text, self.PlayerName .. " has defeated %w+ in a duel") == 1 or string.find(text, "%w+ has fled from " .. self.PlayerName .. " in a duel") == 1) then
-    -- Player won a duel.
-    local splitText = HelperFunctions.SplitString(text)
-    local defeatedPlayerName = nil
-    if (string.find(text, "defeated")) then defeatedPlayerName = splitText[4]
-    else defeatedPlayerName = splitText[1] end
-    
-    Controller:OnDuelWon(time(), HelperFunctions.GetCoordinatesByUnitId("player"), HelperFunctions.GetCatalogIdFromGuid(FindUnitGUIDByUnitName(defeatedPlayerName)), defeatedPlayerName)
-  elseif (string.find(text, "%w+ has defeated " .. self.PlayerName .. " in a duel") == 1 or string.find(text, self.PlayerName .. " has fled from %w+ in a duel") == 1) then
-    -- Player lost a duel.
-    local splitText = HelperFunctions.SplitString(text)
-    local winningPlayerName = nil
-    if (string.find(text, "defeated")) then winningPlayerName = splitText[1]
-    else winningPlayerName = splitText[5] end
-    
-    Controller:OnDuelLost(time(), HelperFunctions.GetCoordinatesByUnitId("player"), HelperFunctions.GetCatalogIdFromGuid(FindUnitGUIDByUnitName(winningPlayerName)), winningPlayerName)
+  -- Capture entire names, not individual words: Forever names include surnames.
+  local winnerFullName, loserFullName = string.match(text, "^(.+) has defeated (.+) in a duel%.?$")
+  if (not winnerFullName) then
+    loserFullName, winnerFullName = string.match(text, "^(.+) has fled from (.+) in a duel%.?$")
+  end
+  if (winnerFullName and loserFullName) then
+    local playerFullName, playerLastName = Api.GetUnitName("player")
+    if (playerFullName and playerLastName) then playerFullName = playerFullName .. " " .. playerLastName end
+    if (winnerFullName ~= playerFullName and loserFullName ~= playerFullName) then return end
+
+    local playerWon = winnerFullName == playerFullName
+    local opponentFullName = playerWon and loserFullName or winnerFullName
+    local opponentGuid = FindUnitGUIDByUnitName(opponentFullName)
+    if (not opponentGuid) then
+      Controller:AddLog("Duel not tracked: unable to find GUID for " .. opponentFullName .. ".", AutoBiographerEnum.LogLevel.Warning)
+      return
+    end
+
+    local opponentCatalogUnitId = HelperFunctions.GetCatalogIdFromGuid(opponentGuid)
+    local opponentUnitId = FindUnitIdByUnitGUID(opponentGuid)
+    if (opponentUnitId) then
+      local name, lastName = Api.GetUnitName(opponentUnitId)
+      Controller:UpdateCatalogUnit(CatalogUnit.New(
+        opponentCatalogUnitId, nil, nil, nil, nil, name, lastName, nil, nil, AutoBiographerEnum.UnitType.Player
+      ))
+    end
+    if (playerWon) then
+      Controller:OnDuelWon(time(), HelperFunctions.GetCoordinatesByUnitId("player"), opponentCatalogUnitId, opponentFullName)
+    else
+      Controller:OnDuelLost(time(), HelperFunctions.GetCoordinatesByUnitId("player"), opponentCatalogUnitId, opponentFullName)
+    end
   elseif (string.find(text, "Discovered .+") == 1) then
     -- Player discovered a new area.
     local area, xpGainedFromDiscovery = string.match(text, "Discovered (.+): (%d+) experience gained")
