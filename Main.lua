@@ -1965,9 +1965,13 @@ function EM:ForEachDamageMeterBreakdown(sessionId, callback)
 
     for _, spell in ipairs(source.combatSpells) do
       local spellName = Api.GetSpellInfo(spell.spellID) or ("Spell " .. tostring(spell.spellID))
+      local creatureName = nil
+      if (not self:IsSecretValue(spell.creatureName) and spell.creatureName ~= nil and spell.creatureName ~= "") then
+        creatureName = spell.creatureName
+      end
       local amount = GetPlainMeterNumber(spell.totalAmount)
       local over = GetPlainMeterNumber(spell.overkillAmount)
-      if (amount ~= nil and over ~= nil) then callback(category, nil, spell.spellID, spellName, amount, over) end
+      if (amount ~= nil and over ~= nil) then callback(category, nil, spell.spellID, spellName, amount, over, creatureName) end
     end
   end
 
@@ -2076,12 +2080,12 @@ end
 function EM:FinalizeDamageMeterCombat(sessionId)
   if (not Api.IsWoWForever() or not self.DamageMeterBaselinesInitialized or not sessionId or sessionId <= 0) then return end
 
-  self:ForEachDamageMeterBreakdown(sessionId, function(category, unitName, spellId, spellName, amount, over)
+  self:ForEachDamageMeterBreakdown(sessionId, function(category, unitName, spellId, spellName, amount, over, creatureName)
     local recorded = self:GetDamageMeterRecordedTotal(sessionId, category, unitName, spellId)
     local amountDelta = amount - recorded.Amount
     local overDelta = over - recorded.Over
     if (amountDelta > 0 or overDelta > 0) then
-      Controller:OnDamageOrHealing(category, unitName, spellId, spellName, math.max(amountDelta, 0), math.max(overDelta, 0))
+      Controller:OnDamageOrHealing(category, unitName, spellId, spellName, math.max(amountDelta, 0), math.max(overDelta, 0), creatureName)
     end
 
     recorded.Amount = math.max(recorded.Amount, amount)

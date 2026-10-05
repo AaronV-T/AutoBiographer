@@ -1,5 +1,5 @@
-death stats by killer
 damage stats pet attack different than player's
+damage stats by rank
 class specific stats
 stat: camp items placed, camp fires placed, times camped?
 Fix
@@ -17,7 +17,12 @@ Add todo list
 Improve UI
 Add event window to map when gamepad ui is enabled
 Add new dungeons and raids locations
+Session stats
+Update Curseforge page and categories
 
+
+
+death stats by killer
 event button
 Notice on unknown mobs, items, zones/subzones.
 Screenshot deaths.

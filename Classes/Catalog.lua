@@ -119,11 +119,20 @@ end
 -- *** CatalogSpell ***
 
 CatalogSpell = {}
-function CatalogSpell.New(id, name, rank)
+function CatalogSpell.GetDamageMeterDisplayName(catalogSpell, spellId)
+  local name = catalogSpell and catalogSpell.Name or ("Spell ID: " .. tostring(spellId))
+  if (catalogSpell and catalogSpell.CreatureName and catalogSpell.CreatureName ~= "") then
+    return name .. " (" .. catalogSpell.CreatureName .. ")"
+  end
+  return name
+end
+
+function CatalogSpell.New(id, name, rank, creatureName)
   return {
     Id = id,
     Name = name,
-    Rank = rank
+    Rank = rank,
+    CreatureName = creatureName
   }
 end
 

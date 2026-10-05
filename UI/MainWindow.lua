@@ -1702,7 +1702,7 @@ function AutoBiographer_StatisticsWindow:Update()
     }
     for spellId, breakdown in pairs(abilitiesBySpellId) do
       local catalogSpell = Controller.CharacterData.Catalogs.SpellCatalog[spellId]
-      local spellName = catalogSpell and catalogSpell.Name or ("Spell ID: " .. tostring(spellId))
+      local spellName = CatalogSpell.GetDamageMeterDisplayName(catalogSpell, spellId)
       table.insert(tableData.Rows, { spellName, breakdown.Amount - breakdown.Over, breakdown.Over })
     end
   elseif (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.DamageTakenBySpell) then
@@ -1746,7 +1746,7 @@ function AutoBiographer_StatisticsWindow:Update()
     }
     for spellId, breakdown in pairs(abilitiesBySpellId) do
       local catalogSpell = Controller.CharacterData.Catalogs.SpellCatalog[spellId]
-      local spellName = catalogSpell and catalogSpell.Name or ("Spell ID: " .. tostring(spellId))
+      local spellName = CatalogSpell.GetDamageMeterDisplayName(catalogSpell, spellId)
       table.insert(tableData.Rows, { spellName, breakdown.Amount - breakdown.Over, breakdown.Over })
     end
   elseif (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.Items) then

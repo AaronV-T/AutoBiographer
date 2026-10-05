@@ -676,7 +676,7 @@ function Controller:OnChangedZone(timestamp, coordinates, zoneName)
   end
 end
 
-function Controller:OnDamageOrHealing(damageOrHealingCategory, unitName, spellId, spellName, amount, overkill)
+function Controller:OnDamageOrHealing(damageOrHealingCategory, unitName, spellId, spellName, amount, overkill, creatureName)
   if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog("DamageOrHealingCategory: " .. tostring(damageOrHealingCategory) .. ". Amount: " .. tostring(amount) .. ", over: " .. tostring(overkill), AutoBiographerEnum.LogLevel.Debug) end
   local damageStatistics = self:GetCurrentLevelStatistics().DamageStatistics
   if (damageOrHealingCategory == AutoBiographerEnum.DamageOrHealingCategory.DamageTaken) then
@@ -695,7 +695,12 @@ function Controller:OnDamageOrHealing(damageOrHealingCategory, unitName, spellId
       Controller:AddLog("Damage or healing was not tracked because its spell ID was nil.", AutoBiographerEnum.LogLevel.Warning)
       return
     end
-    if (not self.CharacterData.Catalogs.SpellCatalog[spellId]) then self.CharacterData.Catalogs.SpellCatalog[spellId] = CatalogSpell.New(spellId, spellName, nil) end
+    local catalogSpell = self.CharacterData.Catalogs.SpellCatalog[spellId]
+    if (not catalogSpell) then
+      self.CharacterData.Catalogs.SpellCatalog[spellId] = CatalogSpell.New(spellId, spellName, nil, creatureName)
+    elseif (creatureName ~= nil and creatureName ~= "") then
+      catalogSpell.CreatureName = creatureName
+    end
     DamageStatistics.AddSpellBreakdown(damageStatistics, damageOrHealingCategory, spellId, amount, overkill)
   end
 
