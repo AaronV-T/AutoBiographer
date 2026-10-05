@@ -137,6 +137,17 @@ function Api.GetSpellInfo(spellId)
   end
 end
 
+function Api.GetSpellRank(spellId)
+  local _, subtext = Api.GetSpellInfo(spellId)
+  if (issecretvalue and issecretvalue(subtext)) then return nil end
+  if ((subtext == nil or subtext == "") and C_Spell and C_Spell.GetSpellSubtext) then
+    subtext = C_Spell.GetSpellSubtext(spellId)
+  end
+  if (issecretvalue and issecretvalue(subtext)) then return nil end
+  if (type(subtext) ~= "string") then return nil end
+  return tonumber(string.match(subtext, "%d+"))
+end
+
 function Api.IsGamepadUIEnabled()
   return GetCVar and GetCVar("InputDeviceInterfaceStyle") == "1"
 end

@@ -974,11 +974,15 @@ function AutoBiographer_StatisticsWindow:Initialize()
   
     info.text, info.arg1 = "Damage Dealt", AutoBiographerEnum.StatisticsDisplayMode.DamageDealt
     UIDropDownMenu_AddButton(info)
+    info.text, info.arg1 = "Damage Dealt by Rank", AutoBiographerEnum.StatisticsDisplayMode.DamageDealtByRank
+    UIDropDownMenu_AddButton(info)
     info.text, info.arg1 = "Damage Taken by Spell", AutoBiographerEnum.StatisticsDisplayMode.DamageTakenBySpell
     UIDropDownMenu_AddButton(info)
     info.text, info.arg1 = "Damage Taken by Unit", AutoBiographerEnum.StatisticsDisplayMode.DamageTakenByUnit
     UIDropDownMenu_AddButton(info)
     info.text, info.arg1 = "Healing Dealt", AutoBiographerEnum.StatisticsDisplayMode.HealingDealt
+    UIDropDownMenu_AddButton(info)
+    info.text, info.arg1 = "Healing Dealt by Rank", AutoBiographerEnum.StatisticsDisplayMode.HealingDealtByRank
     UIDropDownMenu_AddButton(info)
     info.text, info.arg1 = "Item Aquisitions", AutoBiographerEnum.StatisticsDisplayMode.Items
     UIDropDownMenu_AddButton(info)
@@ -1692,18 +1696,33 @@ function AutoBiographer_StatisticsWindow:Update()
 
   -- Get table data.
   local tableData
+  local isRankView = self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.DamageDealtByRank or
+    self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.HealingDealtByRank
   
   if (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.DamageDealt) then
-    local abilitiesBySpellId = Controller:GetAggregatedDamageMeterAbilities({ AutoBiographerEnum.DamageOrHealingCategory.DamageDealt }, minLevel, maxLevel)
+    local abilitiesBySpellName = Controller:GetAggregatedDamageMeterAbilities({ AutoBiographerEnum.DamageOrHealingCategory.DamageDealt }, minLevel, maxLevel, true)
     tableData = {
       HeaderValues = { "Spell Name", "Effective Damage", "Over Damage" },
       RowOffsets = { 0, 250, 450, 650 },
       Rows = {},
     }
+    for spellName, breakdown in pairs(abilitiesBySpellName) do
+      table.insert(tableData.Rows, { spellName, breakdown.Amount - breakdown.Over, breakdown.Over })
+    end
+  elseif (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.DamageDealtByRank) then
+    local abilitiesBySpellId = Controller:GetAggregatedDamageMeterAbilities({ AutoBiographerEnum.DamageOrHealingCategory.DamageDealt }, minLevel, maxLevel)
+    tableData = {
+      HeaderValues = { "Spell Name", "Rank", "Effective Damage", "Over Damage" },
+      RowOffsets = { 0, 250, 330, 490, 650 },
+      Rows = {},
+    }
     for spellId, breakdown in pairs(abilitiesBySpellId) do
       local catalogSpell = Controller.CharacterData.Catalogs.SpellCatalog[spellId]
       local spellName = CatalogSpell.GetDamageMeterDisplayName(catalogSpell, spellId)
-      table.insert(tableData.Rows, { spellName, breakdown.Amount - breakdown.Over, breakdown.Over })
+      local rank = catalogSpell and catalogSpell.Rank
+      if (type(rank) == "string") then rank = tonumber(string.match(rank, "%d+")) end
+      rank = rank or Api.GetSpellRank(spellId) or 0
+      table.insert(tableData.Rows, { spellName, rank, breakdown.Amount - breakdown.Over, breakdown.Over })
     end
   elseif (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.DamageTakenBySpell) then
     local breakdownsByUnitAndSpell = Controller:GetAggregatedDamageTakenBySpell({ AutoBiographerEnum.DamageOrHealingCategory.DamageTaken }, minLevel, maxLevel)
@@ -1738,16 +1757,29 @@ function AutoBiographer_StatisticsWindow:Update()
       table.insert(tableData.Rows, { "Unknown", unknownBreakdown.Amount - unknownBreakdown.Over, unknownBreakdown.Over })
     end
   elseif (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.HealingDealt) then
-    local abilitiesBySpellId = Controller:GetAggregatedDamageMeterAbilities({ AutoBiographerEnum.DamageOrHealingCategory.HealingDealt }, minLevel, maxLevel)
+    local abilitiesBySpellName = Controller:GetAggregatedDamageMeterAbilities({ AutoBiographerEnum.DamageOrHealingCategory.HealingDealt }, minLevel, maxLevel, true)
     tableData = {
       HeaderValues = { "Spell Name", "Effective Healing", "Over Healing" },
       RowOffsets = { 0, 250, 450, 650 },
       Rows = {},
     }
+    for spellName, breakdown in pairs(abilitiesBySpellName) do
+      table.insert(tableData.Rows, { spellName, breakdown.Amount - breakdown.Over, breakdown.Over })
+    end
+  elseif (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.HealingDealtByRank) then
+    local abilitiesBySpellId = Controller:GetAggregatedDamageMeterAbilities({ AutoBiographerEnum.DamageOrHealingCategory.HealingDealt }, minLevel, maxLevel)
+    tableData = {
+      HeaderValues = { "Spell Name", "Rank", "Effective Healing", "Over Healing" },
+      RowOffsets = { 0, 250, 330, 490, 650 },
+      Rows = {},
+    }
     for spellId, breakdown in pairs(abilitiesBySpellId) do
       local catalogSpell = Controller.CharacterData.Catalogs.SpellCatalog[spellId]
       local spellName = CatalogSpell.GetDamageMeterDisplayName(catalogSpell, spellId)
-      table.insert(tableData.Rows, { spellName, breakdown.Amount - breakdown.Over, breakdown.Over })
+      local rank = catalogSpell and catalogSpell.Rank
+      if (type(rank) == "string") then rank = tonumber(string.match(rank, "%d+")) end
+      rank = rank or Api.GetSpellRank(spellId) or 0
+      table.insert(tableData.Rows, { spellName, rank, breakdown.Amount - breakdown.Over, breakdown.Over })
     end
   elseif (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.Items) then
     local itemStatisticsByItem = Controller:GetAggregatedItemStatisticsDictionary(minLevel, maxLevel)
@@ -1921,6 +1953,13 @@ function AutoBiographer_StatisticsWindow:Update()
   end
 
   table.sort(tableData.Rows, function(rowA, rowB)
+    if (isRankView and self.OrderColumnIndex == 1 and rowA[1] == rowB[1]) then
+      if (self.OrderDirection == "ASC") then
+        return rowA[2] < rowB[2]
+      else
+        return rowA[2] > rowB[2]
+      end
+    end
     if (self.OrderDirection == "ASC") then
       return rowA[self.OrderColumnIndex] < rowB[self.OrderColumnIndex]
     else
@@ -1989,6 +2028,8 @@ function AutoBiographer_StatisticsWindow:Update()
       local text = tableData.Rows[i][j]
       if (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.OtherPlayers and j == 6) then
         text = HelperFunctions.SecondsToTimeString(text, true)
+      elseif (isRankView and j == 2 and text == 0) then
+        text = "-"
       end
 
       local maxTextLength = (tableData.RowOffsets[j + 1] - tableData.RowOffsets[j]) / 7

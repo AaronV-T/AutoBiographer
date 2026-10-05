@@ -53,8 +53,8 @@ function Controller:CatalogUnitIsIncomplete(catalogUnitId)
   return self.CharacterData.Catalogs.UnitCatalog[catalogUnitId] == nil or self.CharacterData.Catalogs.UnitCatalog[catalogUnitId].Name == nil
 end
 
-function Controller:GetAggregatedDamageMeterAbilities(damageOrHealingCategories, minLevel, maxLevel)
-  local abilitiesBySpellId = {}
+function Controller:GetAggregatedDamageMeterAbilities(damageOrHealingCategories, minLevel, maxLevel, groupBySpellName)
+  local abilitiesByKey = {}
   for levelNum, levelStatistics in pairs(self.CharacterData.Levels) do
     if (levelNum >= minLevel and levelNum <= maxLevel) then
       local damageStatistics = levelStatistics.DamageStatistics
@@ -62,14 +62,18 @@ function Controller:GetAggregatedDamageMeterAbilities(damageOrHealingCategories,
         local spells = damageStatistics[damageOrHealingCategory]
         if (spells) then
           for spellId, breakdown in pairs(spells) do
-            if (not abilitiesBySpellId[spellId]) then abilitiesBySpellId[spellId] = DamageBreakdown.New() end
-            DamageBreakdown.Add(abilitiesBySpellId[spellId], breakdown.Amount, breakdown.Over)
+            local key = spellId
+            if (groupBySpellName) then
+              key = CatalogSpell.GetDamageMeterDisplayName(self.CharacterData.Catalogs.SpellCatalog[spellId], spellId)
+            end
+            if (not abilitiesByKey[key]) then abilitiesByKey[key] = DamageBreakdown.New() end
+            DamageBreakdown.Add(abilitiesByKey[key], breakdown.Amount, breakdown.Over)
           end
         end
       end
     end
   end
-  return abilitiesBySpellId
+  return abilitiesByKey
 end
 
 function Controller:GetAggregatedDamageTakenBySpell(damageOrHealingCategories, minLevel, maxLevel)
@@ -696,10 +700,12 @@ function Controller:OnDamageOrHealing(damageOrHealingCategory, unitName, spellId
       return
     end
     local catalogSpell = self.CharacterData.Catalogs.SpellCatalog[spellId]
+    local spellRank = Api.GetSpellRank(spellId)
     if (not catalogSpell) then
-      self.CharacterData.Catalogs.SpellCatalog[spellId] = CatalogSpell.New(spellId, spellName, nil, creatureName)
-    elseif (creatureName ~= nil and creatureName ~= "") then
-      catalogSpell.CreatureName = creatureName
+      self.CharacterData.Catalogs.SpellCatalog[spellId] = CatalogSpell.New(spellId, spellName, spellRank, creatureName)
+    else
+      if (spellRank ~= nil) then catalogSpell.Rank = spellRank end
+      if (creatureName ~= nil and creatureName ~= "") then catalogSpell.CreatureName = creatureName end
     end
     DamageStatistics.AddSpellBreakdown(damageStatistics, damageOrHealingCategory, spellId, amount, overkill)
   end

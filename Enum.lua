@@ -146,9 +146,11 @@ AutoBiographerEnum = {
     Spells = 3,
     Time = 4,
     DamageDealt = 5,
+    DamageDealtByRank = 9,
     DamageTakenBySpell = 7,
     DamageTakenByUnit = 6,
     HealingDealt = 8,
+    HealingDealtByRank = 10,
   },
   TimeTrackingType = {
     Afk = 0,
