@@ -1847,6 +1847,9 @@ function AutoBiographer_StatisticsWindow:Update()
     for catalogUnitId, otherPlayerStatistics in pairs(otherPlayerStatisticsByUnit) do
       local catalogUnit = Controller.CharacterData.Catalogs.UnitCatalog[catalogUnitId]
       local unitName = catalogUnit and catalogUnit.Name or ("Unit ID: " .. tostring(catalogUnitId))
+      if (catalogUnit and catalogUnit.Name and catalogUnit.LastName and catalogUnit.LastName ~= "") then
+        unitName = unitName .. " " .. catalogUnit.LastName
+      end
 
       local row = {
         unitName,

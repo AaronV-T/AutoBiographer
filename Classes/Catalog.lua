@@ -86,7 +86,7 @@ end
 -- *** CatalogUnit ***
 
 CatalogUnit = {}
-function CatalogUnit.New(id, class, classification, creatureFamily, creatureType, name, race, playerHasKilled, unitType)
+function CatalogUnit.New(id, class, classification, creatureFamily, creatureType, name, lastName, race, playerHasKilled, unitType)
   return {
     Id = id,
     Class = class,
@@ -94,6 +94,7 @@ function CatalogUnit.New(id, class, classification, creatureFamily, creatureType
     CFam = creatureFamily,
     CType = creatureType,
     Name = name,
+    LastName = lastName,
     Race = race,
     Killed = playerHasKilled,
     UType = unitType
@@ -101,16 +102,17 @@ function CatalogUnit.New(id, class, classification, creatureFamily, creatureType
 end
 
 function CatalogUnit.ToString(cu)
-  return tostring(cu.Id) .. ", " .. tostring(cu.Name) .. ", "  .. tostring(cu.Class) .. ", " .. tostring(cu.Clsfctn) .. ", " .. tostring(cu.CType) .. ", " .. tostring(cu.CFam) .. ", " .. tostring(cu.Race) .. ", " .. tostring(cu.Killed) .. ", " .. tostring(cu.UType)
+  return tostring(cu.Id) .. ", " .. tostring(cu.Name) .. ", " .. tostring(cu.LastName) .. ", "  .. tostring(cu.Class) .. ", " .. tostring(cu.Clsfctn) .. ", " .. tostring(cu.CType) .. ", " .. tostring(cu.CFam) .. ", " .. tostring(cu.Race) .. ", " .. tostring(cu.Killed) .. ", " .. tostring(cu.UType)
 end
 
-function CatalogUnit.Update(cu, id, class, classification, creatureFamily, creatureType, name, race, playerHasKilled, unitType)
+function CatalogUnit.Update(cu, id, class, classification, creatureFamily, creatureType, name, lastName, race, playerHasKilled, unitType)
   if (id ~= nil) then cu.Id = id end
   if (class ~= nil) then cu.Class = class end
   if (classification ~= nil) then cu.Clsfctn = classification end
   if (creatureFamily ~= nil) then cu.CFam = creatureFamily end
   if (creatureType ~= nil) then cu.CType = creatureType end
   if (name ~= nil) then cu.Name = name end
+  if (lastName ~= nil) then cu.LastName = lastName end
   if (race ~= nil) then cu.Race = race end
   if (playerHasKilled ~= nil) then cu.Killed = playerHasKilled end
   if (unitType ~= nil) then cu.UType = unitType end

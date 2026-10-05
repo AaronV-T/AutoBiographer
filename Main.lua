@@ -488,7 +488,8 @@ if (not Api.IsWoWForever()) then
       if (damagerUnitId ~= nil) then 
         local damagerCatalogUnitId = HelperFunctions.GetCatalogIdFromGuid(sourceGuid)
         if (Controller:CatalogUnitIsIncomplete(damagerCatalogUnitId)) then
-          Controller:UpdateCatalogUnit(CatalogUnit.New(damagerCatalogUnitId, UnitClass(damagerUnitId), UnitClassification(damagerUnitId), UnitCreatureFamily(damagerUnitId), UnitCreatureType(damagerUnitId), UnitName(damagerUnitId), UnitRace(damagerUnitId), nil, HelperFunctions.GetUnitTypeFromCatalogUnitId(damagerCatalogUnitId)))
+          local name, lastName = Api.GetUnitName(damagerUnitId)
+          Controller:UpdateCatalogUnit(CatalogUnit.New(damagerCatalogUnitId, UnitClass(damagerUnitId), UnitClassification(damagerUnitId), UnitCreatureFamily(damagerUnitId), UnitCreatureType(damagerUnitId), name, lastName, UnitRace(damagerUnitId), nil, HelperFunctions.GetUnitTypeFromCatalogUnitId(damagerCatalogUnitId)))
         end
       end
 
@@ -523,7 +524,8 @@ if (not Api.IsWoWForever()) then
         
         local damagedCatalogUnitId = HelperFunctions.GetCatalogIdFromGuid(destGuid)
         if (Controller:CatalogUnitIsIncomplete(damagedCatalogUnitId)) then
-          Controller:UpdateCatalogUnit(CatalogUnit.New(damagedCatalogUnitId, UnitClass(damagedUnitId), UnitClassification(damagedUnitId), UnitCreatureFamily(damagedUnitId), UnitCreatureType(damagedUnitId), UnitName(damagedUnitId), UnitRace(damagedUnitId), nil, HelperFunctions.GetUnitTypeFromCatalogUnitId(damagedCatalogUnitId)))
+          local name, lastName = Api.GetUnitName(damagedUnitId)
+          Controller:UpdateCatalogUnit(CatalogUnit.New(damagedCatalogUnitId, UnitClass(damagedUnitId), UnitClassification(damagedUnitId), UnitCreatureFamily(damagedUnitId), UnitCreatureType(damagedUnitId), name, lastName, UnitRace(damagedUnitId), nil, HelperFunctions.GetUnitTypeFromCatalogUnitId(damagedCatalogUnitId)))
         end
       end
       
@@ -740,6 +742,7 @@ function EM.EventHandlers.PLAYER_DEAD(self)
             nil,
             nil,
             killerEvent.sourceName,
+            nil,
             nil,
             nil,
             HelperFunctions.GetUnitTypeFromCatalogUnitId(killerCatalogUnitId)
@@ -1198,13 +1201,15 @@ function EM.EventHandlers.UNIT_DIED(self, unitGuid)
 
   local catalogUnitId = HelperFunctions.GetCatalogIdFromGuid(unitGuid)
   if (Controller:CatalogUnitIsIncomplete(catalogUnitId)) then
+    local name, lastName = Api.GetUnitName(unitId)
     Controller:UpdateCatalogUnit(CatalogUnit.New(
       catalogUnitId,
       UnitClass(unitId),
       UnitClassification(unitId),
       UnitCreatureFamily(unitId),
       UnitCreatureType(unitId),
-      UnitName(unitId),
+      name,
+      lastName,
       UnitRace(unitId),
       nil,
       HelperFunctions.GetUnitTypeFromCatalogUnitId(catalogUnitId)
@@ -1602,7 +1607,7 @@ function EM:UpdateGroupMemberInfo()
     local catalogUnitId = HelperFunctions.GetCatalogIdFromGuid(guid)
     local catalogUnit = Controller.CharacterData.Catalogs.UnitCatalog[catalogUnitId]
     if (Controller:CatalogUnitIsIncomplete(catalogUnitId) or catalogUnit.UType ~= AutoBiographerEnum.UnitType.Player) then
-      local name = UnitName(unitId)
+      local name, lastName = Api.GetUnitName(unitId)
       local class = UnitClass(unitId)
       local race = UnitRace(unitId)
       if (self:IsSecretValue(name)) then name = nil end
@@ -1610,7 +1615,7 @@ function EM:UpdateGroupMemberInfo()
       if (self:IsSecretValue(race)) then race = nil end
       if (name == "") then name = nil end
       Controller:UpdateCatalogUnit(CatalogUnit.New(
-        catalogUnitId, class, nil, nil, nil, name, race, nil, AutoBiographerEnum.UnitType.Player
+        catalogUnitId, class, nil, nil, nil, name, lastName, race, nil, AutoBiographerEnum.UnitType.Player
       ))
     end
   end
@@ -1726,13 +1731,15 @@ function EM:TrackOtherPlayerBuff(unitId)
   if (not success or not catalogUnitId) then return end
 
   if (Controller:CatalogUnitIsIncomplete(catalogUnitId)) then
+    local name, lastName = Api.GetUnitName(unitId)
     Controller:UpdateCatalogUnit(CatalogUnit.New(
       catalogUnitId,
       UnitClass(unitId),
       UnitClassification(unitId),
       UnitCreatureFamily(unitId),
       UnitCreatureType(unitId),
-      UnitName(unitId),
+      name,
+      lastName,
       UnitRace(unitId),
       nil,
       AutoBiographerEnum.UnitType.Player
@@ -1936,6 +1943,7 @@ function EM:FinalizeKill(unitGuid)
   if (not Controller.CharacterData.Catalogs.UnitCatalog[catalogUnitId]) then
     Controller:UpdateCatalogUnit(CatalogUnit.New(
       catalogUnitId,
+      nil,
       nil,
       nil,
       nil,

@@ -148,6 +148,16 @@ function Api.GetSpellRank(spellId)
   return tonumber(string.match(subtext, "%d+"))
 end
 
+function Api.GetUnitName(unitId)
+  local name, lastName = UnitName(unitId)
+  if (issecretvalue and issecretvalue(name)) then name = nil end
+  -- The second return is a surname on Forever, but a realm on other clients.
+  if (not Api.IsWoWForever() or (issecretvalue and issecretvalue(lastName))) then lastName = nil end
+  if (name == "") then name = nil end
+  if (lastName == "") then lastName = nil end
+  return name, lastName
+end
+
 function Api.IsGamepadUIEnabled()
   return GetCVar and GetCVar("InputDeviceInterfaceStyle") == "1"
 end

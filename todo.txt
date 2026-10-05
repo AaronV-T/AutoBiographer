@@ -1,7 +1,6 @@
 Fix
   Duels
   Do layers change player GUIDs?
-  Other player stats to include full names
   Not tracking aucion house items correctly
 stat: camp items placed, camp fires placed, times camped?
 other player stat: rezzes

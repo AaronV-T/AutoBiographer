@@ -890,7 +890,7 @@ function Controller:OnKill(timestamp, coordinates, kill)
     local hasKilledUnitBefore = true
     if (not Catalogs.PlayerHasKilledUnit(self.CharacterData.Catalogs, kill.CatalogUnitId)) then
       hasKilledUnitBefore = false
-      self:UpdateCatalogUnit(CatalogUnit.New(kill.CatalogUnitId, nil, nil, nil, nil, nil, nil, true, nil))
+      self:UpdateCatalogUnit(CatalogUnit.New(kill.CatalogUnitId, nil, nil, nil, nil, nil, nil, nil, true, nil))
       
       if (self.CharacterData.Catalogs.UnitCatalog[kill.CatalogUnitId].UType == AutoBiographerEnum.UnitType.Creature) then
         self:AddEvent(FirstKillEvent.New(timestamp, coordinates, kill.CatalogUnitId))
@@ -1087,7 +1087,7 @@ function Controller:UpdateCatalogUnit(catalogUnit)
   if (self.CharacterData.Catalogs.UnitCatalog[catalogUnit.Id] == nil) then
     self.CharacterData.Catalogs.UnitCatalog[catalogUnit.Id] = catalogUnit
   else
-    CatalogUnit.Update(self.CharacterData.Catalogs.UnitCatalog[catalogUnit.Id], catalogUnit.Id, catalogUnit.Class, catalogUnit.Clsfctn, catalogUnit.CFam, catalogUnit.CType, catalogUnit.Name, catalogUnit.Race, catalogUnit.Killed, catalogUnit.UType)
+    CatalogUnit.Update(self.CharacterData.Catalogs.UnitCatalog[catalogUnit.Id], catalogUnit.Id, catalogUnit.Class, catalogUnit.Clsfctn, catalogUnit.CFam, catalogUnit.CType, catalogUnit.Name, catalogUnit.LastName, catalogUnit.Race, catalogUnit.Killed, catalogUnit.UType)
   end
   
   if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog("CatalogUnit Updated: " .. CatalogUnit.ToString(self.CharacterData.Catalogs.UnitCatalog[catalogUnit.Id]) .. ".", AutoBiographerEnum.LogLevel.Debug) end
