@@ -484,6 +484,18 @@ function Controller:GetOtherPlayerStatByOtherPlayerTrackingType(otherPlayerTrack
   return sum
 end
 
+function Controller:GetUniqueOtherPlayerCountByOtherPlayerTrackingType(otherPlayerTrackingType, minLevel, maxLevel)
+  local count = 0
+  local otherPlayerStatisticsDictionary = self:GetAggregatedOtherPlayerStatisticsDictionary(minLevel, maxLevel)
+  for _, otherPlayerStatistics in pairs(otherPlayerStatisticsDictionary) do
+    if (OtherPlayerStatistics.GetSum(otherPlayerStatistics, { otherPlayerTrackingType }) > 0) then
+      count = count + 1
+    end
+  end
+
+  return count
+end
+
 function Controller:GetSpellCountBySpellTrackingType(spellTrackingType, minLevel, maxLevel)
   local sum = 0
   for k,v in pairs(self.CharacterData.Levels) do
@@ -593,6 +605,19 @@ function Controller:OnBattlegroundJoined(timestamp, battlegroundId)
   
   self:AddEvent(BattlegroundJoinedEvent.New(timestamp, battlegroundId))
   BattlegroundStatistics.IncrementJoined(self:GetCurrentLevelStatistics().BattlegroundStatistics, battlegroundId)
+end
+
+function Controller:OnBuffedOtherPlayer(otherPlayerCatalogUnitId, otherPlayerName, isGroupedWithPlayer)
+  if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog("Buffed other player: #" .. tostring(otherPlayerCatalogUnitId) .. " (" .. tostring(otherPlayerName) .. ").", AutoBiographerEnum.LogLevel.Debug) end
+  if (not otherPlayerCatalogUnitId) then
+    Controller:AddLog("otherPlayerCatalogUnitId was nil.", AutoBiographerEnum.LogLevel.Error)
+    return
+  end
+
+  local otherPlayerStatisticsByOtherPlayer = self:GetCurrentLevelStatistics().OtherPlayerStatisticsByOtherPlayer
+  if (not otherPlayerStatisticsByOtherPlayer[otherPlayerCatalogUnitId]) then otherPlayerStatisticsByOtherPlayer[otherPlayerCatalogUnitId] = OtherPlayerStatistics.New() end
+  local trackingType = isGroupedWithPlayer and AutoBiographerEnum.OtherPlayerTrackingType.BuffsGivenToPlayerWhileGrouped or AutoBiographerEnum.OtherPlayerTrackingType.BuffsGivenToPlayerNotGrouped
+  OtherPlayerStatistics.Add(otherPlayerStatisticsByOtherPlayer[otherPlayerCatalogUnitId], trackingType, 1)
 end
 
 function Controller:OnBossKill(timestamp, coordinates, bossId, bossName, hasKilledBossBefore)
@@ -845,6 +870,7 @@ end
 
 function Controller:OnKill(timestamp, coordinates, kill)
   if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog("Kill: " .. " #" .. tostring(kill.CatalogUnitId) .. ".", AutoBiographerEnum.LogLevel.Debug) end
+  print("Kill: " .. " #" .. tostring(kill.CatalogUnitId))
 
   if (not self:GetCurrentLevelStatistics().KillStatisticsByUnit[kill.CatalogUnitId]) then self:GetCurrentLevelStatistics().KillStatisticsByUnit[kill.CatalogUnitId] = KillStatistics.New() end
   KillStatistics.AddKill(self:GetCurrentLevelStatistics().KillStatisticsByUnit[kill.CatalogUnitId], kill)

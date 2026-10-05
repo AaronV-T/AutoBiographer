@@ -1,4 +1,12 @@
-Misc stat: friendly players buffed. unique players buffed
+Print stat increases on level up (can this actually work, what if a buff is gained or lost during battle?)
+death stats by killer
+damage stats pet attack different than player's
+stat: camp items placed, camp fires placed, times camped?
+Fix
+  Players grouped with statistic only showing 2 players
+  Duels
+  Do layers change player GUIDs?
+  Other player stats to include full names
 Time played with controller.
 more social stuff
   something while camping

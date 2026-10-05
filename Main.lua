@@ -18,6 +18,7 @@ AutoBiographer_EventManager = {
   MerchantIsOpen = nil,
   HasLeveledUpSinceLastStatSnapshot = false,
   NewLevelToAddToHistory = nil,
+  OtherPlayerAuraStates = {},
   PlayerLevelUpStatSnapshot = nil,
   PersistentPlayerInfo = nil,
   PlayerEnteringWorldHasFired = false,
@@ -625,6 +626,7 @@ end
 
 function EM.EventHandlers.GROUP_ROSTER_UPDATE(self)
   self:UpdateGroupMemberInfo()
+  self:SnapshotOtherPlayerAurasForGroup()
 end
 
 
@@ -808,6 +810,7 @@ function EM.EventHandlers.PLAYER_ENTERING_WORLD(self, isLogin, isReload)
   self.PlayerName = UnitName("player")
   self.TemporaryTimestamps.EnteredArea = GetTime()
   self:UpdateGroupMemberInfo()
+  self:SnapshotOtherPlayerAurasForKnownUnits()
   self:UpdatePlayerFlags()
   self:ScheduleDamageMeterSessionBaselines()
 end
@@ -1148,6 +1151,11 @@ function EM.EventHandlers.UNIT_COMBAT(self, unitId, action, ind, dmg, dmgType)
   end
 end
 
+function EM.EventHandlers.UNIT_AURA(self, unitId, updateInfo)
+  if (not Api.IsWoWForever()) then return end
+  self:OnUnitAura(unitId, updateInfo)
+end
+
 function EM.EventHandlers.UNIT_DIED(self, unitGuid)
   --print("UNIT_DIED. " .. tostring(unitGuid))
   if (not Api.IsWoWForever()) then return end
@@ -1238,6 +1246,18 @@ function EM.EventHandlers.UNIT_TARGET(self, unitId)
   
 end
 
+function EM.EventHandlers.PLAYER_FOCUS_CHANGED(self)
+  self:SnapshotOtherPlayerAuras("focus")
+end
+
+function EM.EventHandlers.PLAYER_TARGET_CHANGED(self)
+  self:SnapshotOtherPlayerAuras("target")
+end
+
+function EM.EventHandlers.UPDATE_MOUSEOVER_UNIT(self)
+  self:SnapshotOtherPlayerAuras("mouseover")
+end
+
 function EM.EventHandlers.ZONE_CHANGED(self)
   self:UpdatePlayerZone()
 end
@@ -1320,6 +1340,12 @@ Api.RegisterTooltipHandler("OnTooltipSetUnit", "Unit", function(self)
     local duelsLost = OtherPlayerStatistics.GetSum(otherPlayerStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.DuelsWonAgainstPlayer })
     if (duelsWon > 0 or duelsLost > 0) then
       tooltipString = tooltipString .. "Duels (W/L): " .. tostring(duelsWon) .. "/" .. tostring(duelsLost) .. ". "
+    end
+
+    local buffsGivenNotGrouped = OtherPlayerStatistics.GetSum(otherPlayerStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.BuffsGivenToPlayerNotGrouped })
+    local buffsGivenWhileGrouped = OtherPlayerStatistics.GetSum(otherPlayerStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.BuffsGivenToPlayerWhileGrouped })
+    if (buffsGivenNotGrouped > 0 or buffsGivenWhileGrouped > 0) then
+      tooltipString = tooltipString .. "Buffs Given (Outside/In Group): " .. tostring(buffsGivenNotGrouped) .. "/" .. tostring(buffsGivenWhileGrouped) .. ". "
     end
 
     local timeGrouped = OtherPlayerStatistics.GetSum(otherPlayerStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.TimeSpentGroupedWithPlayer })
@@ -1539,6 +1565,197 @@ function EM:UpdateGroupMemberInfo()
     if (not unitGuidsInGroup[k]) then
       Controller:AddOtherPlayerInGroupTime(HelperFunctions.GetCatalogIdFromGuid(k), HelperFunctions.SubtractFloats(GetTime(), v))
       self.TemporaryTimestamps.OtherPlayerJoinedGroup[k] = nil
+    end
+  end
+end
+
+function EM:IsSecretValue(value)
+  return issecretvalue and issecretvalue(value)
+end
+
+function EM:IsOtherPlayerAuraUnit(unitId)
+  if (self:IsSecretValue(unitId) or not unitId or unitId == "player") then return false end
+
+  local isPlayer = UnitIsPlayer(unitId)
+  local isSelf = UnitIsUnit(unitId, "player")
+  if (self:IsSecretValue(isPlayer) or self:IsSecretValue(isSelf)) then return false end
+  return isPlayer and not isSelf
+end
+
+function EM:StoreOtherPlayerAura(auraState, auraData)
+  if (self:IsSecretValue(auraData) or not auraData or self:IsSecretValue(auraData.auraInstanceID) or self:IsSecretValue(auraData.duration) or
+      self:IsSecretValue(auraData.expirationTime) or self:IsSecretValue(auraData.spellId) or not auraData.auraInstanceID or not auraData.spellId) then
+    return false
+  end
+
+  local aura = {
+    Duration = auraData.duration,
+    ExpirationTime = auraData.expirationTime,
+    SpellId = auraData.spellId,
+  }
+  auraState.ByAuraInstanceId[auraData.auraInstanceID] = aura
+  auraState.BySpellId[auraData.spellId] = aura
+  return true
+end
+
+function EM:SnapshotOtherPlayerAuras(unitId)
+  if (not Api.IsWoWForever() or not self:IsOtherPlayerAuraUnit(unitId)) then return end
+
+  local unitGuid = UnitGUID(unitId)
+  if (self:IsSecretValue(unitGuid) or not unitGuid) then return end
+
+  local auraState = { ByAuraInstanceId = {}, BySpellId = {} }
+  for index = 1, 255 do
+    local auraData = Api.GetAuraDataByIndex(unitId, index, "HELPFUL")
+    if (self:IsSecretValue(auraData)) then
+      self.OtherPlayerAuraStates[unitGuid] = nil
+      return
+    end
+    if (not auraData) then break end
+    if (not self:StoreOtherPlayerAura(auraState, auraData)) then
+      -- An incomplete baseline cannot tell us that a buff was absent.
+      self.OtherPlayerAuraStates[unitGuid] = nil
+      return
+    end
+  end
+  self.OtherPlayerAuraStates[unitGuid] = auraState
+end
+
+function EM:SnapshotOtherPlayerAurasForGroup()
+  for i = 1, 4 do
+    self:SnapshotOtherPlayerAuras("party" .. i)
+  end
+  for i = 1, 40 do
+    self:SnapshotOtherPlayerAuras("raid" .. i)
+  end
+end
+
+function EM:SnapshotOtherPlayerAurasForKnownUnits()
+  self:SnapshotOtherPlayerAuras("focus")
+  self:SnapshotOtherPlayerAuras("mouseover")
+  self:SnapshotOtherPlayerAuras("target")
+  self:SnapshotOtherPlayerAurasForGroup()
+end
+
+function EM:ShouldTrackOtherPlayerBuff(previousAura)
+  if (not previousAura) then return true end
+  if (not previousAura.Duration or previousAura.Duration <= 0 or not previousAura.ExpirationTime) then return false end
+
+  return previousAura.ExpirationTime - GetTime() < previousAura.Duration / 2
+end
+
+function EM:TrackOtherPlayerBuff(unitId)
+  -- Check current group membership even when the recipient is target or mouseover.
+  local inParty = UnitInParty(unitId)
+  local raidIndex = UnitInRaid(unitId)
+  if (self:IsSecretValue(inParty) or self:IsSecretValue(raidIndex)) then return end
+  local isGroupedWithPlayer = inParty or raidIndex ~= nil
+
+  local unitGuid = UnitGUID(unitId)
+  if (self:IsSecretValue(unitGuid) or not unitGuid) then return end
+
+  local success, catalogUnitId = pcall(HelperFunctions.GetCatalogIdFromGuid, unitGuid)
+  if (not success or not catalogUnitId) then return end
+
+  if (Controller:CatalogUnitIsIncomplete(catalogUnitId)) then
+    Controller:UpdateCatalogUnit(CatalogUnit.New(
+      catalogUnitId,
+      UnitClass(unitId),
+      UnitClassification(unitId),
+      UnitCreatureFamily(unitId),
+      UnitCreatureType(unitId),
+      UnitName(unitId),
+      UnitRace(unitId),
+      nil,
+      AutoBiographerEnum.UnitType.Player
+    ))
+  end
+
+  Controller:OnBuffedOtherPlayer(catalogUnitId, UnitName(unitId), isGroupedWithPlayer)
+end
+
+function EM:TryTrackOtherPlayerBuff(unitId, auraData, previousAura, isRefresh)
+  if (self:IsSecretValue(auraData) or not auraData or self:IsSecretValue(auraData.isHelpful) or self:IsSecretValue(auraData.sourceUnit) or
+      self:IsSecretValue(auraData.expirationTime)) then
+    return
+  end
+  if (not auraData.isHelpful or auraData.sourceUnit ~= "player") then return end
+  if (isRefresh and (not previousAura or not auraData.expirationTime or not previousAura.ExpirationTime or
+      auraData.expirationTime <= previousAura.ExpirationTime)) then return end
+  if (not self:ShouldTrackOtherPlayerBuff(previousAura)) then return end
+
+  self:TrackOtherPlayerBuff(unitId)
+end
+
+function EM:OnUnitAura(unitId, updateInfo)
+  if (not self:IsOtherPlayerAuraUnit(unitId)) then return end
+
+  local unitGuid = UnitGUID(unitId)
+  if (self:IsSecretValue(unitGuid) or not unitGuid) then return end
+
+  local auraState = self.OtherPlayerAuraStates[unitGuid]
+  -- Check secrecy before testing the boolean or iterating any update lists.
+  -- Invalidate the baseline because we cannot observe these aura changes.
+  if (self:IsSecretValue(updateInfo)) then
+    self.OtherPlayerAuraStates[unitGuid] = nil
+    return
+  end
+  if (updateInfo and (self:IsSecretValue(updateInfo.isFullUpdate) or self:IsSecretValue(updateInfo.addedAuras) or
+      self:IsSecretValue(updateInfo.updatedAuraInstanceIDs) or self:IsSecretValue(updateInfo.removedAuraInstanceIDs))) then
+    self.OtherPlayerAuraStates[unitGuid] = nil
+    return
+  end
+  if (not auraState or not updateInfo or updateInfo.isFullUpdate) then
+    self:SnapshotOtherPlayerAuras(unitId)
+    return
+  end
+
+  for _, auraData in ipairs(updateInfo.addedAuras or {}) do
+    if (self:IsSecretValue(auraData) or not auraData or self:IsSecretValue(auraData.isHelpful)) then
+      self.OtherPlayerAuraStates[unitGuid] = nil
+      return
+    end
+    if (auraData.isHelpful) then
+      local previousAura = not self:IsSecretValue(auraData.spellId) and auraState.BySpellId[auraData.spellId] or nil
+      if (not self:StoreOtherPlayerAura(auraState, auraData)) then
+        self.OtherPlayerAuraStates[unitGuid] = nil
+        return
+      end
+      self:TryTrackOtherPlayerBuff(unitId, auraData, previousAura, false)
+    end
+  end
+
+  for _, auraInstanceId in ipairs(updateInfo.updatedAuraInstanceIDs or {}) do
+    if (not self:IsSecretValue(auraInstanceId)) then
+      local previousAura = auraState.ByAuraInstanceId[auraInstanceId]
+      local auraData = Api.GetAuraDataByAuraInstanceID(unitId, auraInstanceId)
+      if (self:IsSecretValue(auraData)) then
+        self.OtherPlayerAuraStates[unitGuid] = nil
+        return
+      end
+      if (previousAura and auraData) then
+        if (not self:StoreOtherPlayerAura(auraState, auraData)) then
+          self.OtherPlayerAuraStates[unitGuid] = nil
+          return
+        end
+        self:TryTrackOtherPlayerBuff(unitId, auraData, previousAura, true)
+      end
+    else
+      self.OtherPlayerAuraStates[unitGuid] = nil
+      return
+    end
+  end
+
+  for _, auraInstanceId in ipairs(updateInfo.removedAuraInstanceIDs or {}) do
+    if (not self:IsSecretValue(auraInstanceId)) then
+      local previousAura = auraState.ByAuraInstanceId[auraInstanceId]
+      auraState.ByAuraInstanceId[auraInstanceId] = nil
+      if (previousAura and auraState.BySpellId[previousAura.SpellId] == previousAura) then
+        auraState.BySpellId[previousAura.SpellId] = nil
+      end
+    else
+      self.OtherPlayerAuraStates[unitGuid] = nil
+      return
     end
   end
 end

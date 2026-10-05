@@ -129,6 +129,8 @@ AutoBiographerEnum = {
     DuelsLostToPlayer = 0,
     DuelsWonAgainstPlayer = 1,
     TimeSpentGroupedWithPlayer = 2,
+    BuffsGivenToPlayerNotGrouped = 3,
+    BuffsGivenToPlayerWhileGrouped = 4,
   },
   QuestTrackingType = {
     Completed = 0,

@@ -14,6 +14,20 @@ function Api.FormatMoney(amount)
   return tostring(amount)
 end
 
+function Api.GetAuraDataByAuraInstanceID(unitId, auraInstanceId)
+  if (not C_UnitAuras or not C_UnitAuras.GetAuraDataByAuraInstanceID) then return nil end
+
+  local success, auraData = pcall(C_UnitAuras.GetAuraDataByAuraInstanceID, unitId, auraInstanceId)
+  if (success) then return auraData end
+end
+
+function Api.GetAuraDataByIndex(unitId, index, filter)
+  if (not C_UnitAuras or not C_UnitAuras.GetAuraDataByIndex) then return nil end
+
+  local success, auraData = pcall(C_UnitAuras.GetAuraDataByIndex, unitId, index, filter)
+  if (success) then return auraData end
+end
+
 function Api.GetDamageMeterAvailability()
   if (not C_DamageMeter or not C_DamageMeter.IsDamageMeterAvailable) then
     return nil, "C_DamageMeter.IsDamageMeterAvailable is unavailable."

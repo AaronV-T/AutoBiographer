@@ -744,6 +744,14 @@ function AutoBiographer_MainWindow:Initialize()
   frame.ScrollFrame.Content.DuelsFs:SetPoint("TOPLEFT", 10, topPoint)
   topPoint = topPoint - 15
 
+  frame.ScrollFrame.Content.BuffsGivenNotGroupedFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  frame.ScrollFrame.Content.BuffsGivenNotGroupedFs:SetPoint("TOPLEFT", 10, topPoint)
+  topPoint = topPoint - 15
+
+  frame.ScrollFrame.Content.BuffsGivenWhileGroupedFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  frame.ScrollFrame.Content.BuffsGivenWhileGroupedFs:SetPoint("TOPLEFT", 10, topPoint)
+  topPoint = topPoint - 15
+
   frame.ScrollFrame.Content.JumpsFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   frame.ScrollFrame.Content.JumpsFs:SetPoint("TOPLEFT", 10, topPoint)
   topPoint = topPoint - 15
@@ -1457,6 +1465,14 @@ function AutoBiographer_MainWindow:Update()
   local duelsWon = Controller:GetOtherPlayerStatByOtherPlayerTrackingType(AutoBiographerEnum.OtherPlayerTrackingType.DuelsLostToPlayer, self.DisplayMinLevel, self.DisplayMaxLevel)
   local duelsLost = Controller:GetOtherPlayerStatByOtherPlayerTrackingType(AutoBiographerEnum.OtherPlayerTrackingType.DuelsWonAgainstPlayer, self.DisplayMinLevel, self.DisplayMaxLevel)
   self.ScrollFrame.Content.DuelsFs:SetText("Duels Won: " .. HF.CommaValue(duelsWon) .. ". Duels Lost: " .. HF.CommaValue(duelsLost) .. ".")
+
+  local buffsGivenNotGrouped = Controller:GetOtherPlayerStatByOtherPlayerTrackingType(AutoBiographerEnum.OtherPlayerTrackingType.BuffsGivenToPlayerNotGrouped, self.DisplayMinLevel, self.DisplayMaxLevel)
+  local uniquePlayersBuffedNotGrouped = Controller:GetUniqueOtherPlayerCountByOtherPlayerTrackingType(AutoBiographerEnum.OtherPlayerTrackingType.BuffsGivenToPlayerNotGrouped, self.DisplayMinLevel, self.DisplayMaxLevel)
+  self.ScrollFrame.Content.BuffsGivenNotGroupedFs:SetText("Buffs Given Outside Group: " .. HF.CommaValue(buffsGivenNotGrouped) .. ". Unique Players Buffed: " .. HF.CommaValue(uniquePlayersBuffedNotGrouped) .. ".")
+
+  local buffsGivenWhileGrouped = Controller:GetOtherPlayerStatByOtherPlayerTrackingType(AutoBiographerEnum.OtherPlayerTrackingType.BuffsGivenToPlayerWhileGrouped, self.DisplayMinLevel, self.DisplayMaxLevel)
+  local uniquePlayersBuffedWhileGrouped = Controller:GetUniqueOtherPlayerCountByOtherPlayerTrackingType(AutoBiographerEnum.OtherPlayerTrackingType.BuffsGivenToPlayerWhileGrouped, self.DisplayMinLevel, self.DisplayMaxLevel)
+  self.ScrollFrame.Content.BuffsGivenWhileGroupedFs:SetText("Buffs Given In Group: " .. HF.CommaValue(buffsGivenWhileGrouped) .. ". Unique Players Buffed: " .. HF.CommaValue(uniquePlayersBuffedWhileGrouped) .. ".")
   
   local jumps = Controller:GetMiscellaneousStatByMiscellaneousTrackingType(AutoBiographerEnum.MiscellaneousTrackingType.Jumps, self.DisplayMinLevel, self.DisplayMaxLevel)
   self.ScrollFrame.Content.JumpsFs:SetText("Jumps: " .. jumps)
@@ -1792,8 +1808,8 @@ function AutoBiographer_StatisticsWindow:Update()
   elseif (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.OtherPlayers) then
     local otherPlayerStatisticsByUnit = Controller:GetAggregatedOtherPlayerStatisticsDictionary(minLevel, maxLevel)
     tableData = {
-      HeaderValues = { "Unit Name", "Duels (Win)", "Duels (Lose)", "Time Grouped" },
-      RowOffsets = { 0, 225, 340, 455, 570 },
+      HeaderValues = { "Unit Name", "Buffs (Outside)", "Buffs (In Group)", "Duels (Win)", "Duels (Lose)", "Time Grouped" },
+      RowOffsets = { 0, 170, 290, 400, 485, 570, 700 },
       Rows = {},
     }
     for catalogUnitId, otherPlayerStatistics in pairs(otherPlayerStatisticsByUnit) do
@@ -1807,6 +1823,8 @@ function AutoBiographer_StatisticsWindow:Update()
 
         local row = {
           unitName,
+          OtherPlayerStatistics.GetSum(otherPlayerStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.BuffsGivenToPlayerNotGrouped }),
+          OtherPlayerStatistics.GetSum(otherPlayerStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.BuffsGivenToPlayerWhileGrouped }),
           OtherPlayerStatistics.GetSum(otherPlayerStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.DuelsLostToPlayer }),
           OtherPlayerStatistics.GetSum(otherPlayerStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.DuelsWonAgainstPlayer }),
           OtherPlayerStatistics.GetSum(otherPlayerStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.TimeSpentGroupedWithPlayer }),
@@ -1969,7 +1987,7 @@ function AutoBiographer_StatisticsWindow:Update()
       fs:SetPoint("TOPLEFT", self.ScrollFrame.Content, 17 + tableData.RowOffsets[j], -15 * (i - 1))
 
       local text = tableData.Rows[i][j]
-      if (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.OtherPlayers and j == 4) then
+      if (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.OtherPlayers and j == 6) then
         text = HelperFunctions.SecondsToTimeString(text, true)
       end
 
