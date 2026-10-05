@@ -1587,19 +1587,36 @@ end
 function EM:UpdateGroupMemberInfo()
   -- Populate list of unit GUIDs in player's party/raid.
   local unitGuidsInGroup = {}
-  for i = 1, 4 do
-    local guid = UnitGUID("party" .. i)
-    if (guid and guid ~= self.PersistentPlayerInfo.PlayerGuid) then
-      unitGuidsInGroup[guid] = true
+  local rosterIncomplete = false
+  local function AddGroupMember(unitId)
+    local guid = UnitGUID(unitId)
+    if (self:IsSecretValue(guid)) then
+      rosterIncomplete = true
+      return
+    end
+    if (not guid or guid == self.PersistentPlayerInfo.PlayerGuid or unitGuidsInGroup[guid]) then return end
+    unitGuidsInGroup[guid] = true
+
+    -- Group-time tracking must catalog members itself; Forever has no combat
+    -- log handler to populate these records for the Other Players window.
+    local catalogUnitId = HelperFunctions.GetCatalogIdFromGuid(guid)
+    local catalogUnit = Controller.CharacterData.Catalogs.UnitCatalog[catalogUnitId]
+    if (Controller:CatalogUnitIsIncomplete(catalogUnitId) or catalogUnit.UType ~= AutoBiographerEnum.UnitType.Player) then
+      local name = UnitName(unitId)
+      local class = UnitClass(unitId)
+      local race = UnitRace(unitId)
+      if (self:IsSecretValue(name)) then name = nil end
+      if (self:IsSecretValue(class)) then class = nil end
+      if (self:IsSecretValue(race)) then race = nil end
+      if (name == "") then name = nil end
+      Controller:UpdateCatalogUnit(CatalogUnit.New(
+        catalogUnitId, class, nil, nil, nil, name, race, nil, AutoBiographerEnum.UnitType.Player
+      ))
     end
   end
-  
-  for i = 1, 40 do
-    local guid = UnitGUID("raid" .. i)
-    if (guid and guid ~= self.PersistentPlayerInfo.PlayerGuid) then
-      unitGuidsInGroup[guid] = true
-    end
-  end
+
+  for i = 1, 4 do AddGroupMember("party" .. i) end
+  for i = 1, 40 do AddGroupMember("raid" .. i) end
   
   -- Save current timestamp for every unit in group.
   for k,v in pairs(unitGuidsInGroup) do
@@ -1608,6 +1625,9 @@ function EM:UpdateGroupMemberInfo()
     end
   end
   
+  -- An unreadable GUID is not evidence that an existing member left.
+  if (rosterIncomplete) then return end
+
   -- Add time in group for every unit that left the group.
   for k,v in pairs(self.TemporaryTimestamps.OtherPlayerJoinedGroup) do
     if (not unitGuidsInGroup[k]) then

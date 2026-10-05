@@ -1845,24 +1845,18 @@ function AutoBiographer_StatisticsWindow:Update()
       Rows = {},
     }
     for catalogUnitId, otherPlayerStatistics in pairs(otherPlayerStatisticsByUnit) do
-      if (Controller.CharacterData.Catalogs.UnitCatalog[catalogUnitId] and Controller.CharacterData.Catalogs.UnitCatalog[catalogUnitId].UType == AutoBiographerEnum.UnitType.Player) then
-        local unitName
-        if (Controller.CharacterData.Catalogs.UnitCatalog[catalogUnitId].Name) then
-          unitName = Controller.CharacterData.Catalogs.UnitCatalog[catalogUnitId].Name
-        else
-          unitName = "Unit ID: " .. catalogUnitId
-        end
+      local catalogUnit = Controller.CharacterData.Catalogs.UnitCatalog[catalogUnitId]
+      local unitName = catalogUnit and catalogUnit.Name or ("Unit ID: " .. tostring(catalogUnitId))
 
-        local row = {
-          unitName,
-          OtherPlayerStatistics.GetSum(otherPlayerStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.BuffsGivenToPlayerNotGrouped }),
-          OtherPlayerStatistics.GetSum(otherPlayerStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.BuffsGivenToPlayerWhileGrouped }),
-          OtherPlayerStatistics.GetSum(otherPlayerStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.DuelsLostToPlayer }),
-          OtherPlayerStatistics.GetSum(otherPlayerStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.DuelsWonAgainstPlayer }),
-          OtherPlayerStatistics.GetSum(otherPlayerStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.TimeSpentGroupedWithPlayer }),
-        }
-        table.insert(tableData.Rows, row)
-      end
+      local row = {
+        unitName,
+        OtherPlayerStatistics.GetSum(otherPlayerStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.BuffsGivenToPlayerNotGrouped }),
+        OtherPlayerStatistics.GetSum(otherPlayerStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.BuffsGivenToPlayerWhileGrouped }),
+        OtherPlayerStatistics.GetSum(otherPlayerStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.DuelsLostToPlayer }),
+        OtherPlayerStatistics.GetSum(otherPlayerStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.DuelsWonAgainstPlayer }),
+        OtherPlayerStatistics.GetSum(otherPlayerStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.TimeSpentGroupedWithPlayer }),
+      }
+      table.insert(tableData.Rows, row)
     end
   elseif (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.Spells) then
     local spellStatisticsBySpell = Controller:GetAggregatedSpellStatisticsDictionary(minLevel, maxLevel)
