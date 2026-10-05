@@ -144,6 +144,7 @@ AutoBiographerEnum = {
     Kills = 1,
     OtherPlayers = 2,
     Spells = 3,
+    SpellsByRank = 11,
     Time = 4,
     DamageDealt = 5,
     DamageDealtByRank = 9,

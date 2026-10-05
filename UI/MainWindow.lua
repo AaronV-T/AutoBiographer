@@ -992,6 +992,8 @@ function AutoBiographer_StatisticsWindow:Initialize()
     UIDropDownMenu_AddButton(info)
     info.text, info.arg1 = "Spells", AutoBiographerEnum.StatisticsDisplayMode.Spells
     UIDropDownMenu_AddButton(info)
+    info.text, info.arg1 = "Spells by Rank", AutoBiographerEnum.StatisticsDisplayMode.SpellsByRank
+    UIDropDownMenu_AddButton(info)
     info.text, info.arg1 = "Time", AutoBiographerEnum.StatisticsDisplayMode.Time
     UIDropDownMenu_AddButton(info)
   end)
@@ -1697,7 +1699,8 @@ function AutoBiographer_StatisticsWindow:Update()
   -- Get table data.
   local tableData
   local isRankView = self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.DamageDealtByRank or
-    self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.HealingDealtByRank
+    self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.HealingDealtByRank or
+    self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.SpellsByRank
   
   if (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.DamageDealt) then
     local abilitiesBySpellName = Controller:GetAggregatedDamageMeterAbilities({ AutoBiographerEnum.DamageOrHealingCategory.DamageDealt }, minLevel, maxLevel, true)
@@ -1897,6 +1900,23 @@ function AutoBiographer_StatisticsWindow:Update()
 
     for k, row in pairs(dictAggregatedBySpellName) do
       table.insert(tableData.Rows, row)
+    end
+  elseif (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.SpellsByRank) then
+    local spellStatisticsBySpell = Controller:GetAggregatedSpellStatisticsDictionary(minLevel, maxLevel)
+    tableData = {
+      HeaderValues = { "Spell Name", "Rank", "Started Casting", "Successfully Cast" },
+      RowOffsets = { 0, 250, 330, 490, 650 },
+      Rows = {},
+    }
+    for spellId, spellStatistics in pairs(spellStatisticsBySpell) do
+      local catalogSpell = Controller.CharacterData.Catalogs.SpellCatalog[spellId]
+      local spellName = catalogSpell and catalogSpell.Name or ("Spell ID: " .. tostring(spellId))
+      local rank = catalogSpell and catalogSpell.Rank
+      if (type(rank) == "string") then rank = tonumber(string.match(rank, "%d+")) end
+      rank = rank or Api.GetSpellRank(spellId) or 0
+      local startedCasting = SpellStatistics.GetSum(spellStatistics, { AutoBiographerEnum.SpellTrackingType.StartedCasting })
+      local successfullyCast = SpellStatistics.GetSum(spellStatistics, { AutoBiographerEnum.SpellTrackingType.SuccessfullyCast })
+      table.insert(tableData.Rows, { spellName, rank, startedCasting, successfullyCast })
     end
   elseif (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.Time) then
     local timeStatisticsByArea = Controller:GetAggregatedTimeStatisticsDictionary(minLevel, maxLevel)
