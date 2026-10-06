@@ -30,6 +30,7 @@ AutoBiographer_EventManager = {
   PlayerFlags = {
     AffectingCombat = nil,
     Afk = nil,
+    GamepadUIEnabled = nil,
     InParty = nil,
     IsDeadOrGhost = nil,
     OnTaxi = nil
@@ -39,6 +40,7 @@ AutoBiographer_EventManager = {
     EnteredArea = nil,
     EnteredCombat = nil,
     EnteredTaxi = nil,
+    GamepadUIEnabled = nil,
     JoinedParty = nil,
     LastJump = nil,
     MarkedAfk = nil,
@@ -635,6 +637,11 @@ if (not Api.IsWoWForever()) then
   end
 end
 
+function EM.EventHandlers.CVAR_UPDATE(self)
+  if (not self.PlayerEnteringWorldHasFired or self.PlayerFlags.GamepadUIEnabled == nil) then return end
+  self:UpdateGamepadUIState()
+end
+
 function EM.EventHandlers.DAMAGE_METER_COMBAT_SESSION_UPDATED(self, meterType, sessionId)
   --print("DAMAGE_METER_COMBAT_SESSION_UPDATED. " .. tostring(meterType) .. ", " .. tostring(sessionId))
   self:OnDamageMeterCombatSessionUpdated(meterType, sessionId)
@@ -844,6 +851,8 @@ function EM.EventHandlers.PLAYER_ENTERING_WORLD(self, isLogin, isReload)
   self.LastPlayerMoney = GetMoney()
   self.PlayerName = UnitName("player")
   self.TemporaryTimestamps.EnteredArea = GetTime()
+  self.TemporaryTimestamps.GamepadUIEnabled = nil
+  self:UpdateGamepadUIState()
   self:UpdateGroupMemberInfo()
   self:SnapshotOtherPlayerAurasForKnownUnits()
   self:UpdatePlayerCampAuras(false)
@@ -876,6 +885,8 @@ function EM.EventHandlers.PLAYER_LEAVING_WORLD(self)
     Controller:OnCamped()
   end
   self:UpdateTimestamps(self.PersistentPlayerInfo.CurrentZone, self.PersistentPlayerInfo.CurrentSubZone)
+  self.TemporaryTimestamps.GamepadUIEnabled = nil
+  self.PlayerFlags.GamepadUIEnabled = nil
 end
 
 function EM.EventHandlers.PLAYER_LEVEL_UP(self, newLevel)
@@ -1651,6 +1662,17 @@ function EM:SuppressTimePlayedMessages()
   end
 end
 
+function EM:UpdateGamepadUIState()
+  self.PlayerFlags.GamepadUIEnabled = Api.IsGamepadUIEnabled()
+  local startedAt = self.TemporaryTimestamps.GamepadUIEnabled
+  if (self.PlayerFlags.GamepadUIEnabled) then
+    if (not startedAt) then self.TemporaryTimestamps.GamepadUIEnabled = GetTime() end
+  elseif (startedAt) then
+    Controller:AddTime(AutoBiographerEnum.TimeTrackingType.GamepadUI, HelperFunctions.SubtractFloats(GetTime(), startedAt), self.PersistentPlayerInfo.CurrentZone, self.PersistentPlayerInfo.CurrentSubZone)
+    self.TemporaryTimestamps.GamepadUIEnabled = nil
+  end
+end
+
 function EM:UpdateGroupMemberInfo()
   -- Populate list of unit GUIDs in player's party/raid.
   local unitGuidsInGroup = {}
@@ -2375,6 +2397,12 @@ function EM:UpdateTimestamps(zone, subZone)
     self.TemporaryTimestamps.DeadOrGhost = GetTime()
   end
   
+  -- Gamepad UI
+  if (self.TemporaryTimestamps.GamepadUIEnabled) then
+    Controller:AddTime(AutoBiographerEnum.TimeTrackingType.GamepadUI, HelperFunctions.SubtractFloats(GetTime(), self.TemporaryTimestamps.GamepadUIEnabled), zone, subZone)
+    self.TemporaryTimestamps.GamepadUIEnabled = GetTime()
+  end
+
   -- In Combat
   if (self.TemporaryTimestamps.EnteredCombat) then
     Controller:AddTime(AutoBiographerEnum.TimeTrackingType.InCombat, HelperFunctions.SubtractFloats(GetTime(), self.TemporaryTimestamps.EnteredCombat), zone, subZone)

@@ -826,6 +826,10 @@ function AutoBiographer_MainWindow:Initialize()
   frame.ScrollFrame.Content.TimeSpentDeadFs:SetPoint("TOPLEFT", 10, topPoint)
   topPoint = topPoint - 15
 
+  frame.ScrollFrame.Content.TimeSpentGamepadUIFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  frame.ScrollFrame.Content.TimeSpentGamepadUIFs:SetPoint("TOPLEFT", 10, topPoint)
+  topPoint = topPoint - 15
+
   frame.ScrollFrame.Content.TimeSpentInCombatFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   frame.ScrollFrame.Content.TimeSpentInCombatFs:SetPoint("TOPLEFT", 10, topPoint)
   topPoint = topPoint - 15
@@ -1539,6 +1543,9 @@ function AutoBiographer_MainWindow:Update()
   
   local timeSpentDead = Controller:GetTimeForTimeTrackingType(AutoBiographerEnum.TimeTrackingType.DeadOrGhost, self.DisplayMinLevel, self.DisplayMaxLevel)
   self.ScrollFrame.Content.TimeSpentDeadFs:SetText("Time Spent Dead: " .. HF.SecondsToTimeString(timeSpentDead) .. ".")
+
+  local timeSpentGamepadUI = Controller:GetTimeForTimeTrackingType(AutoBiographerEnum.TimeTrackingType.GamepadUI, self.DisplayMinLevel, self.DisplayMaxLevel)
+  self.ScrollFrame.Content.TimeSpentGamepadUIFs:SetText("Time Spent with Gamepad UI: " .. HF.SecondsToTimeString(timeSpentGamepadUI) .. ".")
   
   local timeSpentInCombat = Controller:GetTimeForTimeTrackingType(AutoBiographerEnum.TimeTrackingType.InCombat, self.DisplayMinLevel, self.DisplayMaxLevel)
   self.ScrollFrame.Content.TimeSpentInCombatFs:SetText("Time Spent in Combat: " .. HF.SecondsToTimeString(timeSpentInCombat) .. ".")
@@ -1928,8 +1935,8 @@ function AutoBiographer_StatisticsWindow:Update()
   elseif (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.Time) then
     local timeStatisticsByArea = Controller:GetAggregatedTimeStatisticsDictionary(minLevel, maxLevel)
     tableData = {
-      HeaderValues = { "Area", "AFK", "Casting", "Dead", "Combat", "Total", "Taxi", "Grouped" },
-      RowOffsets = { 0, 225, 285, 345, 405, 465, 525, 585, 645 },
+      HeaderValues = { "Area", "AFK", "Casting", "Dead", "Combat", "Total", "Taxi", "Grouped", "Gamepad" },
+      RowOffsets = { 0, 225, 285, 345, 405, 465, 525, 585, 645, 705 },
       Rows = {},
     }
 
@@ -1943,6 +1950,7 @@ function AutoBiographer_StatisticsWindow:Update()
       local loggedIn = HelperFunctions.Round(TimeStatistics.GetSum(timeStatistics, { AutoBiographerEnum.TimeTrackingType.LoggedIn }) / 3600, 2)
       local onTaxi = HelperFunctions.Round(TimeStatistics.GetSum(timeStatistics, { AutoBiographerEnum.TimeTrackingType.OnTaxi }) / 3600, 2)
       local inParty = HelperFunctions.Round(TimeStatistics.GetSum(timeStatistics, { AutoBiographerEnum.TimeTrackingType.InParty }) / 3600, 2)
+      local gamepadUI = HelperFunctions.Round(TimeStatistics.GetSum(timeStatistics, { AutoBiographerEnum.TimeTrackingType.GamepadUI }) / 3600, 2)
 
       if (not dictAggregatedByZone[zone]) then
         dictAggregatedByZone[zone] = {
@@ -1954,6 +1962,7 @@ function AutoBiographer_StatisticsWindow:Update()
           loggedIn,
           onTaxi,
           inParty,
+          gamepadUI,
         }
       else
         dictAggregatedByZone[zone][2] = dictAggregatedByZone[zone][2] + afk
@@ -1963,6 +1972,7 @@ function AutoBiographer_StatisticsWindow:Update()
         dictAggregatedByZone[zone][6] = dictAggregatedByZone[zone][6] + loggedIn
         dictAggregatedByZone[zone][7] = dictAggregatedByZone[zone][7] + onTaxi
         dictAggregatedByZone[zone][8] = dictAggregatedByZone[zone][8] + inParty
+        dictAggregatedByZone[zone][9] = dictAggregatedByZone[zone][9] + gamepadUI
       end
     end
 

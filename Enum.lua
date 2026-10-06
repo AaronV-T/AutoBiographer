@@ -162,6 +162,7 @@ AutoBiographerEnum = {
     LoggedIn = 4,
     OnTaxi = 5,
     InParty = 6,
+    GamepadUI = 7,
   },
   UnitType = {
     Creature = 0,

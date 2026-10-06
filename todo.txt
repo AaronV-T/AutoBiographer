@@ -1,15 +1,12 @@
-Time played with controller.
+Improve UI
 more social stuff
   something while camping
     Automatically share last milestone? Or maybe suggest some things to share?
   better sharing of achievements
-Improve UI
 Notes and ratings (players, mobs, items?, maps?).
 Add todo list
   add todo items like, config item if it falls below x count in inventory or repair if durability is less than x%
 More milestones
-Add event window to map when gamepad ui is enabled
-Add new dungeons and raids locations
 class specific stats
 other player stat: rezzes
 Session stats
@@ -17,6 +14,9 @@ Update Curseforge page and categories
 Fix
   Do layers change player GUIDs?
   Not tracking aucion house items correctly
+  Camped stat way too high
+Add event window to map when gamepad ui is enabled
+Add new dungeons and raids locations
 Show spotify wrapped when dieing in hardcore
 
 
