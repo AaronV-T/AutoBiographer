@@ -112,6 +112,7 @@ AutoBiographerEnum = {
   MiscellaneousTrackingType = {
     PlayerDeaths = 0, -- Deprecated
     Jumps = 1,
+    Camped = 2,
   },
   MoneyAcquisitionMethod = {
     AuctionHouseSale = 0,

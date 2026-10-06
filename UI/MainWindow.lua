@@ -752,6 +752,10 @@ function AutoBiographer_MainWindow:Initialize()
   frame.ScrollFrame.Content.BuffsGivenWhileGroupedFs:SetPoint("TOPLEFT", 10, topPoint)
   topPoint = topPoint - 15
 
+  frame.ScrollFrame.Content.CampedFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  frame.ScrollFrame.Content.CampedFs:SetPoint("TOPLEFT", 10, topPoint)
+  topPoint = topPoint - 15
+
   frame.ScrollFrame.Content.JumpsFs = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   frame.ScrollFrame.Content.JumpsFs:SetPoint("TOPLEFT", 10, topPoint)
   topPoint = topPoint - 15
@@ -1480,6 +1484,9 @@ function AutoBiographer_MainWindow:Update()
   local uniquePlayersBuffedWhileGrouped = Controller:GetUniqueOtherPlayerCountByOtherPlayerTrackingType(AutoBiographerEnum.OtherPlayerTrackingType.BuffsGivenToPlayerWhileGrouped, self.DisplayMinLevel, self.DisplayMaxLevel)
   self.ScrollFrame.Content.BuffsGivenWhileGroupedFs:SetText("Buffs Given In Group: " .. HF.CommaValue(buffsGivenWhileGrouped) .. ". Unique Players Buffed: " .. HF.CommaValue(uniquePlayersBuffedWhileGrouped) .. ".")
   
+  local timesCamped = Controller:GetMiscellaneousStatByMiscellaneousTrackingType(AutoBiographerEnum.MiscellaneousTrackingType.Camped, self.DisplayMinLevel, self.DisplayMaxLevel)
+  self.ScrollFrame.Content.CampedFs:SetText("Camped: " .. HF.CommaValue(timesCamped))
+
   local jumps = Controller:GetMiscellaneousStatByMiscellaneousTrackingType(AutoBiographerEnum.MiscellaneousTrackingType.Jumps, self.DisplayMinLevel, self.DisplayMaxLevel)
   self.ScrollFrame.Content.JumpsFs:SetText("Jumps: " .. jumps)
 

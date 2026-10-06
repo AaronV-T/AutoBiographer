@@ -661,6 +661,10 @@ function Controller:OnBossKill(timestamp, coordinates, bossId, bossName, hasKill
   end
 end
 
+function Controller:OnCamped()
+  MiscellaneousStatistics.Add(self:GetCurrentLevelStatistics().MiscellaneousStatistics, AutoBiographerEnum.MiscellaneousTrackingType.Camped, 1)
+end
+
 function Controller:OnChangedSubZone(timestamp, coordinates, zoneName, subZoneName)
   if (subZoneName == nil or subZoneName == "") then return end
   if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog("ChangedSubZone: " .. tostring(subZoneName) .. " (" .. tostring(zoneName) .. ").", AutoBiographerEnum.LogLevel.Debug) end

@@ -2,6 +2,7 @@ AutoBiographer_Settings = nil
 
 AutoBiographer_EventManager = {
   AuctionHouseIsOpen = nil,
+  CampedPending = false,
   CurrentDamageMeterSessionId = nil,
   DamageMeterBaselineInitializationPending = false,
   DamageMeterBaselinesInitialized = false,
@@ -19,6 +20,7 @@ AutoBiographer_EventManager = {
   HasLeveledUpSinceLastStatSnapshot = false,
   NewLevelToAddToHistory = nil,
   OtherPlayerAuraStates = {},
+  PlayerCampAuraSnapshot = nil,
   PlayerLevelUpStatSnapshot = nil,
   PlayerLevelUpStatSnapshotPending = false,
   PlayerLevelUpTargetLevel = nil,
@@ -843,6 +845,7 @@ function EM.EventHandlers.PLAYER_ENTERING_WORLD(self, isLogin, isReload)
   self.TemporaryTimestamps.EnteredArea = GetTime()
   self:UpdateGroupMemberInfo()
   self:SnapshotOtherPlayerAurasForKnownUnits()
+  self:UpdatePlayerCampAuras(false)
   self:UpdatePlayerFlags()
   self:ScheduleDamageMeterSessionBaselines()
 end
@@ -867,6 +870,10 @@ function EM.EventHandlers.PLAYER_INTERACTION_MANAGER_FRAME_HIDE(self, type)
 end
 
 function EM.EventHandlers.PLAYER_LEAVING_WORLD(self)
+  if (self.CampedPending) then
+    self.CampedPending = false
+    Controller:OnCamped()
+  end
   self:UpdateTimestamps(self.PersistentPlayerInfo.CurrentZone, self.PersistentPlayerInfo.CurrentSubZone)
 end
 
@@ -1184,6 +1191,9 @@ end
 function EM.EventHandlers.UNIT_AURA(self, unitId, updateInfo)
   if (not Api.IsWoWForever()) then return end
   if (self:IsSecretValue(unitId)) then return end
+  if (unitId == "player") then
+    if (self.PlayerEnteringWorldHasFired) then self:UpdatePlayerCampAuras(true) end
+  end
   self:OnUnitAura(unitId, updateInfo)
 end
 
@@ -1270,6 +1280,10 @@ end
 function EM.EventHandlers.UNIT_SPELLCAST_INTERRUPTED(self, unitId, arg2, arg3, arg4, arg5)
   if (unitId ~= "player") then return end
   --print("UNIT_SPELLCAST_INTERRUPTED. " .. unitId .. ", " .. tostring(arg2) .. ", " .. tostring(arg3) .. ", " .. tostring(arg4) .. ", " .. tostring(arg5))
+end
+
+function EM.EventHandlers.UNIT_SPELLCAST_SENT(self, unitTarget, target, castGUID, spellID)
+  --print("UNIT_SPELLCAST_SENT. " .. unitTarget .. ", " .. tostring(target) .. ", " .. tostring(castGUID) .. ", " .. tostring(spellID))
 end
 
 function EM.EventHandlers.UNIT_SPELLCAST_START(self, unitId, castId, spellId)
@@ -1927,6 +1941,57 @@ function EM:UpdateMailboxMessages()
 
   self.MailboxUpdatesRunning = self.MailboxUpdatesRunning - 1
   --print ("End UpdateMailboxMessages")
+end
+
+function EM:UpdatePlayerCampAuras(trackChanges)
+  if (not Api.IsWoWForever()) then return end
+
+  -- Read both buffs and debuffs. Incremental UNIT_AURA data may be secret,
+  -- and only these two aura states are needed to identify completed rests.
+  local snapshot = { HasBoostedRest = false }
+  for _, filter in ipairs({ "HELPFUL", "HARMFUL" }) do
+    for index = 1, 255 do
+      local auraData = Api.GetAuraDataByIndex("player", index, filter)
+      if (self:IsSecretValue(auraData)) then
+        self.PlayerCampAuraSnapshot = nil
+        return
+      end
+      if (not auraData) then break end
+      if (self:IsSecretValue(auraData.spellId)) then
+        self.PlayerCampAuraSnapshot = nil
+        return
+      end
+      if (auraData.spellId == 1229741) then -- Camp Benefits
+        local expirationTime = auraData.expirationTime
+        if (self:IsSecretValue(expirationTime) or type(expirationTime) ~= "number") then
+          self.PlayerCampAuraSnapshot = nil
+          return
+        end
+        snapshot.CampBenefitsExpirationTime = expirationTime
+      elseif (auraData.spellId == 1229451) then -- Boosted Rest: additions only, never refreshes.
+        snapshot.HasBoostedRest = true
+      end
+    end
+  end
+
+  local previousSnapshot = self.PlayerCampAuraSnapshot
+  self.PlayerCampAuraSnapshot = snapshot
+  -- Login/reload and the first readable snapshot after secret data are baselines.
+  if (not trackChanges or not previousSnapshot) then return end
+
+  local benefitsReceived = snapshot.CampBenefitsExpirationTime and
+    (not previousSnapshot.CampBenefitsExpirationTime or snapshot.CampBenefitsExpirationTime > previousSnapshot.CampBenefitsExpirationTime)
+  local boostedRestReceived = snapshot.HasBoostedRest and not previousSnapshot.HasBoostedRest
+  if (not benefitsReceived and not boostedRestReceived) then return end
+  if (self.CampedPending) then return end
+
+  -- Combine both benefits into one completed rest, even across separate aura events.
+  self.CampedPending = true
+  C_Timer.After(0.25, function()
+    if (not self.CampedPending) then return end
+    self.CampedPending = false
+    Controller:OnCamped()
+  end)
 end
 
 function EM:UpdatePlayerGuildInfo()
