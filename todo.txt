@@ -1,5 +1,3 @@
-other player stat: rezzes
-total time played and time played last level on level up
 Time played with controller.
 more social stuff
   something while camping
@@ -13,6 +11,7 @@ More milestones
 Add event window to map when gamepad ui is enabled
 Add new dungeons and raids locations
 class specific stats
+other player stat: rezzes
 Session stats
 Update Curseforge page and categories
 Fix

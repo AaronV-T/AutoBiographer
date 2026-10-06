@@ -48,6 +48,7 @@ AutoBiographer_EventManager = {
   TimePlayedMessageChatFramesToRegister = nil,
   TimePlayedMessageIsUnregistered = nil,
   TimePlayedMessageLastTimestamp = nil,
+  TimePlayedMessageSuppressionGeneration = 0,
   TradeInfo = nil,
   ZoneChangedNewAreaEventHasFired = false
 }
@@ -888,12 +889,11 @@ function EM.EventHandlers.PLAYER_LEVEL_UP(self, newLevel)
   
   local delay = 0.25
   C_Timer.After(delay, function()
-    if (self.TimePlayedMessageLastTimestamp and GetTime() - self.TimePlayedMessageLastTimestamp <= delay) then
-      return
-    end
+    if (self.NewLevelToAddToHistory == nil) then return end
 
-    local showMessage = AutoBiographer_Settings.Options["ShowTimePlayedOnLevelUp"]
-    EM:RequestTimePlayed(showMessage)
+    -- The level-up response is printed below with time spent on the last level,
+    -- rather than Blizzard's time on the newly reached level.
+    EM:RequestTimePlayed(false)
   end)
 end
 
@@ -1096,15 +1096,39 @@ function EM.EventHandlers.TIME_PLAYED_MSG(self, totalTimePlayed, levelTimePlayed
   self.TimePlayedMessageLastTimestamp = GetTime()
 
   if (self.TimePlayedMessageChatFramesToRegister) then
-    for i = 1, #self.TimePlayedMessageChatFramesToRegister do
-      _G["ChatFrame" .. self.TimePlayedMessageChatFramesToRegister[i]]:RegisterEvent("TIME_PLAYED_MSG")
-    end
-    self.TimePlayedMessageChatFramesToRegister = nil
+    local chatFramesToRegister = self.TimePlayedMessageChatFramesToRegister
+    local generation = self.TimePlayedMessageSuppressionGeneration
+    -- Stay unregistered for the entire dispatch of this response; restoring
+    -- here would let chat frames print the same TIME_PLAYED_MSG themselves.
+    C_Timer.After(0, function()
+      if (self.TimePlayedMessageSuppressionGeneration ~= generation or self.TimePlayedMessageChatFramesToRegister ~= chatFramesToRegister) then return end
+      for i = 1, #chatFramesToRegister do
+        _G["ChatFrame" .. chatFramesToRegister[i]]:RegisterEvent("TIME_PLAYED_MSG")
+      end
+      self.TimePlayedMessageChatFramesToRegister = nil
+    end)
   end
 
   if self.NewLevelToAddToHistory ~= nil then
-    Controller:OnLevelUp(time(), HelperFunctions.GetCoordinatesByUnitId("player"), self.NewLevelToAddToHistory, totalTimePlayed)
+    local newLevel = self.NewLevelToAddToHistory
+    Controller:OnLevelUp(time(), HelperFunctions.GetCoordinatesByUnitId("player"), newLevel, totalTimePlayed - levelTimePlayed)
     self.NewLevelToAddToHistory = nil
+
+    if (AutoBiographer_Settings.Options["ShowTimePlayedOnLevelUp"]) then
+      local function printSystemMessage(message)
+        local systemColor = ChatTypeInfo and ChatTypeInfo["SYSTEM"]
+        if (systemColor and DEFAULT_CHAT_FRAME) then
+          DEFAULT_CHAT_FRAME:AddMessage(message, systemColor.r, systemColor.g, systemColor.b)
+        else
+          print(message)
+        end
+      end
+
+      local previousLevel = Controller.CharacterData.Levels[newLevel - 1]
+      local lastLevelTimePlayed = previousLevel and previousLevel.TimePlayedThisLevel
+      printSystemMessage("Total time played: " .. HelperFunctions.SecondsToTimeString(totalTimePlayed))
+      printSystemMessage("Time played last level: " .. (lastLevelTimePlayed and HelperFunctions.SecondsToTimeString(lastLevelTimePlayed) or "unavailable (not recorded)"))
+    end
   end
 
   if (self.PersistentPlayerInfo.LastTotalTimePlayed == nil) then
@@ -1599,15 +1623,7 @@ function EM:OnStoppedCasting()
 end
 
 function EM:RequestTimePlayed(showMessage)
-  if (not showMessage) then
-    self.TimePlayedMessageChatFramesToRegister = {}
-    for i = 1, 10 do
-      if (_G["ChatFrame" .. i]:IsEventRegistered("TIME_PLAYED_MSG")) then
-        table.insert(self.TimePlayedMessageChatFramesToRegister, i)
-        _G["ChatFrame" .. i]:UnregisterEvent("TIME_PLAYED_MSG")
-      end
-    end
-  end
+  if (not showMessage) then self:SuppressTimePlayedMessages() end
   
   RequestTimePlayed()
 end
@@ -1620,6 +1636,19 @@ function EM:RequestTimePlayedInterval()
   C_Timer.After(60, function()
     EM:RequestTimePlayedInterval()
   end)
+end
+
+function EM:SuppressTimePlayedMessages()
+  self.TimePlayedMessageSuppressionGeneration = self.TimePlayedMessageSuppressionGeneration + 1
+  if (self.TimePlayedMessageChatFramesToRegister) then return end
+  self.TimePlayedMessageChatFramesToRegister = {}
+  for i = 1, 10 do
+    local chatFrame = _G["ChatFrame" .. i]
+    if (chatFrame and chatFrame:IsEventRegistered("TIME_PLAYED_MSG")) then
+      table.insert(self.TimePlayedMessageChatFramesToRegister, i)
+      chatFrame:UnregisterEvent("TIME_PLAYED_MSG")
+    end
+  end
 end
 
 function EM:UpdateGroupMemberInfo()
@@ -2437,16 +2466,5 @@ end
 
 function EM:Test()
   print("[AutoBiographer] Test")
-
-  local function formatValue(value)
-    if (self:IsSecretValue(value)) then return "<secret>" end
-    return tostring(value)
-  end
-
-  for statId, statName in ipairs({ "Strength", "Agility", "Stamina", "Intellect", "Spirit" }) do
-    local stat, effectiveStat, positiveBonus, negativeBonus = UnitStat("player", statId)
-    print("[AutoBiographer] UnitStat " .. statName .. " (" .. statId .. "): stat=" .. formatValue(stat) ..
-      ", effectiveStat=" .. formatValue(effectiveStat) .. ", positiveBonus=" .. formatValue(positiveBonus) ..
-      ", negativeBonus=" .. formatValue(negativeBonus))
-  end
+  self:RequestTimePlayed(false)
 end
