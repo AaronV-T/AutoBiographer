@@ -2390,11 +2390,17 @@ function EM:UpdateTimestamps(zone, subZone)
     Controller:AddTime(AutoBiographerEnum.TimeTrackingType.Afk, HelperFunctions.SubtractFloats(GetTime(), self.TemporaryTimestamps.MarkedAfk), zone, subZone)
     self.TemporaryTimestamps.MarkedAfk = GetTime()
   end
+
+  -- Casting
+  if (self.TemporaryTimestamps.StartedCasting) then
+    Controller:AddTime(AutoBiographerEnum.TimeTrackingType.Casting, HelperFunctions.SubtractFloats(GetTime(), self.TemporaryTimestamps.StartedCasting), zone, subZone)
+    self.TemporaryTimestamps.StartedCasting = GetTime()
+  end
   
   -- DeadOrGhost
   if (self.TemporaryTimestamps.Died) then
     Controller:AddTime(AutoBiographerEnum.TimeTrackingType.DeadOrGhost, HelperFunctions.SubtractFloats(GetTime(), self.TemporaryTimestamps.Died), zone, subZone)
-    self.TemporaryTimestamps.DeadOrGhost = GetTime()
+    self.TemporaryTimestamps.Died = GetTime()
   end
   
   -- Gamepad UI
