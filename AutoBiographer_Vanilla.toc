@@ -33,7 +33,11 @@ Data/NpcDatabase_Vanilla.lua
 
 UI/ConfirmWindow.lua
 UI/MainWindow.lua
-UI/MainDashboard.lua
+UI/StatisticsPanel.lua
+UI/NotesPanel.lua
+UI/SummaryPanel.lua
+UI/EventsPanel.lua
+UI/MainContainer.lua
 UI/MinimapButton.lua
 UI/MinimapButton.xml
 UI/WorldMapWindow.lua

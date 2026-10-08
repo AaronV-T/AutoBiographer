@@ -174,3 +174,12 @@ function Api.RegisterTooltipHandler(scriptType, tooltipDataType, handler)
     GameTooltip:HookScript(scriptType, handler)
   end
 end
+
+function Api.SetFrameResizeBounds(frame, minWidth, minHeight, maxWidth, maxHeight)
+  if (frame.SetResizeBounds) then
+    frame:SetResizeBounds(minWidth, minHeight, maxWidth, maxHeight)
+  else
+    frame:SetMinResize(minWidth, minHeight)
+    frame:SetMaxResize(maxWidth, maxHeight)
+  end
+end

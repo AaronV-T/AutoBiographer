@@ -1,8 +1,6 @@
-Improve UI
-more social stuff
-  something while camping
-    Automatically share last milestone? Or maybe suggest some things to share?
-  better sharing of achievements
+more social stuff   
+  Milestone sharing guild messages or emotes
+  Milestone sharing camp message prompts
 Notes and ratings (players, mobs, items?, maps?).
 Add todo list
   add todo items like, config item if it falls below x count in inventory or repair if durability is less than x%
@@ -17,9 +15,17 @@ Fix
   Camped stat way too high
   Rested experience not tracked
   Time AFK not tracked
+Distance travelled stat
+Snapshot gear, money, and other stuff on each level up and each raid first clear?
+Track each time something is equipped?
 Add event window to map when gamepad ui is enabled
 Add new dungeons and raids locations
 Show spotify wrapped when dieing in hardcore
+Beautify UI
+  Feats of strength panel
+  Summary page to show more like a highlights?
+Character notes and account notes
+
 
 
 

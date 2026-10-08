@@ -267,12 +267,11 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   AutoBiographer_CustomEventDetailsWindow:Initialize()
   AutoBiographer_DebugWindow:Initialize()
   AutoBiographer_EventWindow:Initialize()
-  AutoBiographer_MainWindow:Initialize()
-  AutoBiographer_NoteDetailsWindow:Initialize()
   AutoBiographer_NotesWindow:Initialize()
   AutoBiographer_OptionWindow:Initialize()
   AutoBiographer_StatisticsWindow:Initialize()
   AutoBiographer_VerificationWindow:Initialize()
+  AutoBiographer_MainWindow:Initialize()
 
   if (not (Api.IsWoWForever() and Api.IsGamepadUIEnabled())) then
     AutoBiographer_WorldMapOverlayWindow_Initialize()

@@ -145,17 +145,6 @@ local dashboardTabs = {
   } },
 }
 
-local statisticsViewNames = {
-  DamageDealt = "Damage Dealt",
-  DamageTakenByUnit = "Damage Taken by Unit",
-  HealingDealt = "Healing Dealt",
-  Items = "Item Aquisitions",
-  Kills = "Kills",
-  OtherPlayers = "Other Players",
-  Spells = "Spells",
-  Time = "Time",
-}
-
 local function CreateDashboardButton(parent, text, width, onClick)
   local button = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
   button:SetSize(width, 24)
@@ -245,7 +234,7 @@ local function CreateDashboardSection(window, definition)
   return section
 end
 
-function AutoBiographer_MainWindow:Initialize()
+function AutoBiographer_SummaryPanel:Initialize()
   AutioBiographer_WindowHelper:InitialzationHelper(self, 800, 650, 100, "Main", -157)
   self.Title:SetText("AutoBiographer")
   self.DisplayMinLevel = self.DisplayMinLevel or 1
@@ -258,46 +247,28 @@ function AutoBiographer_MainWindow:Initialize()
   self.GameVersion = HF.GetGameVersion()
 
   self.CharacterLabel = self:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-  self.CharacterLabel:SetPoint("TOPLEFT", 18, -42)
+  self.CharacterLabel:SetPoint("TOPLEFT", 18, -14)
   self.CharacterLabel:SetSize(280, 24)
   self.CharacterLabel:SetJustifyH("LEFT")
   self.CharacterLabel:SetWordWrap(false)
 
-  local actions = {
-    { "Events", 64, function() AutoBiographer_EventWindow:Toggle() end },
-    { "Statistics", 78, function() AutoBiographer_StatisticsWindow:Toggle() end },
-    { "Notes", 60, function() AutoBiographer_NotesWindow:Toggle() end },
-    { "Options", 64, function()
-      Settings.OpenToCategory(AutoBiographer_OptionWindow.categoryID)
-      self:Hide()
-    end },
-    { "Debug", 56, function() AutoBiographer_DebugWindow:Toggle() end },
-  }
-  local actionRight = -22
-  for i = #actions, 1, -1 do
-    local action = actions[i]
-    local button = CreateDashboardButton(self, action[1], action[2], action[3])
-    button:SetPoint("TOPRIGHT", actionRight, -42)
-    actionRight = actionRight - action[2] - 4
-  end
-
   self.FilterLabel = self:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-  self.FilterLabel:SetPoint("TOPLEFT", 18, -82)
+  self.FilterLabel:SetPoint("TOPLEFT", 18, -54)
   self.FilterLabel:SetText("Show:")
   self.Dropdown = CreateFrame("Frame", nil, self, "UIDropDownMenuTemplate")
-  self.Dropdown:SetPoint("TOPLEFT", 55, -71)
+  self.Dropdown:SetPoint("TOPLEFT", 55, -43)
   UIDropDownMenu_SetWidth(self.Dropdown, 165)
   UIDropDownMenu_Initialize(self.Dropdown, function(dropdown, level, menuList)
     self:UpdateLevelFilter(level, menuList)
   end)
   self.LevelTimeLabel = self:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-  self.LevelTimeLabel:SetPoint("TOPRIGHT", -24, -82)
+  self.LevelTimeLabel:SetPoint("TOPRIGHT", -24, -54)
   self.LevelTimeLabel:SetWidth(480)
   self.LevelTimeLabel:SetJustifyH("RIGHT")
 
   for i, tab in ipairs(dashboardTabs) do
     local button = CreateDashboardButton(self, tab.Name, 118, function() self:SelectTab(tab.Name) end)
-    button:SetPoint("TOPLEFT", 18 + (i - 1) * 124, -116)
+    button:SetPoint("TOPLEFT", 18 + (i - 1) * 124, -88)
     button:SetDisabledFontObject("GameFontNormalSmall")
     self.TabButtons[tab.Name] = button
     local sections = {}
@@ -313,11 +284,11 @@ function AutoBiographer_MainWindow:Initialize()
   if (not self.DashboardPages[self.ActiveTab]) then self.ActiveTab = "Overview" end
 
   self.ScrollFrame:ClearAllPoints()
-  self.ScrollFrame:SetPoint("TOPLEFT", 18, -157)
+  self.ScrollFrame:SetPoint("TOPLEFT", 18, -129)
   self.ScrollFrame:SetPoint("BOTTOMRIGHT", -32, 46)
   self.ScrollFrame.Content:SetWidth(750)
   self.ScrollFrame.Scrollbar:ClearAllPoints()
-  self.ScrollFrame.Scrollbar:SetPoint("TOPLEFT", self, "TOPRIGHT", -25, -162)
+  self.ScrollFrame.Scrollbar:SetPoint("TOPLEFT", self, "TOPRIGHT", -25, -134)
   self.ScrollFrame.Scrollbar:SetPoint("BOTTOMLEFT", self, "BOTTOMRIGHT", -25, 51)
   self.ScrollFrame.Scrollbar.scrollStep = 22
 
@@ -328,22 +299,13 @@ function AutoBiographer_MainWindow:Initialize()
   self.RefreshButton = CreateDashboardButton(self, "Refresh", 80, function() self:Update() end)
   self.RefreshButton:SetPoint("BOTTOMRIGHT", -22, 14)
 
-  -- Also refresh when shown directly, not just through the minimap Toggle helper.
-  self.Toggle = function(window)
-    if (window:IsShown()) then
-      window:Hide()
-    else
-      window:SetFrameLevel(100)
-      window:Show()
-    end
-  end
-  self:SetScript("OnShow", function(window) window:Update() end)
-  self:LayoutDashboard()
+  self.PanelReady = true
+  self:LayoutPanel()
   self:Hide()
   return self
 end
 
-function AutoBiographer_MainWindow:LayoutDashboard()
+function AutoBiographer_SummaryPanel:LayoutDashboard()
   local width = self.ScrollFrame.Content:GetWidth()
   local columnWidth = (width - 16) / 2
   local columnBottom = { 0, 0 }
@@ -404,20 +366,22 @@ function AutoBiographer_MainWindow:LayoutDashboard()
   self.ScrollFrame.Scrollbar:SetShown(maxScroll > 0)
 end
 
-function AutoBiographer_MainWindow:OpenStatistics(viewName)
-  local window = AutoBiographer_StatisticsWindow
-  window.StatisticsDisplayMode = Enum.StatisticsDisplayMode[viewName]
-  window.DropdownText = statisticsViewNames[viewName]
-  window.MinimumLevelEb:SetNumber(self.DisplayMinLevel)
-  window.MaximumLevelEb:SetNumber(math.min(self.DisplayMaxLevel, Controller:GetCurrentLevelNum()))
-  window.OrderColumnIndex = 1
-  window.OrderDirection = "ASC"
-  window:Update()
-  window:SetFrameLevel(150)
-  window:Show()
+function AutoBiographer_SummaryPanel:LayoutPanel()
+  if (not self.PanelReady) then return end
+  self.ScrollFrame.Content:SetWidth(math.max(1, self:GetWidth() - 50))
+  self.Footer:SetWidth(math.max(1, self:GetWidth() - 160))
+  self.LevelTimeLabel:SetWidth(math.max(1, self:GetWidth() - 310))
+  self:LayoutDashboard()
 end
 
-function AutoBiographer_MainWindow:SelectTab(name)
+function AutoBiographer_SummaryPanel:OpenStatistics(viewName)
+  local window = AutoBiographer_StatisticsWindow
+  window:SelectView(Enum.StatisticsDisplayMode[viewName], self.DisplayMinLevel,
+    math.min(self.DisplayMaxLevel, Controller:GetCurrentLevelNum()))
+  AutoBiographer_MainWindow:ShowSection("Statistics")
+end
+
+function AutoBiographer_SummaryPanel:SelectTab(name)
   if (not self.DashboardPages[name]) then return end
   self.ActiveTab = name
   AutoBiographer_Settings.MainWindowTab = name
@@ -425,7 +389,7 @@ function AutoBiographer_MainWindow:SelectTab(name)
   self:Update()
 end
 
-function AutoBiographer_MainWindow:Update()
+function AutoBiographer_SummaryPanel:Update()
   -- Commit active timers before aggregating. Restarting them prevents double counts.
   -- During the level-up request, wait for the new level record to be created first.
   if (EM.PlayerEnteringWorldHasFired and EM.TemporaryTimestamps.EnteredArea and not EM.NewLevelToAddToHistory) then
@@ -554,7 +518,7 @@ function AutoBiographer_MainWindow:Update()
   self:LayoutDashboard()
 end
 
-function AutoBiographer_MainWindow:UpdateLevelFilter(level, menuList)
+function AutoBiographer_SummaryPanel:UpdateLevelFilter(level, menuList)
   local info = UIDropDownMenu_CreateInfo()
   info.func = function(button, minLevel, maxLevel)
     self.DropdownText = button.value

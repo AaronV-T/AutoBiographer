@@ -73,8 +73,8 @@ function Event.GetMapCoordinates(event)
   return nil
 end
 
-function Event.ToString(e, catalogs)
-  local timestampString = HelperFunctions.TimestampToDateString(e.Timestamp) .. ": "
+function Event.ToString(e, catalogs, excludeTimestamp)
+  local timestampString = excludeTimestamp and "" or (HelperFunctions.TimestampToDateString(e.Timestamp) .. ": ")
 
   if (e.Type == AutoBiographerEnum.EventType.Arena) then    
     local arenaTypeString

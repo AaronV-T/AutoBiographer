@@ -10,6 +10,9 @@ local Api = AutoBiographer_Api
 function Controller:AddEvent(event)
   table.insert(self.CharacterData.Events, event)
   if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog(Event.ToString(self.CharacterData.Events[#self.CharacterData.Events], self.CharacterData.Catalogs), AutoBiographerEnum.LogLevel.Debug) end
+  if (AutoBiographer_EventWindow and AutoBiographer_EventWindow.QueueRefresh) then
+    AutoBiographer_EventWindow:QueueRefresh()
+  end
 end
 
 function Controller:AddLog(text, logLevel)
@@ -407,8 +410,8 @@ function Controller:GetEvents()
   return self.CharacterData.Events
 end
 
-function Controller:GetEventString(event)
-  return Event.ToString(event, self.CharacterData.Catalogs)
+function Controller:GetEventString(event, excludeTimestamp)
+  return Event.ToString(event, self.CharacterData.Catalogs, excludeTimestamp)
 end
 
 function Controller:GetExperienceByExperienceTrackingType(experienceTrackingType, minLevel, maxLevel)
