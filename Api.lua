@@ -112,6 +112,28 @@ function Api.GetItemInfo(item)
   end
 end
 
+function Api.GetQuestLogEntries()
+  local entries = {}
+  local count = 0
+  if (C_QuestLog and C_QuestLog.GetNumQuestLogEntries) then count = C_QuestLog.GetNumQuestLogEntries()
+  elseif (GetNumQuestLogEntries) then count = GetNumQuestLogEntries() end
+  if ((issecretvalue and issecretvalue(count)) or type(count) ~= "number") then return entries end
+  for index = 1, count do
+    local id, title, header
+    if (C_QuestLog and C_QuestLog.GetInfo) then
+      local info = C_QuestLog.GetInfo(index)
+      if (not (issecretvalue and issecretvalue(info)) and info) then id, title, header = info.questID, info.title, info.isHeader end
+    elseif (GetQuestLogTitle) then
+      local level, tag, collapsed, complete, frequency
+      title, level, tag, header, collapsed, complete, frequency, id = GetQuestLogTitle(index)
+    end
+    if (not (issecretvalue and (issecretvalue(id) or issecretvalue(title) or issecretvalue(header))) and id and id > 0 and not header) then
+      entries[#entries + 1] = { Id = id, Name = title }
+    end
+  end
+  return entries
+end
+
 function Api.GetQuestTitle(questId)
   if (not C_QuestLog) then return nil end
 
@@ -120,6 +142,34 @@ function Api.GetQuestTitle(questId)
 
   local success, questTitle = pcall(getQuestTitle, questId)
   if (success) then return questTitle end
+end
+
+function Api.GetQuestTooltipId(owner)
+  if ((issecretvalue and issecretvalue(owner)) or not owner) then return nil end
+  local id = owner.questID
+  if (issecretvalue and issecretvalue(id)) then return nil end
+  if (not id) then
+    local info = owner.info
+    if (issecretvalue and issecretvalue(info)) then return nil end
+    if (info) then id = info.questID end
+  end
+  if (issecretvalue and issecretvalue(id)) then return nil end
+  if (id) then return id end
+  local index = owner.questLogIndex
+  if (issecretvalue and issecretvalue(index)) then return nil end
+  if (not index and owner.GetID) then
+    index = owner:GetID()
+    if (issecretvalue and issecretvalue(index)) then return nil end
+    if (QuestLogListScrollFrame and FauxScrollFrame_GetOffset) then index = index + FauxScrollFrame_GetOffset(QuestLogListScrollFrame) end
+  end
+  if (issecretvalue and issecretvalue(index)) then return nil end
+  if (index and C_QuestLog and C_QuestLog.GetInfo) then
+    local info = C_QuestLog.GetInfo(index)
+    if (issecretvalue and issecretvalue(info)) then return nil end
+    return info and info.questID
+  elseif (index and GetQuestLogTitle) then
+    return select(8, GetQuestLogTitle(index))
+  end
 end
 
 function Api.GetSpellInfo(spellId)
@@ -167,12 +217,45 @@ function Api.IsWoWForever()
   return interfaceVersion > 16000 and interfaceVersion < 20000
 end
 
+function Api.RegisterQuestNoteMenu(handler)
+  if (not Menu or not Menu.ModifyMenu) then return false end
+  Menu.ModifyMenu("MENU_QUEST_MAP_LOG_TITLE", function(owner, rootDescription)
+    handler(owner and owner.questID, function(label, callback) rootDescription:CreateButton(label, callback) end)
+  end)
+  return true
+end
+
 function Api.RegisterTooltipHandler(scriptType, tooltipDataType, handler)
   if (Api.IsWoWForever() and TooltipDataProcessor and TooltipDataProcessor.AddTooltipPostCall and Enum and Enum.TooltipDataType) then
     TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType[tooltipDataType], handler)
   else
     GameTooltip:HookScript(scriptType, handler)
   end
+end
+
+function Api.RegisterUnitNoteMenu(handler)
+  if (Menu and Menu.ModifyMenu) then
+    for _, tag in ipairs({ "SELF", "TARGET", "PLAYER", "ENEMY_PLAYER", "PARTY", "RAID_PLAYER", "FOCUS" }) do
+      Menu.ModifyMenu("MENU_UNIT_" .. tag, function(owner, rootDescription, context)
+        if (issecretvalue and issecretvalue(context)) then return end
+        handler(context and context.unit, function(label, callback) rootDescription:CreateButton(label, callback) end)
+      end)
+    end
+    return true
+  elseif (UnitPopup_ShowMenu and UIDropDownMenu_AddButton) then
+    -- Append through the legacy menu API, never alter Blizzard's menu tables.
+    hooksecurefunc("UnitPopup_ShowMenu", function(dropdown, which, unit)
+      if (UIDROPDOWNMENU_MENU_LEVEL and UIDROPDOWNMENU_MENU_LEVEL ~= 1) then return end
+      if (issecretvalue and issecretvalue(unit)) then return end
+      handler(unit or dropdown and dropdown.unit, function(label, callback)
+        local info = UIDropDownMenu_CreateInfo()
+        info.text, info.func, info.notCheckable = label, callback, true
+        UIDropDownMenu_AddButton(info, 1)
+      end)
+    end)
+    return true
+  end
+  return false
 end
 
 function Api.SetFrameResizeBounds(frame, minWidth, minHeight, maxWidth, maxHeight)

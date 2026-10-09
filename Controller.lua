@@ -1,4 +1,5 @@
 AutoBiographer_Controller = {
+  AccountData = {},
   CharacterData = {},
   Logs = {},
   Temp = {},
@@ -473,7 +474,7 @@ function Controller:GetMoneyForAcquisitionMethod(moneyAcquisitionMethod, minLeve
 end
 
 function Controller:GetNotes()
-  return self.CharacterData.Notes
+  return Notes.Initialize(self.AccountData.Notes)
 end
 
 function Controller:GetOtherPlayerStatByOtherPlayerTrackingType(otherPlayerTrackingType, minLevel, maxLevel)

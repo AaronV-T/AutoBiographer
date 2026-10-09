@@ -214,15 +214,17 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   if type(_G["AUTOBIOGRAPHER_LEVELS_CHAR"]) ~= "table" then
 		_G["AUTOBIOGRAPHER_LEVELS_CHAR"] = {}
 	end
-  if type(_G["AUTOBIOGRAPHER_NOTES_CHAR"]) ~= "table" then
-		_G["AUTOBIOGRAPHER_NOTES_CHAR"] = Notes.New()
-	end
+  if type(_G["AUTOBIOGRAPHER_NOTES"]) ~= "table" then
+    _G["AUTOBIOGRAPHER_NOTES"] = Notes.New()
+  end
+  Controller.AccountData = {
+    Notes = _G["AUTOBIOGRAPHER_NOTES"],
+  }
   
   Controller.CharacterData = {
     Catalogs = _G["AUTOBIOGRAPHER_CATALOGS_CHAR"],
     Events = _G["AUTOBIOGRAPHER_EVENTS_CHAR"],
-    Levels = _G["AUTOBIOGRAPHER_LEVELS_CHAR"],
-    Notes = _G["AUTOBIOGRAPHER_NOTES_CHAR"]
+    Levels = _G["AUTOBIOGRAPHER_LEVELS_CHAR"]
   }
   
   if type(_G["AUTOBIOGRAPHER_INFO_CHAR"]) ~= "table" then
@@ -235,7 +237,6 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
       GuildName = nil,
       GuildRankIndex = nil,
       GuildRankName = nil,
-      HasBeenShownCustomEventReminder = nil,
       LastTotalTimePlayed = nil,
       PlayerGuid = nil,
     }
@@ -624,12 +625,6 @@ if (not Api.IsWoWForever()) then
       local playerOrGroupDmgOfTotal = HelperFunctions.Round(100 * ((deadUnit.DamageTakenFromPlayerOrPet + deadUnit.DamageTakenFromGroup) / deadUnit.DamageTakenTotal))
       local kill = Kill.New(deadUnit.GroupHasDamaged, deadUnit.PlayerHasDamaged or deadUnit.PlayerPetHasDamaged, IsUnitGUIDPlayerOrPlayerPet(deadUnit.LastUnitGuidWhoCausedDamage), weHadTag, HelperFunctions.GetCatalogIdFromGuid(destGuid), playerOrGroupDmgOfTotal)
       Controller:OnKill(time(), HelperFunctions.GetCoordinatesByUnitId("player"), kill)
-
-      if (not self.PersistentPlayerInfo.HasBeenShownCustomEventReminder and HelperFunctions.GetUnitTypeFromCatalogUnitId(kill.CatalogUnitId) == AutoBiographerEnum.UnitType.Creature and
-          AutoBiographer_Databases.NpcDatabase and not AutoBiographer_Databases.NpcDatabase[kill.CatalogUnitId]) then
-        print("\124cFFFFD700[AutoBiographer] It looks like you killed a new unit that was added in Season of Discovery. You can record and share your personal discoveries by creating custom events in the AutoBiographer Events window.")
-        self.PersistentPlayerInfo.HasBeenShownCustomEventReminder = true
-      end
     end
     
     if (destGuid ~= self.PersistentPlayerInfo.PlayerGuid) then damagedUnits[destGuid] = nil end
@@ -1407,7 +1402,7 @@ Api.RegisterTooltipHandler("OnTooltipSetItem", "Item", function(self, data)
   itemId = tonumber(itemId)
 
   if (AutoBiographer_Settings.Options["ShowDiscoveryInfoOnToolTips"] and AutoBiographer_Databases.ItemDatabase and not AutoBiographer_Databases.ItemDatabase[itemId]) then
-    self:AddLine("Added in SoD")
+    self:AddLine("Added in Forever")
   end
   
   self:Show()
@@ -1459,7 +1454,7 @@ Api.RegisterTooltipHandler("OnTooltipSetUnit", "Unit", function(self)
 
   if (AutoBiographer_Settings.Options["ShowDiscoveryInfoOnToolTips"] and HelperFunctions.GetUnitTypeFromCatalogUnitId(catalogUnitId) == AutoBiographerEnum.UnitType.Creature and
       AutoBiographer_Databases.NpcDatabase and not AutoBiographer_Databases.NpcDatabase[catalogUnitId]) then
-    GameTooltip:AddLine("Added in SoD")
+    GameTooltip:AddLine("Added in Forever")
   end
 
 	self:Show()

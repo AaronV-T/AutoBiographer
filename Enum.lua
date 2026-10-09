@@ -133,6 +133,13 @@ AutoBiographerEnum = {
     BuffsGivenToPlayerNotGrouped = 3,
     BuffsGivenToPlayerWhileGrouped = 4,
   },
+  PlayerRating = {
+    NotApplicable = 0,
+    TwoThumbsDown = -2,
+    OneThumbDown = -1,
+    OneThumbUp = 1,
+    TwoThumbsUp = 2,
+  },
   QuestTrackingType = {
     Completed = 0,
   },

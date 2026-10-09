@@ -3,7 +3,7 @@
 ## Notes: Tracks character milestones and statistics.
 ## Author: Tollski
 ## Version: 4.1.1
-## SavedVariables: AUTOBIOGRAPHER_SETTINGS
+## SavedVariables: AUTOBIOGRAPHER_SETTINGS, AUTOBIOGRAPHER_NOTES
 ## SavedVariablesPerCharacter: AUTOBIOGRAPHER_CATALOGS_CHAR, AUTOBIOGRAPHER_EVENTS_CHAR, AUTOBIOGRAPHER_INFO_CHAR, AUTOBIOGRAPHER_LEVELS_CHAR, AUTOBIOGRAPHER_NOTES_CHAR
 
 embeds.xml
@@ -32,6 +32,7 @@ UI/ConfirmWindow.lua
 UI/MainWindow.lua
 UI/StatisticsPanel.lua
 UI/NotesPanel.lua
+UI/SubjectNotes.lua
 UI/SummaryPanel.lua
 UI/EventsPanel.lua
 UI/MainContainer.lua

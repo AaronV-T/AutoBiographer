@@ -42,21 +42,24 @@ local function GetNotePreview(content)
   return ""
 end
 
-local function ContainsNote(notes, selected)
-  for _, note in ipairs(notes) do if (note == selected) then return true end end
-  return false
+local function ContainsNote(selected)
+  return Notes.Contains(Controller:GetNotes(), selected)
 end
 
 function AutoBiographer_NotesWindow:CanSaveDraft()
+  local hasRatings = self.SelectedSubject and self.SelectedSubject.Type == "Player" and
+    ((self.DraftBehavior or 0) ~= 0 or (self.DraftSkill or 0) ~= 0 or self.SelectedNote ~= nil)
   return self.HasEditor == true and self:IsDirty() and CountCharacters(self.DraftText) <= noteLimit and
-    string.find(self.DraftText, "%S") ~= nil
+    (string.find(self.DraftText, "%S") ~= nil or hasRatings == true)
 end
 
 function AutoBiographer_NotesWindow:CancelEdit()
   local original = self.SelectedNote or self.ReturnNote
+  local subject = self.ReturnSubject
+  if (self.SelectedNote) then subject = self.SelectedSubject end
   self:RequestLeaveDraft(function()
-    self.ReturnNote = nil
-    if (original and ContainsNote(Controller:GetNotes().GenericNotes, original)) then self:LoadNote(original)
+    self.ReturnNote, self.ReturnSubject = nil, nil
+    if (original and ContainsNote(original)) then self:LoadNote(original, false, subject)
     else self:LoadNote(nil) end
   end)
 end
@@ -69,21 +72,23 @@ end
 function AutoBiographer_NotesWindow:DeleteNote()
   local target = self.SelectedNote
   if (not target) then return end
-  local message = "Delete this note? This cannot be undone."
+  local message = self.SelectedSubject and self.SelectedSubject.Type == "Player" and
+    "Delete this note and its ratings? This cannot be undone." or "Delete this note? This cannot be undone."
   if (self:IsDirty()) then message = message .. " Unsaved edits will also be discarded." end
   self:ShowPrompt("Delete", message .. "\n\n" .. GetNoteTitle(target.Content), function()
-    local notes = Controller:GetNotes().GenericNotes
-    for index, note in ipairs(notes) do
-      if (note == target) then table.remove(notes, index); break end
-    end
-    self.ReturnNote = nil
+    Notes.Delete(Controller:GetNotes(), target)
+    self.ReturnNote, self.ReturnSubject = nil, nil
     self:LoadNote(nil)
     self:Update()
-    if (self.NoteEntries[1]) then self:LoadNote(self.NoteEntries[1].Note) end
+    if (self.NoteEntries[1]) then self:LoadNote(self.NoteEntries[1].Note, false, self.NoteEntries[1].Subject) end
   end)
 end
 
 function AutoBiographer_NotesWindow:HandleKeyDown(key)
+  if (key == "ESCAPE" and self.SubjectPicker and self.SubjectPicker:IsShown()) then
+    self.SubjectPicker:Hide()
+    return true
+  end
   if (key == "ESCAPE" and self.DecisionPrompt:IsShown()) then
     self:ClosePrompt()
     return true
@@ -92,7 +97,8 @@ function AutoBiographer_NotesWindow:HandleKeyDown(key)
 end
 
 function AutoBiographer_NotesWindow:HasFocusedTextInput()
-  return self.EditorScroll.EditBox:HasFocus() or self.SearchBox:HasFocus()
+  return self.EditorScroll.EditBox:HasFocus() or self.SearchBox:HasFocus() or
+    (self.SubjectPicker and self.SubjectPicker:IsShown() and self.SubjectPicker.Input:HasFocus()) or false
 end
 
 function AutoBiographer_NotesWindow:Initialize()
@@ -141,6 +147,8 @@ function AutoBiographer_NotesWindow:Initialize()
   end)
   self.NewButton = CreateButton(self, "New Note", 100, function() self:NewNote() end)
   self.NewButton:SetPoint("TOPRIGHT", -22, -14)
+  self.SearchBox:SetWidth(270)
+  self.SortDropdown:SetPoint("TOPLEFT", 290, -4)
 
   self.ListPanel = CreateFrame("Frame", nil, self)
   self.ListPanel:SetPoint("TOPLEFT", 18, -60)
@@ -264,8 +272,10 @@ function AutoBiographer_NotesWindow:Initialize()
     self:ClosePrompt()
     self.EditorScroll.EditBox:ClearFocus()
     self.SearchBox:ClearFocus()
+    if (self.SubjectPicker) then self.SubjectPicker:Hide() end
     -- Leave the draft and selection in memory; never save or discard on Hide.
   end)
+  AutoBiographer_SubjectNotes:InitializePanel(self)
   self.PanelReady = true
   self:LayoutPanel()
   self:UpdateEditorState()
@@ -274,12 +284,15 @@ function AutoBiographer_NotesWindow:Initialize()
 end
 
 function AutoBiographer_NotesWindow:IsDirty()
-  return self.HasEditor == true and self.DraftText ~= self.OriginalText
+  return self.HasEditor == true and (self.DraftText ~= self.OriginalText or
+    (self.DraftBehavior or 0) ~= (self.OriginalBehavior or 0) or (self.DraftSkill or 0) ~= (self.OriginalSkill or 0))
 end
 
 function AutoBiographer_NotesWindow:LayoutPanel()
   if (not self.PanelReady) then return end
   local width = self:GetWidth()
+  self.SearchBox:SetWidth(math.max(160, math.min(270, width - 590)))
+  self.SortDropdown:SetPoint("TOPLEFT", self.SearchBox:GetWidth() + 20, -4)
   local listWidth = math.max(250, math.min(340, width * 0.3))
   local editorWidth = width - listWidth - 56
   self.ListPanel:SetWidth(listWidth)
@@ -296,13 +309,16 @@ function AutoBiographer_NotesWindow:LayoutPanel()
   self:RenderNoteRows()
 end
 
-function AutoBiographer_NotesWindow:LoadNote(note, isNew)
+function AutoBiographer_NotesWindow:LoadNote(note, isNew, subject)
   self.EditorInitialized = true
   self.SelectedNote = note
+  self.SelectedSubject = subject
   self.IsNewDraft = isNew == true
   self.HasEditor = note ~= nil or self.IsNewDraft
   self.OriginalText = note and note.Content or ""
   self.DraftText = self.OriginalText
+  self.OriginalBehavior, self.OriginalSkill = note and note.BehaviorRating or 0, note and note.SkillRating or 0
+  self.DraftBehavior, self.DraftSkill = self.OriginalBehavior, self.OriginalSkill
   self.EditorLoading = true
   -- Legacy notes longer than the current limit must be readable without truncation.
   self.EditorScroll.EditBox:SetMaxLetters(math.max(noteLimit, string.len(self.DraftText)))
@@ -317,7 +333,7 @@ end
 
 function AutoBiographer_NotesWindow:NewNote()
   self:RequestLeaveDraft(function()
-    self.ReturnNote = self.SelectedNote or self.ReturnNote
+    if (self.SelectedNote) then self.ReturnNote, self.ReturnSubject = self.SelectedNote, self.SelectedSubject end
     self:LoadNote(nil, true)
     self.EditorScroll.EditBox:SetFocus()
   end)
@@ -353,7 +369,7 @@ function AutoBiographer_NotesWindow:RenderNoteRows()
       row.Preview:SetJustifyH("LEFT")
       row.Preview:SetJustifyV("TOP")
       row.Preview:SetWordWrap(true)
-      row:SetScript("OnClick", function(button) self:SelectNote(button.Entry.Note) end)
+      row:SetScript("OnClick", function(button) self:SelectNote(button.Entry.Note, button.Entry.Subject) end)
       row:EnableMouseWheel(true)
       row:SetScript("OnMouseWheel", function(_, delta) self:ScrollNotes(delta) end)
       self.RowPool[count] = row
@@ -397,18 +413,13 @@ end
 
 function AutoBiographer_NotesWindow:SaveDraft()
   if (not self:CanSaveDraft()) then return false end
-  local notes = Controller:GetNotes().GenericNotes
-  if (self.IsNewDraft) then
-    self.SelectedNote = Note.New(self.DraftText)
-    table.insert(notes, self.SelectedNote)
-    self.IsNewDraft = false
-  elseif (ContainsNote(notes, self.SelectedNote)) then
-    Note.Update(self.SelectedNote, self.DraftText)
-  else
-    return false
-  end
+  local selected = Notes.Save(Controller:GetNotes(), self.SelectedSubject,
+    self.SelectedNote, self.DraftText, self.DraftBehavior, self.DraftSkill)
+  if (not selected) then return false end
+  self.SelectedNote, self.IsNewDraft = selected, false
   self.OriginalText = self.DraftText
-  self.ReturnNote = nil
+  self.OriginalBehavior, self.OriginalSkill = self.DraftBehavior, self.DraftSkill
+  self.ReturnNote, self.ReturnSubject = nil, nil
   self:UpdateEditorState()
   self:Update()
   self:RevealSelectedNote()
@@ -421,11 +432,11 @@ function AutoBiographer_NotesWindow:ScrollNotes(delta)
     self.ScrollFrame.Scrollbar:GetValue() - delta * rowHeight)))
 end
 
-function AutoBiographer_NotesWindow:SelectNote(note)
+function AutoBiographer_NotesWindow:SelectNote(note, subject)
   if (note == self.SelectedNote) then return end
   self:RequestLeaveDraft(function()
-    self.ReturnNote = nil
-    if (ContainsNote(Controller:GetNotes().GenericNotes, note)) then self:LoadNote(note) end
+    self.ReturnNote, self.ReturnSubject = nil, nil
+    if (ContainsNote(note)) then self:LoadNote(note, false, subject) end
   end)
 end
 
@@ -442,13 +453,22 @@ end
 
 function AutoBiographer_NotesWindow:Update(resetScroll)
   if (not self.PanelReady) then return end
-  local notes = Controller:GetNotes().GenericNotes
+  local notes = AutoBiographer_SubjectNotes:GetEntries()
   local search = string.lower(self.SearchBox:GetText())
   local entries = {}
-  for index, note in ipairs(notes) do
+  for _, entry in ipairs(notes) do
+    local note = entry.Note
     local content = note.Content or ""
-    if (search == "" or string.find(string.lower(content), search, 1, true)) then
-      table.insert(entries, { Note = note, Index = index, Title = GetNoteTitle(content), Preview = GetNotePreview(content) })
+    local title = entry.Subject and AutoBiographer_SubjectNotes:GetSubjectTitle(entry.Subject) or GetNoteTitle(content)
+    if ((self.SubjectFilter == "All" or self.SubjectFilter == entry.Type) and
+      (search == "" or string.find(string.lower(title .. " " .. content), search, 1, true))) then
+      entry.Title = entry.Subject and (entry.Type .. ": " .. title) or title
+      entry.Preview = entry.Subject and Notes.GetPreview(note, 20) or GetNotePreview(content)
+      if (entry.Type == "Player" and (note.BehaviorRating or note.SkillRating)) then
+        entry.Preview = "Behavior: " .. AutoBiographer_SubjectNotes:GetRatingText(note.BehaviorRating) ..
+          " | Skill: " .. AutoBiographer_SubjectNotes:GetRatingText(note.SkillRating) .. "\n" .. entry.Preview
+      end
+      table.insert(entries, entry)
     end
   end
   table.sort(entries, function(left, right)
@@ -460,14 +480,15 @@ function AutoBiographer_NotesWindow:Update(resetScroll)
       local a, b = left.Note[field] or 0, right.Note[field] or 0
       if (a ~= b) then return a > b end
     end
-    return left.Index < right.Index
+    if (left.Index and right.Index) then return left.Index < right.Index end
+    return left.Key < right.Key
   end)
   self.NoteEntries = entries
-  if (self.SelectedNote and not ContainsNote(notes, self.SelectedNote)) then
+  if (self.SelectedNote and not ContainsNote(self.SelectedNote)) then
     if (self:IsDirty()) then self.SelectedNote = nil; self.IsNewDraft = true; self.OriginalText = ""
     else self:LoadNote(nil) end
   end
-  if (not self.EditorInitialized) then self:LoadNote(entries[1] and entries[1].Note) end
+  if (not self.EditorInitialized) then self:LoadNote(entries[1] and entries[1].Note, false, entries[1] and entries[1].Subject) end
   if (resetScroll) then self.ScrollFrame.Scrollbar:SetValue(0) end
   self:UpdateListScrollRange()
   self:RenderNoteRows()
@@ -485,7 +506,17 @@ function AutoBiographer_NotesWindow:UpdateEditorState()
   local dirty = self:IsDirty()
   self.EditorScroll:SetShown(active)
   self.EditorPlaceholder:SetShown(not active)
-  self.NoteTitle:SetText(active and (self.IsNewDraft and self.DraftText == "" and "New note" or GetNoteTitle(self.DraftText)) or "Notes")
+  local subject = self.SelectedSubject
+  self.NoteTitle:SetText(active and (subject and (subject.Type .. ": " .. AutoBiographer_SubjectNotes:GetSubjectTitle(subject)) or
+    (self.IsNewDraft and self.DraftText == "" and "New note" or GetNoteTitle(self.DraftText))) or "Notes")
+  local isPlayer = active and subject ~= nil and subject.Type == "Player"
+  self.RatingsPanel:SetShown(isPlayer)
+  for _, field in ipairs({ "Behavior", "Skill" }) do
+    for _, button in ipairs(self[field .. "Buttons"]) do
+      button.Selection:SetShown(button.Rating == (self["Draft" .. field] or 0))
+    end
+  end
+  self.EditorScroll:SetPoint("TOPLEFT", 14, isPlayer and -154 or -94)
   self.CreatedLabel:SetText(self.SelectedNote and "Created: " .. HF.TimestampToDateString(self.SelectedNote.CreatedTimestamp) or active and "New note — not saved" or "")
   self.UpdatedLabel:SetText(self.SelectedNote and "Updated: " .. HF.TimestampToDateString(self.SelectedNote.LastUpdatedTimestamp) or "")
   local count = CountCharacters(self.DraftText)
