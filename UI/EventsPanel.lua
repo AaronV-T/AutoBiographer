@@ -275,13 +275,15 @@ function AutoBiographer_EventWindow:Initialize()
   self.DetailsText:SetJustifyV("TOP")
   self.DetailsText:SetWordWrap(true)
   self.DetailsScrollbar = CreateFrame("Slider", nil, self.DetailsPanel, "UIPanelScrollBarTemplate")
+  -- Replace the template's parent:SetVerticalScroll callback before setting a
+  -- range or value: this scrollbar belongs to the details panel, not a ScrollFrame.
+  self.DetailsScrollbar:SetScript("OnValueChanged", function(_, value) self.DetailsScroll:SetVerticalScroll(value) end)
   self.DetailsScrollbar:SetPoint("TOPRIGHT", -10, -62)
   self.DetailsScrollbar:SetPoint("BOTTOMRIGHT", -10, 17)
   self.DetailsScrollbar:SetMinMaxValues(0, 0)
   self.DetailsScrollbar:SetValue(0)
   self.DetailsScrollbar:SetValueStep(1)
   self.DetailsScrollbar.scrollStep = 24
-  self.DetailsScrollbar:SetScript("OnValueChanged", function(_, value) self.DetailsScroll:SetVerticalScroll(value) end)
   self.DetailsScroll:EnableMouseWheel(true)
   self.DetailsScroll:SetScript("OnMouseWheel", function(_, delta)
     local _, maximum = self.DetailsScrollbar:GetMinMaxValues()
