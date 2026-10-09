@@ -1,5 +1,5 @@
 local Api = AutoBiographer_Api
-local sections = { "Summary", "Events", "Statistics", "Notes" }
+local sections = { "Summary", "Events", "Statistics", "Notes", "Todos" }
 
 local function CreateNavigationButton(parent, text, width, onClick)
   local button = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
@@ -40,6 +40,7 @@ function AutoBiographer_MainWindow:Initialize()
     Events = AutoBiographer_EventWindow,
     Statistics = AutoBiographer_StatisticsWindow,
     Notes = AutoBiographer_NotesWindow,
+    Todos = AutoBiographer_TodoPanel,
   }
   AutoBiographer_SummaryPanel:Initialize()
   for _, panel in pairs(self.Panels) do
@@ -53,8 +54,8 @@ function AutoBiographer_MainWindow:Initialize()
 
   self.SectionButtons = {}
   for i, name in ipairs(sections) do
-    local button = CreateNavigationButton(self, name, 120, function() self:ShowSection(name) end)
-    button:SetPoint("TOPLEFT", 18 + (i - 1) * 126, -39)
+    local button = CreateNavigationButton(self, name == "Todos" and "To-do" or name, 100, function() self:ShowSection(name) end)
+    button:SetPoint("TOPLEFT", 18 + (i - 1) * 106, -39)
     self.SectionButtons[name] = button
   end
   self.OptionsButton = CreateNavigationButton(self, "Options", 80, function()

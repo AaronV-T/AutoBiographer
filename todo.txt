@@ -1,8 +1,6 @@
 more social stuff   
   Milestone sharing guild messages or emotes
   Milestone sharing camp message prompts
-Add todo list
-  add todo items like, config item if it falls below x count in inventory or repair if durability is less than x%
 More milestones (minor and major milestones for all stat types)
 class specific stats
 other player stat: rezzes

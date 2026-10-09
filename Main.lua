@@ -217,6 +217,9 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   if type(_G["AUTOBIOGRAPHER_NOTES"]) ~= "table" then
     _G["AUTOBIOGRAPHER_NOTES"] = Notes.New()
   end
+  if type(_G["AUTOBIOGRAPHER_TODOS_CHAR"]) ~= "table" then
+    _G["AUTOBIOGRAPHER_TODOS_CHAR"] = Todo.New()
+  end
   Controller.AccountData = {
     Notes = _G["AUTOBIOGRAPHER_NOTES"],
   }
@@ -224,7 +227,8 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   Controller.CharacterData = {
     Catalogs = _G["AUTOBIOGRAPHER_CATALOGS_CHAR"],
     Events = _G["AUTOBIOGRAPHER_EVENTS_CHAR"],
-    Levels = _G["AUTOBIOGRAPHER_LEVELS_CHAR"]
+    Levels = _G["AUTOBIOGRAPHER_LEVELS_CHAR"],
+    Todos = _G["AUTOBIOGRAPHER_TODOS_CHAR"],
   }
   
   if type(_G["AUTOBIOGRAPHER_INFO_CHAR"]) ~= "table" then
@@ -271,6 +275,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   AutoBiographer_NotesWindow:Initialize()
   AutoBiographer_OptionWindow:Initialize()
   AutoBiographer_StatisticsWindow:Initialize()
+  AutoBiographer_TodoPanel:Initialize()
   AutoBiographer_VerificationWindow:Initialize()
   AutoBiographer_MainWindow:Initialize()
 
@@ -282,6 +287,10 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   C_Timer.After(1, function()
     EM:RequestTimePlayedInterval()
   end)
+end
+
+function EM.EventHandlers.BAG_UPDATE_DELAYED(self)
+  AutoBiographer_TodoPanel:QueueRefresh()
 end
 
 function EM.EventHandlers.BOSS_KILL(self, bossId, bossName)
@@ -651,6 +660,13 @@ function EM.EventHandlers.DAMAGE_METER_RESET(self)
 end
 
 
+function EM.EventHandlers.GET_ITEM_INFO_RECEIVED(self, itemId, success)
+  if (self:IsSecretValue(itemId) or self:IsSecretValue(success) or not success or not Controller.CharacterData.Todos) then return end
+  for _, item in ipairs(Controller:GetTodos().Items) do
+    if (item.ItemId == itemId) then AutoBiographer_TodoPanel:QueueRefresh(); return end
+  end
+end
+
 function EM.EventHandlers.GROUP_ROSTER_UPDATE(self)
   self:UpdateGroupMemberInfo()
   self:SnapshotOtherPlayerAurasForGroup()
@@ -797,6 +813,7 @@ end
 
 function EM.EventHandlers.PLAYER_ENTERING_WORLD(self, isLogin, isReload)
   self.PlayerEnteringWorldHasFired = true
+  AutoBiographer_TodoPanel:QueueRefresh()
   if (Api.IsWoWForever() and (isLogin or isReload or not self.PlayerLevelUpStatSnapshot)) then
     self.PlayerLevelUpStatSnapshot = {}
     self.HasLeveledUpSinceLastStatSnapshot = false
@@ -860,6 +877,7 @@ end
 
 function EM.EventHandlers.PLAYER_REGEN_ENABLED(self)
   self:ScheduleDamageMeterCombatFinalization(self.CurrentDamageMeterSessionId)
+  AutoBiographer_TodoPanel:QueueRefresh()
 end
 
 function EM.EventHandlers.PLAYER_GUILD_UPDATE(self, unitId)
@@ -1354,10 +1372,12 @@ end
 
 function EM.EventHandlers.ZONE_CHANGED(self)
   self:UpdatePlayerZone()
+  AutoBiographer_TodoPanel:QueueRefresh()
 end
 
 function EM.EventHandlers.ZONE_CHANGED_INDOORS(self)
   self:UpdatePlayerZone()
+  AutoBiographer_TodoPanel:QueueRefresh()
 end
 
 function EM.EventHandlers.ZONE_CHANGED_NEW_AREA(self)
@@ -1366,6 +1386,7 @@ function EM.EventHandlers.ZONE_CHANGED_NEW_AREA(self)
   end 
   
   self:UpdatePlayerZone()
+  AutoBiographer_TodoPanel:QueueRefresh()
 end
 
 hooksecurefunc("AscendStop", function()
@@ -2467,6 +2488,7 @@ function EM:ClearCharacterData(doNotRequireConfirmation, doNotReloadUI)
     _G["AUTOBIOGRAPHER_EVENTS_CHAR"] = nil
     _G["AUTOBIOGRAPHER_LEVELS_CHAR"] = nil
     _G["AUTOBIOGRAPHER_INFO_CHAR"] = nil
+    _G["AUTOBIOGRAPHER_TODOS_CHAR"] = nil
     if (not doNotReloadUI) then ReloadUI() end
   end
   print(doNotRequireConfirmation)

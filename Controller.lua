@@ -519,6 +519,10 @@ function Controller:GetSpellCountBySpellTrackingType(spellTrackingType, minLevel
   return sum
 end
 
+function Controller:GetTodos()
+  return Todo.Initialize(self.CharacterData.Todos)
+end
+
 function Controller:GetTotalMoneyGained(minLevel, maxLevel)
   local sum = 0
   for k,v in pairs(self.CharacterData.Levels) do

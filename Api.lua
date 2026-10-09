@@ -102,6 +102,14 @@ function Api.GetDeathRecapEvents()
   return nil, recapEvents
 end
 
+function Api.GetInventoryItemCount(itemId)
+  local getItemCount = GetItemCount or (C_Item and C_Item.GetItemCount)
+  if (not getItemCount) then return nil end
+  -- Count carried items, not bank stock or remaining charges.
+  local success, count = pcall(getItemCount, itemId, false, false)
+  if (success and not (issecretvalue and issecretvalue(count)) and type(count) == "number") then return count end
+end
+
 function Api.GetItemInfo(item)
   if (GetItemInfo) then
     return GetItemInfo(item)
