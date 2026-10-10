@@ -8,6 +8,14 @@ AutoBiographer_Controller = {
 local Controller = AutoBiographer_Controller
 local Api = AutoBiographer_Api
 
+function Controller:AddDistance(distanceTrackingType, yards)
+  if (distanceTrackingType == nil or yards <= 0) then return end
+  local levelStatistics = self:GetCurrentLevelStatistics()
+  -- Create lazily for characters whose existing level records predate tracking.
+  if (not levelStatistics.DistanceStatistics) then levelStatistics.DistanceStatistics = DistanceStatistics.New() end
+  DistanceStatistics.AddDistance(levelStatistics.DistanceStatistics, distanceTrackingType, yards)
+end
+
 function Controller:AddEvent(event)
   table.insert(self.CharacterData.Events, event)
   if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog(Event.ToString(self.CharacterData.Events[#self.CharacterData.Events], self.CharacterData.Catalogs), AutoBiographerEnum.LogLevel.Debug) end
@@ -404,6 +412,16 @@ function Controller:GetDeathsByDeathTrackingType(deathTrackingType, minLevel, ma
     end
   end
   
+  return sum
+end
+
+function Controller:GetDistanceByDistanceTrackingType(distanceTrackingType, minLevel, maxLevel)
+  local sum = 0
+  for levelNum, levelStatistics in pairs(self.CharacterData.Levels) do
+    if (levelNum >= minLevel and levelNum <= maxLevel and levelStatistics.DistanceStatistics) then
+      sum = sum + (levelStatistics.DistanceStatistics[distanceTrackingType] or 0)
+    end
+  end
   return sum
 end
 

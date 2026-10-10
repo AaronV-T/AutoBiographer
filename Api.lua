@@ -120,6 +120,18 @@ function Api.GetItemInfo(item)
   end
 end
 
+function Api.GetPlayerWorldPosition()
+  if (not UnitPosition) then return nil end
+  local success, y, x, _, instanceId = pcall(UnitPosition, "player")
+  if (not success) then return nil end
+  for _, value in pairs({ x = x, y = y, instanceId = instanceId }) do
+    if (issecretvalue and issecretvalue(value)) then return nil end
+    if (type(value) ~= "number" or value ~= value or math.abs(value) == math.huge) then return nil end
+  end
+  if (x == nil or y == nil or instanceId == nil) then return nil end
+  return x, y, instanceId
+end
+
 function Api.GetQuestLogEntries()
   local entries = {}
   local count = 0
@@ -215,6 +227,25 @@ function Api.GetSpellRank(spellId)
   if (issecretvalue and issecretvalue(subtext)) then return nil end
   if (type(subtext) ~= "string") then return nil end
   return tonumber(string.match(subtext, "%d+"))
+end
+
+function Api.GetTravelTrackingType()
+  -- Check in priority order so overlapping states count in exactly one category.
+  local states = {
+    { UnitIsGhost, "player", AutoBiographerEnum.DistanceTrackingType.Ghost },
+    { UnitOnTaxi, "player", AutoBiographerEnum.DistanceTrackingType.FlightPath },
+    { IsSwimming, "player", AutoBiographerEnum.DistanceTrackingType.Swimming },
+    { IsMounted, nil, AutoBiographerEnum.DistanceTrackingType.Mounted },
+  }
+  for _, state in ipairs(states) do
+    if (not state[1]) then return nil end
+    local success, active
+    if (state[2]) then success, active = pcall(state[1], state[2])
+    else success, active = pcall(state[1]) end
+    if (not success or (issecretvalue and issecretvalue(active))) then return nil end
+    if (active) then return state[3] end
+  end
+  return AutoBiographerEnum.DistanceTrackingType.OnFoot
 end
 
 function Api.GetUnitName(unitId)

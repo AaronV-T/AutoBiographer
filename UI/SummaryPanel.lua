@@ -9,6 +9,7 @@ local dashboardTabs = {
   { Name = "Overview", Sections = {
     { Title = "Character summary", Column = 1, Rows = {
       { "TimeLoggedIn", "Time played", "time" },
+      { "DistanceTotal", "Distance travelled", "distance" },
       { "Kills", "Tagged kills" },
       { "Deaths", "Deaths" },
       { "QuestsUnique", "Unique quests completed" },
@@ -127,6 +128,16 @@ local dashboardTabs = {
     } },
     { Title = "Grouping", Column = 2, Details = "OtherPlayers", Rows = {
       { "TimeGrouped", "Time grouped", "time" },
+    } },
+  } },
+  { Name = "Travel", Sections = {
+    { Title = "Distance travelled (recorded)", Column = 0, Rows = {
+      { "DistanceTotal", "Total", "distance", IsTotal = true },
+      { "DistanceOnFoot", "On foot", "distance" },
+      { "DistanceMounted", "Mounted", "distance" },
+      { "DistanceSwimming", "Swimming", "distance" },
+      { "DistanceFlightPath", "Flight paths", "distance" },
+      { "DistanceGhost", "Ghost", "distance" },
     } },
   } },
   { Name = "Time", Sections = {
@@ -267,8 +278,8 @@ function AutoBiographer_SummaryPanel:Initialize()
   self.LevelTimeLabel:SetJustifyH("RIGHT")
 
   for i, tab in ipairs(dashboardTabs) do
-    local button = CreateDashboardButton(self, tab.Name, 118, function() self:SelectTab(tab.Name) end)
-    button:SetPoint("TOPLEFT", 18 + (i - 1) * 124, -88)
+    local button = CreateDashboardButton(self, tab.Name, 100, function() self:SelectTab(tab.Name) end)
+    button:SetPoint("TOPLEFT", 18 + (i - 1) * 106, -88)
     button:SetDisabledFontObject("GameFontNormalSmall")
     self.TabButtons[tab.Name] = button
     local sections = {}
@@ -399,6 +410,12 @@ function AutoBiographer_SummaryPanel:Update()
   local values = {}
   self.DashboardValues = values
   values.HasArenas = self.GameVersion == 2
+  values.DistanceTotal = 0
+  for category, trackingType in pairs(Enum.DistanceTrackingType) do
+    local yards = Controller:GetDistanceByDistanceTrackingType(trackingType, minLevel, maxLevel)
+    values["Distance" .. category] = yards
+    values.DistanceTotal = values.DistanceTotal + yards
+  end
 
   local name, lastName = Api.GetUnitName("player")
   if (name and lastName) then name = name .. " " .. lastName end
@@ -503,6 +520,10 @@ function AutoBiographer_SummaryPanel:Update()
         elseif (format == "time") then
           row.Values[1]:SetText(HF.SecondsToTimeString(value or 0, true))
           row.FullValues[1] = HF.SecondsToTimeString(value or 0)
+        elseif (format == "distance") then
+          local yards = HF.CommaValue(HF.Round(value or 0, 1))
+          row.Values[1]:SetText(yards .. " yd")
+          row.FullValues[1] = yards .. " yards"
         elseif (format == "money") then
           row.Values[1]:SetText(Api.FormatMoney(value or 0))
           row.FullValues[1] = Api.FormatMoney(value or 0)
@@ -513,7 +534,8 @@ function AutoBiographer_SummaryPanel:Update()
       end
     end
   end
-  self.Footer:SetText(self.ActiveTab == "Time" and "Time categories overlap; they do not add up to total play time." or
+  self.Footer:SetText(self.ActiveTab == "Travel" and "Horizontal distance in yards; areas without readable coordinates are not recorded." or
+    self.ActiveTab == "Time" and "Time categories overlap; they do not add up to total play time." or
     ("Recorded statistics | " .. self.DropdownText))
   self:LayoutDashboard()
 end

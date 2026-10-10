@@ -27,6 +27,13 @@ AutoBiographerEnum = {
     DeathToDrowning = 6,
     DeathToFalling = 7,
   },
+  DistanceTrackingType = {
+    FlightPath = 0,
+    Ghost = 1,
+    Mounted = 2,
+    OnFoot = 3,
+    Swimming = 4,
+  },
   EventType = {
     Battleground = 0,
     Death = 1,

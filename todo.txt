@@ -1,9 +1,8 @@
 Fix
   Do layers change player GUIDs?
-  Rested experience not tracked
-Track distance travelled
 Track each time something is equipped?
 Snapshot gear, money, and other stuff on each level up and each raid first clear?
+Track messages sent by type (say, yell, pm, guild, general, trade, emote)
 Track class specific stats
   time spent in forms
 Levels stats page. For each level show time played, xp total, xp breakdown, money total, kills, quests
@@ -24,6 +23,7 @@ other player stat: rezzes
 Session stats
 Show highlights when dieing in hardcore? Share most unique stats when dieing in hardcore?
 Character notes and account notes
+Track travel history?
 
 
 

@@ -7,6 +7,7 @@ function AggregatedStatistics.New()
     BattlegroundStatistics = BattlegroundStatistics.New(),
     DamageStatistics = DamageStatistics.New(),
     DeathStatistics = DeathStatistics.New(),
+    DistanceStatistics = DistanceStatistics.New(), -- Dict<DistanceTrackingType, yards>
     ExperienceStatistics = ExperienceStatistics.New(),
     GatheringStatistics = nil,
     ItemStatisticsByItem = {}, -- Dict<CatalogItemId, ItemStatistics>
@@ -178,6 +179,17 @@ function DeathStatistics.Increment(ds, deathTrackingType)
   if (ds[deathTrackingType] == nil) then ds[deathTrackingType] = 0 end
   
   ds[deathTrackingType] = ds[deathTrackingType] + 1
+end
+
+-- *** DistanceStatistics ***
+
+DistanceStatistics = {}
+function DistanceStatistics.New()
+  return {}
+end
+
+function DistanceStatistics.AddDistance(ds, distanceTrackingType, yards)
+  ds[distanceTrackingType] = (ds[distanceTrackingType] or 0) + yards
 end
 
 -- *** ExperienceStatistics ***

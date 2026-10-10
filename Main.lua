@@ -8,6 +8,9 @@ AutoBiographer_EventManager = {
   DamageMeterBaselinesInitialized = false,
   DamageMeterRecordedTotals = {},
   DamageMeterResetGeneration = 0,
+  DistanceTrackingActive = false,
+  DistanceTrackingGeneration = 0,
+  LastDistancePosition = nil,
   PendingDamageMeterFinalizationSessionId = nil,
   EventHandlers = {},
   LastPlayerDeadEventTimestamp = nil,
@@ -874,6 +877,7 @@ function EM.EventHandlers.PLAYER_ENTERING_WORLD(self, isLogin, isReload)
   self:UpdatePlayerFlags()
   self:ScheduleDamageMeterSessionBaselines()
   if (Api.IsWoWForever()) then self.LastRestedExperiencePool = Api.GetRestedExperiencePool() end
+  self:StartDistanceTracking()
 end
 
 function EM.EventHandlers.PLAYER_FLAGS_CHANGED(self, unitId)
@@ -897,6 +901,7 @@ function EM.EventHandlers.PLAYER_INTERACTION_MANAGER_FRAME_HIDE(self, type)
 end
 
 function EM.EventHandlers.PLAYER_LEAVING_WORLD(self)
+  self:StopDistanceTracking()
   if (self.CampedPending) then
     self.CampedPending = false
     Controller:OnCamped()
@@ -1680,6 +1685,25 @@ function EM:RequestTimePlayedInterval()
   C_Timer.After(60, function()
     EM:RequestTimePlayedInterval()
   end)
+end
+
+function EM:StartDistanceTracking()
+  self:StopDistanceTracking()
+  self.DistanceTrackingActive = true
+  local generation = self.DistanceTrackingGeneration
+  self:UpdateTravelDistance()
+  local function Sample()
+    if (not self.DistanceTrackingActive or self.DistanceTrackingGeneration ~= generation) then return end
+    self:UpdateTravelDistance()
+    C_Timer.After(1, Sample)
+  end
+  C_Timer.After(1, Sample)
+end
+
+function EM:StopDistanceTracking()
+  self.DistanceTrackingActive = false
+  self.DistanceTrackingGeneration = self.DistanceTrackingGeneration + 1
+  self.LastDistancePosition = nil
 end
 
 function EM:SuppressTimePlayedMessages()
@@ -2509,6 +2533,39 @@ function EM:UpdateTimestamps(zone, subZone)
     Controller:AddOtherPlayerInGroupTime(HelperFunctions.GetCatalogIdFromGuid(k), HelperFunctions.SubtractFloats(GetTime(), v))
     self.TemporaryTimestamps.OtherPlayerJoinedGroup[k] = GetTime()
   end
+end
+
+function EM:UpdateTravelDistance()
+  if (not self.DistanceTrackingActive) then return end
+  local x, y, instanceId = Api.GetPlayerWorldPosition()
+  local trackingType = x and Api.GetTravelTrackingType()
+  if (x == nil or trackingType == nil) then
+    self.LastDistancePosition = nil
+    return
+  end
+  local now = GetTime()
+  local levelNum = Controller:GetCurrentLevelNum()
+  local previous = self.LastDistancePosition
+  self.LastDistancePosition = { X = x, Y = y, InstanceId = instanceId,
+    Timestamp = now, TrackingType = trackingType, LevelNum = levelNum }
+  if (not previous or previous.InstanceId ~= instanceId or previous.TrackingType ~= trackingType or previous.LevelNum ~= levelNum) then return end
+  local elapsed = now - previous.Timestamp
+  -- Allow scheduling jitter around the one-second interval, but do not bridge
+  -- loading screens, long frame stalls, or missing samples.
+  if (elapsed <= 0 or elapsed > 2) then return end
+  local deltaX, deltaY = x - previous.X, y - previous.Y
+  local yards = math.sqrt(deltaX * deltaX + deltaY * deltaY)
+  local maximumSpeeds = {
+    [AutoBiographerEnum.DistanceTrackingType.FlightPath] = 200,
+    [AutoBiographerEnum.DistanceTrackingType.Ghost] = 40,
+    [AutoBiographerEnum.DistanceTrackingType.Mounted] = 70,
+    [AutoBiographerEnum.DistanceTrackingType.OnFoot] = 35,
+    [AutoBiographerEnum.DistanceTrackingType.Swimming] = 35,
+  }
+  -- Broad speed limits allow normal movement and reject teleport-like jumps.
+  -- Every rejected segment becomes the next baseline, never a delayed jump.
+  if (yards > maximumSpeeds[trackingType] * elapsed + 2) then return end
+  Controller:AddDistance(trackingType, yards)
 end
 
 function EM:WasTradeRecentlyMade()
