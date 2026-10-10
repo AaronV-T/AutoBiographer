@@ -102,6 +102,16 @@ function Api.GetDeathRecapEvents()
   return nil, recapEvents
 end
 
+function Api.GetEquippedItemId(slotId)
+  if (not GetInventoryItemID) then return nil end
+  local success, itemId = pcall(GetInventoryItemID, "player", slotId)
+  if (not success or (issecretvalue and issecretvalue(itemId))) then return nil end
+  -- A readable nil is an empty slot; nil returned by this wrapper is unknown.
+  if (itemId == nil) then return 0 end
+  if (type(itemId) ~= "number" or itemId < 0 or itemId ~= math.floor(itemId) or itemId == math.huge) then return nil end
+  return itemId
+end
+
 function Api.GetInventoryItemCount(itemId)
   local getItemCount = GetItemCount or (C_Item and C_Item.GetItemCount)
   if (not getItemCount) then return nil end

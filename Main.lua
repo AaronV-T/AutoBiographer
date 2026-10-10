@@ -13,6 +13,10 @@ AutoBiographer_EventManager = {
   LastDistancePosition = nil,
   PendingDamageMeterFinalizationSessionId = nil,
   EventHandlers = {},
+  GearPendingUnequips = {},
+  GearSnapshotRetryPending = false,
+  GearTrackingGeneration = 0,
+  GearTrackingReady = false,
   LastPlayerDeadEventTimestamp = nil,
   LastPlayerMoney = nil,
   MailboxIsOpen = nil,
@@ -216,6 +220,9 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   if type(_G["AUTOBIOGRAPHER_EVENTS_CHAR"]) ~= "table" then
 		_G["AUTOBIOGRAPHER_EVENTS_CHAR"] = {}
 	end
+  if type(_G["AUTOBIOGRAPHER_GEAR_CHAR"]) ~= "table" then
+    _G["AUTOBIOGRAPHER_GEAR_CHAR"] = GearHistory.New()
+  end
   if type(_G["AUTOBIOGRAPHER_LEVELS_CHAR"]) ~= "table" then
 		_G["AUTOBIOGRAPHER_LEVELS_CHAR"] = {}
 	end
@@ -232,6 +239,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   Controller.CharacterData = {
     Catalogs = _G["AUTOBIOGRAPHER_CATALOGS_CHAR"],
     Events = _G["AUTOBIOGRAPHER_EVENTS_CHAR"],
+    Gear = _G["AUTOBIOGRAPHER_GEAR_CHAR"],
     Levels = _G["AUTOBIOGRAPHER_LEVELS_CHAR"],
     Todos = _G["AUTOBIOGRAPHER_TODOS_CHAR"],
   }
@@ -277,6 +285,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   AutoBiographer_CustomEventDetailsWindow:Initialize()
   AutoBiographer_DebugWindow:Initialize()
   AutoBiographer_EventWindow:Initialize()
+  AutoBiographer_GearPanel:Initialize()
   AutoBiographer_NotesWindow:Initialize()
   AutoBiographer_OptionWindow:Initialize()
   AutoBiographer_StatisticsWindow:Initialize()
@@ -878,6 +887,12 @@ function EM.EventHandlers.PLAYER_ENTERING_WORLD(self, isLogin, isReload)
   self:ScheduleDamageMeterSessionBaselines()
   if (Api.IsWoWForever()) then self.LastRestedExperiencePool = Api.GetRestedExperiencePool() end
   self:StartDistanceTracking()
+  self.GearTrackingReady = true
+  self:UpdatePlayerGear()
+end
+
+function EM.EventHandlers.PLAYER_EQUIPMENT_CHANGED(self, slotId)
+  self:UpdatePlayerGear(slotId)
 end
 
 function EM.EventHandlers.PLAYER_FLAGS_CHANGED(self, unitId)
@@ -886,6 +901,7 @@ end
 
 function EM.EventHandlers.PLAYER_REGEN_ENABLED(self)
   self:ScheduleDamageMeterCombatFinalization(self.CurrentDamageMeterSessionId)
+  self:UpdatePlayerGear()
   AutoBiographer_TodoPanel:QueueRefresh()
 end
 
@@ -901,6 +917,11 @@ function EM.EventHandlers.PLAYER_INTERACTION_MANAGER_FRAME_HIDE(self, type)
 end
 
 function EM.EventHandlers.PLAYER_LEAVING_WORLD(self)
+  -- Equipment can already be unavailable here; keep the last known snapshot.
+  self.GearTrackingReady = false
+  self.GearTrackingGeneration = (self.GearTrackingGeneration or 0) + 1
+  self.GearSnapshotRetryPending = false
+  self.GearPendingUnequips = {}
   self:StopDistanceTracking()
   if (self.CampedPending) then
     self.CampedPending = false
@@ -1252,6 +1273,10 @@ function EM.EventHandlers.UNIT_AURA(self, unitId, updateInfo)
     if (self.PlayerEnteringWorldHasFired) then self:UpdatePlayerCampAuras(true) end
   end
   self:OnUnitAura(unitId, updateInfo)
+end
+
+function EM.EventHandlers.UNIT_INVENTORY_CHANGED(self, unitId)
+  if (not self:IsSecretValue(unitId) and unitId == "player") then self:UpdatePlayerGear() end
 end
 
 function EM.EventHandlers.UNIT_MAXHEALTH(self, unitId)
@@ -2140,6 +2165,60 @@ function EM:UpdatePlayerCampAuras(trackChanges)
   end)
 end
 
+function EM:UpdatePlayerGear(slotId, retryCount)
+  if (not self.GearTrackingReady or not Controller.CharacterData.Gear) then return end
+  if (self:IsSecretValue(slotId)) then slotId = nil end
+  if (slotId ~= nil and (type(slotId) ~= "number" or slotId < 0 or slotId > 19 or slotId ~= math.floor(slotId))) then return end
+
+  local timestamp = time()
+  local incomplete = false
+  self.GearPendingUnequips = self.GearPendingUnequips or {}
+  -- Include the legacy ammo/ranged slots as well as armor, weapons and jewelry.
+  for slot = slotId or 0, slotId or 19 do
+    local itemId = Api.GetEquippedItemId(slot)
+    if (itemId == nil) then
+      incomplete = true
+    elseif (itemId == 0 and (Controller.CharacterData.Gear.Snapshot[slot] or 0) > 0) then
+      -- During login, inventory can briefly report every equipped slot empty.
+      -- Preserve known gear until a later read confirms the slot stayed empty.
+      if (not self.GearPendingUnequips[slot]) then
+        local pendingSlotId = slot
+        local pending = { Timestamp = timestamp }
+        local generation = self.GearTrackingGeneration
+        self.GearPendingUnequips[slot] = pending
+        C_Timer.After(1, function()
+          if (not self.GearTrackingReady or generation ~= self.GearTrackingGeneration or
+            self.GearPendingUnequips[pendingSlotId] ~= pending) then return end
+          self.GearPendingUnequips[pendingSlotId] = nil
+          local currentItemId = Api.GetEquippedItemId(pendingSlotId)
+          if (currentItemId == 0) then
+            Controller:OnEquippedItem(pending.Timestamp, pendingSlotId, 0)
+          elseif (currentItemId ~= nil) then
+            Controller:OnEquippedItem(time(), pendingSlotId, currentItemId)
+          else
+            self:UpdatePlayerGear(pendingSlotId)
+          end
+        end)
+      end
+    else
+      self.GearPendingUnequips[slot] = nil
+      Controller:OnEquippedItem(timestamp, slot, itemId)
+    end
+  end
+
+  -- Never treat a failed/secret read as an unequip. Retry briefly when data
+  -- is unavailable; inventory changes and leaving combat also rescan it.
+  if (incomplete and not self.GearSnapshotRetryPending and (retryCount or 0) < 5) then
+    self.GearSnapshotRetryPending = true
+    local generation = self.GearTrackingGeneration
+    C_Timer.After(0.5, function()
+      if (not self.GearTrackingReady or generation ~= self.GearTrackingGeneration) then return end
+      self.GearSnapshotRetryPending = false
+      self:UpdatePlayerGear(nil, (retryCount or 0) + 1)
+    end)
+  end
+end
+
 function EM:UpdatePlayerGuildInfo()
   local guildName, guildRankName, guildRankIndex = GetGuildInfo("player")
   
@@ -2599,6 +2678,7 @@ function EM:ClearCharacterData(doNotRequireConfirmation, doNotReloadUI)
     if (not confirmed) then return end
     _G["AUTOBIOGRAPHER_CATALOGS_CHAR"] = nil
     _G["AUTOBIOGRAPHER_EVENTS_CHAR"] = nil
+    _G["AUTOBIOGRAPHER_GEAR_CHAR"] = nil
     _G["AUTOBIOGRAPHER_LEVELS_CHAR"] = nil
     _G["AUTOBIOGRAPHER_INFO_CHAR"] = nil
     _G["AUTOBIOGRAPHER_TODOS_CHAR"] = nil

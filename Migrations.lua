@@ -462,3 +462,21 @@ table.insert(MM.Migrations,
     end
   )
 )
+
+table.insert(MM.Migrations,
+  AutoBiographer_Migration:New(
+    20,
+    function(eventManager, controller)
+      for _, levelStatistics in pairs(controller.CharacterData.Levels) do
+        levelStatistics.DamageStatistics = DamageStatistics.New()
+      end
+      AutoBiographer_Settings.Options["ShowLowRankCombatSkillWarnings"] = nil
+    end
+
+    -- damage stats
+    -- notes
+    -- todo tasks
+    -- distance stats (remove lazy init in controller)
+    -- gear
+  )
+)

@@ -446,6 +446,10 @@ function Controller:GetExperienceByExperienceTrackingType(experienceTrackingType
   return sum
 end
 
+function Controller:GetGearHistory()
+  return self.CharacterData.Gear
+end
+
 function Controller:GetItemCountForAcquisitionMethod(itemAcquisitionMethod, minLevel, maxLevel)
   local sum = 0
   for k,v in pairs(self.CharacterData.Levels) do
@@ -875,6 +879,14 @@ function Controller:OnDuelWon(timestamp, coordinates, loserCatalogUnitId, loserN
   
   if (not self:GetCurrentLevelStatistics().OtherPlayerStatisticsByOtherPlayer[loserCatalogUnitId]) then self:GetCurrentLevelStatistics().OtherPlayerStatisticsByOtherPlayer[loserCatalogUnitId] = OtherPlayerStatistics.New() end
   OtherPlayerStatistics.Add(self:GetCurrentLevelStatistics().OtherPlayerStatisticsByOtherPlayer[loserCatalogUnitId], AutoBiographerEnum.OtherPlayerTrackingType.DuelsLostToPlayer, 1)
+end
+
+function Controller:OnEquippedItem(timestamp, slotId, itemId)
+  local changed = GearHistory.RecordChange(self:GetGearHistory(), timestamp, slotId, itemId)
+  if (changed and AutoBiographer_GearPanel and AutoBiographer_GearPanel.QueueRefresh) then
+    AutoBiographer_GearPanel:QueueRefresh()
+  end
+  return changed
 end
 
 function Controller:OnGainedExperience(timestamp, coordinates, experienceTrackingType, amount)

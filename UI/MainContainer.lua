@@ -1,10 +1,13 @@
 local Api = AutoBiographer_Api
-local sections = { "Summary", "Events", "Statistics", "Notes", "Todos" }
+local sections = { "Summary", "Events", "Statistics", "GearHistory", "Notes", "Todos" }
+local sectionLabels = { GearHistory = "Gear History", Todos = "To-do" }
 
 local function CreateNavigationButton(parent, text, width, onClick)
   local button = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
   button:SetSize(width, 26)
   button:SetText(text)
+  button:SetNormalFontObject("GameFontNormalSmall")
+  button:SetHighlightFontObject("GameFontHighlightSmall")
   button:SetScript("OnClick", onClick)
   return button
 end
@@ -39,6 +42,7 @@ function AutoBiographer_MainWindow:Initialize()
     Summary = AutoBiographer_SummaryPanel,
     Events = AutoBiographer_EventWindow,
     Statistics = AutoBiographer_StatisticsWindow,
+    GearHistory = AutoBiographer_GearPanel,
     Notes = AutoBiographer_NotesWindow,
     Todos = AutoBiographer_TodoPanel,
   }
@@ -54,7 +58,7 @@ function AutoBiographer_MainWindow:Initialize()
 
   self.SectionButtons = {}
   for i, name in ipairs(sections) do
-    local button = CreateNavigationButton(self, name == "Todos" and "To-do" or name, 100, function() self:ShowSection(name) end)
+    local button = CreateNavigationButton(self, sectionLabels[name] or name, 100, function() self:ShowSection(name) end)
     button:SetPoint("TOPLEFT", 18 + (i - 1) * 106, -39)
     self.SectionButtons[name] = button
   end
@@ -139,6 +143,14 @@ end
 
 function AutoBiographer_MainWindow:LayoutPanels()
   if (not self.Initialized) then return end
+  -- Leave room for Options and Debug even at the minimum window width.
+  local buttonWidth = math.min(100, (self:GetWidth() - 226 - (#sections - 1) * 6) / #sections)
+  for i, name in ipairs(sections) do
+    local button = self.SectionButtons[name]
+    button:SetWidth(buttonWidth)
+    button:ClearAllPoints()
+    button:SetPoint("TOPLEFT", 18 + (i - 1) * (buttonWidth + 6), -39)
+  end
   for _, panel in pairs(self.Panels) do panel:LayoutPanel() end
 end
 

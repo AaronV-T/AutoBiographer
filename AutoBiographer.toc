@@ -5,7 +5,7 @@
 ## Version: 4.1.1
 ## IconTexture: Interface\Icons\inv_misc_note_05
 ## SavedVariables: AUTOBIOGRAPHER_SETTINGS, AUTOBIOGRAPHER_NOTES
-## SavedVariablesPerCharacter: AUTOBIOGRAPHER_CATALOGS_CHAR, AUTOBIOGRAPHER_EVENTS_CHAR, AUTOBIOGRAPHER_INFO_CHAR, AUTOBIOGRAPHER_LEVELS_CHAR, AUTOBIOGRAPHER_NOTES_CHAR, AUTOBIOGRAPHER_TODOS_CHAR
+## SavedVariablesPerCharacter: AUTOBIOGRAPHER_CATALOGS_CHAR, AUTOBIOGRAPHER_EVENTS_CHAR, AUTOBIOGRAPHER_GEAR_CHAR, AUTOBIOGRAPHER_INFO_CHAR, AUTOBIOGRAPHER_LEVELS_CHAR, AUTOBIOGRAPHER_NOTES_CHAR, AUTOBIOGRAPHER_TODOS_CHAR
 
 embeds.xml
 
@@ -25,6 +25,7 @@ Main.lua
 
 Classes/Catalog.lua
 Classes/Event.lua
+Classes/GearHistory.lua
 Classes/Miscellaneous.lua
 Classes/Notes.lua
 Classes/Statistics.lua
@@ -41,6 +42,7 @@ UI/SubjectNotes.lua
 UI/TodoPanel.lua
 UI/SummaryPanel.lua
 UI/EventsPanel.lua
+UI/GearPanel.lua
 UI/MainContainer.lua
 UI/MinimapButton.lua
 UI/MinimapButton.xml
