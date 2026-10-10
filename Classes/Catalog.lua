@@ -5,8 +5,11 @@ function Catalogs.New()
   return {
     BossCatalog = {}, -- Dict<CatalogBossId, CatalogBoss>
     ItemCatalog = {}, -- Dict<CatalogItemId, CatalogItem>
+    RaidCatalog = {}, -- Dict<InstanceId, { Name }>
+    SkillCatalog = {}, -- Dict<SkillId, { Name }>
     SubZoneCatalog = {}, -- Dict<CatalogSubZoneName, CatalogSubZone>
     SpellCatalog = {}, -- Dict<CatalogSpellId, CatalogSpell>
+    TalentCatalog = {}, -- Dict<TalentId, { Name }>
     UnitCatalog = {}, -- Dict<CatalogUnitId, CatalogUnit>
     ZoneCatalog = {}, -- Dict<CatalogZoneName, CatalogZone>
   }

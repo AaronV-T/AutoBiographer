@@ -1,5 +1,6 @@
-Snapshot gear, money, and other stuff on each level up and each raid first clear?
 Track messages sent by type (say, yell, pm, guild, general, trade, emote)
+Chat commands: Add note, add task
+Startup hints
 Track class specific stats
   time spent in forms
 Levels stats page. For each level show time played, xp total, xp breakdown, money total, kills, quests

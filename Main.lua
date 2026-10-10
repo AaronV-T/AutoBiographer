@@ -229,6 +229,9 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   if type(_G["AUTOBIOGRAPHER_NOTES"]) ~= "table" then
     _G["AUTOBIOGRAPHER_NOTES"] = Notes.New()
   end
+  if type(_G["AUTOBIOGRAPHER_SNAPSHOTS_CHAR"]) ~= "table" then
+    _G["AUTOBIOGRAPHER_SNAPSHOTS_CHAR"] = CharacterSnapshots.New()
+  end
   if type(_G["AUTOBIOGRAPHER_TODOS_CHAR"]) ~= "table" then
     _G["AUTOBIOGRAPHER_TODOS_CHAR"] = Todo.New()
   end
@@ -241,6 +244,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
     Events = _G["AUTOBIOGRAPHER_EVENTS_CHAR"],
     Gear = _G["AUTOBIOGRAPHER_GEAR_CHAR"],
     Levels = _G["AUTOBIOGRAPHER_LEVELS_CHAR"],
+    Snapshots = _G["AUTOBIOGRAPHER_SNAPSHOTS_CHAR"],
     Todos = _G["AUTOBIOGRAPHER_TODOS_CHAR"],
   }
   
@@ -286,6 +290,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   AutoBiographer_DebugWindow:Initialize()
   AutoBiographer_EventWindow:Initialize()
   AutoBiographer_GearPanel:Initialize()
+  AutoBiographer_SnapshotPanel:Initialize()
   AutoBiographer_NotesWindow:Initialize()
   AutoBiographer_OptionWindow:Initialize()
   AutoBiographer_StatisticsWindow:Initialize()
@@ -889,6 +894,7 @@ function EM.EventHandlers.PLAYER_ENTERING_WORLD(self, isLogin, isReload)
   self:StartDistanceTracking()
   self.GearTrackingReady = true
   self:UpdatePlayerGear()
+  AutoBiographer_SnapshotManager:Resume()
 end
 
 function EM.EventHandlers.PLAYER_EQUIPMENT_CHANGED(self, slotId)
@@ -902,6 +908,7 @@ end
 function EM.EventHandlers.PLAYER_REGEN_ENABLED(self)
   self:ScheduleDamageMeterCombatFinalization(self.CurrentDamageMeterSessionId)
   self:UpdatePlayerGear()
+  if (self.GearTrackingReady and AutoBiographer_SnapshotManager) then AutoBiographer_SnapshotManager:Resume() end
   AutoBiographer_TodoPanel:QueueRefresh()
 end
 
@@ -917,6 +924,7 @@ function EM.EventHandlers.PLAYER_INTERACTION_MANAGER_FRAME_HIDE(self, type)
 end
 
 function EM.EventHandlers.PLAYER_LEAVING_WORLD(self)
+  if (AutoBiographer_SnapshotManager) then AutoBiographer_SnapshotManager:Pause() end
   -- Equipment can already be unavailable here; keep the last known snapshot.
   self.GearTrackingReady = false
   self.GearTrackingGeneration = (self.GearTrackingGeneration or 0) + 1
@@ -1147,6 +1155,7 @@ function EM.EventHandlers.UPDATE_BATTLEFIELD_STATUS(self, battleFieldIndex)
 end
 
 function EM.EventHandlers.TIME_PLAYED_MSG(self, totalTimePlayed, levelTimePlayed)
+  AutoBiographer_SnapshotManager:OnTimePlayed(totalTimePlayed)
   self.TimePlayedMessageLastTimestamp = GetTime()
 
   if (self.TimePlayedMessageChatFramesToRegister) then
@@ -2680,6 +2689,7 @@ function EM:ClearCharacterData(doNotRequireConfirmation, doNotReloadUI)
     _G["AUTOBIOGRAPHER_EVENTS_CHAR"] = nil
     _G["AUTOBIOGRAPHER_GEAR_CHAR"] = nil
     _G["AUTOBIOGRAPHER_LEVELS_CHAR"] = nil
+    _G["AUTOBIOGRAPHER_SNAPSHOTS_CHAR"] = nil
     _G["AUTOBIOGRAPHER_INFO_CHAR"] = nil
     _G["AUTOBIOGRAPHER_TODOS_CHAR"] = nil
     if (not doNotReloadUI) then ReloadUI() end

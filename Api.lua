@@ -2,6 +2,10 @@ AutoBiographer_Api = {}
 
 local Api = AutoBiographer_Api
 
+local function IsReadable(value, expectedType)
+  return not (issecretvalue and issecretvalue(value)) and type(value) == expectedType
+end
+
 function Api.FormatMoney(amount)
   if (GetCoinText) then
     return GetCoinText(amount)
@@ -128,6 +132,172 @@ function Api.GetItemInfo(item)
   if (C_Item and C_Item.GetItemInfo) then
     return C_Item.GetItemInfo(item)
   end
+end
+
+function Api.GetPlayerSnapshotAttributes()
+  local success, result = pcall(function()
+    local health, mana = UnitHealthMax("player"), UnitPowerMax("player", 0)
+    if (not IsReadable(health, "number") or not IsReadable(mana, "number")) then return nil end
+    local attributes = { Base = {}, Effective = {} }
+    for index = 1, 5 do
+      local stat, effective, positive, negative = UnitStat("player", index)
+      if (not IsReadable(stat, "number") or not IsReadable(effective, "number")
+        or not IsReadable(positive, "number") or not IsReadable(negative, "number")) then return nil end
+      attributes.Base[index] = stat - positive - negative
+      attributes.Effective[index] = effective
+    end
+    return { Attributes = attributes, MaxHealth = health, MaxMana = mana }
+  end)
+  if (success) then return result end
+end
+
+function Api.GetPlayerSnapshotEquipment()
+  local equipment, enchants = {}, {}
+  for slotId = 0, 19 do
+    local itemId = Api.GetEquippedItemId(slotId)
+    if (itemId == nil) then return nil end
+    equipment[slotId] = itemId
+    if (itemId > 0 and GetInventoryItemLink) then
+      local success, link = pcall(GetInventoryItemLink, "player", slotId)
+      if (success and IsReadable(link, "string")) then
+        local enchantId = tonumber(link:match("item:%d+:(%d+)"))
+        if (enchantId and enchantId > 0) then enchants[slotId] = enchantId end
+      end
+    end
+  end
+  return equipment, enchants
+end
+
+function Api.GetPlayerSnapshotSkills()
+  local success, result = pcall(function()
+    local skills = {}
+    if (GetProfessions and GetProfessionInfo) then
+      local indices = { GetProfessions() }
+      -- Profession indices can have holes (e.g. no second primary profession).
+      for _, index in pairs(indices) do
+        if (not IsReadable(index, "number")) then return nil end
+        local name, _, rank, maxRank, _, _, skillId = GetProfessionInfo(index)
+        if (not IsReadable(name, "string") or not IsReadable(rank, "number")
+          or not IsReadable(maxRank, "number")) then return nil end
+        skills[#skills + 1] = { Id = IsReadable(skillId, "number") and skillId or nil,
+          Name = name, Rank = rank, MaxRank = maxRank }
+      end
+    elseif (GetNumSkillLines and GetSkillLineInfo) then
+      for index = 1, GetNumSkillLines() do
+        local name, isHeader, _, rank, _, _, maxRank = GetSkillLineInfo(index)
+        if (issecretvalue and issecretvalue(isHeader)) then return nil end
+        if (not isHeader or isHeader == 0) then
+          if (not IsReadable(name, "string") or not IsReadable(rank, "number")
+            or not IsReadable(maxRank, "number")) then return nil end
+          skills[#skills + 1] = { Name = name, Rank = rank, MaxRank = maxRank }
+        end
+      end
+    else
+      return nil
+    end
+    return skills
+  end)
+  if (success) then return result end
+end
+
+function Api.GetPlayerSnapshotTalents(level)
+  -- A level-up event can arrive before UnitLevel changes. Use the milestone's
+  -- level when deciding whether the character has unlocked talents yet.
+  level = level or UnitLevel("player")
+  if (IsReadable(level, "number") and level < 10) then return {}, 0 end
+  local success, talents, unspent = pcall(function()
+    local modern = C_SpecializationInfo
+    if (modern and modern.IsInitialized) then
+      local initialized = modern.IsInitialized()
+      if (not IsReadable(initialized, "boolean") or not initialized) then return nil end
+    end
+    local group = 1
+    if (modern and modern.GetActiveSpecGroup) then
+      group = modern.GetActiveSpecGroup(false, false)
+    elseif (GetActiveTalentGroup) then
+      group = GetActiveTalentGroup()
+    end
+    if (not IsReadable(group, "number")) then return nil end
+    local result, seen = {}, {}
+    local function AddTalent(id, name, rank)
+      if (not IsReadable(rank, "number")) then return false end
+      if (rank > 0) then
+        if (not IsReadable(id, "number") or id <= 0 or not IsReadable(name, "string")) then return false end
+        if (not seen[id]) then
+          seen[id] = true
+          result[#result + 1] = { Id = id, Name = name, Rank = rank }
+        end
+      end
+      return true
+    end
+    local tabCount
+    if (GetNumTalentTabs) then tabCount = GetNumTalentTabs(false, false)
+    elseif (modern and modern.GetNumSpecializationsForClassID) then
+      local _, _, classId = UnitClass("player")
+      if (not IsReadable(classId, "number")) then return nil end
+      tabCount = modern.GetNumSpecializationsForClassID(classId)
+    elseif (GetNumSpecializations) then tabCount = GetNumSpecializations(false, false) end
+    if (not IsReadable(tabCount, "number") or tabCount <= 0) then return nil end
+    for tab = 1, tabCount do
+      -- Classic has a linear talent list. Forever need not expose those
+      -- globals: its namespaced query also supports the tier/column grid.
+      if (GetNumTalents) then
+        local count = GetNumTalents(tab, false, false)
+        if (not IsReadable(count, "number") or count <= 0) then return nil end
+        for index = 1, count do
+          local id, name, rank
+          if (modern and modern.GetTalentInfo) then
+            local info = modern.GetTalentInfo({ specializationIndex = tab,
+              talentIndex = index, isInspect = false, isPet = false, groupIndex = group })
+            if (not IsReadable(info, "table")) then return nil end
+            id, name, rank = info.talentID, info.name, info.rank
+          elseif (GetTalentInfo) then
+            local legacyName, _, _, _, legacyRank = GetTalentInfo(tab, index, false, false, group)
+            name, rank = legacyName, legacyRank
+            if (GetTalentLink) then
+              local link = GetTalentLink(tab, index, false, false, group)
+              if (IsReadable(link, "string")) then id = tonumber(link:match("talent:(%d+)")) end
+            end
+          else
+            return nil
+          end
+          if (not AddTalent(id, name, rank)) then return nil end
+        end
+      elseif (modern and modern.GetTalentInfo) then
+        local found = false
+        -- These globals belong to the load-on-demand talent UI. Defaults also
+        -- allow snapshots before the player has opened that UI.
+        local tiers = MAX_NUM_TALENT_TIERS or MAX_TALENT_TIERS or 15
+        local columns = NUM_TALENT_COLUMNS or 4
+        if (not IsReadable(tiers, "number") or not IsReadable(columns, "number")) then return nil end
+        for tier = 1, tiers do
+          for column = 1, columns do
+            local info = modern.GetTalentInfo({ specializationIndex = tab,
+              tier = tier, column = column, isInspect = false, isPet = false, groupIndex = group })
+            if (issecretvalue and issecretvalue(info)) then return nil end
+            -- Empty positions in the grid are normal, not missing data.
+            if (info) then
+              if (not IsReadable(info, "table")) then return nil end
+              found = true
+              local rank = info.rank
+              if (issecretvalue and issecretvalue(rank)) then return nil end
+              if (not IsReadable(rank, "number")) then
+                if (not IsReadable(info.selected, "boolean")) then return nil end
+                rank = info.selected and 1 or 0
+              end
+              if (not AddTalent(info.talentID, info.name, rank)) then return nil end
+            end
+          end
+        end
+        if (not found) then return nil end
+      else
+        return nil
+      end
+    end
+    local points = GetUnspentTalentPoints and GetUnspentTalentPoints(false, false, group)
+    return result, IsReadable(points, "number") and points or nil
+  end)
+  if (success) then return talents, unspent end
 end
 
 function Api.GetPlayerWorldPosition()

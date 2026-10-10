@@ -380,6 +380,10 @@ function Controller:GetBattlegroundStatsByBattlegroundId(battlegroundId, minLeve
   return joined, losses, wins
 end
 
+function Controller:GetCharacterSnapshots()
+  return self.CharacterData.Snapshots
+end
+
 function Controller:GetCurrentLevelNum()
   return HelperFunctions.GetLastKeyFromTable(self.CharacterData.Levels)
 end
@@ -685,6 +689,7 @@ function Controller:OnBossKill(timestamp, coordinates, bossId, bossName, hasKill
   end
 
   self:AddEvent(BossKillEvent.New(timestamp, coordinates, bossId, bossName))
+  AutoBiographer_SnapshotManager:SnapshotRaid(bossId)
   
   if (AutoBiographer_Settings.Options["TakeScreenshotOnBossKill"] and (not AutoBiographer_Settings.Options["TakeScreenshotOnlyOnFirstBossKill"] or not hasKilledBossBefore)) then
     self:TakeScreenshot(0.5)
@@ -999,6 +1004,9 @@ function Controller:OnLevelUp(timestamp, coordinates, levelNum, totalTimePlayedA
   
   if (timestamp) then
     self:AddEvent(LevelUpEvent.New(timestamp, coordinates, levelNum))
+    -- A nil timestamp denotes initialization of an already-progressed
+    -- character, not a milestone. New level-1 characters come through here.
+    AutoBiographer_SnapshotManager:SnapshotLevel(levelNum, totalTimePlayedAtDing)
     if (AutoBiographer_Settings.Options["TakeScreenshotOnLevelUp"] and levelNum > 1) then 
       self:TakeScreenshot(1.0)
     end
