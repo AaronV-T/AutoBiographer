@@ -180,6 +180,17 @@ function Api.GetQuestTooltipId(owner)
   end
 end
 
+function Api.GetRestedExperiencePool()
+  if (not GetXPExhaustion) then return nil end
+  local success, pool = pcall(GetXPExhaustion)
+  if (not success or (issecretvalue and issecretvalue(pool))) then return nil end
+  -- The API returns nil when the readable pool is exhausted, not when its
+  -- value is secret. Keep those cases distinct so the final bonus is counted.
+  if (pool == nil) then return 0 end
+  if (type(pool) ~= "number" or pool < 0) then return nil end
+  return pool
+end
+
 function Api.GetSpellInfo(spellId)
   if (GetSpellInfo) then
     return GetSpellInfo(spellId)

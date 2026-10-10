@@ -28,6 +28,7 @@ AutoBiographer_EventManager = {
   PersistentPlayerInfo = nil,
   PlayerEnteringWorldHasFired = false,
   PlayerName = nil,
+  LastRestedExperiencePool = nil,
   PlayerFlags = {
     AffectingCombat = nil,
     Afk = nil,
@@ -325,7 +326,9 @@ function EM.EventHandlers.CHAT_MSG_COMBAT_XP_GAIN(self, text)
   
   if (xpGainedFromKill) then Controller:OnGainedExperience(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.ExperienceTrackingType.Kill, tonumber(xpGainedFromKill)) end
   if (xpGainedFromGroupBonus) then Controller:OnGainedExperience(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.ExperienceTrackingType.GroupBonus, tonumber(xpGainedFromGroupBonus)) end
-  if (xpGainedFromRestedBonus) then Controller:OnGainedExperience(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.ExperienceTrackingType.RestedBonus, tonumber(xpGainedFromRestedBonus)) end
+  -- Forever no longer includes rested XP in the message; UPDATE_EXHAUSTION
+  -- records it from the pool instead. Do not count it twice if text returns.
+  if (not Api.IsWoWForever() and xpGainedFromRestedBonus) then Controller:OnGainedExperience(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.ExperienceTrackingType.RestedBonus, tonumber(xpGainedFromRestedBonus)) end
   if (xpLostToRaidPenalty) then Controller:OnGainedExperience(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.ExperienceTrackingType.RaidPenalty, tonumber(xpLostToRaidPenalty)) end
 end
 
@@ -870,6 +873,7 @@ function EM.EventHandlers.PLAYER_ENTERING_WORLD(self, isLogin, isReload)
   self:UpdatePlayerCampAuras(false)
   self:UpdatePlayerFlags()
   self:ScheduleDamageMeterSessionBaselines()
+  if (Api.IsWoWForever()) then self.LastRestedExperiencePool = Api.GetRestedExperiencePool() end
 end
 
 function EM.EventHandlers.PLAYER_FLAGS_CHANGED(self, unitId)
@@ -1365,6 +1369,19 @@ end
 
 function EM.EventHandlers.PLAYER_TARGET_CHANGED(self)
   self:SnapshotOtherPlayerAuras("target")
+end
+
+function EM.EventHandlers.UPDATE_EXHAUSTION(self)
+  if (not Api.IsWoWForever() or not self.PlayerEnteringWorldHasFired) then return end
+  local previousPool = self.LastRestedExperiencePool
+  local currentPool = Api.GetRestedExperiencePool()
+  self.LastRestedExperiencePool = currentPool
+  -- Login/reload or unreadable data establishes a new baseline. Increases
+  -- from resting/camping are not XP earned. On Forever, consuming the pool
+  -- uses two pool points per bonus XP, including a partial final rested kill.
+  if (previousPool == nil or currentPool == nil or currentPool >= previousPool) then return end
+  Controller:OnGainedExperience(time(), HelperFunctions.GetCoordinatesByUnitId("player"),
+    AutoBiographerEnum.ExperienceTrackingType.RestedBonus, (previousPool - currentPool) / 2)
 end
 
 function EM.EventHandlers.UPDATE_MOUSEOVER_UNIT(self)
