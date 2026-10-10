@@ -12,6 +12,7 @@ function AggregatedStatistics.New()
     GatheringStatistics = nil,
     ItemStatisticsByItem = {}, -- Dict<CatalogItemId, ItemStatistics>
     KillStatisticsByUnit = {}, -- Dict<CatalogUnitId, KillStatistics>
+    MessageStatistics = MessageStatistics.New(), -- Dict<MessageTrackingType, count>
     MiscellaneousStatistics = MiscellaneousStatistics.New(),
     MoneyStatistics = MoneyStatistics.New(),
     OtherPlayerStatisticsByOtherPlayer = {}, -- Dict<CatalogUnitId, PlayerStatistics>
@@ -296,6 +297,17 @@ function LevelStatistics.New(levelNum, totalTimePlayedAtDing, timePlayedThisLeve
   newInstance.TimePlayedThisLevel = timePlayedThisLevel -- int (seconds)
 
   return newInstance
+end
+
+-- *** MessageStatistics ***
+
+MessageStatistics = {}
+function MessageStatistics.New()
+  return {}
+end
+
+function MessageStatistics.Increment(ms, messageTrackingType)
+  ms[messageTrackingType] = (ms[messageTrackingType] or 0) + 1
 end
 
 -- *** MiscellaneousStatistics ***

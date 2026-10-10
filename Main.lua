@@ -19,6 +19,7 @@ AutoBiographer_EventManager = {
   GearTrackingReady = false,
   LastPlayerDeadEventTimestamp = nil,
   LastPlayerMoney = nil,
+  LastSentChatLineId = nil,
   MailboxIsOpen = nil,
   MailboxMessages = nil,
   MailboxUpdatesRunning = 0,
@@ -69,6 +70,15 @@ local EM = AutoBiographer_EventManager
 local Controller = AutoBiographer_Controller
 local MM = AutoBiographer_MessageManager
 local Api = AutoBiographer_Api
+local messageTypes = AutoBiographerEnum.MessageTrackingType
+local channelMessageTypes = {
+  [1] = messageTypes.General,
+  [2] = messageTypes.Trade,
+  [22] = messageTypes.LocalDefense,
+  [23] = messageTypes.WorldDefense,
+  [26] = messageTypes.LookingForGroup,
+  [42] = messageTypes.TradeServices,
+}
 local damageMeterSessionRetentionCount = 5
 
 -- Slash Commands
@@ -335,6 +345,36 @@ function EM.EventHandlers.AUCTION_HOUSE_SHOW(self, arg1, arg2)
   self.AuctionHouseIsOpen = true
 end
 
+-- Older clients use BATTLEGROUND rather than INSTANCE_CHAT. Only register
+-- optional chat events when the client supports them, using the normal frame.
+if (Api.IsEventAvailable("CHAT_MSG_BATTLEGROUND", C_ChatInfo == nil and not Api.IsWoWForever())) then
+  function EM.EventHandlers.CHAT_MSG_BATTLEGROUND(self, ...)
+    self:OnMessageSent(messageTypes.Battleground, false, ...)
+  end
+end
+
+if (Api.IsEventAvailable("CHAT_MSG_BATTLEGROUND_LEADER", C_ChatInfo == nil and not Api.IsWoWForever())) then
+  function EM.EventHandlers.CHAT_MSG_BATTLEGROUND_LEADER(self, ...)
+    self:OnMessageSent(messageTypes.Battleground, false, ...)
+  end
+end
+
+if (Api.IsEventAvailable("CHAT_MSG_BN_WHISPER_INFORM", BNGetInfo ~= nil)) then
+  function EM.EventHandlers.CHAT_MSG_BN_WHISPER_INFORM(self, ...)
+    self:OnMessageSent(messageTypes.BattleNetWhisper, true, ...)
+  end
+end
+
+function EM.EventHandlers.CHAT_MSG_CHANNEL(self, ...)
+  -- zoneChannelID is the channel's stable type, not its changing /1 or /2 number.
+  local zoneChannelId = select(7, ...)
+  local messageType = messageTypes.OtherChannel
+  if (not self:IsSecretValue(zoneChannelId) and zoneChannelId ~= nil) then
+    messageType = channelMessageTypes[zoneChannelId] or messageType
+  end
+  self:OnMessageSent(messageType, false, ...)
+end
+
 function EM.EventHandlers.CHAT_MSG_COMBAT_XP_GAIN(self, text)
   local mobName, xpGainedFromKill = string.match(text, "(.+) dies, you gain (%d+) experience")
   local xpGainedFromGroupBonus = string.match(text, "+(%d+) group bonus")
@@ -347,6 +387,32 @@ function EM.EventHandlers.CHAT_MSG_COMBAT_XP_GAIN(self, text)
   -- records it from the pool instead. Do not count it twice if text returns.
   if (not Api.IsWoWForever() and xpGainedFromRestedBonus) then Controller:OnGainedExperience(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.ExperienceTrackingType.RestedBonus, tonumber(xpGainedFromRestedBonus)) end
   if (xpLostToRaidPenalty) then Controller:OnGainedExperience(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.ExperienceTrackingType.RaidPenalty, tonumber(xpLostToRaidPenalty)) end
+end
+
+if (Api.IsEventAvailable("CHAT_MSG_COMMUNITIES_CHANNEL", C_Club ~= nil)) then
+  function EM.EventHandlers.CHAT_MSG_COMMUNITIES_CHANNEL(self, ...)
+    self:OnMessageSent(messageTypes.Community, false, ...)
+  end
+end
+
+function EM.EventHandlers.CHAT_MSG_EMOTE(self, ...)
+  self:OnMessageSent(messageTypes.Emote, false, ...)
+end
+
+function EM.EventHandlers.CHAT_MSG_GUILD(self, ...)
+  self:OnMessageSent(messageTypes.Guild, false, ...)
+end
+
+if (Api.IsEventAvailable("CHAT_MSG_INSTANCE_CHAT", C_ChatInfo ~= nil)) then
+  function EM.EventHandlers.CHAT_MSG_INSTANCE_CHAT(self, ...)
+    self:OnMessageSent(messageTypes.Instance, false, ...)
+  end
+end
+
+if (Api.IsEventAvailable("CHAT_MSG_INSTANCE_CHAT_LEADER", C_ChatInfo ~= nil)) then
+  function EM.EventHandlers.CHAT_MSG_INSTANCE_CHAT_LEADER(self, ...)
+    self:OnMessageSent(messageTypes.Instance, false, ...)
+  end
 end
 
 function EM.EventHandlers.CHAT_MSG_LOOT(self, text, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, arg17, arg18, arg19, arg20, arg21)
@@ -464,6 +530,34 @@ function EM.EventHandlers.CHAT_MSG_MONEY(self, text, arg2, arg3, arg4, arg5)
   Controller:OnGainedMoney(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.MoneyAcquisitionMethod.Loot, moneySum)
 end
 
+function EM.EventHandlers.CHAT_MSG_OFFICER(self, ...)
+  self:OnMessageSent(messageTypes.Officer, false, ...)
+end
+
+function EM.EventHandlers.CHAT_MSG_PARTY(self, ...)
+  self:OnMessageSent(messageTypes.Party, false, ...)
+end
+
+function EM.EventHandlers.CHAT_MSG_PARTY_LEADER(self, ...)
+  self:OnMessageSent(messageTypes.Party, false, ...)
+end
+
+function EM.EventHandlers.CHAT_MSG_RAID(self, ...)
+  self:OnMessageSent(messageTypes.Raid, false, ...)
+end
+
+function EM.EventHandlers.CHAT_MSG_RAID_LEADER(self, ...)
+  self:OnMessageSent(messageTypes.Raid, false, ...)
+end
+
+function EM.EventHandlers.CHAT_MSG_RAID_WARNING(self, ...)
+  self:OnMessageSent(messageTypes.RaidWarning, false, ...)
+end
+
+function EM.EventHandlers.CHAT_MSG_SAY(self, ...)
+  self:OnMessageSent(messageTypes.Say, false, ...)
+end
+
 function EM.EventHandlers.CHAT_MSG_SKILL(self, text)
   if (string.find(text, "Your skill in") ~= 1) then return end
   
@@ -520,10 +614,22 @@ function EM.EventHandlers.CHAT_MSG_SYSTEM(self, text)
   end
 end
 
+function EM.EventHandlers.CHAT_MSG_TEXT_EMOTE(self, ...)
+  self:OnMessageSent(messageTypes.Emote, false, ...)
+end
+
 function EM.EventHandlers.CHAT_MSG_TRADESKILLS(self, text, arg2, arg3, arg4, arg5)
   --if (string.find(text, "You create") ~= 1) then return end
   --print(text)
   --print(arg2)
+end
+
+function EM.EventHandlers.CHAT_MSG_WHISPER_INFORM(self, ...)
+  self:OnMessageSent(messageTypes.Whisper, true, ...)
+end
+
+function EM.EventHandlers.CHAT_MSG_YELL(self, ...)
+  self:OnMessageSent(messageTypes.Yell, false, ...)
 end
 
 -- WoW Forever does not expose the raw combat-log payload that this legacy
@@ -1683,6 +1789,27 @@ function EM:MailMoneyTakenFromOneMessage(message)
   end
 
   message.moneyIsAssumedTaken = true
+end
+
+function EM:OnMessageSent(messageTrackingType, outgoingOnly, ...)
+  if (not self.PlayerEnteringWorldHasFired) then return end
+
+  -- INFORM events confirm our outgoing whispers; their GUID is the recipient.
+  -- Other chat events echo everyone, so only count a readable local-player GUID.
+  -- Never inspect or save the message text (which can also be secret).
+  if (not outgoingOnly) then
+    local senderGuid = select(12, ...)
+    local playerGuid = UnitGUID("player")
+    if (self:IsSecretValue(senderGuid) or self:IsSecretValue(playerGuid)) then return end
+    if (not senderGuid or not playerGuid or senderGuid ~= playerGuid) then return end
+  end
+
+  local lineId = select(11, ...)
+  if (not self:IsSecretValue(lineId) and type(lineId) == "number" and lineId > 0) then
+    if (lineId == self.LastSentChatLineId) then return end
+    self.LastSentChatLineId = lineId
+  end
+  Controller:OnMessageSent(messageTrackingType)
 end
 
 function EM:OnStartedCasting(spellId)

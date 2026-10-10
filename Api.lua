@@ -438,6 +438,11 @@ function Api.GetUnitName(unitId)
   return name, lastName
 end
 
+function Api.IsEventAvailable(eventName, fallback)
+  if (C_EventUtils and C_EventUtils.IsEventValid) then return C_EventUtils.IsEventValid(eventName) end
+  return fallback
+end
+
 function Api.IsGamepadUIEnabled()
   return GetCVar and GetCVar("InputDeviceInterfaceStyle") == "1"
 end

@@ -218,6 +218,18 @@ function Controller:GetAggregatedKillStatisticsDictionary(minLevel, maxLevel)
   return killStatisticsDictionary
 end
 
+function Controller:GetAggregatedMessageStatistics(minLevel, maxLevel)
+  local messageStatistics = MessageStatistics.New()
+  for levelNum, levelStatistics in pairs(self.CharacterData.Levels) do
+    if (levelNum >= minLevel and levelNum <= maxLevel) then
+      for messageTrackingType, count in pairs(levelStatistics.MessageStatistics or {}) do
+        messageStatistics[messageTrackingType] = (messageStatistics[messageTrackingType] or 0) + count
+      end
+    end
+  end
+  return messageStatistics
+end
+
 function Controller:GetAggregatedOtherPlayerStatisticsByCatalogUnitId(catalogUnitId, minLevel, maxLevel)
   local otherPlayerStatisticsByCatalogUnitId = OtherPlayerStatistics.New()
   for levelNum, levelStatistics in pairs(self.CharacterData.Levels) do
@@ -1012,6 +1024,12 @@ function Controller:OnLevelUp(timestamp, coordinates, levelNum, totalTimePlayedA
     end
   end
 
+end
+
+function Controller:OnMessageSent(messageTrackingType)
+  local levelStatistics = self:GetCurrentLevelStatistics()
+  if (not levelStatistics.MessageStatistics) then levelStatistics.MessageStatistics = MessageStatistics.New() end
+  MessageStatistics.Increment(levelStatistics.MessageStatistics, messageTrackingType)
 end
 
 function Controller:OnMoneyChanged(timestamp, coordinates, deltaMoney)

@@ -1,4 +1,3 @@
-Track messages sent by type (say, yell, pm, guild, general, trade, emote)
 Chat commands: Add note, add task
 Startup hints
 Track class specific stats
@@ -15,7 +14,7 @@ Update Curseforge page and categories
 
 
 
-Add new dungeons and raids locations
+Add new dungeons and raids locations. Make snapshotting work for new raid bosses, or use dungeon clearing achievements to determine snapshots to take.
 Add event window to map when gamepad ui is enabled
 other player stat: rezzes
 Session stats

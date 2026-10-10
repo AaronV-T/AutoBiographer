@@ -118,7 +118,7 @@ local dashboardTabs = {
       { "BuffsOutsideGroup", "Buffs given" },
       { "PlayersBuffedOutsideGroup", "Unique players buffed" },
     } },
-    { Title = "Buffs within your group", Column = 2, Details = "OtherPlayers", Rows = {
+    { Title = "Buffs within your group", Column = 1, Details = "OtherPlayers", Rows = {
       { "BuffsInGroup", "Buffs given" },
       { "PlayersBuffedInGroup", "Unique players buffed" },
     } },
@@ -126,8 +126,31 @@ local dashboardTabs = {
       { "DuelsWon", "Won" },
       { "DuelsLost", "Lost" },
     } },
-    { Title = "Grouping", Column = 2, Details = "OtherPlayers", Rows = {
+    { Title = "Grouping", Column = 1, Details = "OtherPlayers", Rows = {
       { "TimeGrouped", "Time grouped", "time" },
+    } },
+    { Title = "Messages sent", Column = 2, Rows = {
+      { "MessagesTotal", "Total", IsTotal = true },
+      { "MessagesBattleNetWhisper", "Battle.net private message" },
+      { "MessagesBattleground", "Battleground" },
+      { "MessagesCommunity", "Community" },
+      { "MessagesEmote", "Emote" },
+      { "MessagesGeneral", "General" },
+      { "MessagesGuild", "Guild" },
+      { "MessagesInstance", "Instance / battleground" },
+      { "MessagesLocalDefense", "Local Defense" },
+      { "MessagesLookingForGroup", "Looking For Group" },
+      { "MessagesOfficer", "Officer" },
+      { "MessagesOtherChannel", "Other / custom channel" },
+      { "MessagesParty", "Party" },
+      { "MessagesWhisper", "Private message" },
+      { "MessagesRaid", "Raid" },
+      { "MessagesRaidWarning", "Raid warning" },
+      { "MessagesSay", "Say" },
+      { "MessagesTrade", "Trade" },
+      { "MessagesTradeServices", "Trade (Services)" },
+      { "MessagesWorldDefense", "World Defense" },
+      { "MessagesYell", "Yell" },
     } },
   } },
   { Name = "Travel", Sections = {
@@ -468,6 +491,13 @@ function AutoBiographer_SummaryPanel:Update()
   for category, acquisitionMethod in pairs(Enum.ItemAcquisitionMethod) do
     values["Items" .. category] = Controller:GetItemCountForAcquisitionMethod(acquisitionMethod, minLevel, maxLevel)
     values.ItemsTotal = values.ItemsTotal + values["Items" .. category]
+  end
+  values.MessagesTotal = 0
+  local messageStatistics = Controller:GetAggregatedMessageStatistics(minLevel, maxLevel)
+  for category, messageTrackingType in pairs(Enum.MessageTrackingType) do
+    local count = messageStatistics[messageTrackingType] or 0
+    values["Messages" .. category] = count
+    values.MessagesTotal = values.MessagesTotal + count
   end
   values.MoneyTotal = Controller:GetTotalMoneyGained(minLevel, maxLevel)
   values.MoneyOther = values.MoneyTotal
