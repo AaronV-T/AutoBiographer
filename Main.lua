@@ -20,6 +20,7 @@ AutoBiographer_EventManager = {
   HasLeveledUpSinceLastStatSnapshot = false,
   NewLevelToAddToHistory = nil,
   OtherPlayerAuraStates = {},
+  PlayerCampAuraHistory = nil,
   PlayerCampAuraSnapshot = nil,
   PlayerLevelUpStatSnapshot = nil,
   PlayerLevelUpStatSnapshotPending = false,
@@ -2034,20 +2035,58 @@ function EM:UpdatePlayerCampAuras(trackChanges)
           return
         end
         snapshot.CampBenefitsExpirationTime = expirationTime
+        if (not self:IsSecretValue(auraData.auraInstanceID) and type(auraData.auraInstanceID) == "number") then
+          snapshot.CampBenefitsAuraInstanceId = auraData.auraInstanceID
+        end
       elseif (auraData.spellId == 1229451) then -- Boosted Rest: additions only, never refreshes.
         snapshot.HasBoostedRest = true
+        if (not self:IsSecretValue(auraData.auraInstanceID) and type(auraData.auraInstanceID) == "number") then
+          snapshot.BoostedRestAuraInstanceId = auraData.auraInstanceID
+        end
+        if (not self:IsSecretValue(auraData.expirationTime) and type(auraData.expirationTime) == "number") then
+          snapshot.BoostedRestExpirationTime = auraData.expirationTime
+        end
       end
     end
   end
 
   local previousSnapshot = self.PlayerCampAuraSnapshot
   self.PlayerCampAuraSnapshot = snapshot
+  -- An aura can be omitted from combat-time scans without actually ending.
+  -- Compare positive observations with the last confirmed benefits, not with
+  -- a possibly empty previous scan. Keep this history in memory across gaps.
+  local history = self.PlayerCampAuraHistory or {}
+  local benefitsReceived = snapshot.CampBenefitsExpirationTime and
+    (not history.CampBenefitsExpirationTime or snapshot.CampBenefitsExpirationTime > history.CampBenefitsExpirationTime or
+      (snapshot.CampBenefitsAuraInstanceId and history.CampBenefitsAuraInstanceId and
+        snapshot.CampBenefitsAuraInstanceId ~= history.CampBenefitsAuraInstanceId))
+  local boostedRestReceived = snapshot.HasBoostedRest and
+    (not history.HasBoostedRest or
+      (snapshot.BoostedRestAuraInstanceId and history.BoostedRestAuraInstanceId and
+        snapshot.BoostedRestAuraInstanceId ~= history.BoostedRestAuraInstanceId) or
+      ((not snapshot.BoostedRestAuraInstanceId or not history.BoostedRestAuraInstanceId) and
+        snapshot.BoostedRestExpirationTime and history.BoostedRestExpirationTime and
+        snapshot.BoostedRestExpirationTime > history.BoostedRestExpirationTime))
+  if (snapshot.CampBenefitsExpirationTime) then
+    history.CampBenefitsExpirationTime = benefitsReceived and snapshot.CampBenefitsExpirationTime or
+      math.max(history.CampBenefitsExpirationTime, snapshot.CampBenefitsExpirationTime)
+    if (snapshot.CampBenefitsAuraInstanceId or benefitsReceived) then
+      history.CampBenefitsAuraInstanceId = snapshot.CampBenefitsAuraInstanceId
+    end
+  end
+  if (snapshot.HasBoostedRest) then
+    history.HasBoostedRest = true
+    if (snapshot.BoostedRestAuraInstanceId or boostedRestReceived) then
+      history.BoostedRestAuraInstanceId = snapshot.BoostedRestAuraInstanceId
+    end
+    if (snapshot.BoostedRestExpirationTime) then
+      history.BoostedRestExpirationTime = boostedRestReceived and snapshot.BoostedRestExpirationTime or
+        math.max(history.BoostedRestExpirationTime or snapshot.BoostedRestExpirationTime, snapshot.BoostedRestExpirationTime)
+    end
+  end
+  self.PlayerCampAuraHistory = history
   -- Login/reload and the first readable snapshot after secret data are baselines.
   if (not trackChanges or not previousSnapshot) then return end
-
-  local benefitsReceived = snapshot.CampBenefitsExpirationTime and
-    (not previousSnapshot.CampBenefitsExpirationTime or snapshot.CampBenefitsExpirationTime > previousSnapshot.CampBenefitsExpirationTime)
-  local boostedRestReceived = snapshot.HasBoostedRest and not previousSnapshot.HasBoostedRest
   if (not benefitsReceived and not boostedRestReceived) then return end
   if (self.CampedPending) then return end
 

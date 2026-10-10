@@ -1,28 +1,29 @@
-more social stuff   
+Fix
+  Do layers change player GUIDs?
+  Rested experience not tracked
+Track distance travelled
+Track each time something is equipped?
+Snapshot gear, money, and other stuff on each level up and each raid first clear?
+Track class specific stats
+  time spent in forms
+Levels stats page. For each level show time played, xp total, xp breakdown, money total, kills, quests
+more social stuff
   Milestone sharing guild messages or emotes
   Milestone sharing camp message prompts
 More milestones (minor and major milestones for all stat types)
-class specific stats
-other player stat: rezzes
-Session stats
-Update Curseforge page and categories
-Fix
-  Do layers change player GUIDs?
-  Not tracking aucion house items correctly
-  Camped stat way too high
-  Rested experience not tracked
-Distance travelled stat
-Snapshot gear, money, and other stuff on each level up and each raid first clear?
-Track each time something is equipped?
-Add event window to map when gamepad ui is enabled
-Add new dungeons and raids locations
-Show spotify wrapped when dieing in hardcore
 Beautify UI
   Feats of strength panel
   Summary page to show more like a highlights?
+Update Curseforge page and categories
+
+
+
+Add new dungeons and raids locations
+Add event window to map when gamepad ui is enabled
+other player stat: rezzes
+Session stats
+Show highlights when dieing in hardcore? Share most unique stats when dieing in hardcore?
 Character notes and account notes
-
-
 
 
 
