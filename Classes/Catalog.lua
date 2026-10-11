@@ -4,6 +4,7 @@ Catalogs = {}
 function Catalogs.New()
   return {
     BossCatalog = {}, -- Dict<CatalogBossId, CatalogBoss>
+    CompanionFamilyCatalog = {}, -- Dict<CreatureFamilyId, name>
     ItemCatalog = {}, -- Dict<CatalogItemId, CatalogItem>
     RaidCatalog = {}, -- Dict<InstanceId, { Name }>
     SkillCatalog = {}, -- Dict<SkillId, { Name }>

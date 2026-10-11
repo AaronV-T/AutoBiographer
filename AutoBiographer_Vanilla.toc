@@ -32,6 +32,7 @@ Classes/Statistics.lua
 Classes/Todo.lua
 
 SnapshotManager.lua
+ClassActivity.lua
 
 Data/ItemDatabase_Vanilla.lua
 Data/NpcDatabase_Vanilla.lua

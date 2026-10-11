@@ -8,6 +8,16 @@ AutoBiographer_Controller = {
 local Controller = AutoBiographer_Controller
 local Api = AutoBiographer_Api
 
+function Controller:AddCompanionFamilyTime(familyId, familyName, seconds)
+  if (not familyId or seconds <= 0) then return end
+  local catalogs = self.CharacterData.Catalogs
+  catalogs.CompanionFamilyCatalog = catalogs.CompanionFamilyCatalog or {}
+  if (familyName) then catalogs.CompanionFamilyCatalog[familyId] = familyName end
+  local statistics = self:GetCurrentLevelStatistics()
+  statistics.TimeStatisticsByCompanionFamily = statistics.TimeStatisticsByCompanionFamily or {}
+  statistics.TimeStatisticsByCompanionFamily[familyId] = (statistics.TimeStatisticsByCompanionFamily[familyId] or 0) + seconds
+end
+
 function Controller:AddDistance(distanceTrackingType, yards)
   if (distanceTrackingType == nil or yards <= 0) then return end
   local levelStatistics = self:GetCurrentLevelStatistics()
@@ -48,6 +58,24 @@ function Controller:AddOtherPlayerInGroupTime(otherPlayerGuid, seconds)
   OtherPlayerStatistics.Add(self:GetCurrentLevelStatistics().OtherPlayerStatisticsByOtherPlayer[otherPlayerGuid], AutoBiographerEnum.OtherPlayerTrackingType.TimeSpentGroupedWithPlayer, seconds)
 end
 
+function Controller:AddSpellTime(spellId, seconds)
+  if (not spellId or seconds <= 0) then return end
+  local catalog = self.CharacterData.Catalogs.SpellCatalog
+  if (not catalog[spellId] or not catalog[spellId].Name) then
+    local name = Api.GetSpellInfo(spellId)
+    if (issecretvalue and issecretvalue(name)) then name = nil end
+    if (not catalog[spellId]) then
+      catalog[spellId] = CatalogSpell.New(spellId, name, Api.GetSpellRank(spellId))
+    elseif (name) then
+      catalog[spellId].Name = name
+      catalog[spellId].Rank = catalog[spellId].Rank or Api.GetSpellRank(spellId)
+    end
+  end
+  local statistics = self:GetCurrentLevelStatistics()
+  statistics.TimeStatisticsBySpell = statistics.TimeStatisticsBySpell or {}
+  statistics.TimeStatisticsBySpell[spellId] = (statistics.TimeStatisticsBySpell[spellId] or 0) + seconds
+end
+
 function Controller:AddTime(timeTrackingType, seconds, zone, subZone)
   if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog("Adding " .. tostring(seconds) .. " seconds of timeTrackingType " .. tostring(timeTrackingType) .. " to " .. tostring(subZone) .. " (" .. tostring(zone) .. ").", AutoBiographerEnum.LogLevel.Debug) end
   
@@ -63,6 +91,18 @@ end
 
 function Controller:CatalogUnitIsIncomplete(catalogUnitId)
   return self.CharacterData.Catalogs.UnitCatalog[catalogUnitId] == nil or self.CharacterData.Catalogs.UnitCatalog[catalogUnitId].Name == nil
+end
+
+function Controller:GetAggregatedCompanionFamilyTime(minLevel, maxLevel)
+  local totals = {}
+  for levelNum, statistics in pairs(self.CharacterData.Levels) do
+    if (levelNum >= minLevel and levelNum <= maxLevel) then
+      for familyId, seconds in pairs(statistics.TimeStatisticsByCompanionFamily or {}) do
+        totals[familyId] = (totals[familyId] or 0) + seconds
+      end
+    end
+  end
+  return totals
 end
 
 function Controller:GetAggregatedDamageMeterAbilities(damageOrHealingCategories, minLevel, maxLevel, groupBySpellName)
@@ -329,6 +369,18 @@ function Controller:GetAggregatedSpellStatisticsDictionary(minLevel, maxLevel)
   end
   
   return spellStatisticsDictionary
+end
+
+function Controller:GetAggregatedSpellTime(minLevel, maxLevel)
+  local totals = {}
+  for levelNum, statistics in pairs(self.CharacterData.Levels) do
+    if (levelNum >= minLevel and levelNum <= maxLevel) then
+      for spellId, seconds in pairs(statistics.TimeStatisticsBySpell or {}) do
+        totals[spellId] = (totals[spellId] or 0) + seconds
+      end
+    end
+  end
+  return totals
 end
 
 function Controller:GetAggregatedTimeStatisticsDictionary(minLevel, maxLevel)

@@ -1,7 +1,3 @@
-Chat commands: Add note, add task
-Startup hints
-Track class specific stats
-  time spent in forms
 Levels stats page. For each level show time played, xp total, xp breakdown, money total, kills, quests
 more social stuff
   Milestone sharing guild messages or emotes
@@ -10,10 +6,14 @@ More milestones (minor and major milestones for all stat types)
 Beautify UI
   Feats of strength panel
   Summary page to show more like a highlights?
+Fix map event button
+Test on Classic Era
 Update Curseforge page and categories
 
 
 
+Chat commands: Add note, add task
+Startup hints
 Add new dungeons and raids locations. Make snapshotting work for new raid bosses, or use dungeon clearing achievements to determine snapshots to take.
 Add event window to map when gamepad ui is enabled
 other player stat: rezzes
@@ -21,6 +21,7 @@ Session stats
 Show highlights when dieing in hardcore? Share most unique stats when dieing in hardcore?
 Character notes and account notes
 Track travel history?
+Track whispers to and from specific players?
 
 
 

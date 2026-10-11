@@ -6,6 +6,14 @@ local function IsReadable(value, expectedType)
   return not (issecretvalue and issecretvalue(value)) and type(value) == expectedType
 end
 
+local function ReadBoolean(func, ...)
+  if (not func) then return nil end
+  local success, value = pcall(func, ...)
+  if (not success or (issecretvalue and issecretvalue(value))) then return nil end
+  if (value == nil) then return false end
+  if (type(value) == "boolean") then return value end
+end
+
 function Api.FormatMoney(amount)
   if (GetCoinText) then
     return GetCoinText(amount)
@@ -131,6 +139,81 @@ function Api.GetItemInfo(item)
 
   if (C_Item and C_Item.GetItemInfo) then
     return C_Item.GetItemInfo(item)
+  end
+end
+
+function Api.GetPlayerAlive()
+  local dead = ReadBoolean(UnitIsDeadOrGhost, "player")
+  if (dead ~= nil) then return not dead end
+end
+
+function Api.GetPlayerChannelSpellId()
+  if (not UnitChannelInfo) then return nil end
+  local success, name, _, _, _, _, _, _, spellId = pcall(UnitChannelInfo, "player")
+  if (not success or (issecretvalue and issecretvalue(name))) then return nil end
+  if (name == nil) then return 0 end
+  if (IsReadable(spellId, "number")) then return spellId end
+end
+
+function Api.GetPlayerClass()
+  if (not UnitClass) then return nil end
+  local success, _, class = pcall(UnitClass, "player")
+  if (success and IsReadable(class, "string")) then return class end
+end
+
+function Api.GetPlayerCompanionFamily()
+  local exists = ReadBoolean(UnitExists, "pet")
+  if (exists == nil) then return nil end
+  if (not exists) then return 0 end
+  local dead = ReadBoolean(UnitIsDeadOrGhost, "pet")
+  if (dead == nil) then return nil end
+  if (dead) then return 0 end
+  if (not UnitCreatureFamily) then return nil end
+  local success, name, id = pcall(UnitCreatureFamily, "pet")
+  if (success and IsReadable(id, "number") and id > 0 and IsReadable(name, "string")) then return id, name end
+  -- Older clients expose only the localized family name. Do not invent an ID.
+end
+
+function Api.GetPlayerFeignDeath()
+  return ReadBoolean(UnitIsFeignDeath, "player")
+end
+
+function Api.GetPlayerFormId()
+  if (GetShapeshiftFormID) then
+    local success, formId = pcall(GetShapeshiftFormID)
+    if (not success or (issecretvalue and issecretvalue(formId))) then return nil end
+    if (formId == nil) then return 0 end
+    if (IsReadable(formId, "number")) then return formId end
+    return nil
+  end
+  local spellId = Api.GetPlayerFormSpellId()
+  if (spellId == nil) then return nil end
+  if (spellId == 0) then return 0 end
+  return ({ [768] = 1, [783] = 3, [1066] = 4, [5487] = 5, [9634] = 8,
+    [15473] = 13, [2645] = 16, [2457] = 17, [71] = 18, [2458] = 19, [24858] = 31 })[spellId]
+end
+
+function Api.GetPlayerFormSpellId()
+  if (not GetShapeshiftForm or not GetShapeshiftFormInfo) then return nil end
+  local success, index = pcall(GetShapeshiftForm)
+  if (not success or not IsReadable(index, "number")) then return nil end
+  if (index == 0) then return 0 end
+  local ok, _, second, _, fourth, fifth = pcall(GetShapeshiftFormInfo, index)
+  if (not ok) then return nil end
+  -- Modern: icon, active, castable, spellID. Older: icon, name, active, castable, spellID.
+  if (IsReadable(fourth, "number")) then return fourth end
+  if (IsReadable(second, "string") and IsReadable(fifth, "number")) then return fifth end
+end
+
+function Api.GetPlayerHelpfulAuras()
+  if (not C_UnitAuras or not C_UnitAuras.GetAuraDataByIndex) then return nil end
+  local auras = {}
+  for index = 1, 255 do
+    local success, aura = pcall(C_UnitAuras.GetAuraDataByIndex, "player", index, "HELPFUL|PLAYER")
+    if (not success or (issecretvalue and issecretvalue(aura))) then return nil end
+    if (aura == nil) then return auras end
+    if (not IsReadable(aura.spellId, "number")) then return nil end
+    auras[aura.spellId] = true
   end
 end
 
@@ -300,6 +383,26 @@ function Api.GetPlayerSnapshotTalents(level)
   if (success) then return talents, unspent end
 end
 
+function Api.GetPlayerStealthed()
+  return ReadBoolean(IsStealthed)
+end
+
+function Api.GetPlayerTotems()
+  if (not GetTotemInfo) then return nil end
+  local totems = {}
+  for slot = 1, 4 do
+    local success, active, _, start, duration, _, _, spellId = pcall(GetTotemInfo, slot)
+    if (success and not (issecretvalue and issecretvalue(active))) then
+      if (not active) then
+        totems[slot] = false
+      elseif (IsReadable(spellId, "number") and spellId > 0 and IsReadable(start, "number") and IsReadable(duration, "number")) then
+        totems[slot] = { SpellId = spellId, ExpiresAt = duration > 0 and start + duration or nil }
+      end
+    end
+  end
+  return totems
+end
+
 function Api.GetPlayerWorldPosition()
   if (not UnitPosition) then return nil end
   local success, y, x, _, instanceId = pcall(UnitPosition, "player")
@@ -414,7 +517,6 @@ function Api.GetTravelTrackingType()
   local states = {
     { UnitIsGhost, "player", AutoBiographerEnum.DistanceTrackingType.Ghost },
     { UnitOnTaxi, "player", AutoBiographerEnum.DistanceTrackingType.FlightPath },
-    { IsSwimming, "player", AutoBiographerEnum.DistanceTrackingType.Swimming },
     { IsMounted, nil, AutoBiographerEnum.DistanceTrackingType.Mounted },
   }
   for _, state in ipairs(states) do
@@ -425,7 +527,23 @@ function Api.GetTravelTrackingType()
     if (not success or (issecretvalue and issecretvalue(active))) then return nil end
     if (active) then return state[3] end
   end
-  return AutoBiographerEnum.DistanceTrackingType.OnFoot
+  local class = Api.GetPlayerClass()
+  if (UnitClass and class == nil) then return nil end
+  if (class == "DRUID" or class == "ROGUE") then
+    local stealthed = Api.GetPlayerStealthed()
+    if (stealthed == nil) then return nil end
+    if (stealthed) then return AutoBiographerEnum.DistanceTrackingType.Stealthed end
+  end
+  if (class == "DRUID" or class == "SHAMAN") then
+    local formId = Api.GetPlayerFormId()
+    if (formId == nil) then return nil end
+    local category = ({ [1] = "CatForm", [3] = "TravelForm", [4] = "AquaticForm",
+      [5] = "BearForm", [8] = "BearForm", [16] = "GhostWolf", [31] = "MoonkinForm" })[formId]
+    if (category) then return AutoBiographerEnum.DistanceTrackingType[category] end
+  end
+  local swimming = ReadBoolean(IsSwimming, "player")
+  if (swimming == nil) then return nil end
+  return swimming and AutoBiographerEnum.DistanceTrackingType.Swimming or AutoBiographerEnum.DistanceTrackingType.OnFoot
 end
 
 function Api.GetUnitName(unitId)

@@ -161,6 +161,13 @@ local dashboardTabs = {
       { "DistanceSwimming", "Swimming", "distance" },
       { "DistanceFlightPath", "Flight paths", "distance" },
       { "DistanceGhost", "Ghost", "distance" },
+      { "DistanceAquaticForm", "Aquatic Form", "distance", nil, "IsDruid" },
+      { "DistanceBearForm", "Bear Form", "distance", nil, "IsDruid" },
+      { "DistanceCatForm", "Cat Form", "distance", nil, "IsDruid" },
+      { "DistanceMoonkinForm", "Moonkin Form", "distance", nil, "IsDruid" },
+      { "DistanceTravelForm", "Travel Form", "distance", nil, "IsDruid" },
+      { "DistanceGhostWolf", "Ghost Wolf", "distance", nil, "IsShaman" },
+      { "DistanceStealthed", "Stealthed", "distance", nil, "CanStealth" },
     } },
   } },
   { Name = "Time", Sections = {
@@ -176,6 +183,11 @@ local dashboardTabs = {
       { "TimeOnTaxi", "Flights", "time" },
       { "TimeGamepadUI", "Gamepad UI enabled", "time" },
     } },
+    { Title = "Class activity", Column = 1, ClassStates = true, Rows = {} },
+    { Title = "Aura and seal time", Column = 2, Class = "PALADIN", Dynamic = "SpellTime", Rows = {} },
+    { Title = "Totem time", Column = 2, Class = "SHAMAN", Dynamic = "SpellTime", Rows = {} },
+    { Title = "Pet family time", Column = 2, Class = "HUNTER", Dynamic = "CompanionTime", Rows = {} },
+    { Title = "Demon time", Column = 2, Class = "WARLOCK", Dynamic = "CompanionTime", Rows = {} },
   } },
 }
 
@@ -187,6 +199,47 @@ local function CreateDashboardButton(parent, text, width, onClick)
   button:SetHighlightFontObject("GameFontHighlightSmall")
   button:SetScript("OnClick", onClick)
   return button
+end
+
+local function CreateDashboardRow(window, section, rowDefinition)
+  local definition = section.Definition
+  local row = CreateFrame("Button", nil, section)
+  row.Definition = rowDefinition
+  row.Label = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  row.Label:SetPoint("LEFT", rowDefinition.Indent or 0, 0)
+  row.Label:SetJustifyH("LEFT")
+  row.Label:SetWordWrap(false)
+  row.Label:SetText(rowDefinition[2])
+  row.Values = {}
+  for i = 1, definition.Columns and #definition.Columns or 1 do
+    local value = row:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    value:SetJustifyH("RIGHT")
+    value:SetWordWrap(false)
+    table.insert(row.Values, value)
+  end
+  if (rowDefinition.IsTotal) then
+    local background = row:CreateTexture(nil, "BACKGROUND")
+    background:SetAllPoints(row)
+    background:SetColorTexture(1, 1, 1, 0.06)
+  end
+  row:SetScript("OnEnter", function(self)
+    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+    GameTooltip:SetText(row.Definition[2])
+    for i, value in ipairs(self.Values) do
+      GameTooltip:AddDoubleLine(definition.Columns and definition.Columns[i] or "Recorded",
+        self.FullValues and self.FullValues[i] or value:GetText(), 1, 0.82, 0, 1, 1, 1)
+    end
+    if (rowDefinition[4]) then GameTooltip:AddLine("Click to view details", 0.6, 0.6, 0.6) end
+    GameTooltip:Show()
+  end)
+  row:SetScript("OnLeave", function() GameTooltip:Hide() end)
+  if (rowDefinition[4]) then
+    row:SetScript("OnClick", function() window:OpenStatistics(rowDefinition[4]) end)
+    local highlight = row:CreateTexture(nil, "HIGHLIGHT")
+    highlight:SetAllPoints(row)
+    highlight:SetColorTexture(1, 0.82, 0, 0.08)
+  end
+  return row
 end
 
 local function CreateDashboardSection(window, definition)
@@ -225,45 +278,7 @@ local function CreateDashboardSection(window, definition)
   end
 
   for _, rowDefinition in ipairs(definition.Rows) do
-    local row = CreateFrame("Button", nil, section)
-    row.Definition = rowDefinition
-    row.Label = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    row.Label:SetPoint("LEFT", rowDefinition.Indent or 0, 0)
-    row.Label:SetJustifyH("LEFT")
-    row.Label:SetWordWrap(false)
-    row.Label:SetText(rowDefinition[2])
-    row.Values = {}
-    for i = 1, definition.Columns and #definition.Columns or 1 do
-      local value = row:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-      value:SetJustifyH("RIGHT")
-      value:SetWordWrap(false)
-      table.insert(row.Values, value)
-    end
-    if (rowDefinition.IsTotal) then
-      local background = row:CreateTexture(nil, "BACKGROUND")
-      background:SetAllPoints(row)
-      background:SetColorTexture(1, 1, 1, 0.06)
-    end
-    row:SetScript("OnEnter", function(self)
-      GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-      GameTooltip:SetText(rowDefinition[2])
-      for i, value in ipairs(self.Values) do
-        GameTooltip:AddDoubleLine(definition.Columns and definition.Columns[i] or "Recorded",
-          self.FullValues and self.FullValues[i] or value:GetText(), 1, 0.82, 0, 1, 1, 1)
-      end
-      if (rowDefinition[4]) then
-        GameTooltip:AddLine("Click to view details", 0.6, 0.6, 0.6)
-      end
-      GameTooltip:Show()
-    end)
-    row:SetScript("OnLeave", function() GameTooltip:Hide() end)
-    if (rowDefinition[4]) then
-      row:SetScript("OnClick", function() window:OpenStatistics(rowDefinition[4]) end)
-      local highlight = row:CreateTexture(nil, "HIGHLIGHT")
-      highlight:SetAllPoints(row)
-      highlight:SetColorTexture(1, 0.82, 0, 0.08)
-    end
-    table.insert(section.Rows, row)
+    table.insert(section.Rows, CreateDashboardRow(window, section, rowDefinition))
   end
   return section
 end
@@ -279,6 +294,7 @@ function AutoBiographer_SummaryPanel:Initialize()
   self.TabButtons = {}
   self.DashboardValues = {}
   self.GameVersion = HF.GetGameVersion()
+  self.PlayerClass = Api.GetPlayerClass()
 
   self.CharacterLabel = self:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
   self.CharacterLabel:SetPoint("TOPLEFT", 18, -14)
@@ -307,9 +323,19 @@ function AutoBiographer_SummaryPanel:Initialize()
     self.TabButtons[tab.Name] = button
     local sections = {}
     for _, definition in ipairs(tab.Sections) do
-      if (not definition.Availability or
+      if (definition.ClassStates) then
+        definition.Rows = {}
+        for _, state in ipairs(AutoBiographer_ClassActivity and AutoBiographer_ClassActivity.StateDefinitions or {}) do
+          if (self.PlayerClass and (state[3] == self.PlayerClass or state.OtherClass == self.PlayerClass)) then
+            table.insert(definition.Rows, { "Time" .. state[1], state[2], "time" })
+          end
+        end
+      end
+      if ((not definition.Class or definition.Class == self.PlayerClass) and
+        (not definition.ClassStates or #definition.Rows > 0) and
+        (not definition.Availability or
         definition.Availability == "Battlegrounds" and self.GameVersion < 3 or
-        definition.Availability == "Arenas" and self.GameVersion == 2) then
+        definition.Availability == "Arenas" and self.GameVersion == 2)) then
         table.insert(sections, CreateDashboardSection(self, definition))
       end
     end
@@ -433,6 +459,9 @@ function AutoBiographer_SummaryPanel:Update()
   local values = {}
   self.DashboardValues = values
   values.HasArenas = self.GameVersion == 2
+  values.IsDruid = self.PlayerClass == "DRUID"
+  values.IsShaman = self.PlayerClass == "SHAMAN"
+  values.CanStealth = self.PlayerClass == "DRUID" or self.PlayerClass == "ROGUE"
   values.DistanceTotal = 0
   for category, trackingType in pairs(Enum.DistanceTrackingType) do
     local yards = Controller:GetDistanceByDistanceTrackingType(trackingType, minLevel, maxLevel)
@@ -515,10 +544,11 @@ function AutoBiographer_SummaryPanel:Update()
     values["Buffs" .. category] = Controller:GetOtherPlayerStatByOtherPlayerTrackingType(trackingType, minLevel, maxLevel)
     values["PlayersBuffed" .. category] = Controller:GetUniqueOtherPlayerCountByOtherPlayerTrackingType(trackingType, minLevel, maxLevel)
   end
-  for _, category in ipairs({ "Afk", "Casting", "DeadOrGhost", "GamepadUI", "InCombat", "InParty", "LoggedIn", "OnTaxi" }) do
+  for category, trackingType in pairs(Enum.TimeTrackingType) do
     local key = category == "InParty" and "Grouped" or category
-    values["Time" .. key] = Controller:GetTimeForTimeTrackingType(Enum.TimeTrackingType[category], minLevel, maxLevel)
+    values["Time" .. key] = Controller:GetTimeForTimeTrackingType(trackingType, minLevel, maxLevel)
   end
+  self:UpdateClassTimeRows(minLevel, maxLevel)
 
   if (self.GameVersion < 3) then
     for _, id in ipairs({ 1, 2, 3, 4 }) do
@@ -568,6 +598,42 @@ function AutoBiographer_SummaryPanel:Update()
     self.ActiveTab == "Time" and "Time categories overlap; they do not add up to total play time." or
     ("Recorded statistics | " .. self.DropdownText))
   self:LayoutDashboard()
+end
+
+function AutoBiographer_SummaryPanel:UpdateClassTimeRows(minLevel, maxLevel)
+  for _, section in ipairs(self.DashboardPages.Time) do
+    local dynamic = section.Definition.Dynamic
+    if (dynamic) then
+      section.RowPool = section.RowPool or {}
+      for _, row in pairs(section.RowPool) do row:Hide() end
+      local totals, names = {}, {}
+      if (dynamic == "SpellTime") then
+        for spellId, seconds in pairs(Controller:GetAggregatedSpellTime(minLevel, maxLevel)) do
+          local spell = Controller.CharacterData.Catalogs.SpellCatalog[spellId]
+          local name = spell and spell.Name or ("Spell #" .. spellId)
+          totals[name] = (totals[name] or 0) + seconds
+        end
+      else
+        local catalog = Controller.CharacterData.Catalogs.CompanionFamilyCatalog or {}
+        for familyId, seconds in pairs(Controller:GetAggregatedCompanionFamilyTime(minLevel, maxLevel)) do
+          local name = catalog[familyId] or ("Family #" .. familyId)
+          totals[name] = (totals[name] or 0) + seconds
+        end
+      end
+      for name in pairs(totals) do names[#names + 1] = name end
+      table.sort(names)
+      if (#names == 0) then names[1] = "None recorded"; totals[names[1]] = 0 end
+      section.Rows = {}
+      for _, name in ipairs(names) do
+        local key = dynamic .. name
+        if (not section.RowPool[key]) then
+          section.RowPool[key] = CreateDashboardRow(self, section, { key, name, "time" })
+        end
+        table.insert(section.Rows, section.RowPool[key])
+        self.DashboardValues[key] = totals[name]
+      end
+    end
+  end
 end
 
 function AutoBiographer_SummaryPanel:UpdateLevelFilter(level, menuList)

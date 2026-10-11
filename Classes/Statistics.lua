@@ -20,6 +20,8 @@ function AggregatedStatistics.New()
     QuestStatisticsByQuest = {}, -- Dict<QuestId, QuestStatistics>
     SpellStatisticsBySpell = {}, -- Dict<CatalogSpellId, SpellStatistics>
     TimeStatisticsByArea = {}, -- Dict<ZoneName-SubZoneName, TimeStatistics>
+    TimeStatisticsByCompanionFamily = {}, -- Dict<CreatureFamilyId, seconds>
+    TimeStatisticsBySpell = {}, -- Dict<CatalogSpellId, seconds>; auras, seals, and totems
   }
 end
 

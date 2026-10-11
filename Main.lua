@@ -998,6 +998,7 @@ function EM.EventHandlers.PLAYER_ENTERING_WORLD(self, isLogin, isReload)
   self:ScheduleDamageMeterSessionBaselines()
   if (Api.IsWoWForever()) then self.LastRestedExperiencePool = Api.GetRestedExperiencePool() end
   self:StartDistanceTracking()
+  if (AutoBiographer_ClassActivity) then AutoBiographer_ClassActivity:Start() end
   self.GearTrackingReady = true
   self:UpdatePlayerGear()
   AutoBiographer_SnapshotManager:Resume()
@@ -1042,6 +1043,7 @@ function EM.EventHandlers.PLAYER_LEAVING_WORLD(self)
     Controller:OnCamped()
   end
   self:UpdateTimestamps(self.PersistentPlayerInfo.CurrentZone, self.PersistentPlayerInfo.CurrentSubZone)
+  if (AutoBiographer_ClassActivity) then AutoBiographer_ClassActivity:Stop() end
   self.TemporaryTimestamps.GamepadUIEnabled = nil
   self.PlayerFlags.GamepadUIEnabled = nil
 end
@@ -1382,8 +1384,9 @@ function EM.EventHandlers.UNIT_COMBAT(self, unitId, action, ind, dmg, dmgType)
 end
 
 function EM.EventHandlers.UNIT_AURA(self, unitId, updateInfo)
-  if (not Api.IsWoWForever()) then return end
   if (self:IsSecretValue(unitId)) then return end
+  if (unitId == "player") then self:UpdateClassActivity() end
+  if (not Api.IsWoWForever()) then return end
   if (unitId == "player") then
     if (self.PlayerEnteringWorldHasFired) then self:UpdatePlayerCampAuras(true) end
   end
@@ -1445,23 +1448,33 @@ end
 
 function EM.EventHandlers.UNIT_FLAGS(self, unitId)
   --print("UNIT_FLAGS. " .. unitId)
-  if (unitId == "player") then self:UpdatePlayerFlags() end
+  if (not self:IsSecretValue(unitId) and unitId == "player") then
+    self:UpdatePlayerFlags()
+    self:UpdateClassActivity()
+  end
 end
 
 function EM.EventHandlers.UNIT_HEALTH(self, unitId)
   --print("UNIT_HEALTH. " .. unitId .. ". " .. tostring(UnitIsTapDenied(unitId)))
+  if (not self:IsSecretValue(unitId) and unitId == "pet") then self:UpdateClassActivity() end
+end
+
+function EM.EventHandlers.UNIT_PET(self, unitId)
+  if (not self:IsSecretValue(unitId) and unitId == "player") then self:UpdateClassActivity() end
 end
 
 function EM.EventHandlers.UNIT_SPELLCAST_CHANNEL_START(self, unitId, castId, spellId, arg4, arg5)
   if (unitId ~= "player") then return end
   --print("UNIT_SPELLCAST_CHANNEL_START. " .. unitId .. ", " .. tostring(arg2) .. ", " .. tostring(arg3) .. ", " .. tostring(arg4) .. ", " .. tostring(arg5))
   self:OnStartedCasting(spellId)
+  self:UpdateClassActivity()
 end
 
 function EM.EventHandlers.UNIT_SPELLCAST_CHANNEL_STOP(self, unitId, arg2, arg3, arg4, arg5)
   if (unitId ~= "player") then return end
   --print("UNIT_SPELLCAST_CHANNEL_STOP. " .. unitId .. ", " .. tostring(arg2) .. ", " .. tostring(arg3) .. ", " .. tostring(arg4) .. ", " .. tostring(arg5))
   self:OnStoppedCasting()
+  self:UpdateClassActivity()
 end
 
 function EM.EventHandlers.UNIT_SPELLCAST_FAILED(self, unitId, arg2, arg3, arg4, arg5)
@@ -1497,7 +1510,9 @@ function EM.EventHandlers.UNIT_SPELLCAST_STOP(self, unitId, arg2, arg3, arg4, ar
 end
 
 function EM.EventHandlers.UNIT_SPELLCAST_SUCCEEDED(self, unitId, castId, spellId)
-  if (unitId ~= "player") then return end
+  if (self:IsSecretValue(unitId) or unitId ~= "player") then return end
+  self:UpdateClassActivity()
+  if (self:IsSecretValue(spellId)) then return end
   --print("UNIT_SPELLCAST_SUCCEEDED. " .. unitId .. ", " .. tostring(arg2) .. ", " .. tostring(arg3) .. ", " .. tostring(arg4) .. ", " .. tostring(arg5))
   
   local name, rank, icon, castTime, minRange, maxRange, id = Api.GetSpellInfo(spellId)
@@ -1506,6 +1521,13 @@ end
 
 function EM.EventHandlers.UNIT_TARGET(self, unitId)
   
+end
+
+-- Optional state events still use the addon's normal event frame/dispatcher.
+for _, eventName in ipairs({ "PLAYER_TOTEM_UPDATE", "UPDATE_SHAPESHIFT_FORM", "UPDATE_SHAPESHIFT_FORMS", "UPDATE_STEALTH" }) do
+  if (Api.IsEventAvailable(eventName, true)) then
+    EM.EventHandlers[eventName] = function(self) self:UpdateClassActivity() end
+  end
 end
 
 function EM.EventHandlers.PLAYER_FOCUS_CHANGED(self)
@@ -1856,6 +1878,7 @@ function EM:StartDistanceTracking()
   local function Sample()
     if (not self.DistanceTrackingActive or self.DistanceTrackingGeneration ~= generation) then return end
     self:UpdateTravelDistance()
+    self:UpdateClassActivity()
     C_Timer.After(1, Sample)
   end
   C_Timer.After(1, Sample)
@@ -1878,6 +1901,10 @@ function EM:SuppressTimePlayedMessages()
       chatFrame:UnregisterEvent("TIME_PLAYED_MSG")
     end
   end
+end
+
+function EM:UpdateClassActivity()
+  if (AutoBiographer_ClassActivity) then AutoBiographer_ClassActivity:Update() end
 end
 
 function EM:UpdateGamepadUIState()
@@ -2695,6 +2722,7 @@ function EM:UpdatePlayerZone()
 end
 
 function EM:UpdateTimestamps(zone, subZone)
+  if (AutoBiographer_ClassActivity) then AutoBiographer_ClassActivity:Flush(zone, subZone) end
   -- Afk
   if (self.TemporaryTimestamps.MarkedAfk) then
     Controller:AddTime(AutoBiographerEnum.TimeTrackingType.Afk, HelperFunctions.SubtractFloats(GetTime(), self.TemporaryTimestamps.MarkedAfk), zone, subZone)
@@ -2779,7 +2807,7 @@ function EM:UpdateTravelDistance()
   }
   -- Broad speed limits allow normal movement and reject teleport-like jumps.
   -- Every rejected segment becomes the next baseline, never a delayed jump.
-  if (yards > maximumSpeeds[trackingType] * elapsed + 2) then return end
+  if (yards > (maximumSpeeds[trackingType] or 35) * elapsed + 2) then return end
   Controller:AddDistance(trackingType, yards)
 end
 
