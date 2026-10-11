@@ -533,6 +533,53 @@ function Controller:GetItemCountForAcquisitionMethod(itemAcquisitionMethod, minL
   return sum
 end
 
+function Controller:GetLevelStatistics(minLevel, maxLevel)
+  local enum = AutoBiographerEnum
+  local recordedStarts = {}
+  for _, event in ipairs(self.CharacterData.Events or {}) do
+    if (event.Type == enum.EventType.Level and event.SubType == enum.EventSubType.LevelUp) then
+      recordedStarts[event.LevelNum] = true
+    end
+  end
+  local result, currentLevel = {}, self:GetCurrentLevelNum()
+  for levelNum, statistics in pairs(self.CharacterData.Levels) do
+    if (levelNum >= minLevel and levelNum <= maxLevel) then
+      local experience = statistics.ExperienceStatistics or {}
+      local money = statistics.MoneyStatistics or {}
+      local entry = {
+        LevelNum = levelNum,
+        Experience = experience,
+        ExperienceTotal = (experience[enum.ExperienceTrackingType.Kill] or 0) +
+          (experience[enum.ExperienceTrackingType.Quest] or 0) + (experience[enum.ExperienceTrackingType.Discovery] or 0),
+        TimePlayed = 0, AfkTime = 0, GroupedTime = 0, DistanceTravelled = 0,
+        MoneyGained = money.TotalMoneyGained or 0, MoneyLost = money.TotalMoneyLost or 0,
+        Kills = 0, Quests = 0, Deaths = 0,
+        IsPartial = not recordedStarts[levelNum],
+        IsInProgress = levelNum == currentLevel,
+      }
+      for _, area in pairs(statistics.TimeStatisticsByArea or {}) do
+        entry.TimePlayed = entry.TimePlayed + (area[enum.TimeTrackingType.LoggedIn] or 0)
+        entry.AfkTime = entry.AfkTime + (area[enum.TimeTrackingType.Afk] or 0)
+        entry.GroupedTime = entry.GroupedTime + (area[enum.TimeTrackingType.InParty] or 0)
+      end
+      for _, distance in pairs(statistics.DistanceStatistics or {}) do entry.DistanceTravelled = entry.DistanceTravelled + distance end
+      for _, kills in pairs(statistics.KillStatisticsByUnit or {}) do
+        entry.Kills = entry.Kills + KillStatistics.GetSum(kills, {
+          enum.KillTrackingType.TaggedKillingBlow, enum.KillTrackingType.TaggedAssist, enum.KillTrackingType.TaggedGroupAssistOrKillingBlow,
+        })
+      end
+      for _, quests in pairs(statistics.QuestStatisticsByQuest or {}) do
+        entry.Quests = entry.Quests + (quests[enum.QuestTrackingType.Completed] or 0)
+      end
+      for _, deathType in pairs(enum.DeathTrackingType) do entry.Deaths = entry.Deaths + ((statistics.DeathStatistics or {})[deathType] or 0) end
+      entry.MoneyNet = entry.MoneyGained - entry.MoneyLost
+      entry.ExperiencePerHour = entry.TimePlayed > 0 and entry.ExperienceTotal * 3600 / entry.TimePlayed or 0
+      result[levelNum] = entry
+    end
+  end
+  return result
+end
+
 function Controller:GetLogs()
   return self.Logs
 end

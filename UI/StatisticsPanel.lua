@@ -14,6 +14,7 @@ local views = {
   { "Healing Dealt by Rank", Enum.StatisticsDisplayMode.HealingDealtByRank },
   { "Item Acquisitions", Enum.StatisticsDisplayMode.Items },
   { "Kills", Enum.StatisticsDisplayMode.Kills },
+  { "Levels", Enum.StatisticsDisplayMode.Levels },
   { "Other Players", Enum.StatisticsDisplayMode.OtherPlayers },
   { "Spells", Enum.StatisticsDisplayMode.Spells },
   { "Spells by Rank", Enum.StatisticsDisplayMode.SpellsByRank },
@@ -47,6 +48,16 @@ local headerDescriptions = {
   ["Over Damage"] = "Tracked damage beyond the target's remaining health. Unavailable overdamage is not estimated.",
   ["Over Healing"] = "Tracked healing beyond missing health. Unavailable overhealing is not estimated.",
   Rank = "Spell rank. A dash means no rank was recorded.",
+  Level = "Statistics recorded while at this level. * indicates a potentially partial recording; + indicates the current level, still in progress.",
+  ["Time Played"] = "Time recorded by AutoBiographer at this level, including AFK time. Time played while the addon was disabled is not included.",
+  ["XP Gained"] = "Recorded kill, quest, and exploration XP. Kill XP already includes bonuses. Hover a row for the XP breakdown.",
+  ["XP/hour"] = "Recorded XP divided by recorded time played, including AFK time. The total is a combined rate, not the sum of individual rates.",
+  ["Money Gained"] = "All recorded increases in your money, including trade and mail receipts.",
+  ["Money Lost"] = "All recorded decreases in your money, including spending and money given away through trade or mail.",
+  ["Money Net"] = "Money gained minus money lost at this level, not the character's wallet balance.",
+  Kills = "Total tagged kills, including killing blows, assists, and group kills.",
+  Quests = "Quest completions recorded at this level, including repeated quests.",
+  Deaths = "All deaths recorded at this level.",
 }
 
 local function CreateButton(parent, text, width, onClick)
@@ -72,11 +83,17 @@ end
 
 local function IsDurationColumn(window, column)
   return window.StatisticsDisplayMode == Enum.StatisticsDisplayMode.Time and column > 1 or
-    window.StatisticsDisplayMode == Enum.StatisticsDisplayMode.OtherPlayers and column == 6
+    window.StatisticsDisplayMode == Enum.StatisticsDisplayMode.OtherPlayers and column == 6 or
+    window.StatisticsDisplayMode == Enum.StatisticsDisplayMode.Levels and column == 2
 end
 
-local function FormatValue(window, column, value)
+local function FormatValue(window, column, value, row)
   if (value == nil) then return "" end
+  if (window.StatisticsDisplayMode == Enum.StatisticsDisplayMode.Levels) then
+    if (column == 1 and row) then return tostring(value) .. (row.LevelStatistics.IsPartial and "*" or "") .. (row.LevelStatistics.IsInProgress and "+" or "") end
+    if (column >= 5 and column <= 7) then return (value < 0 and "-" or "") .. Api.FormatMoney(math.abs(value)) end
+    if (column == 4 and row and row[2] == 0) then return "-" end
+  end
   if (IsDurationColumn(window, column)) then return FormatDuration(value) end
   if (window.CurrentTableData.HeaderValues[column] == "Rank") then
     return value == 0 and "-" or tostring(value)
@@ -266,6 +283,19 @@ function AutoBiographer_StatisticsWindow:GetTableData(minLevel, maxLevel)
         }
         table.insert(tableData.Rows, row)
       end
+    end
+  elseif (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.Levels) then
+    tableData = {
+      HeaderValues = { "Level", "Time Played", "XP Gained", "XP/hour", "Money Gained", "Money Lost", "Money Net", "Kills", "Quests", "Deaths" },
+      RowOffsets = { 0, 60, 165, 260, 350, 480, 610, 740, 800, 860, 920 },
+      RateColumns = { [4] = { Numerator = 3, Denominator = 2, Multiplier = 3600 } },
+      Rows = {},
+    }
+    for levelNum, statistics in pairs(Controller:GetLevelStatistics(minLevel, maxLevel)) do
+      table.insert(tableData.Rows, { levelNum, statistics.TimePlayed, statistics.ExperienceTotal, statistics.ExperiencePerHour,
+        statistics.MoneyGained, statistics.MoneyLost, statistics.MoneyNet, statistics.Kills, statistics.Quests, statistics.Deaths,
+        LevelStatistics = statistics, SearchText = (statistics.IsPartial and "partial " or "") .. (statistics.IsInProgress and "in progress" or ""),
+      })
     end
   elseif (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.OtherPlayers) then
     local otherPlayerStatisticsByUnit = Controller:GetAggregatedOtherPlayerStatisticsDictionary(minLevel, maxLevel)
@@ -545,6 +575,8 @@ function AutoBiographer_StatisticsWindow:Initialize()
     GameTooltip:AddLine("Totals include the rows matching the current search and level filter. Names and ranks are not added together.", 1, 1, 1, true)
     if (self.StatisticsDisplayMode == Enum.StatisticsDisplayMode.Time) then
       GameTooltip:AddLine(headerDescriptions.Total, 1, 1, 1, true)
+    elseif (self.StatisticsDisplayMode == Enum.StatisticsDisplayMode.Levels) then
+      GameTooltip:AddLine(headerDescriptions["XP/hour"], 1, 1, 1, true)
     end
     GameTooltip:Show()
   end)
@@ -661,6 +693,9 @@ function AutoBiographer_StatisticsWindow:RenderStatisticsTable()
   self.EmptyMessage:SetShown(#self.FilteredRows == 0)
   self.EmptyMessage:SetText(#tableData.Rows == 0 and "No statistics recorded for this view and level range.\nTry All levels or another statistics type." or "No statistics match your search.\nTry another name or clear the filters.")
   self.Footer:SetText(HF.CommaValue(#self.FilteredRows) .. " of " .. HF.CommaValue(#tableData.Rows) .. " rows")
+  if (self.StatisticsDisplayMode == Enum.StatisticsDisplayMode.Levels) then
+    self.Footer:SetText(self.Footer:GetText() .. "  |  * Partial recording  + In progress")
+  end
   self:RenderVisibleRows()
 end
 
@@ -724,7 +759,7 @@ function AutoBiographer_StatisticsWindow:RenderVisibleRows()
       cell:SetPoint("TOPLEFT", self.ColumnOffsets[column], 0)
       cell:SetSize(self.ColumnOffsets[column + 1] - self.ColumnOffsets[column], rowHeight)
       cell.Text:SetJustifyH(type(row.Data[column]) == "number" and "RIGHT" or "LEFT")
-      cell.Text:SetText(FormatValue(self, column, row.Data[column]))
+      cell.Text:SetText(FormatValue(self, column, row.Data[column], row.Data))
       cell:Show()
     end
     row:Show()
@@ -771,7 +806,11 @@ end
 
 function AutoBiographer_StatisticsWindow:ShowRowTooltip(owner, row, column)
   GameTooltip:SetOwner(owner, "ANCHOR_RIGHT")
-  if (column == 1 and row.ItemId and Api.GetItemInfo(row.ItemId)) then
+  if (row.LevelStatistics) then
+    GameTooltip:SetText("Level " .. row[1], 1, 0.82, 0)
+    if (row.LevelStatistics.IsInProgress) then GameTooltip:AddLine("In progress", 0.3, 1, 0.3) end
+    if (row.LevelStatistics.IsPartial) then GameTooltip:AddLine("The beginning of this level was not recorded; statistics may be partial.", 1, 0.82, 0, true) end
+  elseif (column == 1 and row.ItemId and Api.GetItemInfo(row.ItemId)) then
     GameTooltip:SetHyperlink("item:" .. tostring(row.ItemId))
   elseif (column == 1 and row.SpellId and Api.GetSpellInfo(row.SpellId)) then
     GameTooltip:SetHyperlink("spell:" .. tostring(row.SpellId))
@@ -780,11 +819,25 @@ function AutoBiographer_StatisticsWindow:ShowRowTooltip(owner, row, column)
   end
   for i = 2, #self.CurrentTableData.HeaderValues do
     local value = row[i]
-    local text = IsDurationColumn(self, i) and HF.SecondsToTimeString(value, true) or FormatValue(self, i, value)
+    local text = IsDurationColumn(self, i) and HF.SecondsToTimeString(value, true) or FormatValue(self, i, value, row)
     GameTooltip:AddDoubleLine(self.CurrentTableData.HeaderValues[i], text, 0.8, 0.8, 0.8, 1, 1, 1)
   end
   if (row.IsUnknown) then
     GameTooltip:AddLine("Raw damage taken that could not be attributed to a unit or spell by the damage meter.", 1, 1, 1, true)
+  end
+  if (row.LevelStatistics) then
+    local statistics, xp = row.LevelStatistics, row.LevelStatistics.Experience
+    local types = Enum.ExperienceTrackingType
+    local killXp, rested, group, penalty = xp[types.Kill] or 0, xp[types.RestedBonus] or 0, xp[types.GroupBonus] or 0, xp[types.RaidPenalty] or 0
+    GameTooltip:AddLine("XP breakdown", 1, 0.82, 0)
+    for _, entry in ipairs({ { "Kills (total)", killXp }, { "  Kills (base)", killXp - rested - group + penalty },
+      { "  Rested bonus", rested }, { "  Group bonus", group }, { "  Raid penalty", penalty },
+      { "Quests", xp[types.Quest] or 0 }, { "Exploration", xp[types.Discovery] or 0 } }) do
+      GameTooltip:AddDoubleLine(entry[1], HF.CommaValue(entry[2]), 0.8, 0.8, 0.8, 1, 1, 1)
+    end
+    GameTooltip:AddDoubleLine("AFK time", HF.SecondsToTimeString(statistics.AfkTime, true), 0.8, 0.8, 0.8, 1, 1, 1)
+    GameTooltip:AddDoubleLine("Grouped time", HF.SecondsToTimeString(statistics.GroupedTime, true), 0.8, 0.8, 0.8, 1, 1, 1)
+    GameTooltip:AddDoubleLine("Distance travelled", HF.CommaValue(HF.Round(statistics.DistanceTravelled, 0)) .. " yd", 0.8, 0.8, 0.8, 1, 1, 1)
   end
   GameTooltip:Show()
 end
@@ -820,21 +873,27 @@ function AutoBiographer_StatisticsWindow:UpdateFilteredRows(resetScroll)
   local state = self:GetViewState()
   local search = string.lower(state.Search)
   local rows, totals = {}, {}
+  local rateColumns = self.CurrentTableData.RateColumns or {}
   for _, row in ipairs(self.CurrentTableData.Rows) do
     local names = {}
     for i, value in ipairs(row) do
-      if (type(value) == "string" or self.CurrentTableData.HeaderValues[i] == "Rank") then
+      if (i == 1 or type(value) == "string" or self.CurrentTableData.HeaderValues[i] == "Rank") then
         table.insert(names, tostring(value))
       end
     end
+    if (row.SearchText) then table.insert(names, row.SearchText) end
     if (search == "" or string.find(string.lower(table.concat(names, " ")), search, 1, true)) then
       table.insert(rows, row)
       for i, value in ipairs(row) do
-        if (type(value) == "number" and self.CurrentTableData.HeaderValues[i] ~= "Rank") then
+        if (type(value) == "number" and self.CurrentTableData.HeaderValues[i] ~= "Rank" and self.CurrentTableData.HeaderValues[i] ~= "Level" and not rateColumns[i]) then
           totals[i] = (totals[i] or 0) + value
         end
       end
     end
+  end
+  for column, rate in pairs(rateColumns) do
+    local denominator = totals[rate.Denominator] or 0
+    totals[column] = denominator > 0 and (totals[rate.Numerator] or 0) * rate.Multiplier / denominator or 0
   end
   local column = math.max(1, math.min(#self.CurrentTableData.HeaderValues, state.SortColumn))
   state.SortColumn = column

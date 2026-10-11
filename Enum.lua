@@ -186,6 +186,7 @@ AutoBiographerEnum = {
   StatisticsDisplayMode = {
     Items = 0,
     Kills = 1,
+    Levels = 12,
     OtherPlayers = 2,
     Spells = 3,
     SpellsByRank = 11,
