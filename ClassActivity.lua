@@ -25,7 +25,6 @@ Activity.StateDefinitions = {
 }
 
 local auraSpellIds = { 465, 7294, 19746, 19876, 19888, 19891, 20218 }
-local sealSpellIds = { 21084, 21082, 20375, 20164, 20165, 20166 }
 local spellNames = {}
 
 local function ReadSpellName(spellId)
@@ -49,8 +48,7 @@ end
 function Activity:Flush(zone, subZone)
   local now = GetTime()
   for _, timer in pairs(self.Timers) do
-    local finish = timer.ExpiresAt and math.min(now, timer.ExpiresAt) or now
-    local seconds = math.max(0, finish - timer.StartedAt)
+    local seconds = math.max(0, now - timer.StartedAt)
     if (seconds > 0) then
       if (timer.Kind == "State") then
         Controller:AddTime(timer.Id, seconds, zone, subZone)
@@ -80,12 +78,12 @@ function Activity:Update()
   local EM = AutoBiographer_EventManager
   self:Flush(EM.PersistentPlayerInfo.CurrentZone, EM.PersistentPlayerInfo.CurrentSubZone)
   local now, desired = GetTime(), {}
-  local function Add(key, kind, id, name, expiresAt)
-    desired[key] = { Kind = kind, Id = id, Name = name, StartedAt = now, ExpiresAt = expiresAt }
+  local function Add(key, kind, id, name)
+    desired[key] = { Kind = kind, Id = id, Name = name, StartedAt = now }
   end
 
-  -- Read actual states, not successful casts: forms can be cancelled, seals
-  -- consumed, pets dismissed and totems destroyed without another cast.
+  -- Read actual states, not successful casts: forms can be cancelled and
+  -- pets dismissed without another cast.
   if (Api.GetPlayerAlive()) then
     local class = Api.GetPlayerClass()
     if (class == "DRUID" or class == "SHAMAN" or class == "PRIEST" or class == "WARRIOR") then
@@ -117,16 +115,6 @@ function Activity:Update()
     if (class == "PALADIN") then
       local auraId = Api.GetPlayerFormSpellId()
       if (auraId and auraId > 0 and SpellMatches(auraId, auraSpellIds)) then Add("Aura", "Spell", auraId) end
-      for spellId in pairs(Api.GetPlayerHelpfulAuras() or {}) do
-        if (SpellMatches(spellId, sealSpellIds)) then Add("Seal", "Spell", spellId) end
-      end
-    end
-    if (class == "SHAMAN") then
-      for slot, totem in pairs(Api.GetPlayerTotems() or {}) do
-        if (totem and (not totem.ExpiresAt or totem.ExpiresAt > now)) then
-          Add("Totem" .. slot, "Spell", totem.SpellId, nil, totem.ExpiresAt)
-        end
-      end
     end
   end
   -- Unknown/secret states end the readable interval. Never carry a stale

@@ -205,18 +205,6 @@ function Api.GetPlayerFormSpellId()
   if (IsReadable(second, "string") and IsReadable(fifth, "number")) then return fifth end
 end
 
-function Api.GetPlayerHelpfulAuras()
-  if (not C_UnitAuras or not C_UnitAuras.GetAuraDataByIndex) then return nil end
-  local auras = {}
-  for index = 1, 255 do
-    local success, aura = pcall(C_UnitAuras.GetAuraDataByIndex, "player", index, "HELPFUL|PLAYER")
-    if (not success or (issecretvalue and issecretvalue(aura))) then return nil end
-    if (aura == nil) then return auras end
-    if (not IsReadable(aura.spellId, "number")) then return nil end
-    auras[aura.spellId] = true
-  end
-end
-
 function Api.GetPlayerSnapshotAttributes()
   local success, result = pcall(function()
     local health, mana = UnitHealthMax("player"), UnitPowerMax("player", 0)
@@ -385,22 +373,6 @@ end
 
 function Api.GetPlayerStealthed()
   return ReadBoolean(IsStealthed)
-end
-
-function Api.GetPlayerTotems()
-  if (not GetTotemInfo) then return nil end
-  local totems = {}
-  for slot = 1, 4 do
-    local success, active, _, start, duration, _, _, spellId = pcall(GetTotemInfo, slot)
-    if (success and not (issecretvalue and issecretvalue(active))) then
-      if (not active) then
-        totems[slot] = false
-      elseif (IsReadable(spellId, "number") and spellId > 0 and IsReadable(start, "number") and IsReadable(duration, "number")) then
-        totems[slot] = { SpellId = spellId, ExpiresAt = duration > 0 and start + duration or nil }
-      end
-    end
-  end
-  return totems
 end
 
 function Api.GetPlayerWorldPosition()

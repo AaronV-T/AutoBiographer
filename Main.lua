@@ -1524,7 +1524,7 @@ function EM.EventHandlers.UNIT_TARGET(self, unitId)
 end
 
 -- Optional state events still use the addon's normal event frame/dispatcher.
-for _, eventName in ipairs({ "PLAYER_TOTEM_UPDATE", "UPDATE_SHAPESHIFT_FORM", "UPDATE_SHAPESHIFT_FORMS", "UPDATE_STEALTH" }) do
+for _, eventName in ipairs({ "UPDATE_SHAPESHIFT_FORM", "UPDATE_SHAPESHIFT_FORMS", "UPDATE_STEALTH" }) do
   if (Api.IsEventAvailable(eventName, true)) then
     EM.EventHandlers[eventName] = function(self) self:UpdateClassActivity() end
   end
