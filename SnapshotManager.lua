@@ -59,7 +59,10 @@ function manager:CaptureDetails(snapshot, includeAttributes)
   end
 
   if (not snapshot.Talents) then
-    local talents, unspent = Api.GetPlayerSnapshotTalents(snapshot.Level)
+    local talents, unspent, failure = Api.GetPlayerSnapshotTalents(snapshot.Level)
+    -- Diagnostic state stays in memory, never in the saved snapshot. Repeated
+    -- retries with the same failure should not flood chat every second.
+    self.TalentDiagnosticMessages = self.TalentDiagnosticMessages or {}
     if (talents) then
       snapshot.Talents, snapshot.UnspentTalentPoints = {}, unspent
       for _, talent in ipairs(talents) do
@@ -67,6 +70,16 @@ function manager:CaptureDetails(snapshot, includeAttributes)
         snapshot.Talents[talent.Id] = talent.Rank
       end
       snapshot.TalentsCollectedAt = time()
+      if (self.TalentDiagnosticMessages[snapshot]) then
+        print("[AutoBiographer Talents] Level " .. snapshot.Level .. ": captured " .. #talents .. " selected talents after retry.")
+        self.TalentDiagnosticMessages[snapshot] = nil
+      end
+    else
+      failure = failure or "Talent reader returned no data without a failure reason."
+      if (self.TalentDiagnosticMessages[snapshot] ~= failure) then
+        self.TalentDiagnosticMessages[snapshot] = failure
+        print("[AutoBiographer Talents] Level " .. snapshot.Level .. ", retry " .. (self.RetryAttempts or 0) .. ": " .. failure)
+      end
     end
   end
 

@@ -271,29 +271,39 @@ function Api.GetPlayerSnapshotSkills()
   if (success) then return result end
 end
 
-function Api.GetPlayerSnapshotTalents(level)
+function Api.GetPlayerSnapshotTalents(level, diagnostic)
+  local stage = "talent snapshot"
+  local function Value(value)
+    if (issecretvalue and issecretvalue(value)) then return "<secret>" end
+    return tostring(value)
+  end
+  local function Trace(message)
+    if (diagnostic) then diagnostic(message) end
+  end
+  local function Query(description)
+    stage = description
+    Trace("Query: " .. stage)
+  end
+  local function Fail(reason)
+    return nil, nil, stage .. ": " .. reason
+  end
   -- A level-up event can arrive before UnitLevel changes. Use the milestone's
   -- level when deciding whether the character has unlocked talents yet.
   level = level or UnitLevel("player")
-  if (IsReadable(level, "number") and level < 10) then return {}, 0 end
-  local success, talents, unspent = pcall(function()
-    local modern = C_SpecializationInfo
-    if (modern and modern.IsInitialized) then
-      local initialized = modern.IsInitialized()
-      if (not IsReadable(initialized, "boolean") or not initialized) then return nil end
-    end
-    local group = 1
-    if (modern and modern.GetActiveSpecGroup) then
-      group = modern.GetActiveSpecGroup(false, false)
-    elseif (GetActiveTalentGroup) then
-      group = GetActiveTalentGroup()
-    end
-    if (not IsReadable(group, "number")) then return nil end
+  Trace("Level=" .. Value(level))
+  if (IsReadable(level, "number") and level < 10) then
+    Trace("Talents not unlocked: returning an empty build.")
+    return {}, 0
+  end
+  local success, talents, unspent, failure = pcall(function()
     local result, seen = {}, {}
     local function AddTalent(id, name, rank)
-      if (not IsReadable(rank, "number")) then return false end
+      Trace("Talent: id=" .. Value(id) .. ", name=" .. Value(name) .. ", rank=" .. Value(rank))
+      if (not IsReadable(rank, "number")) then return false, "unreadable rank=" .. Value(rank) end
       if (rank > 0) then
-        if (not IsReadable(id, "number") or id <= 0 or not IsReadable(name, "string")) then return false end
+        if (not IsReadable(id, "number") or id <= 0 or not IsReadable(name, "string")) then
+          return false, "selected talent has invalid id=" .. Value(id) .. " or name=" .. Value(name)
+        end
         if (not seen[id]) then
           seen[id] = true
           result[#result + 1] = { Id = id, Name = name, Rank = rank }
@@ -301,38 +311,134 @@ function Api.GetPlayerSnapshotTalents(level)
       end
       return true
     end
+    if (Api.IsWoWForever()) then
+      -- Forever exposes talents through trait trees, not the specialization
+      -- tier/column grid. Keep the same catalog-ID/rank snapshot format.
+      Query("Forever trait APIs")
+      if (not C_ClassTalents or not C_ClassTalents.GetActiveConfigID or not C_Traits
+        or not C_Traits.GetConfigInfo or not C_Traits.GetTreeNodes or not C_Traits.GetNodeInfo
+        or not C_Traits.GetEntryInfo or not C_Traits.GetDefinitionInfo) then
+        return Fail("required trait API unavailable")
+      end
+      Query("C_ClassTalents.GetActiveConfigID()")
+      local configId = C_ClassTalents.GetActiveConfigID()
+      Trace("configId=" .. Value(configId))
+      if (not IsReadable(configId, "number") or configId <= 0) then return Fail("invalid configId=" .. Value(configId)) end
+      Query("C_Traits.GetConfigInfo(configId=" .. configId .. ")")
+      local config = C_Traits.GetConfigInfo(configId)
+      if (not IsReadable(config, "table")) then return Fail("invalid config=" .. Value(config)) end
+      if (not IsReadable(config.treeIDs, "table") or #config.treeIDs == 0) then return Fail("missing or unreadable treeIDs") end
+      for _, treeId in ipairs(config.treeIDs) do
+        if (not IsReadable(treeId, "number") or treeId <= 0) then return Fail("invalid treeId=" .. Value(treeId)) end
+        Query("C_Traits.GetTreeNodes(treeId=" .. treeId .. ")")
+        local nodes = C_Traits.GetTreeNodes(treeId)
+        if (not IsReadable(nodes, "table") or #nodes == 0) then return Fail("missing or unreadable nodes") end
+        for _, nodeId in ipairs(nodes) do
+          if (not IsReadable(nodeId, "number") or nodeId <= 0) then return Fail("invalid nodeId=" .. Value(nodeId)) end
+          Query("C_Traits.GetNodeInfo(configId=" .. configId .. ", nodeId=" .. nodeId .. ")")
+          local node = C_Traits.GetNodeInfo(configId, nodeId)
+          if (not IsReadable(node, "table")) then return Fail("invalid node=" .. Value(node)) end
+          local rank = node.activeRank
+          if (not IsReadable(rank, "number") or rank < 0) then return Fail("invalid activeRank=" .. Value(rank)) end
+          if (rank > 0) then
+            if (not IsReadable(node.activeEntry, "table")) then return Fail("missing or unreadable activeEntry") end
+            local entryId = node.activeEntry.entryID
+            if (not IsReadable(entryId, "number") or entryId <= 0) then return Fail("invalid entryId=" .. Value(entryId)) end
+            Query("C_Traits.GetEntryInfo(configId=" .. configId .. ", entryId=" .. entryId .. ")")
+            local entry = C_Traits.GetEntryInfo(configId, entryId)
+            if (not IsReadable(entry, "table")) then return Fail("invalid entry=" .. Value(entry)) end
+            local definitionId = entry.definitionID
+            if (not IsReadable(definitionId, "number") or definitionId <= 0) then return Fail("invalid definitionId=" .. Value(definitionId)) end
+            Query("C_Traits.GetDefinitionInfo(definitionId=" .. definitionId .. ")")
+            local definition = C_Traits.GetDefinitionInfo(definitionId)
+            if (not IsReadable(definition, "table")) then return Fail("invalid definition=" .. Value(definition)) end
+            local spellId = definition.spellID
+            if (not IsReadable(spellId, "number") or spellId <= 0) then return Fail("invalid spellId=" .. Value(spellId)) end
+            Query("GetSpellInfo(spellId=" .. spellId .. ")")
+            local name = Api.GetSpellInfo(spellId)
+            -- Use the trait entry as its stable catalog ID; the definition's
+            -- spell ID is only needed to resolve the displayed talent name.
+            local added, reason = AddTalent(entryId, name, rank)
+            if (not added) then return Fail(reason) end
+          end
+        end
+      end
+      Query("GetUnspentTalentPoints()")
+      local points = GetUnspentTalentPoints and GetUnspentTalentPoints()
+      Trace("unspentPoints=" .. Value(points))
+      return result, IsReadable(points, "number") and points or nil
+    end
+    local modern = C_SpecializationInfo
+    Trace("APIs: C_SpecializationInfo=" .. tostring(modern ~= nil) ..
+      ", GetNumTalentTabs=" .. tostring(GetNumTalentTabs ~= nil) ..
+      ", GetNumTalents=" .. tostring(GetNumTalents ~= nil) ..
+      ", modern.GetTalentInfo=" .. tostring(modern ~= nil and modern.GetTalentInfo ~= nil) ..
+      ", GetTalentInfo=" .. tostring(GetTalentInfo ~= nil))
+    if (modern and modern.IsInitialized) then
+      Query("C_SpecializationInfo.IsInitialized()")
+      local initialized = modern.IsInitialized()
+      Trace("initialized=" .. Value(initialized))
+      if (not IsReadable(initialized, "boolean") or not initialized) then return Fail("initialized=" .. Value(initialized)) end
+    end
+    local group = 1
+    if (modern and modern.GetActiveSpecGroup) then
+      Query("C_SpecializationInfo.GetActiveSpecGroup(false, false)")
+      group = modern.GetActiveSpecGroup(false, false)
+    elseif (GetActiveTalentGroup) then
+      Query("GetActiveTalentGroup()")
+      group = GetActiveTalentGroup()
+    end
+    Trace("group=" .. Value(group))
+    if (not IsReadable(group, "number")) then return Fail("unreadable group=" .. Value(group)) end
     local tabCount
-    if (GetNumTalentTabs) then tabCount = GetNumTalentTabs(false, false)
+    if (GetNumTalentTabs) then
+      Query("GetNumTalentTabs(false, false)")
+      tabCount = GetNumTalentTabs(false, false)
     elseif (modern and modern.GetNumSpecializationsForClassID) then
+      Query("UnitClass(player), then C_SpecializationInfo.GetNumSpecializationsForClassID(classId)")
       local _, _, classId = UnitClass("player")
-      if (not IsReadable(classId, "number")) then return nil end
+      Trace("classId=" .. Value(classId))
+      if (not IsReadable(classId, "number")) then return Fail("unreadable classId=" .. Value(classId)) end
       tabCount = modern.GetNumSpecializationsForClassID(classId)
-    elseif (GetNumSpecializations) then tabCount = GetNumSpecializations(false, false) end
-    if (not IsReadable(tabCount, "number") or tabCount <= 0) then return nil end
+    elseif (GetNumSpecializations) then
+      Query("GetNumSpecializations(false, false)")
+      tabCount = GetNumSpecializations(false, false)
+    else
+      return Fail("no talent tree count API available")
+    end
+    Trace("tabCount=" .. Value(tabCount))
+    if (not IsReadable(tabCount, "number") or tabCount <= 0) then return Fail("invalid tabCount=" .. Value(tabCount)) end
     for tab = 1, tabCount do
-      -- Classic has a linear talent list. Forever need not expose those
-      -- globals: its namespaced query also supports the tier/column grid.
+      -- Classic has a linear talent list; other non-Forever versions may
+      -- expose the namespaced tier/column grid instead.
       if (GetNumTalents) then
+        Query("GetNumTalents(tab=" .. tab .. ", false, false)")
         local count = GetNumTalents(tab, false, false)
-        if (not IsReadable(count, "number") or count <= 0) then return nil end
+        Trace("talentCount=" .. Value(count))
+        if (not IsReadable(count, "number") or count <= 0) then return Fail("invalid talentCount=" .. Value(count)) end
         for index = 1, count do
           local id, name, rank
           if (modern and modern.GetTalentInfo) then
+            Query("C_SpecializationInfo.GetTalentInfo: specializationIndex=" .. tab .. ", talentIndex=" .. index .. ", groupIndex=" .. group .. ", isInspect=false, isPet=false")
             local info = modern.GetTalentInfo({ specializationIndex = tab,
               talentIndex = index, isInspect = false, isPet = false, groupIndex = group })
-            if (not IsReadable(info, "table")) then return nil end
+            if (not IsReadable(info, "table")) then return Fail("invalid info=" .. Value(info)) end
             id, name, rank = info.talentID, info.name, info.rank
           elseif (GetTalentInfo) then
+            Query("GetTalentInfo: tab=" .. tab .. ", index=" .. index .. ", group=" .. group)
             local legacyName, _, _, _, legacyRank = GetTalentInfo(tab, index, false, false, group)
             name, rank = legacyName, legacyRank
             if (GetTalentLink) then
+              Query("GetTalentLink: tab=" .. tab .. ", index=" .. index .. ", group=" .. group)
               local link = GetTalentLink(tab, index, false, false, group)
+              Trace("link=" .. Value(link))
               if (IsReadable(link, "string")) then id = tonumber(link:match("talent:(%d+)")) end
             end
           else
-            return nil
+            return Fail("no talent info API available")
           end
-          if (not AddTalent(id, name, rank)) then return nil end
+          local added, reason = AddTalent(id, name, rank)
+          if (not added) then return Fail(reason) end
         end
       elseif (modern and modern.GetTalentInfo) then
         local found = false
@@ -340,35 +446,49 @@ function Api.GetPlayerSnapshotTalents(level)
         -- allow snapshots before the player has opened that UI.
         local tiers = MAX_NUM_TALENT_TIERS or MAX_TALENT_TIERS or 15
         local columns = NUM_TALENT_COLUMNS or 4
-        if (not IsReadable(tiers, "number") or not IsReadable(columns, "number")) then return nil end
+        Query("talent grid: tab=" .. tab .. ", tiers=" .. Value(tiers) .. ", columns=" .. Value(columns))
+        if (not IsReadable(tiers, "number") or not IsReadable(columns, "number")) then return Fail("unreadable grid dimensions") end
         for tier = 1, tiers do
           for column = 1, columns do
+            stage = "C_SpecializationInfo.GetTalentInfo: specializationIndex=" .. tab .. ", tier=" .. tier .. ", column=" .. column .. ", groupIndex=" .. group .. ", isInspect=false, isPet=false"
+            -- Empty cells are expected; only log populated cells or failures.
             local info = modern.GetTalentInfo({ specializationIndex = tab,
               tier = tier, column = column, isInspect = false, isPet = false, groupIndex = group })
-            if (issecretvalue and issecretvalue(info)) then return nil end
+            if (issecretvalue and issecretvalue(info)) then return Fail("info=<secret>") end
             -- Empty positions in the grid are normal, not missing data.
             if (info) then
-              if (not IsReadable(info, "table")) then return nil end
+              Trace("Query: " .. stage)
+              if (not IsReadable(info, "table")) then return Fail("invalid info=" .. Value(info)) end
               found = true
               local rank = info.rank
-              if (issecretvalue and issecretvalue(rank)) then return nil end
+              if (issecretvalue and issecretvalue(rank)) then return Fail("rank=<secret>") end
               if (not IsReadable(rank, "number")) then
-                if (not IsReadable(info.selected, "boolean")) then return nil end
+                Trace("rank=" .. Value(rank) .. ", selected=" .. Value(info.selected))
+                if (not IsReadable(info.selected, "boolean")) then return Fail("unreadable rank and selected=" .. Value(info.selected)) end
                 rank = info.selected and 1 or 0
               end
-              if (not AddTalent(info.talentID, info.name, rank)) then return nil end
+              local added, reason = AddTalent(info.talentID, info.name, rank)
+              if (not added) then return Fail(reason) end
             end
           end
         end
-        if (not found) then return nil end
+        if (not found) then return Fail("no talent info found anywhere in tab " .. tab .. " (" .. tiers .. " tiers x " .. columns .. " columns)") end
       else
-        return nil
+        return Fail("no talent info API available")
       end
     end
+    Query("GetUnspentTalentPoints(false, false, group=" .. group .. ")")
     local points = GetUnspentTalentPoints and GetUnspentTalentPoints(false, false, group)
+    Trace("unspentPoints=" .. Value(points))
     return result, IsReadable(points, "number") and points or nil
   end)
-  if (success) then return talents, unspent end
+  if (not success) then
+    failure = "API error during " .. stage .. ": " .. Value(talents)
+    talents, unspent = nil, nil
+  end
+  if (failure) then Trace("FAILED: " .. failure)
+  else Trace("SUCCESS: " .. #talents .. " selected talents, unspentPoints=" .. Value(unspent)) end
+  return talents, unspent, failure
 end
 
 function Api.GetPlayerStealthed()
