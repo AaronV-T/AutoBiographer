@@ -2093,12 +2093,54 @@ function EM:TrackOtherPlayerBuff(unitId)
   Controller:OnBuffedOtherPlayer(catalogUnitId, UnitName(unitId), isGroupedWithPlayer)
 end
 
+-- These are the aura spells, not the spells used to place a totem. Matching
+-- their localized names also covers higher ranks without listing every rank.
+local totemBuffSpells = {
+  [5672] = "Healing Stream",
+  [5677] = "Mana Spring",
+  [8072] = "Stoneskin",
+  [8076] = "Strength of Earth",
+  [8178] = "Grounding Totem Effect",
+  [8182] = "Frost Resistance",
+  [8185] = "Fire Resistance",
+  [8230] = "Flametongue Totem Effect",
+  [8515] = "Windfury Totem",
+  [8836] = "Grace of Air",
+  [10596] = "Nature Resistance",
+  [15108] = "Windwall",
+  [16191] = "Mana Tide",
+  [25909] = "Tranquil Air",
+}
+local totemBuffNames
+
+function EM:IsTotemBuff(auraData)
+  if (self:IsSecretValue(auraData.spellId)) then return true end
+  if (totemBuffSpells[auraData.spellId]) then return true end
+  if (not totemBuffNames) then
+    totemBuffNames = {}
+    for spellId, name in pairs(totemBuffSpells) do
+      totemBuffNames[name] = true
+      local localizedName = Api.GetSpellInfo(spellId)
+      if (not self:IsSecretValue(localizedName) and localizedName) then
+        totemBuffNames[localizedName] = true
+      end
+    end
+  end
+  local name = auraData.name
+  if (self:IsSecretValue(name) or not name) then
+    name = auraData.spellId and Api.GetSpellInfo(auraData.spellId)
+  end
+  if (self:IsSecretValue(name) or not name) then return true end
+  return totemBuffNames[name] or string.find(name, "Totem", 1, true) ~= nil
+end
+
 function EM:TryTrackOtherPlayerBuff(unitId, auraData, previousAura, isRefresh)
   if (self:IsSecretValue(auraData) or not auraData or self:IsSecretValue(auraData.isHelpful) or self:IsSecretValue(auraData.sourceUnit) or
       self:IsSecretValue(auraData.expirationTime)) then
     return
   end
   if (not auraData.isHelpful or auraData.sourceUnit ~= "player") then return end
+  if (self:IsTotemBuff(auraData)) then return end
   if (isRefresh and (not previousAura or not auraData.expirationTime or not previousAura.ExpirationTime or
       auraData.expirationTime <= previousAura.ExpirationTime)) then return end
   if (not self:ShouldTrackOtherPlayerBuff(previousAura)) then return end

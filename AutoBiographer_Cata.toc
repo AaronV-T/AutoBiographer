@@ -42,6 +42,7 @@ UI/StatisticsPanel.lua
 UI/NotesPanel.lua
 UI/SubjectNotes.lua
 UI/TodoPanel.lua
+UI/Overview.lua
 UI/SummaryPanel.lua
 UI/EventsPanel.lua
 UI/GearPanel.lua

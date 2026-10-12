@@ -6,24 +6,7 @@ local Enum = AutoBiographerEnum
 
 -- Each row references an aggregated value, not a second copy of the statistics.
 local dashboardTabs = {
-  { Name = "Overview", Sections = {
-    { Title = "Character summary", Column = 1, Rows = {
-      { "TimeLoggedIn", "Time played", "time" },
-      { "DistanceTotal", "Distance travelled", "distance" },
-      { "Kills", "Tagged kills" },
-      { "Deaths", "Deaths" },
-      { "QuestsUnique", "Unique quests completed" },
-      { "MoneyTotal", "Money gained", "money" },
-    } },
-    { Title = "Combat & activity", Column = 2, Rows = {
-      { "DamageDealt", "Damage dealt" },
-      { "HealingDealt", "Healing dealt" },
-      { "SpellsSucceeded", "Spells successfully cast" },
-      { "TimeGrouped", "Time grouped", "time" },
-      { "Camped", "Times camped" },
-      { "Jumps", "Jumps" },
-    } },
-  } },
+  { Name = "Overview", Sections = {} },
   { Name = "Combat", Sections = {
     { Title = "Damage & healing", Column = 1, Columns = { "Total", "Effective", "Over" }, Rows = {
       { "DamageDealt", "Damage dealt", "breakdown", "DamageDealt" },
@@ -307,22 +290,17 @@ function AutoBiographer_SummaryPanel:Initialize()
   self.CharacterLabel:SetWordWrap(false)
 
   self.FilterLabel = self:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-  self.FilterLabel:SetPoint("TOPLEFT", 18, -54)
+  self.FilterLabel:SetPoint("TOPRIGHT", -235, -20)
   self.FilterLabel:SetText("Show:")
   self.Dropdown = CreateFrame("Frame", nil, self, "UIDropDownMenuTemplate")
-  self.Dropdown:SetPoint("TOPLEFT", 55, -43)
+  self.Dropdown:SetPoint("TOPRIGHT", -18, -9)
   UIDropDownMenu_SetWidth(self.Dropdown, 165)
   UIDropDownMenu_Initialize(self.Dropdown, function(dropdown, level, menuList)
     self:UpdateLevelFilter(level, menuList)
   end)
-  self.LevelTimeLabel = self:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-  self.LevelTimeLabel:SetPoint("TOPRIGHT", -24, -54)
-  self.LevelTimeLabel:SetWidth(480)
-  self.LevelTimeLabel:SetJustifyH("RIGHT")
-
   for i, tab in ipairs(dashboardTabs) do
     local button = AutioBiographer_WindowHelper:CreateTab(self, tab.Name, 100, function() self:SelectTab(tab.Name) end)
-    button:SetPoint("TOPLEFT", 18 + (i - 1) * 106, -85)
+    button:SetPoint("TOPLEFT", 18 + (i - 1) * 106, -49)
     self.TabButtons[tab.Name] = button
     local sections = {}
     for _, definition in ipairs(tab.Sections) do
@@ -347,17 +325,17 @@ function AutoBiographer_SummaryPanel:Initialize()
   if (not self.DashboardPages[self.ActiveTab]) then self.ActiveTab = "Overview" end
 
   self.TabEdge = self:CreateTexture(nil, "ARTWORK")
-  self.TabEdge:SetPoint("TOPLEFT", 18, -113)
-  self.TabEdge:SetPoint("TOPRIGHT", -32, -113)
+  self.TabEdge:SetPoint("TOPLEFT", 18, -77)
+  self.TabEdge:SetPoint("TOPRIGHT", -32, -77)
   self.TabEdge:SetHeight(1)
   self.TabEdge:SetColorTexture(0.45, 0.42, 0.36, 0.7)
 
   self.ScrollFrame:ClearAllPoints()
-  self.ScrollFrame:SetPoint("TOPLEFT", 18, -129)
+  self.ScrollFrame:SetPoint("TOPLEFT", 18, -93)
   self.ScrollFrame:SetPoint("BOTTOMRIGHT", -32, 46)
   self.ScrollFrame.Content:SetWidth(750)
   self.ScrollFrame.Scrollbar:ClearAllPoints()
-  self.ScrollFrame.Scrollbar:SetPoint("TOPLEFT", self, "TOPRIGHT", -25, -134)
+  self.ScrollFrame.Scrollbar:SetPoint("TOPLEFT", self, "TOPRIGHT", -25, -98)
   self.ScrollFrame.Scrollbar:SetPoint("BOTTOMLEFT", self, "BOTTOMRIGHT", -25, 51)
   self.ScrollFrame.Scrollbar.scrollStep = 22
 
@@ -368,6 +346,7 @@ function AutoBiographer_SummaryPanel:Initialize()
   self.RefreshButton = CreateDashboardButton(self, "Refresh", 80, function() self:Update() end)
   self.RefreshButton:SetPoint("BOTTOMRIGHT", -22, 14)
 
+  AutoBiographer_Overview:Initialize(self)
   self.PanelReady = true
   self:LayoutPanel()
   self:Hide()
@@ -431,7 +410,9 @@ function AutoBiographer_SummaryPanel:LayoutDashboard()
       end
     end
   end
-  local contentHeight = math.max(columnBottom[1], columnBottom[2]) - 16
+  local overview = self.ActiveTab == "Overview"
+  self.Overview:SetShown(overview)
+  local contentHeight = overview and AutoBiographer_Overview:Layout(self, width) or math.max(columnBottom[1], columnBottom[2]) - 16
   local maxScroll = math.max(0, contentHeight - self.ScrollFrame:GetHeight())
   self.ScrollFrame.Content:SetHeight(math.max(1, contentHeight))
   self.ScrollFrame.Scrollbar:SetMinMaxValues(0, maxScroll)
@@ -446,11 +427,11 @@ function AutoBiographer_SummaryPanel:LayoutPanel()
     local button = self.TabButtons[tab.Name]
     button:SetTabWidth(tabWidth)
     button:ClearAllPoints()
-    button:SetPoint("TOPLEFT", 18 + (i - 1) * (tabWidth + 6), -85)
+    button:SetPoint("TOPLEFT", 18 + (i - 1) * (tabWidth + 6), -49)
   end
   self.ScrollFrame.Content:SetWidth(math.max(1, self:GetWidth() - 50))
   self.Footer:SetWidth(math.max(1, self:GetWidth() - 160))
-  self.LevelTimeLabel:SetWidth(math.max(1, self:GetWidth() - 310))
+  self.CharacterLabel:SetWidth(math.max(1, self:GetWidth() - 310))
   self:LayoutDashboard()
 end
 
@@ -494,8 +475,6 @@ function AutoBiographer_SummaryPanel:Update()
   self.CharacterLabel:SetText((name or EM.PlayerName or "Character") .. " | Level " .. Controller:GetCurrentLevelNum())
   UIDropDownMenu_SetText(self.Dropdown, self.DropdownText)
   local level = minLevel == maxLevel and Controller.CharacterData.Levels[minLevel]
-  self.LevelTimeLabel:SetText(level and level.TimePlayedThisLevel and
-    ("Time at level " .. minLevel .. ": " .. HF.SecondsToTimeString(level.TimePlayedThisLevel, true)) or "")
 
   for _, category in ipairs({ "DamageDealt", "DamageTaken", "PetDamageTaken", "HealingDealt", "HealingTaken" }) do
     local enumName = category
@@ -601,9 +580,9 @@ function AutoBiographer_SummaryPanel:Update()
           row.Values[1]:SetText(HF.SecondsToTimeString(value or 0, true))
           row.FullValues[1] = HF.SecondsToTimeString(value or 0)
         elseif (format == "distance") then
-          local yards = HF.CommaValue(HF.Round(value or 0, 1))
-          row.Values[1]:SetText(yards .. " yd")
-          row.FullValues[1] = yards .. " yards"
+          local miles = HF.CommaValue(HF.Round((value or 0) / 1760, 1))
+          row.Values[1]:SetText(miles .. " mi")
+          row.FullValues[1] = miles .. " miles"
         elseif (format == "money") then
           row.Values[1]:SetText(Api.FormatMoney(value or 0))
           row.FullValues[1] = Api.FormatMoney(value or 0)
@@ -614,9 +593,14 @@ function AutoBiographer_SummaryPanel:Update()
       end
     end
   end
-  self.Footer:SetText(self.ActiveTab == "Travel" and "Horizontal distance in yards; areas without readable coordinates are not recorded." or
+  if (self.ActiveTab == "Overview") then AutoBiographer_Overview:Update(self) end
+  self.Footer:SetText(self.ActiveTab == "Overview" and ("Your recorded story | " .. self.DropdownText .. " | Click a highlight to explore") or
+    self.ActiveTab == "Travel" and "Horizontal distance in miles; areas without readable coordinates are not recorded." or
     self.ActiveTab == "Time" and "Time categories overlap; they do not add up to total play time." or
     ("Recorded statistics | " .. self.DropdownText))
+  if (level and level.TimePlayedThisLevel) then
+    self.Footer:SetText(self.Footer:GetText() .. " | Time at level " .. minLevel .. ": " .. HF.SecondsToTimeString(level.TimePlayedThisLevel, true))
+  end
   self:LayoutDashboard()
 end
 

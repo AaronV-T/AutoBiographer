@@ -268,7 +268,11 @@ function HF.SecondsToTimeString(totalSeconds, shorten)
   end
   
   if (shorten) then
-    if (returnString:len() > 0) then returnString = returnString:sub(1, -2) end
+    if (returnString:len() > 0) then
+      returnString = returnString:sub(1, -2)
+    else
+      returnString = seconds .. "s"
+    end
   else
     returnString = returnString .. seconds .. " second"
     if (seconds ~= 1) then returnString = returnString .. "s" end

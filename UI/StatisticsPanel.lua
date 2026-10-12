@@ -265,23 +265,30 @@ function AutoBiographer_StatisticsWindow:GetTableData(minLevel, maxLevel)
       RowOffsets = { 0, 225, 340, 455, 570, 685 },
       Rows = {},
     }
+    local unknownRow
     for catalogUnitId, killStatistics in pairs(killStatisticsByUnit) do
-      if (Controller.CharacterData.Catalogs.UnitCatalog[catalogUnitId] and Controller.CharacterData.Catalogs.UnitCatalog[catalogUnitId].UType == AutoBiographerEnum.UnitType.Creature) then
-        local unitName
-        if (Controller.CharacterData.Catalogs.UnitCatalog[catalogUnitId].Name) then
-          unitName = Controller.CharacterData.Catalogs.UnitCatalog[catalogUnitId].Name
-        else
-          unitName = "Unit ID: " .. catalogUnitId
-        end
-
-        local row = {
-          unitName,
-          KillStatistics.GetSum(killStatistics, { AutoBiographerEnum.KillTrackingType.TaggedKillingBlow }),
-          KillStatistics.GetSum(killStatistics, { AutoBiographerEnum.KillTrackingType.TaggedAssist, AutoBiographerEnum.KillTrackingType.TaggedGroupAssistOrKillingBlow, AutoBiographerEnum.KillTrackingType.TaggedKillingBlow }),
-          KillStatistics.GetSum(killStatistics, { AutoBiographerEnum.KillTrackingType.UntaggedKillingBlow }),
-          KillStatistics.GetSum(killStatistics, { AutoBiographerEnum.KillTrackingType.UntaggedAssist, AutoBiographerEnum.KillTrackingType.UntaggedGroupAssistOrKillingBlow, AutoBiographerEnum.KillTrackingType.UntaggedKillingBlow }),
-        }
+      local catalogUnit = Controller.CharacterData.Catalogs.UnitCatalog[catalogUnitId]
+      local unitName = catalogUnit and catalogUnit.Name
+      if (unitName and unitName ~= "" and catalogUnit.LastName and catalogUnit.LastName ~= "") then
+        unitName = unitName .. " " .. catalogUnit.LastName
+      end
+      local row = {
+        unitName,
+        KillStatistics.GetSum(killStatistics, { AutoBiographerEnum.KillTrackingType.TaggedKillingBlow }),
+        KillStatistics.GetSum(killStatistics, { AutoBiographerEnum.KillTrackingType.TaggedAssist, AutoBiographerEnum.KillTrackingType.TaggedGroupAssistOrKillingBlow, AutoBiographerEnum.KillTrackingType.TaggedKillingBlow }),
+        KillStatistics.GetSum(killStatistics, { AutoBiographerEnum.KillTrackingType.UntaggedKillingBlow }),
+        KillStatistics.GetSum(killStatistics, { AutoBiographerEnum.KillTrackingType.UntaggedAssist, AutoBiographerEnum.KillTrackingType.UntaggedGroupAssistOrKillingBlow, AutoBiographerEnum.KillTrackingType.UntaggedKillingBlow }),
+      }
+      if (unitName and unitName ~= "") then
         table.insert(tableData.Rows, row)
+      else
+        if (not unknownRow) then
+          unknownRow = { "Unknown", 0, 0, 0, 0 }
+          table.insert(tableData.Rows, unknownRow)
+        end
+        for column = 2, 5 do
+          unknownRow[column] = unknownRow[column] + row[column]
+        end
       end
     end
   elseif (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.Levels) then
@@ -837,7 +844,7 @@ function AutoBiographer_StatisticsWindow:ShowRowTooltip(owner, row, column)
     end
     GameTooltip:AddDoubleLine("AFK time", HF.SecondsToTimeString(statistics.AfkTime, true), 0.8, 0.8, 0.8, 1, 1, 1)
     GameTooltip:AddDoubleLine("Grouped time", HF.SecondsToTimeString(statistics.GroupedTime, true), 0.8, 0.8, 0.8, 1, 1, 1)
-    GameTooltip:AddDoubleLine("Distance travelled", HF.CommaValue(HF.Round(statistics.DistanceTravelled, 0)) .. " yd", 0.8, 0.8, 0.8, 1, 1, 1)
+    GameTooltip:AddDoubleLine("Distance travelled", HF.CommaValue(HF.Round(statistics.DistanceTravelled / 1760, 1)) .. " mi", 0.8, 0.8, 0.8, 1, 1, 1)
   end
   GameTooltip:Show()
 end
