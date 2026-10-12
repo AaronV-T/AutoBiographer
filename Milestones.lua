@@ -96,11 +96,15 @@ function Milestones:Check(key)
   self.Totals[key] = total
   if (total <= previous) then return end
 
-  -- Announce only the highest crossed threshold when a batch crosses several.
+  -- Record each crossed major threshold, but announce only the highest one.
   local rule = definition.Rule
   local major, threshold = nil, rule.MajorStart
   while (threshold and threshold <= total) do
-    if (threshold > previous) then major = threshold end
+    if (threshold > previous) then
+      major = threshold
+      AutoBiographer_Controller:AddEvent(StatisticMilestoneEvent.New(time(), HelperFunctions.GetCoordinatesByUnitId("player"),
+        key, threshold, definition.Phrase(threshold)))
+    end
     threshold = threshold * self.Configuration.MajorMultiplier
   end
   local minor

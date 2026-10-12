@@ -20,6 +20,7 @@ local eventCategories = {
   { Name = "Reputation changes", SubTypes = { "ReputationLevelChanged" } },
   { Name = "Skill milestones", SubTypes = { "SkillMilestone" } },
   { Name = "Spells learned", SubTypes = { "SpellLearned" } },
+  { Name = "Statistic milestones", SubTypes = { "StatisticMilestone" } },
 }
 
 local categoryBySubType = {}

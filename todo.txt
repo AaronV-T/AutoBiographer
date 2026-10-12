@@ -1,13 +1,14 @@
-Levels stats page. For each level show time played, xp total, xp breakdown, money total, kills, quests
 more social stuff
-  Milestone sharing guild messages or emotes
   Milestone sharing camp message prompts
-More milestones (minor and major milestones for all stat types)
+  Something that requires multiple people to have the addon?
+Fix snapshot talents
+Fix camped stat too high
 Beautify UI
   Feats of strength panel
   Summary page to show more like a highlights?
-Fix map event button
-Test on Classic Era
+Fix map event button. Maybe have dedicated embedded map event and gear progression view in AB window.
+Test with controller
+Test on Classic Era and Anniversary
 Update Curseforge page and categories
 
 

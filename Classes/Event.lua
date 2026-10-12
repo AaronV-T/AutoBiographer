@@ -48,6 +48,10 @@ function Event.GetIconPath(e)
     if (e.SubType == AutoBiographerEnum.EventSubType.SpellLearned) then
       return "Interface\\Icons\\inv_helmet_53"
     end
+  elseif (e.Type == AutoBiographerEnum.EventType.Statistic) then
+    if (e.SubType == AutoBiographerEnum.EventSubType.StatisticMilestone) then
+      return "Interface\\Icons\\inv_bijou_red"
+    end
   elseif (e.Type == AutoBiographerEnum.EventType.Quest) then
     if (e.SubType == AutoBiographerEnum.EventSubType.QuestTurnIn) then
       return "Interface\\Icons\\inv_misc_questionmark"
@@ -177,6 +181,10 @@ function Event.ToString(e, catalogs, excludeTimestamp)
         if (catalogs.SpellCatalog[e.SpellId].Rank) then spellText = spellText .. " (Rank " .. catalogs.SpellCatalog[e.SpellId].Rank .. ")" end
       end
       return timestampString .. "You learned " .. spellText .. "."
+    end
+  elseif (e.Type == AutoBiographerEnum.EventType.Statistic) then
+    if (e.SubType == AutoBiographerEnum.EventSubType.StatisticMilestone) then
+      return timestampString .. "You have " .. e.Text .. "!"
     end
   elseif (e.Type == AutoBiographerEnum.EventType.Quest) then
     if (e.SubType == AutoBiographerEnum.EventSubType.QuestTurnIn) then
@@ -361,6 +369,16 @@ function SpellLearnedEvent.New(timestamp, coordinates, spellId)
   local newInstance = WorldEvent.New(timestamp, AutoBiographerEnum.EventType.Spell, AutoBiographerEnum.EventSubType.SpellLearned, coordinates)
   newInstance.SpellId = spellId
   
+  return newInstance
+end
+
+StatisticMilestoneEvent = {}
+function StatisticMilestoneEvent.New(timestamp, coordinates, statistic, amount, text)
+  local newInstance = WorldEvent.New(timestamp, AutoBiographerEnum.EventType.Statistic, AutoBiographerEnum.EventSubType.StatisticMilestone, coordinates)
+  newInstance.Statistic = statistic
+  newInstance.Amount = amount
+  newInstance.Text = text
+
   return newInstance
 end
 
