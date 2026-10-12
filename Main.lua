@@ -30,6 +30,7 @@ AutoBiographer_EventManager = {
   OtherPlayerAuraStates = {},
   PlayerCampAuraHistory = nil,
   PlayerCampAuraSnapshot = nil,
+  PlayerCampTrackingStartedAt = nil,
   PlayerLevelUpStatSnapshot = nil,
   PlayerLevelUpStatSnapshotPending = false,
   PlayerLevelUpTargetLevel = nil,
@@ -2255,6 +2256,9 @@ end
 
 function EM:UpdatePlayerCampAuras(trackChanges)
   if (not Api.IsWoWForever()) then return end
+  if (not trackChanges or not self.PlayerCampTrackingStartedAt) then
+    self.PlayerCampTrackingStartedAt = GetTime()
+  end
 
   -- Read both buffs and debuffs. Incremental UNIT_AURA data may be secret,
   -- and only these two aura states are needed to identify completed rests.
@@ -2278,6 +2282,9 @@ function EM:UpdatePlayerCampAuras(trackChanges)
           return
         end
         snapshot.CampBenefitsExpirationTime = expirationTime
+        if (not self:IsSecretValue(auraData.duration) and type(auraData.duration) == "number") then
+          snapshot.CampBenefitsDuration = auraData.duration
+        end
         if (not self:IsSecretValue(auraData.auraInstanceID) and type(auraData.auraInstanceID) == "number") then
           snapshot.CampBenefitsAuraInstanceId = auraData.auraInstanceID
         end
@@ -2288,6 +2295,9 @@ function EM:UpdatePlayerCampAuras(trackChanges)
         end
         if (not self:IsSecretValue(auraData.expirationTime) and type(auraData.expirationTime) == "number") then
           snapshot.BoostedRestExpirationTime = auraData.expirationTime
+        end
+        if (not self:IsSecretValue(auraData.duration) and type(auraData.duration) == "number") then
+          snapshot.BoostedRestDuration = auraData.duration
         end
       end
     end
@@ -2310,6 +2320,19 @@ function EM:UpdatePlayerCampAuras(trackChanges)
       ((not snapshot.BoostedRestAuraInstanceId or not history.BoostedRestAuraInstanceId) and
         snapshot.BoostedRestExpirationTime and history.BoostedRestExpirationTime and
         snapshot.BoostedRestExpirationTime > history.BoostedRestExpirationTime))
+  -- The login scan can be empty before auras finish loading. A later first
+  -- observation is still a baseline if the buff was applied before entry.
+  local function AppliedSinceEntry(expirationTime, duration, previouslyObserved)
+    if (expirationTime and duration and duration > 0) then
+      return expirationTime - duration >= self.PlayerCampTrackingStartedAt
+    end
+    -- Without readable timing, do not count a previously unseen login buff.
+    return previouslyObserved
+  end
+  local newBenefits = benefitsReceived and AppliedSinceEntry(snapshot.CampBenefitsExpirationTime,
+    snapshot.CampBenefitsDuration, history.CampBenefitsExpirationTime ~= nil)
+  local newBoostedRest = boostedRestReceived and AppliedSinceEntry(snapshot.BoostedRestExpirationTime,
+    snapshot.BoostedRestDuration, history.HasBoostedRest == true)
   if (snapshot.CampBenefitsExpirationTime) then
     history.CampBenefitsExpirationTime = benefitsReceived and snapshot.CampBenefitsExpirationTime or
       math.max(history.CampBenefitsExpirationTime, snapshot.CampBenefitsExpirationTime)
@@ -2330,7 +2353,7 @@ function EM:UpdatePlayerCampAuras(trackChanges)
   self.PlayerCampAuraHistory = history
   -- Login/reload and the first readable snapshot after secret data are baselines.
   if (not trackChanges or not previousSnapshot) then return end
-  if (not benefitsReceived and not boostedRestReceived) then return end
+  if (not newBenefits and not newBoostedRest) then return end
   if (self.CampedPending) then return end
 
   -- Combine both benefits into one completed rest, even across separate aura events.

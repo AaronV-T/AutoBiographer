@@ -1,14 +1,11 @@
-more social stuff
-  Milestone sharing camp message prompts
-  Something that requires multiple people to have the addon?
-Fix snapshot talents
-Fix camped stat too high
 Beautify UI
   Feats of strength panel
   Summary page to show more like a highlights?
-Fix map event button. Maybe have dedicated embedded map event and gear progression view in AB window.
+Fix map events. Maybe have dedicated embedded map event and gear progression view in AB window.
+Custom campfire stories?
 Test with controller
 Test on Classic Era and Anniversary
+Add announcement to Wow classic that forever addon is available.
 Update Curseforge page and categories
 
 
@@ -36,3 +33,15 @@ Misc stats: fishing attempts and successful.
 Make map events more efficient.
 Add WotLK raids.
 Progressive map events WotLK improvement (use Azeroth map, move icons instead of delete)
+
+
+
+Shared addon ideas
+  Character Cards: Let players share an optional biography containing selected statistics, notable accomplishments, favourite activities, and a short personal introduction.
+  Shared Adventure Journal: Exchange selected events from a dungeon or expedition so participating players can keep a combined account of their adventure.
+  Campfire Gatherings: Recognize nearby addon users and offer group-flavoured stories based on their combined statistics, such as total distance travelled or the group’s most experienced hunter.
+  Witnessed Milestones: Save another player’s shared milestone in your journal, including when and where you witnessed it.
+  Shared Goals: Create party or guild challenges involving quests, crafting, travel, or other activities, and combine participating players’ progress.
+  Shared Notes and Reminders: Send notes about creatures, items, quests, or locations to another player, who can choose to add them to their own notes or to-do list.
+  Character Snapshot Exchange: Share level-up or raid-clear snapshots so other players can view your character and equipment as they appeared at that moment.
+  Reunion Summaries: When participating players meet again, show what each has accomplished since their last meeting.
