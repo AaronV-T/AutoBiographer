@@ -31,6 +31,78 @@ end
 --
 --
 AutioBiographer_WindowHelper = {}
+function AutioBiographer_WindowHelper:CreateTab(parent, text, width, onClick)
+  local tab = CreateFrame("Button", nil, parent)
+  tab:SetSize(width, 28)
+  -- Keep the standard red button fill and bevels. The selected tab is taller
+  -- and omits the bottom bevel so it joins the panel rather than floating above it.
+  local function CreateArtwork(selected)
+    local height = selected and 28 or 24
+    local topOffset = selected and 0 or -4
+    local bottom = selected and 0.59375 or 0.6875
+    -- Anchor every slice to the same top edge instead of chaining their centers.
+    local left = tab:CreateTexture(nil, "BORDER")
+    left:SetSize(12, height)
+    left:SetPoint("TOPLEFT", tab, "TOPLEFT", 0, topOffset)
+    left:SetTexCoord(0, 0.09375, 0, bottom)
+    local middle = tab:CreateTexture(nil, "BORDER")
+    middle:SetSize(math.max(1, width - 24), height)
+    middle:SetPoint("TOPLEFT", tab, "TOPLEFT", 12, topOffset)
+    middle:SetTexCoord(0.09375, 0.53125, 0, bottom)
+    local right = tab:CreateTexture(nil, "BORDER")
+    right:SetSize(12, height)
+    right:SetPoint("TOPRIGHT", tab, "TOPRIGHT", 0, topOffset)
+    right:SetTexCoord(0.53125, 0.625, 0, bottom)
+    for _, texture in ipairs({ left, middle, right }) do
+      texture:SetTexture("Interface\\Buttons\\UI-Panel-Button-Up")
+    end
+    return { left, middle, right }
+  end
+  tab.ActiveArtwork = CreateArtwork(true)
+  tab.InactiveArtwork = CreateArtwork(false)
+  tab.Label = tab:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+  tab.Label:SetWordWrap(false)
+  tab:SetFontString(tab.Label)
+  tab:SetNormalFontObject("GameFontNormalSmall")
+  tab:SetHighlightFontObject("GameFontHighlightSmall")
+  tab:SetDisabledFontObject("GameFontHighlightSmall")
+  tab:SetText(text)
+  tab.Hover = tab:CreateTexture(nil, "HIGHLIGHT")
+  tab.Hover:SetTexture("Interface\\Buttons\\UI-Panel-Button-Highlight")
+  tab.Hover:SetTexCoord(0, 0.625, 0, 0.6875)
+  tab.Hover:SetBlendMode("ADD")
+  tab.Hover:SetPoint("TOPLEFT", 0, -4)
+  tab.Hover:SetPoint("BOTTOMRIGHT")
+  tab:SetHighlightTexture(tab.Hover)
+  function tab:SetTabWidth(value)
+    self:SetWidth(value)
+    self.ActiveArtwork[2]:SetWidth(math.max(1, value - 24))
+    self.InactiveArtwork[2]:SetWidth(math.max(1, value - 24))
+    self.Label:SetWidth(math.max(1, value - 24))
+  end
+  local function SetPressed(self, pressed)
+    for _, texture in ipairs(self.InactiveArtwork) do
+      texture:SetTexture(pressed and "Interface\\Buttons\\UI-Panel-Button-Down" or "Interface\\Buttons\\UI-Panel-Button-Up")
+    end
+  end
+  function tab:SetSelected(selected)
+    self.Selected = selected
+    SetPressed(self, false)
+    for _, texture in ipairs(self.ActiveArtwork) do texture:SetShown(selected) end
+    for _, texture in ipairs(self.InactiveArtwork) do texture:SetShown(not selected) end
+    if (selected) then self:Disable() else self:Enable() end
+    self.Label:ClearAllPoints()
+    self.Label:SetPoint("CENTER", 0, selected and 0 or -2)
+  end
+  tab:SetTabWidth(width)
+  tab:SetSelected(false)
+  tab:SetScript("OnClick", onClick)
+  tab:SetScript("OnMouseDown", function(self) if (not self.Selected) then SetPressed(self, true) end end)
+  tab:SetScript("OnMouseUp", function(self) SetPressed(self, false) end)
+  tab:SetScript("OnHide", function(self) SetPressed(self, false) end)
+  return tab
+end
+
 function AutioBiographer_WindowHelper:InitialzationHelper(window, width, height, frameLevel, windowTitle, scrollFrameYOffset)
   local frame = window
   frame:SetSize(width, height) 

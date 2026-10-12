@@ -25,21 +25,20 @@ local dashboardTabs = {
     } },
   } },
   { Name = "Combat", Sections = {
-    { Title = "Damage & healing", Column = 0, Columns = { "Total", "Effective", "Over" }, Rows = {
+    { Title = "Damage & healing", Column = 1, Columns = { "Total", "Effective", "Over" }, Rows = {
       { "DamageDealt", "Damage dealt", "breakdown", "DamageDealt" },
       { "DamageTaken", "Damage taken", "breakdown", "DamageTakenByUnit" },
       { "PetDamageTaken", "Pet damage taken", "breakdown", nil, "HasPetDamageTaken" },
       { "HealingDealt", "Healing dealt", "breakdown", "HealingDealt" },
       { "HealingTaken", "Healing taken", "breakdown" },
     } },
-    { Title = "Kills", Column = 1, Details = "Kills", Rows = {
-      { "Kills", "Total", IsTotal = true },
+    { Title = "Kills", Column = 2, Details = "Kills", Rows = {
       { "KillingBlows", "Killing blows" },
       { "KillAssists", "Kill assists" },
       { "GroupKills", "Group kills without damage" },
+      { "Kills", "Total", IsTotal = true },
     } },
     { Title = "Deaths", Column = 2, Rows = {
-      { "Deaths", "Total", IsTotal = true },
       { "DeathToCreature", "Creatures" },
       { "DeathToDrowning", "Drowning" },
       { "DeathToEnvironment", "Other environment" },
@@ -48,19 +47,20 @@ local dashboardTabs = {
       { "DeathToPet", "Pets" },
       { "DeathToPlayer", "Players" },
       { "DeathToUnknown", "Unknown" },
+      { "Deaths", "Total", IsTotal = true },
     } },
     { Title = "Spell casts", Column = 1, Details = "Spells", Rows = {
       { "SpellsStarted", "Started" },
       { "SpellsSucceeded", "Successful" },
     } },
-    { Title = "Battlegrounds", Column = 0, Availability = "Battlegrounds",
+    { Title = "Battlegrounds", Column = 1, Availability = "Battlegrounds",
       Columns = { "Wins", "Losses", "Incomplete" }, Rows = {
       { "Battleground1", "Alterac Valley", "results" },
       { "Battleground3", "Arathi Basin", "results" },
       { "Battleground4", "Eye of the Storm", "results", nil, "HasArenas" },
       { "Battleground2", "Warsong Gulch", "results" },
     } },
-    { Title = "Arenas", Column = 0, Availability = "Arenas",
+    { Title = "Arenas", Column = 2, Availability = "Arenas",
       Columns = { "Wins", "Losses", "Incomplete" }, Rows = {
       { "ArenaRated2", "2v2 rated", "results" },
       { "ArenaSkirmish2", "2v2 skirmish", "results" },
@@ -91,7 +91,6 @@ local dashboardTabs = {
   } },
   { Name = "Economy", Sections = {
     { Title = "Items acquired", Column = 1, Details = "Items", Rows = {
-      { "ItemsTotal", "Total", IsTotal = true },
       { "ItemsAuctionHouse", "Auction house" },
       { "ItemsCreate", "Created" },
       { "ItemsLoot", "Looted" },
@@ -100,9 +99,9 @@ local dashboardTabs = {
       { "ItemsTrade", "Trade" },
       { "ItemsMerchant", "Vendors" },
       { "ItemsOther", "Other sources" },
+      { "ItemsTotal", "Total", IsTotal = true },
     } },
     { Title = "Money gained", Column = 2, Rows = {
-      { "MoneyTotal", "Total", "money", IsTotal = true },
       { "MoneyAuctionHouseSale", "Auction house sales", "money" },
       { "MoneyLoot", "Loot", "money" },
       { "MoneyMail", "Mail", "money" },
@@ -111,6 +110,7 @@ local dashboardTabs = {
       { "MoneyQuest", "Quests", "money" },
       { "MoneyTrade", "Trade", "money" },
       { "MoneyOther", "Other sources", "money" },
+      { "MoneyTotal", "Total", "money", IsTotal = true },
     } },
   } },
   { Name = "Social", Sections = {
@@ -130,7 +130,6 @@ local dashboardTabs = {
       { "TimeGrouped", "Time grouped", "time" },
     } },
     { Title = "Messages sent", Column = 2, Rows = {
-      { "MessagesTotal", "Total", IsTotal = true },
       { "MessagesBattleNetWhisper", "Battle.net private message" },
       { "MessagesBattleground", "Battleground" },
       { "MessagesCommunity", "Community" },
@@ -151,11 +150,11 @@ local dashboardTabs = {
       { "MessagesTradeServices", "Trade (Services)" },
       { "MessagesWorldDefense", "World Defense" },
       { "MessagesYell", "Yell" },
+      { "MessagesTotal", "Total", IsTotal = true },
     } },
   } },
   { Name = "Travel", Sections = {
     { Title = "Distance travelled (recorded)", Column = 0, Rows = {
-      { "DistanceTotal", "Total", "distance", IsTotal = true },
       { "DistanceOnFoot", "On foot", "distance" },
       { "DistanceMounted", "Mounted", "distance" },
       { "DistanceSwimming", "Swimming", "distance" },
@@ -168,6 +167,7 @@ local dashboardTabs = {
       { "DistanceTravelForm", "Travel Form", "distance", nil, "IsDruid" },
       { "DistanceGhostWolf", "Ghost Wolf", "distance", nil, "IsShaman" },
       { "DistanceStealthed", "Stealthed", "distance", nil, "CanStealth" },
+      { "DistanceTotal", "Total", "distance", IsTotal = true },
     } },
   } },
   { Name = "Time", Sections = {
@@ -211,15 +211,20 @@ local function CreateDashboardRow(window, section, rowDefinition)
   row.Label:SetText(rowDefinition[2])
   row.Values = {}
   for i = 1, definition.Columns and #definition.Columns or 1 do
-    local value = row:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    local value = row:CreateFontString(nil, "OVERLAY", rowDefinition.IsTotal and "GameFontHighlightSmall" or "GameFontHighlight")
     value:SetJustifyH("RIGHT")
     value:SetWordWrap(false)
     table.insert(row.Values, value)
   end
+  row.Background = row:CreateTexture(nil, "BACKGROUND")
+  row.Background:SetPoint("TOPLEFT", -12, 0)
+  row.Background:SetPoint("BOTTOMRIGHT", 12, 0)
   if (rowDefinition.IsTotal) then
-    local background = row:CreateTexture(nil, "BACKGROUND")
-    background:SetAllPoints(row)
-    background:SetColorTexture(1, 1, 1, 0.06)
+    row.Separator = row:CreateTexture(nil, "BORDER")
+    row.Separator:SetPoint("TOPLEFT", -12, 0)
+    row.Separator:SetPoint("TOPRIGHT", 12, 0)
+    row.Separator:SetHeight(1)
+    row.Separator:SetColorTexture(0.6, 0.5, 0.3, 0.4)
   end
   row:SetScript("OnEnter", function(self)
     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
@@ -316,9 +321,8 @@ function AutoBiographer_SummaryPanel:Initialize()
   self.LevelTimeLabel:SetJustifyH("RIGHT")
 
   for i, tab in ipairs(dashboardTabs) do
-    local button = CreateDashboardButton(self, tab.Name, 100, function() self:SelectTab(tab.Name) end)
-    button:SetPoint("TOPLEFT", 18 + (i - 1) * 106, -88)
-    button:SetDisabledFontObject("GameFontNormalSmall")
+    local button = AutioBiographer_WindowHelper:CreateTab(self, tab.Name, 100, function() self:SelectTab(tab.Name) end)
+    button:SetPoint("TOPLEFT", 18 + (i - 1) * 106, -85)
     self.TabButtons[tab.Name] = button
     local sections = {}
     for _, definition in ipairs(tab.Sections) do
@@ -341,6 +345,12 @@ function AutoBiographer_SummaryPanel:Initialize()
     self.DashboardPages[tab.Name] = sections
   end
   if (not self.DashboardPages[self.ActiveTab]) then self.ActiveTab = "Overview" end
+
+  self.TabEdge = self:CreateTexture(nil, "ARTWORK")
+  self.TabEdge:SetPoint("TOPLEFT", 18, -113)
+  self.TabEdge:SetPoint("TOPRIGHT", -32, -113)
+  self.TabEdge:SetHeight(1)
+  self.TabEdge:SetColorTexture(0.45, 0.42, 0.36, 0.7)
 
   self.ScrollFrame:ClearAllPoints()
   self.ScrollFrame:SetPoint("TOPLEFT", 18, -129)
@@ -370,8 +380,7 @@ function AutoBiographer_SummaryPanel:LayoutDashboard()
   local columnBottom = { 0, 0 }
   for name, sections in pairs(self.DashboardPages) do
     local selected = name == self.ActiveTab
-    if (selected) then self.TabButtons[name]:Disable()
-    else self.TabButtons[name]:Enable() end
+    self.TabButtons[name]:SetSelected(selected)
     for _, section in ipairs(sections) do
       section:Hide()
       if (selected) then
@@ -384,26 +393,31 @@ function AutoBiographer_SummaryPanel:LayoutDashboard()
         section:SetPoint("TOPLEFT", column == 2 and columnWidth + 16 or 0, -top)
         section:SetWidth(sectionWidth)
         section.Title:SetWidth(sectionWidth - (definition.Details and 110 or 24))
-        local valueWidth = definition.Columns and 100 or 160
+        -- Leave room for row labels in half-width tables with multiple values.
+        local valueWidth = definition.Columns and math.min(100, (sectionWidth - 30) / (#definition.Columns + 2)) or 160
         for i, header in ipairs(section.ColumnHeaders) do
           header:SetPoint("TOPRIGHT", -12 - (#section.ColumnHeaders - i) * valueWidth, -36)
           header:SetWidth(valueWidth - 6)
         end
         local rowTop = definition.Columns and 56 or 36
+        local visibleRowIndex = 0
         for _, row in ipairs(section.Rows) do
           local condition = row.Definition[5]
           row:Hide()
           if (not condition or self.DashboardValues[condition]) then
+            visibleRowIndex = visibleRowIndex + 1
+            row.Background:SetColorTexture(1, 1, 1, row.Definition.IsTotal and 0.06 or (visibleRowIndex % 2 == 0 and 0.025 or 0))
             row:ClearAllPoints()
             row:SetPoint("TOPLEFT", 12, -rowTop)
-            row:SetSize(sectionWidth - 24, 22)
+            local rowHeight = row.Definition.IsTotal and 32 or 22
+            row:SetSize(sectionWidth - 24, rowHeight)
             row.Label:SetWidth(sectionWidth - 30 - #row.Values * valueWidth - (row.Definition.Indent or 0))
             for i, value in ipairs(row.Values) do
               value:SetPoint("RIGHT", -(#row.Values - i) * valueWidth, 0)
               value:SetWidth(valueWidth - 6)
             end
             row:Show()
-            rowTop = rowTop + 22
+            rowTop = rowTop + rowHeight
           end
         end
         local height = rowTop + 10
@@ -427,6 +441,13 @@ end
 
 function AutoBiographer_SummaryPanel:LayoutPanel()
   if (not self.PanelReady) then return end
+  local tabWidth = math.max(80, math.min(100, (self:GetWidth() - 50 - (#dashboardTabs - 1) * 6) / #dashboardTabs))
+  for i, tab in ipairs(dashboardTabs) do
+    local button = self.TabButtons[tab.Name]
+    button:SetTabWidth(tabWidth)
+    button:ClearAllPoints()
+    button:SetPoint("TOPLEFT", 18 + (i - 1) * (tabWidth + 6), -85)
+  end
   self.ScrollFrame.Content:SetWidth(math.max(1, self:GetWidth() - 50))
   self.Footer:SetWidth(math.max(1, self:GetWidth() - 160))
   self.LevelTimeLabel:SetWidth(math.max(1, self:GetWidth() - 310))

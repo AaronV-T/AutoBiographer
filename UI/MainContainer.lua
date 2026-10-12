@@ -59,9 +59,15 @@ function AutoBiographer_MainWindow:Initialize()
   end
 
   self.SectionButtons = {}
+  -- Keep the divider subdued like the window's metal border.
+  self.PageEdge = self:CreateTexture(nil, "ARTWORK")
+  self.PageEdge:SetPoint("TOPLEFT", 18, -69)
+  self.PageEdge:SetPoint("TOPRIGHT", -22, -69)
+  self.PageEdge:SetHeight(1)
+  self.PageEdge:SetColorTexture(0.45, 0.42, 0.36, 0.7)
   for i, name in ipairs(sections) do
-    local button = CreateNavigationButton(self, sectionLabels[name] or name, 100, function() self:ShowSection(name) end)
-    button:SetPoint("TOPLEFT", 18 + (i - 1) * 106, -39)
+    local button = AutioBiographer_WindowHelper:CreateTab(self, sectionLabels[name] or name, 100, function() self:ShowSection(name) end)
+    button:SetPoint("TOPLEFT", 18 + (i - 1) * 106, -41)
     self.SectionButtons[name] = button
   end
   self.OptionsButton = CreateNavigationButton(self, "Options", 80, function()
@@ -154,9 +160,9 @@ function AutoBiographer_MainWindow:LayoutPanels()
   for i, name in ipairs(sections) do
     local button = self.SectionButtons[name]
     local buttonWidth = minimumButtonWidths[name] + (100 - minimumButtonWidths[name]) * expansion
-    button:SetWidth(buttonWidth)
+    button:SetTabWidth(buttonWidth)
     button:ClearAllPoints()
-    button:SetPoint("TOPLEFT", x, -39)
+    button:SetPoint("TOPLEFT", x, -41)
     x = x + buttonWidth + 6
   end
   for _, panel in pairs(self.Panels) do panel:LayoutPanel() end
@@ -188,10 +194,10 @@ function AutoBiographer_MainWindow:ShowSection(name)
       local wasVisible = panel:IsVisible()
       panel:Show()
       if (wasVisible) then panel:Update() end
-      self.SectionButtons[section]:Disable()
+      self.SectionButtons[section]:SetSelected(true)
     else
       panel:Hide()
-      self.SectionButtons[section]:Enable()
+      self.SectionButtons[section]:SetSelected(false)
     end
   end
   self:Show()
