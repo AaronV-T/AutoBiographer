@@ -204,6 +204,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
         EnableCustomEventSharing = true,
         EnableDebugLogging = false,
         EnableMilestoneMessages = true,
+        RecommendCampfireMessages = true,
         ShowDiscoveryInfoOnToolTips = true,
         ShowFriendlyPlayerToolTips = true,
         ShowKillCountOnUnitToolTips = true,
@@ -995,6 +996,7 @@ function EM.EventHandlers.PLAYER_ENTERING_WORLD(self, isLogin, isReload)
   self:UpdateGroupMemberInfo()
   self:SnapshotOtherPlayerAurasForKnownUnits()
   self:UpdatePlayerCampAuras(false)
+  AutoBiographer_CampfireSharing:OnPlayerAuras(true)
   self:UpdatePlayerFlags()
   self:ScheduleDamageMeterSessionBaselines()
   if (Api.IsWoWForever()) then self.LastRestedExperiencePool = Api.GetRestedExperiencePool() end
@@ -1015,10 +1017,12 @@ end
 
 function EM.EventHandlers.PLAYER_REGEN_DISABLED(self)
   AutoBiographer_Milestones:PauseSharing()
+  AutoBiographer_CampfireSharing:Pause()
 end
 
 function EM.EventHandlers.PLAYER_REGEN_ENABLED(self)
   AutoBiographer_Milestones:ResumeSharing()
+  AutoBiographer_CampfireSharing:Resume()
   self:ScheduleDamageMeterCombatFinalization(self.CurrentDamageMeterSessionId)
   self:UpdatePlayerGear()
   if (self.GearTrackingReady and AutoBiographer_SnapshotManager) then AutoBiographer_SnapshotManager:Resume() end
@@ -1037,6 +1041,7 @@ function EM.EventHandlers.PLAYER_INTERACTION_MANAGER_FRAME_HIDE(self, type)
 end
 
 function EM.EventHandlers.PLAYER_LEAVING_WORLD(self)
+  AutoBiographer_CampfireSharing:Reset()
   if (AutoBiographer_SnapshotManager) then AutoBiographer_SnapshotManager:Pause() end
   -- Equipment can already be unavailable here; keep the last known snapshot.
   self.GearTrackingReady = false
@@ -1394,7 +1399,10 @@ function EM.EventHandlers.UNIT_AURA(self, unitId, updateInfo)
   if (unitId == "player") then self:UpdateClassActivity() end
   if (not Api.IsWoWForever()) then return end
   if (unitId == "player") then
-    if (self.PlayerEnteringWorldHasFired) then self:UpdatePlayerCampAuras(true) end
+    if (self.PlayerEnteringWorldHasFired) then
+      self:UpdatePlayerCampAuras(true)
+      AutoBiographer_CampfireSharing:OnPlayerAuras(false)
+    end
   end
   self:OnUnitAura(unitId, updateInfo)
 end

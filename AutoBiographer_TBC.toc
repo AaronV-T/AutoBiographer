@@ -34,6 +34,7 @@ Classes/Todo.lua
 SnapshotManager.lua
 ClassActivity.lua
 Milestones.lua
+CampfireSharing.lua
 
 UI/ConfirmWindow.lua
 UI/MainWindow.lua
