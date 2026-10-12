@@ -81,7 +81,21 @@ function AutoBiographer_OptionWindow:Initialize()
   self.cbEnableMilestoneMessages:SetPoint("LEFT", self, "TOPLEFT", 10, yPos)
   self.fsEnableMilestoneMessages = self:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   self.fsEnableMilestoneMessages:SetPoint("LEFT", self, "TOPLEFT", 40, yPos)
-  self.fsEnableMilestoneMessages:SetText("Enable milestone messages.")
+  self.fsEnableMilestoneMessages:SetText("Show personal milestone messages (minor and major).")
+  yPos = yPos - 30
+
+  self.cbShareMilestonesInGuild = CreateFrame("CheckButton", nil, self, "UICheckButtonTemplate")
+  self.cbShareMilestonesInGuild:SetPoint("LEFT", self, "TOPLEFT", 10, yPos)
+  self.fsShareMilestonesInGuild = self:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  self.fsShareMilestonesInGuild:SetPoint("LEFT", self, "TOPLEFT", 40, yPos)
+  self.fsShareMilestonesInGuild:SetText("Automatically share major milestones in guild chat.")
+  yPos = yPos - 30
+
+  self.cbShareMilestonesAsEmotes = CreateFrame("CheckButton", nil, self, "UICheckButtonTemplate")
+  self.cbShareMilestonesAsEmotes:SetPoint("LEFT", self, "TOPLEFT", 10, yPos)
+  self.fsShareMilestonesAsEmotes = self:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  self.fsShareMilestonesAsEmotes:SetPoint("LEFT", self, "TOPLEFT", 40, yPos)
+  self.fsShareMilestonesAsEmotes:SetText("Offer major milestones as emotes (click to send).")
   yPos = yPos - 30
 
   self.cbEnableCustomEventSharing = CreateFrame("CheckButton", nil, self, "UICheckButtonTemplate") 
@@ -105,6 +119,8 @@ function AutoBiographer_OptionWindow:LoadOptions()
   self.cbEnableCustomEventSharing:SetChecked(AutoBiographer_Settings.Options["EnableCustomEventSharing"])
   self.cbEnableDebugLogging:SetChecked(AutoBiographer_Settings.Options["EnableDebugLogging"])
   self.cbEnableMilestoneMessages:SetChecked(AutoBiographer_Settings.Options["EnableMilestoneMessages"])
+  self.cbShareMilestonesInGuild:SetChecked(AutoBiographer_Settings.Options.ShareMilestonesInGuild)
+  self.cbShareMilestonesAsEmotes:SetChecked(AutoBiographer_Settings.Options.ShareMilestonesAsEmotes)
   self.cbFriendlyPlayerTooltip:SetChecked(AutoBiographer_Settings.Options["ShowFriendlyPlayerToolTips"])
   self.cbKillCountTooltip:SetChecked(AutoBiographer_Settings.Options["ShowKillCountOnUnitToolTips"])
   self.cbDiscoveryTooltip:SetChecked(AutoBiographer_Settings.Options["ShowDiscoveryInfoOnToolTips"])
@@ -118,6 +134,14 @@ function AutoBiographer_OptionWindow:LoadOptions()
 end
 
 function AutoBiographer_OptionWindow:SaveOptions()
+  local options = AutoBiographer_Settings.Options
+  local guild = not not self.cbShareMilestonesInGuild:GetChecked()
+  local emote = not not self.cbShareMilestonesAsEmotes:GetChecked()
+  if (guild ~= options.ShareMilestonesInGuild or emote ~= options.ShareMilestonesAsEmotes) then
+    options.MilestoneSharingPrompted = true
+  end
+  options.ShareMilestonesInGuild = guild
+  options.ShareMilestonesAsEmotes = emote
   AutoBiographer_Settings.Options["EnableCustomEventSharing"] = self.cbEnableCustomEventSharing:GetChecked()
   AutoBiographer_Settings.Options["EnableDebugLogging"] = self.cbEnableDebugLogging:GetChecked()
   AutoBiographer_Settings.Options["EnableMilestoneMessages"] = self.cbEnableMilestoneMessages:GetChecked()
@@ -134,6 +158,7 @@ function AutoBiographer_OptionWindow:SaveOptions()
   
   if (AutoBiographer_Settings.Options["ShowMinimapButton"] == false) then AutoBiographer_MinimapButton:Hide()
   else AutoBiographer_MinimapButton:Show() end
+  AutoBiographer_Milestones:ResumeSharing()
 end
 
 AutoBiographer_OptionWindow.name = "AutoBiographer"

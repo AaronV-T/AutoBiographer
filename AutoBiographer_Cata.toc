@@ -33,6 +33,7 @@ Classes/Todo.lua
 
 SnapshotManager.lua
 ClassActivity.lua
+Milestones.lua
 
 UI/ConfirmWindow.lua
 UI/MainWindow.lua

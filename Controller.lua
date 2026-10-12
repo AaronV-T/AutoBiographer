@@ -16,6 +16,7 @@ function Controller:AddCompanionFamilyTime(familyId, familyName, seconds)
   local statistics = self:GetCurrentLevelStatistics()
   statistics.TimeStatisticsByCompanionFamily = statistics.TimeStatisticsByCompanionFamily or {}
   statistics.TimeStatisticsByCompanionFamily[familyId] = (statistics.TimeStatisticsByCompanionFamily[familyId] or 0) + seconds
+  AutoBiographer_Milestones:OnCompanionFamilyTime(familyId, familyName, seconds)
 end
 
 function Controller:AddDistance(distanceTrackingType, yards)
@@ -24,6 +25,7 @@ function Controller:AddDistance(distanceTrackingType, yards)
   -- Create lazily for characters whose existing level records predate tracking.
   if (not levelStatistics.DistanceStatistics) then levelStatistics.DistanceStatistics = DistanceStatistics.New() end
   DistanceStatistics.AddDistance(levelStatistics.DistanceStatistics, distanceTrackingType, yards)
+  AutoBiographer_Milestones:OnStatChanged("Distance")
 end
 
 function Controller:AddEvent(event)
@@ -74,6 +76,7 @@ function Controller:AddSpellTime(spellId, seconds)
   local statistics = self:GetCurrentLevelStatistics()
   statistics.TimeStatisticsBySpell = statistics.TimeStatisticsBySpell or {}
   statistics.TimeStatisticsBySpell[spellId] = (statistics.TimeStatisticsBySpell[spellId] or 0) + seconds
+  AutoBiographer_Milestones:OnSpellTime(spellId, seconds)
 end
 
 function Controller:AddTime(timeTrackingType, seconds, zone, subZone)
@@ -83,6 +86,7 @@ function Controller:AddTime(timeTrackingType, seconds, zone, subZone)
   
   if (not self:GetCurrentLevelStatistics().TimeStatisticsByArea[areaId]) then self:GetCurrentLevelStatistics().TimeStatisticsByArea[areaId] = TimeStatistics.New() end
   TimeStatistics.AddTime(self:GetCurrentLevelStatistics().TimeStatisticsByArea[areaId], timeTrackingType, seconds)
+  AutoBiographer_Milestones:OnStatChanged("Time")
 end
 
 function Controller:CatalogItemIsIncomplete(catalogItemId)
@@ -716,6 +720,7 @@ function Controller:OnAcquiredItem(timestamp, coordinates, itemAcquisitionMethod
   
   if (not self:GetCurrentLevelStatistics().ItemStatisticsByItem[catalogItem.Id]) then self:GetCurrentLevelStatistics().ItemStatisticsByItem[catalogItem.Id] = ItemStatistics.New() end
   ItemStatistics.AddCount(self:GetCurrentLevelStatistics().ItemStatisticsByItem[catalogItem.Id], itemAcquisitionMethod, quantity)
+  AutoBiographer_Milestones:OnStatChanged("Items")
 end
 
 function Controller:OnArenaFinished(timestamp, registered, teamSize, arenaId, playerWon)
@@ -767,6 +772,7 @@ function Controller:OnBuffedOtherPlayer(otherPlayerCatalogUnitId, otherPlayerNam
   if (not otherPlayerStatisticsByOtherPlayer[otherPlayerCatalogUnitId]) then otherPlayerStatisticsByOtherPlayer[otherPlayerCatalogUnitId] = OtherPlayerStatistics.New() end
   local trackingType = isGroupedWithPlayer and AutoBiographerEnum.OtherPlayerTrackingType.BuffsGivenToPlayerWhileGrouped or AutoBiographerEnum.OtherPlayerTrackingType.BuffsGivenToPlayerNotGrouped
   OtherPlayerStatistics.Add(otherPlayerStatisticsByOtherPlayer[otherPlayerCatalogUnitId], trackingType, 1)
+  AutoBiographer_Milestones:OnStatChanged("Buffs")
 end
 
 function Controller:OnBossKill(timestamp, coordinates, bossId, bossName, hasKilledBossBefore)
@@ -809,6 +815,7 @@ end
 
 function Controller:OnCamped()
   MiscellaneousStatistics.Add(self:GetCurrentLevelStatistics().MiscellaneousStatistics, AutoBiographerEnum.MiscellaneousTrackingType.Camped, 1)
+  AutoBiographer_Milestones:OnStatChanged("Camped")
 end
 
 function Controller:OnChangedSubZone(timestamp, coordinates, zoneName, subZoneName)
@@ -860,82 +867,7 @@ function Controller:OnDamageOrHealing(damageOrHealingCategory, unitName, spellId
     DamageStatistics.AddSpellBreakdown(damageStatistics, damageOrHealingCategory, spellId, amount, overkill)
   end
 
-  if (AutoBiographer_Settings.Options["EnableMilestoneMessages"]) then
-    local damageOrHealingMilestoneThreshold
-    if (self:GetCurrentLevelNum() < 30) then
-      damageOrHealingMilestoneThreshold = 100000
-    elseif (self:GetCurrentLevelNum() < 60) then
-      damageOrHealingMilestoneThreshold = 1000000
-    elseif (self:GetCurrentLevelNum() < 70) then
-      damageOrHealingMilestoneThreshold = 5000000
-    elseif (self:GetCurrentLevelNum() < 80) then
-      damageOrHealingMilestoneThreshold = 10000000
-    else
-      damageOrHealingMilestoneThreshold = 20000000
-    end
-
-    if (damageOrHealingCategory == AutoBiographerEnum.DamageOrHealingCategory.DamageDealt) then
-      if (self.Temp.LastMilestoneMessageDamageCheckTimestamp and GetTime() - self.Temp.LastMilestoneMessageDamageCheckTimestamp < 1) then
-        if (not self.Temp.IsPendingMilestoneMessageDamageCheck) then
-          self.Temp.IsPendingMilestoneMessageDamageCheck = true
-          C_Timer.After(GetTime() - self.Temp.LastMilestoneMessageDamageCheckTimestamp, function()
-            Controller:CheckDamageForMilestoneMessage(amount, damageOrHealingMilestoneThreshold)
-          end)
-        end
-      else
-        Controller:CheckDamageForMilestoneMessage(amount, damageOrHealingMilestoneThreshold)
-      end
-    elseif (damageOrHealingCategory == AutoBiographerEnum.DamageOrHealingCategory.HealingDealt) then
-      if (self.Temp.LastMilestoneMessageHealingCheckTimestamp and GetTime() - self.Temp.LastMilestoneMessageHealingCheckTimestamp < 1) then
-        if (not self.Temp.IsPendingMilestoneMessageHealingCheck) then
-          self.Temp.IsPendingMilestoneMessageHealingCheck = true
-          C_Timer.After(GetTime() - self.Temp.LastMilestoneMessageHealingCheckTimestamp, function()
-            Controller:CheckHealingForMilestoneMessage(amount, damageOrHealingMilestoneThreshold)
-          end)
-        end
-      else
-        Controller:CheckHealingForMilestoneMessage(amount, damageOrHealingMilestoneThreshold)
-      end
-    end
-  end
-end
-
-function Controller:CheckDamageForMilestoneMessage(thisAmount, threshold)
-  self.Temp.IsPendingMilestoneMessageDamageCheck = false
-  self.Temp.LastMilestoneMessageDamageCheckTimestamp = GetTime()
-
-  local totalDamage = self:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageDealt, 1, self:GetCurrentLevelNum())
-
-  local damageDifference = thisAmount
-  if (self.Temp.LastMilestoneMessageDamageCheckTotalDamageDealt ~= nil) then
-    damageDifference = totalDamage - self.Temp.LastMilestoneMessageDamageCheckTotalDamageDealt
-  end
-
-  -- print("Total damage: " .. totalDamage .. ". Last total damage: " .. tostring(self.Temp.LastMilestoneMessageDamageCheckTotalDamageDealt) .. ". Damage difference: " .. damageDifference)
-  if (totalDamage % threshold < damageDifference) then
-    print("\124cFFFFD700[AutoBiographer] You have dealt " .. HelperFunctions.CommaValue(HelperFunctions.Round(totalDamage / threshold) * threshold) .. " damage!")
-  end
-
-  self.Temp.LastMilestoneMessageDamageCheckTotalDamageDealt = totalDamage
-end
-
-function Controller:CheckHealingForMilestoneMessage(thisAmount, threshold)
-  self.Temp.IsPendingMilestoneMessageHealingCheck = false
-  self.Temp.LastMilestoneMessageHealingCheckTimestamp = GetTime()
-
-  local totalHealing = self:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.HealingDealt, 1, self:GetCurrentLevelNum())
-
-  local healingDifference = thisAmount
-  if (self.Temp.LastMilestoneMessageDamageCheckTotalHealingDealt ~= nil) then
-    healingDifference = totalHealing - self.Temp.LastMilestoneMessageDamageCheckTotalHealingDealt
-  end
-
-  -- print("Total healing: " .. totalHealing .. ". Last total healing: " .. tostring(self.Temp.LastMilestoneMessageDamageCheckTotalHealingDealt) .. ". Healing difference: " .. healingDifference)
-  if (totalHealing % threshold < healingDifference) then
-    print("\124cFFFFD700[AutoBiographer] You have done " .. HelperFunctions.CommaValue(HelperFunctions.Round(totalHealing / threshold) * threshold) .. " healing!")
-  end
-
-  self.Temp.LastMilestoneMessageDamageCheckTotalHealingDealt = totalHealing
+  AutoBiographer_Milestones:OnStatChanged("Damage")
 end
 
 function Controller:OnDeath(timestamp, coordinates, killerCatalogUnitId, killerLevel, environmentalType)
@@ -973,6 +905,7 @@ function Controller:OnDeath(timestamp, coordinates, killerCatalogUnitId, killerL
   end
 
   DeathStatistics.Increment(self:GetCurrentLevelStatistics().DeathStatistics, deathTrackingType)
+  AutoBiographer_Milestones:OnStatChanged("Deaths")
 end
 
 function Controller:OnDuelLost(timestamp, coordinates, winnerCatalogUnitId, winnerName)
@@ -995,6 +928,7 @@ function Controller:OnDuelWon(timestamp, coordinates, loserCatalogUnitId, loserN
   
   if (not self:GetCurrentLevelStatistics().OtherPlayerStatisticsByOtherPlayer[loserCatalogUnitId]) then self:GetCurrentLevelStatistics().OtherPlayerStatisticsByOtherPlayer[loserCatalogUnitId] = OtherPlayerStatistics.New() end
   OtherPlayerStatistics.Add(self:GetCurrentLevelStatistics().OtherPlayerStatisticsByOtherPlayer[loserCatalogUnitId], AutoBiographerEnum.OtherPlayerTrackingType.DuelsLostToPlayer, 1)
+  AutoBiographer_Milestones:OnStatChanged("Duels")
 end
 
 function Controller:OnEquippedItem(timestamp, slotId, itemId)
@@ -1008,6 +942,7 @@ end
 function Controller:OnGainedExperience(timestamp, coordinates, experienceTrackingType, amount)
   if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog("GainedExperience: " .. tostring(amount) .. ". Experience Tracking Type: " .. tostring(experienceTrackingType) .. ".", AutoBiographerEnum.LogLevel.Debug) end
   ExperienceStatistics.AddExperience(self:GetCurrentLevelStatistics().ExperienceStatistics, experienceTrackingType, amount)
+  AutoBiographer_Milestones:OnStatChanged("Experience")
 end
 
 function Controller:OnGainedMoney(timestamp, coordinates, moneyAcquisitionMethod, money)
@@ -1029,17 +964,11 @@ function Controller:OnJump(timestamp)
   if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog("Jump.", AutoBiographerEnum.LogLevel.Debug) end
   MiscellaneousStatistics.Add(self:GetCurrentLevelStatistics().MiscellaneousStatistics, AutoBiographerEnum.MiscellaneousTrackingType.Jumps, 1)
   
-  if (AutoBiographer_Settings.Options["EnableMilestoneMessages"]) then
-    local jumpCount = self:GetMiscellaneousStatByMiscellaneousTrackingType(AutoBiographerEnum.MiscellaneousTrackingType.Jumps, 1, self:GetCurrentLevelNum())
-    if (jumpCount % 1000 == 0) then
-      print("\124cFFFFD700[AutoBiographer] You have jumped " .. HelperFunctions.CommaValue(jumpCount) .. " times!")
-    end
-  end
+  AutoBiographer_Milestones:OnStatChanged("Jumps")
 end
 
 function Controller:OnKill(timestamp, coordinates, kill)
   if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog("Kill: " .. " #" .. tostring(kill.CatalogUnitId) .. ".", AutoBiographerEnum.LogLevel.Debug) end
-  print("Kill: " .. " #" .. tostring(kill.CatalogUnitId))
 
   if (not self:GetCurrentLevelStatistics().KillStatisticsByUnit[kill.CatalogUnitId]) then self:GetCurrentLevelStatistics().KillStatisticsByUnit[kill.CatalogUnitId] = KillStatistics.New() end
   KillStatistics.AddKill(self:GetCurrentLevelStatistics().KillStatisticsByUnit[kill.CatalogUnitId], kill)
@@ -1058,40 +987,8 @@ function Controller:OnKill(timestamp, coordinates, kill)
     if (AutoBiographer_Databases.BossDatabase[kill.CatalogUnitId]) then
       Controller:OnBossKill(time(), HelperFunctions.GetCoordinatesByUnitId("player"), kill.CatalogUnitId, self.CharacterData.Catalogs.UnitCatalog[kill.CatalogUnitId].Name, hasKilledUnitBefore)
     end
-
-    if (AutoBiographer_Settings.Options["EnableMilestoneMessages"]) then
-      if (self.Temp.LastMilestoneMessageKillsCheckTimestamp and GetTime() - self.Temp.LastMilestoneMessageKillsCheckTimestamp < 1) then
-        if (not self.Temp.IsPendingMilestoneMessageKillsCheck) then
-          self.Temp.IsPendingMilestoneMessageKillsCheck = true
-          C_Timer.After(GetTime() - self.Temp.LastMilestoneMessageKillsCheckTimestamp, function()
-            Controller:CheckKillsForMilestoneMessage()
-          end)
-        end
-      else
-        Controller:CheckKillsForMilestoneMessage()
-      end
-    end
   end
-end
-
-function Controller:CheckKillsForMilestoneMessage()
-  self.Temp.IsPendingMilestoneMessageKillsCheck = false
-  self.Temp.LastMilestoneMessageKillsCheckTimestamp = GetTime()
-
-  local totalsKillStatistics = self:GetAggregatedKillStatisticsTotals(1, self:GetCurrentLevelNum())
-  local totalTaggedKills = KillStatistics.GetSum(totalsKillStatistics, { AutoBiographerEnum.KillTrackingType.TaggedAssist, AutoBiographerEnum.KillTrackingType.TaggedGroupAssistOrKillingBlow, AutoBiographerEnum.KillTrackingType.TaggedKillingBlow })
-
-  local killDifference = 1
-  if (self.Temp.LastMilestoneMessageKillsCheckTotalTaggedKills ~= nil) then
-    killDifference = totalTaggedKills - self.Temp.LastMilestoneMessageKillsCheckTotalTaggedKills
-  end
-
-  local threshold = 1000
-  if (totalTaggedKills % threshold < killDifference) then
-    print("\124cFFFFD700[AutoBiographer] You have " .. HelperFunctions.CommaValue(HelperFunctions.Round(totalTaggedKills / threshold) * threshold) .. " tagged kills!")
-  end
-
-  self.Temp.LastMilestoneMessageKillsCheckTotalTaggedKills = totalTaggedKills
+  AutoBiographer_Milestones:OnStatChanged("Kills")
 end
 
 function Controller:OnLeftGuild(timestamp, guildName)
@@ -1129,11 +1026,13 @@ function Controller:OnMessageSent(messageTrackingType)
   local levelStatistics = self:GetCurrentLevelStatistics()
   if (not levelStatistics.MessageStatistics) then levelStatistics.MessageStatistics = MessageStatistics.New() end
   MessageStatistics.Increment(levelStatistics.MessageStatistics, messageTrackingType)
+  AutoBiographer_Milestones:OnStatChanged("Messages")
 end
 
 function Controller:OnMoneyChanged(timestamp, coordinates, deltaMoney)
   if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog("MoneyChanged: " .. tostring(deltaMoney) .. ".", AutoBiographerEnum.LogLevel.Debug) end
   MoneyStatistics.TotalMoneyChanged(self:GetCurrentLevelStatistics().MoneyStatistics, deltaMoney)
+  AutoBiographer_Milestones:OnStatChanged("Money")
 end
 
 function Controller:OnQuestTurnedIn(timestamp, coordinates, questId, questTitle, xpGained, moneyGained)
@@ -1143,14 +1042,7 @@ function Controller:OnQuestTurnedIn(timestamp, coordinates, questId, questTitle,
   if (not self:GetCurrentLevelStatistics().QuestStatisticsByQuest[questId]) then self:GetCurrentLevelStatistics().QuestStatisticsByQuest[questId] = QuestStatistics.New() end
   QuestStatistics.Increment(self:GetCurrentLevelStatistics().QuestStatisticsByQuest[questId], AutoBiographerEnum.QuestTrackingType.Completed)
 
-  if (AutoBiographer_Settings.Options["EnableMilestoneMessages"]) then
-    local aggregatedQuestStatisticsDictionary = self:GetAggregatedQuestStatisticsDictionary(1, self:GetCurrentLevelNum())
-    local totalsQuestStatistics = self:GetAggregatedQuestStatisticsTotals(1, self:GetCurrentLevelNum(), aggregatedQuestStatisticsDictionary)
-    local totalQuestsCompleted = QuestStatistics.GetSum(totalsQuestStatistics, { AutoBiographerEnum.QuestTrackingType.Completed })
-    if (totalQuestsCompleted % 100 == 0) then
-      print("\124cFFFFD700[AutoBiographer] You have completed " .. HelperFunctions.CommaValue(totalQuestsCompleted) .. " quests!")
-    end
-  end
+  AutoBiographer_Milestones:OnStatChanged("Quests")
 end
 
 function Controller:OnReputationLevelChanged(timestamp, coordinates, faction, reputationLevel)
@@ -1195,6 +1087,7 @@ function Controller:OnSpellSuccessfullyCast(timestamp, coordinates, spellId, spe
   
    if (not self:GetCurrentLevelStatistics().SpellStatisticsBySpell[spellId]) then self:GetCurrentLevelStatistics().SpellStatisticsBySpell[spellId] = SpellStatistics.New() end
    SpellStatistics.Increment(self:GetCurrentLevelStatistics().SpellStatisticsBySpell[spellId], AutoBiographerEnum.SpellTrackingType.SuccessfullyCast)
+  AutoBiographer_Milestones:OnStatChanged("Spells")
 end
 
 function Controller:OnSkillLevelIncreased(timestamp, coordinates, skillName, skillLevel)

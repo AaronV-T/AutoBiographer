@@ -583,6 +583,14 @@ function Api.RegisterUnitNoteMenu(handler)
   return false
 end
 
+function Api.SendMilestoneMessage(message, channel)
+  if (C_ChatInfo and C_ChatInfo.InChatMessagingLockdown and C_ChatInfo.InChatMessagingLockdown()) then return false end
+  local send = C_ChatInfo and C_ChatInfo.SendChatMessage or SendChatMessage
+  if (not send) then return false end
+  send(message, channel)
+  return true
+end
+
 function Api.SetFrameResizeBounds(frame, minWidth, minHeight, maxWidth, maxHeight)
   if (frame.SetResizeBounds) then
     frame:SetResizeBounds(minWidth, minHeight, maxWidth, maxHeight)

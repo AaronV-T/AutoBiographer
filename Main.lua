@@ -291,6 +291,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
       Controller:OnLevelUp(nil, nil, playerLevel)
     end
   end
+  AutoBiographer_Milestones:Start()
   
   AutoBiographer_MinimapButton_Reposition()
   if (AutoBiographer_Settings.Options["ShowMinimapButton"] == false) then AutoBiographer_MinimapButton:Hide()
@@ -1012,7 +1013,12 @@ function EM.EventHandlers.PLAYER_FLAGS_CHANGED(self, unitId)
   if (unitId == "player") then self:UpdatePlayerFlags() end
 end
 
+function EM.EventHandlers.PLAYER_REGEN_DISABLED(self)
+  AutoBiographer_Milestones:PauseSharing()
+end
+
 function EM.EventHandlers.PLAYER_REGEN_ENABLED(self)
+  AutoBiographer_Milestones:ResumeSharing()
   self:ScheduleDamageMeterCombatFinalization(self.CurrentDamageMeterSessionId)
   self:UpdatePlayerGear()
   if (self.GearTrackingReady and AutoBiographer_SnapshotManager) then AutoBiographer_SnapshotManager:Resume() end
@@ -2874,5 +2880,12 @@ end
 
 function EM:Test()
   print("[AutoBiographer] Test")
-  self:RequestTimePlayed(false)
+
+  local creatureTypesKilled = 0
+  for _, unit in pairs(Controller.CharacterData.Catalogs.UnitCatalog) do
+    if (unit.Killed and unit.UType == AutoBiographerEnum.UnitType.Creature) then
+      creatureTypesKilled = creatureTypesKilled + 1
+    end
+  end
+  print("[AutoBiographer] Creature types killed: " .. creatureTypesKilled)
 end
