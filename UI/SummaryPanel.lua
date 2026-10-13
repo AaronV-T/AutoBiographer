@@ -247,6 +247,7 @@ local function CreateDashboardSection(window, definition)
   section.Title = section:CreateFontString(nil, "OVERLAY", "GameFontNormal")
   section.Title:SetPoint("TOPLEFT", 12, -12)
   section.Title:SetText(definition.Title)
+  section.Title:SetJustifyH("CENTER")
   section.Title:SetWordWrap(false)
 
   if (definition.Details) then
@@ -275,7 +276,7 @@ function AutoBiographer_SummaryPanel:Initialize()
   self.Title:SetText("AutoBiographer")
   self.DisplayMinLevel = self.DisplayMinLevel or 1
   self.DisplayMaxLevel = self.DisplayMaxLevel or 9999
-  self.DropdownText = self.DropdownText or "Total"
+  self.DropdownText = self.DropdownText or "All Levels"
   self.ActiveTab = AutoBiographer_Settings.MainWindowTab or "Overview"
   self.DashboardPages = {}
   self.TabButtons = {}
@@ -283,18 +284,9 @@ function AutoBiographer_SummaryPanel:Initialize()
   self.GameVersion = HF.GetGameVersion()
   self.PlayerClass = Api.GetPlayerClass()
 
-  self.CharacterLabel = self:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-  self.CharacterLabel:SetPoint("TOPLEFT", 18, -14)
-  self.CharacterLabel:SetSize(280, 24)
-  self.CharacterLabel:SetJustifyH("LEFT")
-  self.CharacterLabel:SetWordWrap(false)
-
-  self.FilterLabel = self:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-  self.FilterLabel:SetPoint("TOPRIGHT", -235, -20)
-  self.FilterLabel:SetText("Show:")
   self.Dropdown = CreateFrame("Frame", nil, self, "UIDropDownMenuTemplate")
-  self.Dropdown:SetPoint("TOPRIGHT", -18, -9)
-  UIDropDownMenu_SetWidth(self.Dropdown, 165)
+  self.Dropdown:SetPoint("TOPLEFT", 2, -9)
+  UIDropDownMenu_SetWidth(self.Dropdown, AutioBiographer_WindowHelper.FilterDropdownWidth)
   UIDropDownMenu_Initialize(self.Dropdown, function(dropdown, level, menuList)
     self:UpdateLevelFilter(level, menuList)
   end)
@@ -371,7 +363,7 @@ function AutoBiographer_SummaryPanel:LayoutDashboard()
         section:ClearAllPoints()
         section:SetPoint("TOPLEFT", column == 2 and columnWidth + 16 or 0, -top)
         section:SetWidth(sectionWidth)
-        section.Title:SetWidth(sectionWidth - (definition.Details and 110 or 24))
+        section.Title:SetWidth(sectionWidth - 24)
         -- Leave room for row labels in half-width tables with multiple values.
         local valueWidth = definition.Columns and math.min(100, (sectionWidth - 30) / (#definition.Columns + 2)) or 160
         for i, header in ipairs(section.ColumnHeaders) do
@@ -431,7 +423,6 @@ function AutoBiographer_SummaryPanel:LayoutPanel()
   end
   self.ScrollFrame.Content:SetWidth(math.max(1, self:GetWidth() - 50))
   self.Footer:SetWidth(math.max(1, self:GetWidth() - 160))
-  self.CharacterLabel:SetWidth(math.max(1, self:GetWidth() - 310))
   self:LayoutDashboard()
 end
 
@@ -470,9 +461,6 @@ function AutoBiographer_SummaryPanel:Update()
     values.DistanceTotal = values.DistanceTotal + yards
   end
 
-  local name, lastName = Api.GetUnitName("player")
-  if (name and lastName) then name = name .. " " .. lastName end
-  self.CharacterLabel:SetText((name or EM.PlayerName or "Character") .. " | Level " .. Controller:GetCurrentLevelNum())
   UIDropDownMenu_SetText(self.Dropdown, self.DropdownText)
   local level = minLevel == maxLevel and Controller.CharacterData.Levels[minLevel]
 
@@ -648,7 +636,7 @@ function AutoBiographer_SummaryPanel:UpdateLevelFilter(level, menuList)
     self:Update()
   end
   if (not level or level == 1) then
-    info.text, info.arg1, info.arg2 = "Total", 1, 9999
+    info.text, info.arg1, info.arg2 = "All Levels", 1, 9999
     info.checked = self.DisplayMinLevel == 1 and self.DisplayMaxLevel == 9999
     UIDropDownMenu_AddButton(info, level)
     local highestRange = math.floor((Controller:GetCurrentLevelNum() - 1) / 10)

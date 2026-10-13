@@ -111,8 +111,6 @@ function AutoBiographer_NotesWindow:Initialize()
   if (self.SortOrder ~= "Updated" and self.SortOrder ~= "Created" and self.SortOrder ~= "Alphabetical") then self.SortOrder = "Updated" end
 
   self.SearchBox = CreateFrame("EditBox", nil, self, "InputBoxTemplate")
-  self.SearchBox:SetPoint("TOPLEFT", 24, -14)
-  self.SearchBox:SetSize(300, 24)
   self.SearchBox:SetAutoFocus(false)
   self.SearchBox:SetMaxLetters(200)
   self.SearchHint = self.SearchBox:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
@@ -130,8 +128,6 @@ function AutoBiographer_NotesWindow:Initialize()
   end)
   self.SearchBox:SetText("")
   self.SortDropdown = CreateFrame("Frame", nil, self, "UIDropDownMenuTemplate")
-  self.SortDropdown:SetPoint("TOPLEFT", 330, -4)
-  UIDropDownMenu_SetWidth(self.SortDropdown, 170)
   UIDropDownMenu_Initialize(self.SortDropdown, function()
     for _, order in ipairs(sortOrders) do
       local info = UIDropDownMenu_CreateInfo()
@@ -146,9 +142,7 @@ function AutoBiographer_NotesWindow:Initialize()
     end
   end)
   self.NewButton = CreateButton(self, "New Note", 100, function() self:NewNote() end)
-  self.NewButton:SetPoint("TOPRIGHT", -22, -14)
-  self.SearchBox:SetWidth(270)
-  self.SortDropdown:SetPoint("TOPLEFT", 290, -4)
+  self.NewButton:SetPoint("TOPRIGHT", -22, -5)
 
   self.ListPanel = CreateFrame("Frame", nil, self)
   self.ListPanel:SetPoint("TOPLEFT", 18, -60)
@@ -291,8 +285,14 @@ end
 function AutoBiographer_NotesWindow:LayoutPanel()
   if (not self.PanelReady) then return end
   local width = self:GetWidth()
-  self.SearchBox:SetWidth(math.max(160, math.min(270, width - 590)))
-  self.SortDropdown:SetPoint("TOPLEFT", self.SearchBox:GetWidth() + 20, -4)
+  local toolbarRight = AutioBiographer_WindowHelper:LayoutSearchToolbar(self, { self.SubjectDropdown, self.SortDropdown })
+  self.SubjectButton:ClearAllPoints()
+  local actionLeft = width - 22 - self.NewButton:GetWidth() - 8 - self.SubjectButton:GetWidth()
+  if (actionLeft >= toolbarRight + 8) then
+    self.SubjectButton:SetPoint("RIGHT", self.NewButton, "LEFT", -8, 0)
+  else
+    self.SubjectButton:SetPoint("TOPRIGHT", -22, -33)
+  end
   local listWidth = math.max(250, math.min(340, width * 0.3))
   local editorWidth = width - listWidth - 56
   self.ListPanel:SetWidth(listWidth)

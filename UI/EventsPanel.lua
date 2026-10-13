@@ -124,7 +124,7 @@ function AutoBiographer_EventWindow:CaptureScrollAnchor()
 end
 
 function AutoBiographer_EventWindow:Initialize()
-  AutioBiographer_WindowHelper:InitialzationHelper(self, 800, 650, 150, "Events", -104)
+  AutioBiographer_WindowHelper:InitialzationHelper(self, 800, 650, 150, "Events", -55)
   self.Title:SetText("AutoBiographer Events")
   self.JournalEntries = {}
   self.EntriesByEventIndex = {}
@@ -134,8 +134,6 @@ function AutoBiographer_EventWindow:Initialize()
   self.SearchGeneration = 0
 
   self.SearchBox = CreateFrame("EditBox", nil, self, "InputBoxTemplate")
-  self.SearchBox:SetPoint("TOPLEFT", 24, -14)
-  self.SearchBox:SetSize(235, 24)
   self.SearchBox:SetAutoFocus(false)
   self.SearchBox:SetMaxLetters(200)
   self.SearchBox:SetText("")
@@ -157,12 +155,11 @@ function AutoBiographer_EventWindow:Initialize()
   end)
 
   self.FilterDropdown = CreateFrame("Frame", nil, self, "UIDropDownMenuTemplate")
-  self.FilterDropdown:SetPoint("TOPLEFT", 265, -4)
-  UIDropDownMenu_SetWidth(self.FilterDropdown, 145)
   UIDropDownMenu_SetText(self.FilterDropdown, "Filters")
   UIDropDownMenu_Initialize(self.FilterDropdown, function()
     local info = UIDropDownMenu_CreateInfo()
     info.notCheckable = true
+    info.keepShownOnClick = true
     info.text = "Select all"
     info.func = function() self:SetAllFilters(true) end
     UIDropDownMenu_AddButton(info)
@@ -172,8 +169,9 @@ function AutoBiographer_EventWindow:Initialize()
     for _, category in ipairs(eventCategories) do
       info = UIDropDownMenu_CreateInfo()
       info.text = category.Name
-      info.checked = CategoryIsChecked(category)
+      info.checked = function() return CategoryIsChecked(category) end
       info.isNotRadio = true
+      info.ignoreAsMenuSelection = true
       info.keepShownOnClick = true
       info.func = function()
         local enabled = not CategoryIsChecked(category)
@@ -187,8 +185,6 @@ function AutoBiographer_EventWindow:Initialize()
   end)
 
   self.SortDropdown = CreateFrame("Frame", nil, self, "UIDropDownMenuTemplate")
-  self.SortDropdown:SetPoint("TOPLEFT", 440, -4)
-  UIDropDownMenu_SetWidth(self.SortDropdown, 140)
   UIDropDownMenu_Initialize(self.SortDropdown, function()
     for _, order in ipairs({ "Newest", "Oldest" }) do
       local info = UIDropDownMenu_CreateInfo()
@@ -207,19 +203,20 @@ function AutoBiographer_EventWindow:Initialize()
     if (AutoBiographer_CustomEventDetailsWindow:IsVisible()) then AutoBiographer_CustomEventDetailsWindow:Update()
     else AutoBiographer_CustomEventDetailsWindow:Toggle() end
   end)
-  self.CreateCustomEventBtn:SetPoint("TOPRIGHT", -22, -14)
+  self.CreateCustomEventBtn:SetPoint("TOPRIGHT", -22, -5)
   self.FilterSummary = self:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-  self.FilterSummary:SetPoint("TOPLEFT", 18, -51)
+  self.FilterSummary:SetPoint("TOPLEFT", 18, -37)
   self.FilterSummary:SetWidth(750)
   self.FilterSummary:SetJustifyH("LEFT")
+  self.FilterSummary:SetWordWrap(false)
 
   self.ScrollFrame:ClearAllPoints()
-  self.ScrollFrame:SetPoint("TOPLEFT", 18, -75)
-  self.ScrollFrame:SetPoint("BOTTOMRIGHT", -32, 210)
+  self.ScrollFrame:SetPoint("TOPLEFT", 18, -55)
+  self.ScrollFrame:SetPoint("BOTTOMRIGHT", -32, 135)
   self.ScrollFrame.Content:SetWidth(750)
   self.ScrollFrame.Scrollbar:ClearAllPoints()
-  self.ScrollFrame.Scrollbar:SetPoint("TOPLEFT", self, "TOPRIGHT", -25, -80)
-  self.ScrollFrame.Scrollbar:SetPoint("BOTTOMLEFT", self, "BOTTOMRIGHT", -25, 215)
+  self.ScrollFrame.Scrollbar:SetPoint("TOPLEFT", self, "TOPRIGHT", -25, -60)
+  self.ScrollFrame.Scrollbar:SetPoint("BOTTOMLEFT", self, "BOTTOMRIGHT", -25, 140)
   self.ScrollFrame.Scrollbar:SetMinMaxValues(0, 0)
   self.ScrollFrame.Scrollbar:SetValue(0)
   self.ScrollFrame.Scrollbar.scrollStep = 44
@@ -244,7 +241,7 @@ function AutoBiographer_EventWindow:Initialize()
   self.DetailsPanel = CreateFrame("Frame", nil, self)
   self.DetailsPanel:SetPoint("BOTTOMLEFT", 18, 46)
   self.DetailsPanel:SetPoint("BOTTOMRIGHT", -18, 46)
-  self.DetailsPanel:SetHeight(150)
+  self.DetailsPanel:SetHeight(75)
   local background = self.DetailsPanel:CreateTexture(nil, "BACKGROUND")
   background:SetAllPoints(self.DetailsPanel)
   background:SetColorTexture(0, 0, 0, 0.18)
@@ -254,17 +251,17 @@ function AutoBiographer_EventWindow:Initialize()
   line:SetHeight(1)
   line:SetColorTexture(0.6, 0.5, 0.3, 0.4)
   self.DetailsTitle = self.DetailsPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-  self.DetailsTitle:SetPoint("TOPLEFT", 12, -12)
+  self.DetailsTitle:SetPoint("TOPLEFT", 12, -6)
   self.DetailsTitle:SetWidth(730)
   self.DetailsTitle:SetJustifyH("LEFT")
   self.DetailsLocation = self.DetailsPanel:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-  self.DetailsLocation:SetPoint("TOPLEFT", 12, -33)
+  self.DetailsLocation:SetPoint("TOPLEFT", 12, -22)
   self.DetailsLocation:SetWidth(710)
   self.DetailsLocation:SetJustifyH("LEFT")
   self.DetailsLocation:SetWordWrap(false)
   self.DetailsScroll = CreateFrame("ScrollFrame", nil, self.DetailsPanel)
-  self.DetailsScroll:SetPoint("TOPLEFT", 12, -56)
-  self.DetailsScroll:SetPoint("BOTTOMRIGHT", -30, 12)
+  self.DetailsScroll:SetPoint("TOPLEFT", 12, -36)
+  self.DetailsScroll:SetPoint("BOTTOMRIGHT", -30, 8)
   self.DetailsContent = CreateFrame("Frame", nil, self.DetailsScroll)
   self.DetailsContent:SetWidth(722)
   self.DetailsContent:SetHeight(1)
@@ -279,8 +276,8 @@ function AutoBiographer_EventWindow:Initialize()
   -- Replace the template's parent:SetVerticalScroll callback before setting a
   -- range or value: this scrollbar belongs to the details panel, not a ScrollFrame.
   self.DetailsScrollbar:SetScript("OnValueChanged", function(_, value) self.DetailsScroll:SetVerticalScroll(value) end)
-  self.DetailsScrollbar:SetPoint("TOPRIGHT", -10, -62)
-  self.DetailsScrollbar:SetPoint("BOTTOMRIGHT", -10, 17)
+  self.DetailsScrollbar:SetPoint("TOPRIGHT", -10, -42)
+  self.DetailsScrollbar:SetPoint("BOTTOMRIGHT", -10, 13)
   self.DetailsScrollbar:SetMinMaxValues(0, 0)
   self.DetailsScrollbar:SetValue(0)
   self.DetailsScrollbar:SetValueStep(1)
@@ -307,6 +304,7 @@ end
 
 function AutoBiographer_EventWindow:LayoutPanel()
   if (not self.PanelReady) then return end
+  AutioBiographer_WindowHelper:LayoutSearchToolbar(self, { self.FilterDropdown, self.SortDropdown })
   local width = math.max(1, self:GetWidth() - 50)
   self.ScrollFrame.Content:SetWidth(width)
   self.JournalTextWidth = math.max(1, width - 118)
@@ -398,6 +396,9 @@ end
 function AutoBiographer_EventWindow:SetAllFilters(enabled)
   for _, subType in pairs(Enum.EventSubType) do
     AutoBiographer_Settings.EventDisplayFilters[subType] = enabled
+  end
+  if (UIDROPDOWNMENU_OPEN_MENU == self.FilterDropdown) then
+    UIDropDownMenu_Refresh(self.FilterDropdown, nil, 1)
   end
   self:Update(true)
 end

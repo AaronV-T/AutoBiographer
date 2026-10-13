@@ -1,7 +1,8 @@
 local Api = AutoBiographer_Api
-local sections = { "Summary", "Events", "Statistics", "GearHistory", "Snapshots", "Notes", "Todos" }
-local sectionLabels = { GearHistory = "Gear History", Todos = "To-do" }
-local minimumButtonWidths = { Summary = 76, Events = 64, Statistics = 82, GearHistory = 96, Snapshots = 88, Notes = 64, Todos = 64 }
+local sections = { "Summary", "Events", "Statistics", "Snapshots", "GearHistory", "Notes", "Todos" }
+local sectionLabels = { GearHistory = "Gear History", Statistics = "Statistic Details", Todos = "To-do" }
+local minimumButtonWidths = { Summary = 72, Events = 60, Statistics = 110, GearHistory = 92, Snapshots = 84, Notes = 58, Todos = 58 }
+local preferredButtonWidths = { Statistics = 120 }
 
 local function CreateNavigationButton(parent, text, width, onClick)
   local button = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
@@ -66,7 +67,7 @@ function AutoBiographer_MainWindow:Initialize()
   self.PageEdge:SetHeight(1)
   self.PageEdge:SetColorTexture(0.45, 0.42, 0.36, 0.7)
   for i, name in ipairs(sections) do
-    local button = AutioBiographer_WindowHelper:CreateTab(self, sectionLabels[name] or name, 100, function() self:ShowSection(name) end)
+    local button = AutioBiographer_WindowHelper:CreateTab(self, sectionLabels[name] or name, preferredButtonWidths[name] or 100, function() self:ShowSection(name) end)
     button:SetPoint("TOPLEFT", 18 + (i - 1) * 106, -41)
     self.SectionButtons[name] = button
   end
@@ -153,13 +154,16 @@ function AutoBiographer_MainWindow:LayoutPanels()
   if (not self.Initialized) then return end
   -- Leave room for Options and Debug even at the minimum window width.
   local available = self:GetWidth() - 226 - (#sections - 1) * 6
-  local minimumTotal = 0
-  for _, name in ipairs(sections) do minimumTotal = minimumTotal + minimumButtonWidths[name] end
-  local expansion = math.max(0, math.min(1, (available - minimumTotal) / (#sections * 100 - minimumTotal)))
+  local minimumTotal, preferredTotal = 0, 0
+  for _, name in ipairs(sections) do
+    minimumTotal = minimumTotal + minimumButtonWidths[name]
+    preferredTotal = preferredTotal + (preferredButtonWidths[name] or 100)
+  end
+  local expansion = math.max(0, math.min(1, (available - minimumTotal) / (preferredTotal - minimumTotal)))
   local x = 18
   for i, name in ipairs(sections) do
     local button = self.SectionButtons[name]
-    local buttonWidth = minimumButtonWidths[name] + (100 - minimumButtonWidths[name]) * expansion
+    local buttonWidth = minimumButtonWidths[name] + ((preferredButtonWidths[name] or 100) - minimumButtonWidths[name]) * expansion
     button:SetTabWidth(buttonWidth)
     button:ClearAllPoints()
     button:SetPoint("TOPLEFT", x, -41)

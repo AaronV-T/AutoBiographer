@@ -30,7 +30,29 @@ end
 -- Window Initialization Helper
 --
 --
-AutioBiographer_WindowHelper = {}
+AutioBiographer_WindowHelper = {
+  FilterDropdownWidth = 160,
+  SearchInputWidth = 200,
+}
+
+function AutioBiographer_WindowHelper:LayoutSearchToolbar(panel, dropdowns)
+  panel.SearchBox:SetSize(self.SearchInputWidth, 24)
+  panel.SearchBox:ClearAllPoints()
+  panel.SearchBox:SetPoint("TOPLEFT", 24, -5)
+  local gap, dropdownInset = 12, 16
+  local right = 24 + self.SearchInputWidth
+  local x = right + gap - dropdownInset
+  for _, dropdown in ipairs(dropdowns or {}) do
+    UIDropDownMenu_SetWidth(dropdown, self.FilterDropdownWidth)
+    dropdown:ClearAllPoints()
+    dropdown:SetPoint("TOPLEFT", x, -4)
+    -- Space the visible artwork, not the dropdown's padded frame edges.
+    right = x + dropdown:GetWidth() - dropdownInset
+    x = right + gap - dropdownInset
+  end
+  return right
+end
+
 function AutioBiographer_WindowHelper:CreateTab(parent, text, width, onClick)
   local tab = CreateFrame("Button", nil, parent)
   tab:SetSize(width, 28)

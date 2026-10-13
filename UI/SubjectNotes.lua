@@ -186,8 +186,6 @@ end
 function SN:InitializePanel(panel)
   panel.SubjectFilter = "All"
   panel.SubjectDropdown = CreateFrame("Frame", nil, panel, "UIDropDownMenuTemplate")
-  panel.SubjectDropdown:SetPoint("TOPLEFT", 2, -36)
-  UIDropDownMenu_SetWidth(panel.SubjectDropdown, 145)
   UIDropDownMenu_SetText(panel.SubjectDropdown, "All notes")
   UIDropDownMenu_Initialize(panel.SubjectDropdown, function()
     for _, filter in ipairs(filters) do
@@ -202,7 +200,6 @@ function SN:InitializePanel(panel)
     end
   end)
   panel.SubjectButton = Button(panel, "Linked Note", 120, function() self:ShowPicker(panel) end)
-  panel.SubjectButton:SetPoint("RIGHT", panel.NewButton, "LEFT", -8, 0)
   panel.ListPanel:SetPoint("TOPLEFT", 18, -86)
   panel.EditorPanel:SetPoint("TOPRIGHT", -18, -86)
   panel.RatingsPanel = CreateFrame("Frame", nil, panel.EditorPanel)

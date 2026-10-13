@@ -19,19 +19,16 @@ function panel:HasFocusedTextInput()
 end
 
 function panel:Initialize()
-  AutioBiographer_WindowHelper:InitialzationHelper(self, 750, 585, 150, "Gear History", -96)
+  AutioBiographer_WindowHelper:InitialzationHelper(self, 750, 585, 150, "Gear History", -85)
   self.Rows, self.RowPool, self.Headers = {}, {}, {}
   self.SearchGeneration = 0
-  self.Heading = self:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-  self.Heading:SetPoint("TOPLEFT", 18, -14)
-  self.Heading:SetText("Gear History")
   self.Description = self:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-  self.Description:SetPoint("TOPLEFT", 18, -42)
+  self.Description:SetPoint("TOPLEFT", 18, -37)
+  self.Description:SetJustifyH("LEFT")
+  self.Description:SetWordWrap(false)
   self.Description:SetText("Newest first. Hover for item details; click an item to open its link.")
 
   self.SearchBox = CreateFrame("EditBox", nil, self, "InputBoxTemplate")
-  self.SearchBox:SetPoint("TOPRIGHT", -26, -14)
-  self.SearchBox:SetSize(260, 24)
   self.SearchBox:SetAutoFocus(false)
   self.SearchBox:SetMaxLetters(200)
   self.SearchHint = self.SearchBox:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
@@ -50,8 +47,8 @@ function panel:Initialize()
   self.SearchBox:SetText("")
 
   self.Header = CreateFrame("Frame", nil, self)
-  self.Header:SetPoint("TOPLEFT", 18, -66)
-  self.Header:SetPoint("TOPRIGHT", -32, -66)
+  self.Header:SetPoint("TOPLEFT", 18, -55)
+  self.Header:SetPoint("TOPRIGHT", -32, -55)
   self.Header:SetHeight(26)
   local background = self.Header:CreateTexture(nil, "BACKGROUND")
   background:SetAllPoints(self.Header)
@@ -87,6 +84,8 @@ function panel:Initialize()
   self.RefreshButton:SetSize(80, 24)
   self.RefreshButton:SetPoint("BOTTOMRIGHT", -22, 14)
   self.RefreshButton:SetText("Refresh")
+  self.RefreshButton:SetNormalFontObject("GameFontNormalSmall")
+  self.RefreshButton:SetHighlightFontObject("GameFontHighlightSmall")
   self.RefreshButton:SetScript("OnClick", function() self:Update() end)
   self:SetScript("OnHide", function() self.SearchBox:ClearFocus(); self:HideRowTooltips() end)
   -- Item names/links may arrive after the history is first displayed.
@@ -108,6 +107,7 @@ end
 
 function panel:LayoutPanel()
   if (not self.PanelReady) then return end
+  AutioBiographer_WindowHelper:LayoutSearchToolbar(self)
   local width = math.max(1, self:GetWidth() - 50)
   self.ColumnOffsets = { 0, 185, 340, 430, width }
   for i, header in ipairs(self.Headers) do
@@ -119,11 +119,11 @@ function panel:LayoutPanel()
   self.Footer:SetWidth(math.max(1, self:GetWidth() - 130))
   self.EmptyMessage:SetWidth(math.max(1, width - 60))
   self.ScrollFrame:ClearAllPoints()
-  self.ScrollFrame:SetPoint("TOPLEFT", 18, -96)
+  self.ScrollFrame:SetPoint("TOPLEFT", 18, -85)
   self.ScrollFrame:SetPoint("BOTTOMRIGHT", -32, 62)
   self.ScrollFrame.Content:SetWidth(width)
   self.ScrollFrame.Scrollbar:ClearAllPoints()
-  self.ScrollFrame.Scrollbar:SetPoint("TOPLEFT", self, "TOPRIGHT", -25, -101)
+  self.ScrollFrame.Scrollbar:SetPoint("TOPLEFT", self, "TOPRIGHT", -25, -90)
   self.ScrollFrame.Scrollbar:SetPoint("BOTTOMLEFT", self, "BOTTOMRIGHT", -25, 67)
   self:UpdateScrollRange()
 end

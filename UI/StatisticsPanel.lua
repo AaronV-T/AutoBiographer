@@ -460,25 +460,23 @@ function AutoBiographer_StatisticsWindow:GetViewState()
   if (not self.ViewStates[mode]) then
     self.ViewStates[mode] = {
       Search = "", LevelFilter = "All", MinLevel = 1, MaxLevel = Controller:GetCurrentLevelNum(),
-      SortColumn = 1, SortDirection = "ASC", Scroll = 0,
+      SortColumn = 1, SortDirection = mode == Enum.StatisticsDisplayMode.Levels and "DESC" or "ASC", Scroll = 0,
     }
   end
   return self.ViewStates[mode]
 end
 
 function AutoBiographer_StatisticsWindow:Initialize()
-  AutioBiographer_WindowHelper:InitialzationHelper(self, 750, 585, 150, "Statistics", -114)
+  AutioBiographer_WindowHelper:InitialzationHelper(self, 750, 585, 150, "Statistics", -85)
   self.ViewStates = {}
   self.RowPool = {}
   self.TableHeaders = {}
   self.TotalCells = {}
   self.FilterGeneration = 0
-  self.StatisticsDisplayMode = self.StatisticsDisplayMode or Enum.StatisticsDisplayMode.Kills
-  self.DropdownText = self.DropdownText or "Kills"
+  self.StatisticsDisplayMode = self.StatisticsDisplayMode or Enum.StatisticsDisplayMode.Levels
+  self.DropdownText = self.DropdownText or "Levels"
 
   self.Dropdown = CreateFrame("Frame", nil, self, "UIDropDownMenuTemplate")
-  self.Dropdown:SetPoint("TOPLEFT", 14, -4)
-  UIDropDownMenu_SetWidth(self.Dropdown, 200)
   UIDropDownMenu_Initialize(self.Dropdown, function()
     for _, view in ipairs(views) do
       local info = UIDropDownMenu_CreateInfo()
@@ -489,8 +487,6 @@ function AutoBiographer_StatisticsWindow:Initialize()
     end
   end)
   self.LevelDropdown = CreateFrame("Frame", nil, self, "UIDropDownMenuTemplate")
-  self.LevelDropdown:SetPoint("TOPLEFT", 264, -4)
-  UIDropDownMenu_SetWidth(self.LevelDropdown, 154)
   UIDropDownMenu_Initialize(self.LevelDropdown, function()
     for _, filter in ipairs({ { "All levels", "All" }, { "Current level", "Current" }, { "Custom range", "Custom" } }) do
       local info = UIDropDownMenu_CreateInfo()
@@ -502,8 +498,6 @@ function AutoBiographer_StatisticsWindow:Initialize()
   end)
 
   self.SearchBox = CreateFrame("EditBox", nil, self, "InputBoxTemplate")
-  self.SearchBox:SetPoint("TOPRIGHT", -26, -14)
-  self.SearchBox:SetHeight(24)
   self.SearchBox:SetAutoFocus(false)
   self.SearchBox:SetMaxLetters(200)
   self.SearchHint = self.SearchBox:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
@@ -523,22 +517,23 @@ function AutoBiographer_StatisticsWindow:Initialize()
   end)
   self.SearchBox:SetText("")
   self.ScopeLabel = self:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-  self.ScopeLabel:SetPoint("TOPLEFT", 18, -53)
+  self.ScopeLabel:SetPoint("TOPLEFT", 18, -37)
   self.ScopeLabel:SetJustifyH("LEFT")
   self.ScopeLabel:SetWordWrap(false)
 
   self.CustomRange = CreateFrame("Frame", nil, self)
-  self.CustomRange:SetPoint("TOPRIGHT", -22, -45)
-  self.CustomRange:SetSize(230, 24)
+  self.CustomRange:SetSize(150, 24)
   local previous
   for i, name in ipairs({ "Minimum", "Maximum" }) do
     local label = self.CustomRange:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     label:SetText(i == 1 and "From level" or "to")
-    if (previous) then label:SetPoint("LEFT", previous, "RIGHT", 12, 0)
+    label:SetWidth(i == 1 and 50 or 12)
+    label:SetWordWrap(false)
+    if (previous) then label:SetPoint("LEFT", previous, "RIGHT", 8, 0)
     else label:SetPoint("LEFT", 0, 0) end
     local box = CreateFrame("EditBox", nil, self.CustomRange, "InputBoxTemplate")
-    box:SetPoint("LEFT", label, "RIGHT", 12, 0)
-    box:SetSize(40, 22)
+    box:SetPoint("LEFT", label, "RIGHT", 8, 0)
+    box:SetSize(32, 22)
     box:SetAutoFocus(false)
     box:SetNumeric(true)
     box:SetMaxLetters(3)
@@ -617,16 +612,18 @@ end
 
 function AutoBiographer_StatisticsWindow:LayoutPanel()
   if (not self.PanelReady) then return end
-  self.SearchBox:SetWidth(math.max(180, math.min(300, self:GetWidth() - 538)))
-  self.ScopeLabel:SetWidth(math.max(1, self:GetWidth() - 285))
+  local toolbarRight = AutioBiographer_WindowHelper:LayoutSearchToolbar(self, { self.Dropdown, self.LevelDropdown })
+  self.CustomRange:ClearAllPoints()
+  self.CustomRange:SetPoint("TOPLEFT", toolbarRight + 12, -5)
+  self.ScopeLabel:SetWidth(math.max(1, self:GetWidth() - 50))
   self.Footer:SetWidth(math.max(1, self:GetWidth() - 235))
   self.EmptyMessage:SetWidth(math.max(1, self:GetWidth() - 130))
   self.ScrollFrame:ClearAllPoints()
-  self.ScrollFrame:SetPoint("TOPLEFT", 18, -114)
+  self.ScrollFrame:SetPoint("TOPLEFT", 18, -85)
   self.ScrollFrame:SetPoint("BOTTOMRIGHT", -32, 82)
   self.ScrollFrame.Content:SetWidth(math.max(1, self:GetWidth() - 50))
   self.ScrollFrame.Scrollbar:ClearAllPoints()
-  self.ScrollFrame.Scrollbar:SetPoint("TOPLEFT", self, "TOPRIGHT", -25, -119)
+  self.ScrollFrame.Scrollbar:SetPoint("TOPLEFT", self, "TOPRIGHT", -25, -90)
   self.ScrollFrame.Scrollbar:SetPoint("BOTTOMLEFT", self, "BOTTOMRIGHT", -25, 87)
   if (self.CurrentTableData) then self:RenderStatisticsTable() end
 end
@@ -652,7 +649,7 @@ function AutoBiographer_StatisticsWindow:RenderStatisticsTable()
     end
     header.Label = label
     header:ClearAllPoints()
-    header:SetPoint("TOPLEFT", 18 + offsets[i], -84)
+    header:SetPoint("TOPLEFT", 18 + offsets[i], -55)
     header:SetSize(offsets[i + 1] - offsets[i], 26)
     header:SetText(label)
     local text = header:GetFontString()

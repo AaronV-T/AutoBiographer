@@ -1,6 +1,4 @@
 Beautify UI
-  Feats of strength panel
-  Summary page to show more like a highlights?
 Fix map events. Maybe have dedicated embedded map event and gear progression view in AB window.
 Custom campfire stories?
 Test with controller
@@ -10,6 +8,8 @@ Update Curseforge page and categories
 
 
 
+Battlegrounds & pvp verify stats
+Right-click chat message to save it and link it to the person who posted it.
 Chat commands: Add note, add task
 Startup hints
 Add new dungeons and raids locations. Make snapshotting work for new raid bosses, or use dungeon clearing achievements to determine snapshots to take.
