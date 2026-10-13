@@ -98,7 +98,7 @@ end
 
 function AutoBiographer_NotesWindow:HasFocusedTextInput()
   return self.EditorScroll.EditBox:HasFocus() or self.SearchBox:HasFocus() or
-    (self.SubjectPicker and self.SubjectPicker:IsShown() and self.SubjectPicker.Input:HasFocus()) or false
+    (self.SubjectPicker and self.SubjectPicker:IsShown() and self.SubjectPicker.Input and self.SubjectPicker.Input:HasFocus()) or false
 end
 
 function AutoBiographer_NotesWindow:Initialize()
@@ -141,8 +141,7 @@ function AutoBiographer_NotesWindow:Initialize()
       UIDropDownMenu_AddButton(info)
     end
   end)
-  self.NewButton = CreateButton(self, "New Note", 100, function() self:NewNote() end)
-  self.NewButton:SetPoint("TOPRIGHT", -22, -5)
+  self.NewButton = CreateButton(self, "New Generic Note", 140, function() self:NewNote() end)
 
   self.ListPanel = CreateFrame("Frame", nil, self)
   self.ListPanel:SetPoint("TOPLEFT", 18, -60)
@@ -206,7 +205,7 @@ function AutoBiographer_NotesWindow:Initialize()
   self.EditorPlaceholder:SetPoint("CENTER")
   self.EditorPlaceholder:SetJustifyH("CENTER")
   self.EditorPlaceholder:SetWordWrap(true)
-  self.EditorPlaceholder:SetText("Select a note to read or edit it.\n\nUse New Note to start writing.")
+  self.EditorPlaceholder:SetText("Select a note to read or edit it.\n\nUse the New Note buttons to start writing.")
   self.DraftStatus = self.EditorPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
   self.DraftStatus:SetPoint("BOTTOMLEFT", 14, 50)
   self.CharacterCount = self.EditorPanel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
@@ -285,13 +284,12 @@ end
 function AutoBiographer_NotesWindow:LayoutPanel()
   if (not self.PanelReady) then return end
   local width = self:GetWidth()
-  local toolbarRight = AutioBiographer_WindowHelper:LayoutSearchToolbar(self, { self.SubjectDropdown, self.SortDropdown })
-  self.SubjectButton:ClearAllPoints()
-  local actionLeft = width - 22 - self.NewButton:GetWidth() - 8 - self.SubjectButton:GetWidth()
-  if (actionLeft >= toolbarRight + 8) then
-    self.SubjectButton:SetPoint("RIGHT", self.NewButton, "LEFT", -8, 0)
-  else
-    self.SubjectButton:SetPoint("TOPRIGHT", -22, -33)
+  AutioBiographer_WindowHelper:LayoutSearchToolbar(self, { self.SubjectDropdown, self.SortDropdown })
+  local buttonLeft = 18
+  for _, button in ipairs(self.CreationButtons) do
+    button:ClearAllPoints()
+    button:SetPoint("TOPLEFT", buttonLeft, -42)
+    buttonLeft = buttonLeft + button:GetWidth() + 8
   end
   local listWidth = math.max(250, math.min(340, width * 0.3))
   local editorWidth = width - listWidth - 56
@@ -333,8 +331,13 @@ end
 
 function AutoBiographer_NotesWindow:NewNote()
   self:RequestLeaveDraft(function()
+    if (self.SubjectPicker) then self.SubjectPicker:Hide() end
     if (self.SelectedNote) then self.ReturnNote, self.ReturnSubject = self.SelectedNote, self.SelectedSubject end
+    self.SubjectFilter = "General"
+    UIDropDownMenu_SetText(self.SubjectDropdown, "General")
+    self.SearchBox:SetText("")
     self:LoadNote(nil, true)
+    self:Update(true)
     self.EditorScroll.EditBox:SetFocus()
   end)
 end
@@ -494,7 +497,7 @@ function AutoBiographer_NotesWindow:Update(resetScroll)
   self:RenderNoteRows()
   self:UpdateEditorState()
   self.EmptyListMessage:SetShown(#entries == 0)
-  self.EmptyListMessage:SetText(#notes == 0 and "Create your first note\nwith New Note." or "No notes match\nyour search.")
+  self.EmptyListMessage:SetText(#notes == 0 and "Create your first note\nwith the New Note buttons." or "No notes match\nyour search.")
   self.Footer:SetText(HF.CommaValue(#entries) .. " of " .. HF.CommaValue(#notes) .. " notes")
   for _, order in ipairs(sortOrders) do
     if (order.Key == self.SortOrder) then UIDropDownMenu_SetText(self.SortDropdown, order.Name); break end
@@ -511,11 +514,7 @@ function AutoBiographer_NotesWindow:UpdateEditorState()
     (self.IsNewDraft and self.DraftText == "" and "New note" or GetNoteTitle(self.DraftText))) or "Notes")
   local isPlayer = active and subject ~= nil and subject.Type == "Player"
   self.RatingsPanel:SetShown(isPlayer)
-  for _, field in ipairs({ "Behavior", "Skill" }) do
-    for _, button in ipairs(self[field .. "Buttons"]) do
-      button.Selection:SetShown(button.Rating == (self["Draft" .. field] or 0))
-    end
-  end
+  AutoBiographer_SubjectNotes:UpdateRatings(self)
   self.EditorScroll:SetPoint("TOPLEFT", 14, isPlayer and -154 or -94)
   self.CreatedLabel:SetText(self.SelectedNote and "Created: " .. HF.TimestampToDateString(self.SelectedNote.CreatedTimestamp) or active and "New note — not saved" or "")
   self.UpdatedLabel:SetText(self.SelectedNote and "Updated: " .. HF.TimestampToDateString(self.SelectedNote.LastUpdatedTimestamp) or "")

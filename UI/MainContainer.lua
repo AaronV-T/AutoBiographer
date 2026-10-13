@@ -17,13 +17,13 @@ end
 function AutoBiographer_MainWindow:FitToScreen()
   local availableWidth = math.max(1, UIParent:GetWidth() - 24)
   local availableHeight = math.max(1, UIParent:GetHeight() - 24)
-  local scale = math.min(1, availableWidth / 800, availableHeight / 600)
+  local scale = math.min(1, availableWidth / 1000, availableHeight / 800)
   self:SetScale(scale)
   local maxWidth, maxHeight = availableWidth / scale, availableHeight / scale
-  Api.SetFrameResizeBounds(self, 800, 600, maxWidth, maxHeight)
+  Api.SetFrameResizeBounds(self, 1000, 800, maxWidth, maxHeight)
   local geometry = AutoBiographer_Settings.MainWindowGeometry or {}
-  self:SetSize(math.max(800, math.min(maxWidth, geometry.Width or 1000)),
-    math.max(600, math.min(maxHeight, geometry.Height or 800)))
+  self:SetSize(math.max(1000, math.min(maxWidth, geometry.Width or 1200)),
+    math.max(800, math.min(maxHeight, geometry.Height or 1000)))
 end
 
 function AutoBiographer_MainWindow:Initialize()
