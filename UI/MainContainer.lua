@@ -1,6 +1,6 @@
 local Api = AutoBiographer_Api
 local sections = { "Summary", "Events", "Statistics", "Snapshots", "GearHistory", "Notes", "Todos" }
-local sectionLabels = { GearHistory = "Gear History", Statistics = "Statistic Details", Todos = "To-do" }
+local sectionLabels = { GearHistory = "Gear History", Statistics = "Statistic Details", Todos = "Tasks" }
 local minimumButtonWidths = { Summary = 72, Events = 60, Statistics = 110, GearHistory = 92, Snapshots = 84, Notes = 58, Todos = 58 }
 local preferredButtonWidths = { Statistics = 120 }
 

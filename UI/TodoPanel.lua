@@ -1,8 +1,10 @@
 local Controller = AutoBiographer_Controller
 local HF = HelperFunctions
 local panel = AutoBiographer_TodoPanel
-local rowHeight = 82
+local rowHeight = 68
 local trackerRowHeight = 28
+local catalogAreasPerPage = 12
+local views = { { Key = "Incomplete", Name = "Incomplete tasks" }, { Key = "All", Name = "All tasks" } }
 local types = { { Key = "Always", Name = "Until manually completed" }, { Key = "Inventory", Name = "Inventory count" }, { Key = "Area", Name = "In an area" } }
 local operators = { { Key = "<", Name = "Less than (<)" }, { Key = "<=", Name = "At most (<=)" },
   { Key = ">", Name = "Greater than (>)" }, { Key = ">=", Name = "At least (>=)" }, { Key = "=", Name = "Equal to (=)" } }
@@ -68,6 +70,11 @@ local function EditBox(parent, x, y, width, maximum, callback)
   return box
 end
 
+local function FocusTaskTitle(parent)
+  for _, box in ipairs({ parent.SearchBox, parent.ItemBox, parent.CountBox, parent.AreaBox, parent.AreaFilterBox }) do box:ClearFocus() end
+  parent.TitleBox:SetFocus()
+end
+
 local function Status(entry)
   if (entry.Item.Completed) then return "|cff9d9d9dCompleted|r" end
   if (entry.Matches == nil) then return "|cffffd166Waiting for readable game data|r" end
@@ -95,7 +102,7 @@ end
 function panel:DeleteSelected()
   local selected = self.Selected
   if (not selected) then return end
-  AutoBiographer_ConfirmWindow.New("Delete this to-do?\nThis cannot be undone.", function(confirmed)
+  AutoBiographer_ConfirmWindow.New("Delete this task?\nThis cannot be undone.", function(confirmed)
     if (not confirmed or self.Selected ~= selected) then return end
     Todo.Delete(Controller:GetTodos(), selected)
     self:LoadDraft(nil)
@@ -103,31 +110,77 @@ function panel:DeleteSelected()
   end)
 end
 
+function panel:GetCatalogAreas()
+  local catalogs = Controller.CharacterData.Catalogs or {}
+  local choices = {}
+  local search = string.lower(self.AreaFilterBox:GetText())
+  local function Add(name, zone, kind)
+    if (type(name) ~= "string" or name == "") then return end
+    if (type(zone) ~= "string" or zone == "") then zone = nil end
+    local label = name .. (zone and " — " .. zone or "") .. " (" .. kind .. ")"
+    if (string.find(string.lower(label), search, 1, true)) then
+      choices[#choices + 1] = { Name = name, Zone = zone, Label = label }
+    end
+  end
+  for name, zone in pairs(catalogs.ZoneCatalog or {}) do Add(zone.Name or name, nil, "zone") end
+  for name, subzone in pairs(catalogs.SubZoneCatalog or {}) do Add(subzone.Name or name, subzone.ZoneName, "subzone") end
+  table.sort(choices, function(a, b) return string.lower(a.Label) < string.lower(b.Label) end)
+  return choices
+end
+
 function panel:HasFocusedTextInput()
-  for _, box in ipairs({ self.TitleBox, self.ItemBox, self.CountBox, self.AreaBox }) do
+  for _, box in ipairs({ self.SearchBox, self.TitleBox, self.ItemBox, self.CountBox, self.AreaBox, self.AreaFilterBox }) do
     if (box:IsVisible() and box:HasFocus()) then return true end
   end
   return false
 end
 
 function panel:Initialize()
-  AutioBiographer_WindowHelper:InitialzationHelper(self, 800, 650, 150, "To-do", -94)
+  AutioBiographer_WindowHelper:InitialzationHelper(self, 800, 650, 150, "Tasks", -55)
   self.Rows, self.Entries, self.ActiveEntries, self.IncompleteEntries, self.DisplayEntries = {}, {}, {}, {}, {}
   self.View = "All"
-  self.Heading = Label(self, "To-do", 18, -12, "GameFontNormalLarge")
-  self.NewButton = Button(self, "New task", 100, function() self:SelectTask(nil) end)
-  self.NewButton:SetPoint("TOPRIGHT", -320, -8)
-  self.IncompleteButton = Button(self, "Incomplete tasks", 140, function() self:SelectView("Incomplete") end)
-  self.IncompleteButton:SetPoint("TOPLEFT", 18, -45)
-  self.AllButton = Button(self, "All tasks", 90, function() self:SelectView("All") end)
-  self.AllButton:SetPoint("LEFT", self.IncompleteButton, "RIGHT", 6, 0)
-  self.TrackerCheck = Check(self, "Show tracker", 0, 0, function(checked)
+  self.SearchGeneration = 0
+  self.SearchBox = EditBox(self, 24, -5, 200, 200, function() end)
+  self.SearchHint = Label(self.SearchBox, "Search tasks...", 0, 0, "GameFontDisableSmall")
+  self.SearchHint:ClearAllPoints()
+  self.SearchHint:SetPoint("LEFT", 2, 0)
+  self.SearchBox:SetScript("OnTextChanged", function(box)
+    self.SearchHint:SetShown(box:GetText() == "")
+    if (not self.PanelReady) then return end
+    self.SearchGeneration = self.SearchGeneration + 1
+    local generation = self.SearchGeneration
+    C_Timer.After(0.15, function()
+      if (generation == self.SearchGeneration and self:IsVisible()) then
+        self.ScrollFrame.Scrollbar:SetValue(0)
+        self:Update()
+      end
+    end)
+  end)
+  self.SearchBox:SetScript("OnEnterPressed", function(box)
+    box:ClearFocus()
+    self.SearchGeneration = self.SearchGeneration + 1
+    self.ScrollFrame.Scrollbar:SetValue(0)
+    self:Update()
+  end)
+  self.SearchBox:SetText("")
+  self.FilterDropdown = Dropdown(self, views, function(value) self:SelectView(value) end)
+  self.FilterDropdown:SetPoint("TOPLEFT", 220, -4)
+  UIDropDownMenu_SetWidth(self.FilterDropdown, 160)
+  SelectDropdown(self.FilterDropdown, self.View)
+  self.FilterSummary = Label(self, "", 18, -37, "GameFontDisableSmall")
+  self.FilterSummary:SetWordWrap(false)
+  self.NewButton = Button(self, "New Task", 100, function() self:SelectTask(nil, true) end)
+  self.NewButton:SetNormalFontObject("GameFontNormalSmall")
+  self.NewButton:SetHighlightFontObject("GameFontHighlightSmall")
+  self.NewButton:SetPoint("TOPRIGHT", -22, -5)
+  self.TrackerCheck = Check(self, "Show Tracker", 0, 0, function(checked)
     Controller:GetTodos().ShowTracker = checked
     self:UpdateTracker()
   end)
   self.TrackerCheck:ClearAllPoints()
-  self.TrackerCheck:SetPoint("TOPRIGHT", -150, -8)
-  self.Empty = Label(self.ScrollFrame, "No tasks yet. Use New task to add one.", 8, -8, "GameFontDisableSmall")
+  self.TrackerCheck:SetPoint("RIGHT", self.NewButton, "LEFT", -112, 0)
+  self.TrackerCheck.Label:SetWidth(96)
+  self.Empty = Label(self.ScrollFrame, "No tasks yet. Use New Task to add one.", 8, -8, "GameFontDisableSmall")
   self.Message = Label(self, "", 18, -1, "GameFontHighlightSmall")
   self.Message:ClearAllPoints()
   self.Message:SetPoint("BOTTOMLEFT", 18, 15)
@@ -161,11 +214,65 @@ function panel:Initialize()
   self.AreaLabel = Label(self.Editor, "City, zone, or subzone (exact name)", 14, -155)
   self.AreaBox = EditBox(self.Editor, 18, -175, 300, 120, function(value)
     if (self:SetDraftField("Area", value)) then self:SetDraftField("Zone", nil) end
+    if (not self.Loading) then self:UpdateEditor() end
   end)
-  self.ZoneButton = Button(self.Editor, "Use current zone / city", 230, function() self:UseCurrentArea(false) end)
+  self.ZoneButton = Button(self.Editor, "Use current zone", 150, function() self:UseCurrentArea(false) end)
   self.ZoneButton:SetPoint("TOPLEFT", 14, -211)
-  self.SubZoneButton = Button(self.Editor, "Use current subzone", 230, function() self:UseCurrentArea(true) end)
-  self.SubZoneButton:SetPoint("TOPLEFT", 14, -241)
+  self.SubZoneButton = Button(self.Editor, "Use current subzone", 164, function() self:UseCurrentArea(true) end)
+  self.SubZoneButton:SetPoint("LEFT", self.ZoneButton, "RIGHT", 6, 0)
+  for _, button in ipairs({ self.ZoneButton, self.SubZoneButton }) do
+    button:SetNormalFontObject("GameFontNormalSmall")
+    button:SetHighlightFontObject("GameFontHighlightSmall")
+  end
+  self.AreaFilterBox = EditBox(self.Editor, 188, -247, 200, 120, function(value)
+    self.AreaPage = 1
+    self.AreaFilterHint:SetShown(value == "")
+  end)
+  self.AreaFilterHint = Label(self.AreaFilterBox, "Filter catalog zones / subzones", 0, 0, "GameFontDisableSmall")
+  self.AreaFilterHint:ClearAllPoints()
+  self.AreaFilterHint:SetPoint("LEFT", 2, 0)
+  self.AreaFilterHint:SetWordWrap(false)
+  self.AreaFilterBox:ClearAllPoints()
+  self.AreaFilterBox:SetPoint("TOPRIGHT", -20, -247)
+  self.AreaFilterBox:SetScript("OnEnterPressed", function(box) box:ClearFocus() end)
+  self.AreaDropdown = CreateFrame("Frame", nil, self.Editor, "UIDropDownMenuTemplate")
+  self.AreaDropdown:SetPoint("TOPLEFT", 0, -246)
+  UIDropDownMenu_Initialize(self.AreaDropdown, function()
+    local choices = self:GetCatalogAreas()
+    local pages = math.max(1, math.ceil(#choices / catalogAreasPerPage))
+    self.AreaPage = math.min(self.AreaPage or 1, pages)
+    local function PageButton(label, page)
+      local info = UIDropDownMenu_CreateInfo()
+      info.text, info.notCheckable, info.keepShownOnClick = label, true, true
+      info.func = function()
+        self.AreaPage = page
+        CloseDropDownMenus()
+        ToggleDropDownMenu(1, nil, self.AreaDropdown, self.AreaDropdown, 0, 0)
+      end
+      UIDropDownMenu_AddButton(info)
+    end
+    if (self.AreaPage > 1) then PageButton("Previous page", self.AreaPage - 1) end
+    for index = (self.AreaPage - 1) * catalogAreasPerPage + 1, math.min(self.AreaPage * catalogAreasPerPage, #choices) do
+      local choice = choices[index]
+      local info = UIDropDownMenu_CreateInfo()
+      info.text = choice.Label
+      info.checked = self.Draft ~= nil and self.Draft.Area == choice.Name and self.Draft.Zone == choice.Zone
+      info.func = function()
+        self.AreaBox:SetText(choice.Name)
+        self:SetDraftField("Area", choice.Name)
+        self:SetDraftField("Zone", choice.Zone)
+        self:UpdateEditor()
+      end
+      UIDropDownMenu_AddButton(info)
+    end
+    if (self.AreaPage < pages) then PageButton("Next page", self.AreaPage + 1) end
+    if (#choices == 0) then
+      local info = UIDropDownMenu_CreateInfo()
+      info.text = self.AreaFilterBox:GetText() == "" and "No catalog areas recorded yet" or "No matching catalog areas"
+      info.disabled, info.notCheckable = true, true
+      UIDropDownMenu_AddButton(info)
+    end
+  end)
   self.RecurringCheck = Check(self.Editor, "Recurring reminder", 10, -278, function(value)
     self:SetDraftField("Recurring", value)
     self:UpdateEditor()
@@ -177,7 +284,7 @@ function panel:Initialize()
   self.MoveUpButton:SetPoint("TOPLEFT", 14, -350)
   self.MoveDownButton = Button(self.Editor, "Move down", 110, function() self:MoveSelected(1) end)
   self.MoveDownButton:SetPoint("LEFT", self.MoveUpButton, "RIGHT", 6, 0)
-  self.SaveButton = Button(self.Editor, "Save", 80, function() self:SaveDraft() end)
+  self.SaveButton = Button(self.Editor, "Save & Close", 120, function() self:SaveDraft() end)
   self.SaveButton:SetPoint("BOTTOMLEFT", 14, 14)
   self.CancelButton = Button(self.Editor, "Cancel", 80, function() self:LoadDraft(self.Selected) end)
   self.CancelButton:SetPoint("LEFT", self.SaveButton, "RIGHT", 6, 0)
@@ -211,7 +318,7 @@ function panel:InitializeTracker()
   tracker.Header:SetHeight(24)
   tracker.Header:SetPoint("TOPLEFT", 10, -8)
   tracker.Header:EnableMouse(true)
-  tracker.Header.Title = Label(tracker.Header, "AutoBiographer To-do", 0, -6, "GameFontNormal")
+  tracker.Header.Title = Label(tracker.Header, "AutoBiographer Tasks", 0, -6, "GameFontNormal")
   tracker.Header.Title:SetWordWrap(false)
   -- Allow for font/layout rounding so the last letters are not ellipsized.
   local titleWidth = math.ceil(tracker.Header.Title:GetStringWidth()) + 8
@@ -264,19 +371,24 @@ function panel:LayoutPanel()
   local listWidth = width - editorWidth - 54
   self.Editor:SetWidth(editorWidth)
   self.Editor:ClearAllPoints()
-  self.Editor:SetPoint("TOPRIGHT", -18, -46)
+  self.Editor:SetPoint("TOPRIGHT", -18, -55)
   self.Editor:SetPoint("BOTTOMRIGHT", -18, 40)
   self.ScrollFrame:ClearAllPoints()
-  self.ScrollFrame:SetPoint("TOPLEFT", 18, -90)
+  self.ScrollFrame:SetPoint("TOPLEFT", 18, -55)
   self.ScrollFrame:SetPoint("BOTTOMRIGHT", self, "BOTTOMLEFT", listWidth + 18, 40)
   self.ScrollFrame.Scrollbar:ClearAllPoints()
   self.ScrollFrame.Scrollbar:SetPoint("TOPLEFT", self.ScrollFrame, "TOPRIGHT", 0, -16)
   self.ScrollFrame.Scrollbar:SetPoint("BOTTOMLEFT", self.ScrollFrame, "BOTTOMRIGHT", 0, 16)
   self.ScrollFrame.Content:SetWidth(listWidth)
   self.Message:SetWidth(width - 36)
+  self.FilterSummary:SetWidth(width - 36)
   self.TitleBox:SetWidth(editorWidth - 38)
   self.ItemBox:SetWidth(editorWidth - 38)
   self.AreaBox:SetWidth(editorWidth - 38)
+  local areaFilterWidth = (editorWidth - 208) * 0.85
+  self.AreaFilterBox:SetWidth(areaFilterWidth)
+  self.AreaFilterHint:SetWidth(areaFilterWidth - 4)
+  UIDropDownMenu_SetWidth(self.AreaDropdown, 160)
   self.Hint:SetWidth(editorWidth - 28)
   UIDropDownMenu_SetWidth(self.TypeDropdown, editorWidth - 46)
   UIDropDownMenu_SetWidth(self.OperatorDropdown, 170)
@@ -309,12 +421,15 @@ function panel:LoadDraft(item)
   self.ItemBox:SetText(self.Draft.ItemText)
   self.CountBox:SetText(self.Draft.CountText)
   self.AreaBox:SetText(self.Draft.Area)
+  self.AreaPage = 1
+  self.AreaFilterBox:SetText("")
   SelectDropdown(self.TypeDropdown, self.Draft.Type)
   SelectDropdown(self.OperatorDropdown, self.Draft.Operator)
   self.RecurringCheck:SetChecked(self.Draft.Recurring)
   self.Dirty, self.Loading = false, false
   self.Message:SetText("")
   self:UpdateEditor()
+  self:RenderRows()
 end
 
 function panel:MoveSelected(direction)
@@ -344,16 +459,21 @@ function panel:RenderRows()
     local row = self.Rows[index]
     if (not row) then
       row = CreateFrame("Button", nil, self.ScrollFrame.Content)
-      row.Check = Check(row, "", 0, -8, function(value) if (row.Entry) then self:Complete(row.Entry.Item, value) end end)
-      row.Title = Label(row, "", 32, -8, "GameFontHighlight")
+      row.Check = Check(row, "", 0, -4, function(value) if (row.Entry) then self:Complete(row.Entry.Item, value) end end)
+      row.Title = Label(row, "", 32, -4, "GameFontHighlight")
       row.Title:SetWordWrap(false)
       row.Title:SetHeight(18)
-      row.Description = Label(row, "", 32, -30, "GameFontDisableSmall")
+      row.Description = Label(row, "", 32, -26, "GameFontDisableSmall")
       row.Description:SetHeight(14)
       row.Description:SetWordWrap(false)
-      row.Status = Label(row, "", 32, -46, "GameFontDisableSmall")
-      row.Status:SetHeight(32)
+      row.Description:SetJustifyV("TOP")
+      row.Status = Label(row, "", 32, -40, "GameFontDisableSmall")
+      row.Status:SetHeight(24)
       row.Status:SetWordWrap(true)
+      row.Status:SetJustifyV("TOP")
+      row.Selection = row:CreateTexture(nil, "ARTWORK")
+      row.Selection:SetAllPoints(row)
+      row.Selection:SetColorTexture(1, 0.82, 0, 0.1)
       row.Highlight = row:CreateTexture(nil, "HIGHLIGHT")
       row.Highlight:SetAllPoints()
       row.Highlight:SetColorTexture(1, 1, 1, 0.06)
@@ -372,31 +492,39 @@ function panel:RenderRows()
     row.Description:SetText("Condition: " .. Todo.Describe(row.Entry.Item) .. count)
     row.Status:SetText(StatusLine(row.Entry))
     row.Check:SetChecked(row.Entry.Item.Completed == true)
+    row.Selection:SetShown(row.Entry.Item == self.Selected)
     row:Show()
   end
   for index = math.min(visible, math.max(0, #self.DisplayEntries - first + 1)) + 1, #self.Rows do self.Rows[index]:Hide() end
   self.Empty:SetShown(#self.DisplayEntries == 0)
-  self.Empty:SetText(self.View == "Incomplete" and "No incomplete tasks." or "No tasks yet. Use New task to add one.")
+  self.Empty:SetText(self.SearchBox:GetText() ~= "" and "No matching tasks." or
+    self.View == "Incomplete" and "No incomplete tasks." or "No tasks yet. Use New Task to add one.")
 end
 
 function panel:SaveDraft()
   local saved, message = Todo.Save(Controller:GetTodos(), self.Selected, self.Draft)
   if (not saved) then self.Message:SetText(message); return end
-  self:LoadDraft(saved)
+  self:LoadDraft(nil)
   self:Update()
+  FocusTaskTitle(self)
   self.Message:SetText("Task saved.")
 end
 
-function panel:SelectTask(item)
+function panel:SelectTask(item, focusTitle)
   if (item and item == self.Selected) then return end
-  if (not self:IsDirty()) then self:LoadDraft(item); return end
-  AutoBiographer_ConfirmWindow.New("Discard unsaved to-do changes?", function(confirmed)
-    if (confirmed) then self:LoadDraft(item) end
+  local function LoadSelection()
+    self:LoadDraft(item)
+    if (focusTitle) then FocusTaskTitle(self) end
+  end
+  if (not self:IsDirty()) then LoadSelection(); return end
+  AutoBiographer_ConfirmWindow.New("Discard unsaved task changes?", function(confirmed)
+    if (confirmed) then LoadSelection() end
   end)
 end
 
 function panel:SelectView(view)
   self.View = view == "Incomplete" and "Incomplete" or "All"
+  SelectDropdown(self.FilterDropdown, self.View)
   self.ScrollFrame.Scrollbar:SetValue(0)
   self:Update()
 end
@@ -415,9 +543,16 @@ function panel:Update()
     self.Entries, self.ActiveEntries, self.IncompleteEntries = Todo.Update(Controller:GetTodos(), Todo.GetContext())
   end
   self.DisplayEntries = self.View == "Incomplete" and self.IncompleteEntries or self.Entries
-  self.Heading:SetText("To-do | " .. #self.ActiveEntries .. " active / " .. #Controller:GetTodos().Items .. " tasks")
-  self.IncompleteButton:SetEnabled(self.View ~= "Incomplete")
-  self.AllButton:SetEnabled(self.View ~= "All")
+  local search = string.lower(self.SearchBox:GetText())
+  if (search ~= "") then
+    local matches = {}
+    for _, entry in ipairs(self.DisplayEntries) do
+      local text = string.lower(entry.Item.Title .. " " .. Todo.Describe(entry.Item))
+      if (string.find(text, search, 1, true)) then matches[#matches + 1] = entry end
+    end
+    self.DisplayEntries = matches
+  end
+  self.FilterSummary:SetText(#self.DisplayEntries .. " of " .. #Controller:GetTodos().Items .. " tasks | " .. #self.ActiveEntries .. " active")
   self.TrackerCheck:SetChecked(Controller:GetTodos().ShowTracker)
   self:UpdateScrollRange()
   if (self:IsVisible()) then self:RenderRows() end
@@ -429,14 +564,18 @@ function panel:UpdateEditor()
   self.EditorTitle:SetText(self.Selected and "Edit task" or "New task")
   self.DeleteButton:SetEnabled(self.Selected ~= nil)
   self.SaveButton:SetEnabled(self.Dirty == true)
-  self.Hint:SetText((self.Draft.Type == "Always" or not self.Draft.Recurring) and "This task stays completed until you uncheck it." or
-    "Recurring: completing hides the task until its condition stops matching, then matches again.")
+  self.Hint:SetText((self.Draft.Type == "Always" or not self.Draft.Recurring) and
+    "Once marked complete, this task remains hidden unless marked incomplete." or
+    "If marked complete, this task remains hidden until the condition stops matching, then matches again.")
   local inventory, area = self.Draft.Type == "Inventory", self.Draft.Type == "Area"
   self.RecurringCheck:SetShown(inventory or area)
   for _, control in ipairs({ self.ItemLabel, self.ItemBox, self.ComparisonLabel, self.OperatorDropdown, self.CountLabel, self.CountBox }) do
     control:SetShown(inventory)
   end
-  for _, control in ipairs({ self.AreaLabel, self.AreaBox, self.ZoneButton, self.SubZoneButton }) do control:SetShown(area) end
+  for _, control in ipairs({ self.AreaLabel, self.AreaBox, self.ZoneButton, self.SubZoneButton,
+    self.AreaFilterBox, self.AreaDropdown }) do control:SetShown(area) end
+  UIDropDownMenu_SetText(self.AreaDropdown, self.Draft.Area ~= "" and
+    (self.Draft.Area .. (self.Draft.Zone and " — " .. self.Draft.Zone or "")) or "Choose a catalog area")
   self:UpdateOrderButtons()
 end
 
@@ -483,5 +622,6 @@ function panel:UseCurrentArea(subzone)
   self.AreaBox:SetText(value)
   self:SetDraftField("Area", value)
   self:SetDraftField("Zone", subzone and context.Zone or nil)
+  self:UpdateEditor()
   self.Message:SetText(subzone and "Subzone scoped to " .. context.Zone .. "." or "Current zone selected.")
 end

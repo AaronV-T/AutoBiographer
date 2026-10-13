@@ -1,9 +1,8 @@
-Beautify UI
 Fix map events. Maybe have dedicated embedded map event and gear progression view in AB window.
 Custom campfire stories?
 Test with controller
 Test on Classic Era and Anniversary
-Add announcement to Wow classic that forever addon is available.
+Add announcement to Wow classic that forever addon is available and needs testers.
 Update Curseforge page and categories
 
 

@@ -236,6 +236,9 @@ function panel:RenderList()
       button:SetSize(220, 50)
       button.Background = button:CreateTexture(nil, "BACKGROUND")
       button.Background:SetAllPoints(button)
+      button.Selection = button:CreateTexture(nil, "ARTWORK")
+      button.Selection:SetAllPoints(button)
+      button.Selection:SetColorTexture(1, 0.82, 0, 0.1)
       button:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight")
       button.Label = button:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
       button.Label:SetPoint("TOPLEFT", 6, -6)
@@ -253,6 +256,7 @@ function panel:RenderList()
     button:ClearAllPoints()
     button:SetPoint("TOPLEFT", 0, -(rowIndex - 1) * 52)
     button.Background:SetColorTexture(1, 1, 1, rowIndex % 2 == 0 and 0.025 or 0)
+    button.Selection:SetShown(button.Entry ~= nil and button.Entry.Snapshot == self.SelectedSnapshot)
     if (button.Entry) then
       local text = button.Entry.Label
       if (button.Entry.Snapshot == self.SelectedSnapshot) then text = gold .. text .. "|r" end
