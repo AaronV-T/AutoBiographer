@@ -1,5 +1,3 @@
-Test with controller
-Test on Classic Era and Anniversary
 Add announcement to Wow classic that forever addon is available and needs testers.
 Update Curseforge page and categories
 
@@ -8,6 +6,7 @@ Update Curseforge page and categories
 Track fishing stats attempts and successful.
 Track travel history?
 Track whispers to and from specific players?
+Fix controller issues
 Custom campfire stories?
 Battlegrounds & pvp verify stats
 Right-click chat message to save it and link it to the person who posted it.
@@ -28,7 +27,6 @@ Notice on unknown mobs, items, zones/subzones.
 Screenshot deaths.
 Show tips to transfer data after character transfer.
 Track autoattacks/shots. Track results (hit, miss, dodge, parry) and damage done of attacks and spells.
-Misc stats: fishing attempts and successful.
 Make map events more efficient.
 Add WotLK raids.
 Progressive map events WotLK improvement (use Azeroth map, move icons instead of delete)

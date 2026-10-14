@@ -696,7 +696,9 @@ if (not Api.IsWoWForever()) then
       end
       
       -- Process event's damage amount.
+      local spellId, spellName, spellSchool, amount, overKill, school, resisted, blocked, absorbed, critical, glancing, crushing, isOffHand
       if (string.find(event, "SWING") == 1) then
+        spellId = 6603 -- Melee swings have no spell fields in their payload.
         amount, overKill, school, resisted, blocked, absorbed, critical, glancing, crushing, isOffHand = select(12, CombatLogGetCurrentEventInfo())
       elseif (string.find(event, "RANGE") == 1 or string.find(event, "SPELL") == 1) then
         spellId, spellName, spellSchool, amount, overKill, school, resisted, blocked, absorbed, critical, glancing, crushing, isOffHand = select(12, CombatLogGetCurrentEventInfo())
@@ -734,7 +736,7 @@ if (not Api.IsWoWForever()) then
     elseif (combatLogHealEvents[event]) then
       -- Process event's heal amount.
       if (sourceGuid == self.PersistentPlayerInfo.PlayerGuid or destGuid == self.PersistentPlayerInfo.PlayerGuid) then
-        spellId, spellName, spellSchool, amount, overKill, school, resisted, blocked, absorbed, critical, glancing, crushing, isOffHand = select(12, CombatLogGetCurrentEventInfo())
+        local spellId, spellName, spellSchool, amount, overKill, school, resisted, blocked, absorbed, critical, glancing, crushing, isOffHand = select(12, CombatLogGetCurrentEventInfo())
 
         if (amount) then 
           if (not overKill or overKill == -1) then overKill = 0 end
