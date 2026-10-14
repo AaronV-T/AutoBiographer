@@ -415,7 +415,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
 
   frame.ProgressFs = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   frame.ProgressFs:SetPoint("TOPRIGHT", frame.LevelFs, "BOTTOMRIGHT", 0, 0)
-  frame.ProgressFs:SetText("Progress: N/A")
+  frame.ProgressFs:SetText("N/A")
 
   frame.EventsBtn = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate");
   frame.EventsBtn:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -5, 5);
@@ -446,7 +446,7 @@ function AutoBiographer_WorldMapOverlayWindow_HideEvents()
   AutoBiographer_WorldMapOverlayWindow.EventsAreShown = false
   AutoBiographer_WorldMapOverlayWindow.EventsBtn:SetText("Show Events")
   AutoBiographer_WorldMapOverlayWindow.LevelFs:SetText("Level: N/A")
-  AutoBiographer_WorldMapOverlayWindow.ProgressFs:SetText("Progress: N/A")
+  AutoBiographer_WorldMapOverlayWindow.ProgressFs:SetText("N/A")
   AutoBiographer_WorldMapOverlayWindow_SetOptionsEnabled(true)
 
   HbdPins:RemoveAllWorldMapIcons(AutoBiographer_WorldMapOverlayWindow)
@@ -548,7 +548,7 @@ function AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex, firstIndex, 
   local progress = ((eventIndex - firstIndex + 1) / (#AutoBiographer_Controller.CharacterData.Events - firstIndex + 1))* 100
   local extraSpaces = ""
   if (progress < 10) then extraSpaces = "  " end
-  AutoBiographer_WorldMapOverlayWindow.ProgressFs:SetText("Progress: " .. extraSpaces .. string.format("%.1f%%", progress))
+  AutoBiographer_WorldMapOverlayWindow.ProgressFs:SetText("" .. extraSpaces .. string.format("%.1f%%", progress))
 
   if (event.SubType == AutoBiographerEnum.EventSubType.LevelUp) then
     extraSpaces = ""
@@ -782,7 +782,7 @@ end
 
 function AutoBiographer_WorldMapOverlayWindowToggleButton_Initialize()
   local frame = AutoBiographer_WorldMapOverlayWindowToggleButton
-  frame:SetPoint("BOTTOMLEFT", WorldMapFrame.ScrollContainer, "TOPLEFT", 0, 2);
+  frame:SetPoint("TOPRIGHT", WorldMapFrame.ScrollContainer, "TOPRIGHT", 0, 2);
   frame:SetSize(120, 20);
   frame:SetText("Event Window");
   frame:SetNormalFontObject("GameFontNormal");

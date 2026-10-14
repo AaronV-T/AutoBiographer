@@ -118,6 +118,14 @@ function AutoBiographer_OptionWindow:Initialize()
   self.fsEnableDebugLogging:SetPoint("LEFT", self, "TOPLEFT", 40, yPos)
   self.fsEnableDebugLogging:SetText("Enable debug logging (this can negatively affect performance).")
   yPos = yPos - 30
+
+  self.DebugButton = CreateFrame("Button", nil, self, "UIPanelButtonTemplate")
+  self.DebugButton:SetPoint("TOPLEFT", 10, yPos + 10)
+  self.DebugButton:SetSize(100, 24)
+  self.DebugButton:SetText("Debug")
+  self.DebugButton:SetNormalFontObject("GameFontNormalSmall")
+  self.DebugButton:SetHighlightFontObject("GameFontHighlightSmall")
+  self.DebugButton:SetScript("OnClick", function() AutoBiographer_DebugWindow:Toggle() end)
   
   self:LoadOptions()
 end

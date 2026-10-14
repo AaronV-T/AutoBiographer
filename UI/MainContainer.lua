@@ -1,8 +1,8 @@
 local Api = AutoBiographer_Api
-local sections = { "Summary", "Events", "Statistics", "Snapshots", "GearHistory", "Notes", "Todos" }
-local sectionLabels = { GearHistory = "Gear History", Statistics = "Statistic Details", Todos = "Tasks" }
-local minimumButtonWidths = { Summary = 72, Events = 60, Statistics = 110, GearHistory = 92, Snapshots = 84, Notes = 58, Todos = 58 }
-local preferredButtonWidths = { Statistics = 120 }
+local sections = { "Summary", "Events", "Replay", "Statistics", "Snapshots", "GearHistory", "Notes", "Todos" }
+local sectionLabels = { GearHistory = "Gear Log", Statistics = "Stat Details", Todos = "Tasks" }
+local minimumButtonWidths = { Summary = 72, Events = 60, Replay = 60, Statistics = 88, GearHistory = 70, Snapshots = 84, Notes = 58, Todos = 58 }
+local preferredButtonWidths = {}
 
 local function CreateNavigationButton(parent, text, width, onClick)
   local button = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
@@ -43,6 +43,7 @@ function AutoBiographer_MainWindow:Initialize()
   self.Panels = {
     Summary = AutoBiographer_SummaryPanel,
     Events = AutoBiographer_EventWindow,
+    Replay = AutoBiographer_ReplayPanel,
     Statistics = AutoBiographer_StatisticsWindow,
     GearHistory = AutoBiographer_GearPanel,
     Snapshots = AutoBiographer_SnapshotPanel,
@@ -75,9 +76,7 @@ function AutoBiographer_MainWindow:Initialize()
     Settings.OpenToCategory(AutoBiographer_OptionWindow.categoryID)
     self:Hide()
   end)
-  self.OptionsButton:SetPoint("TOPRIGHT", -108, -39)
-  self.DebugButton = CreateNavigationButton(self, "Debug", 80, function() AutoBiographer_DebugWindow:Toggle() end)
-  self.DebugButton:SetPoint("TOPRIGHT", -22, -39)
+  self.OptionsButton:SetPoint("TOPRIGHT", -22, -39)
 
   self.ResizeGrip = CreateFrame("Button", nil, self)
   self.ResizeGrip:SetSize(16, 16)
@@ -152,8 +151,8 @@ end
 
 function AutoBiographer_MainWindow:LayoutPanels()
   if (not self.Initialized) then return end
-  -- Leave room for Options and Debug even at the minimum window width.
-  local available = self:GetWidth() - 226 - (#sections - 1) * 6
+  -- Leave room for Options even at the minimum window width.
+  local available = self:GetWidth() - 140 - (#sections - 1) * 6
   local minimumTotal, preferredTotal = 0, 0
   for _, name in ipairs(sections) do
     minimumTotal = minimumTotal + minimumButtonWidths[name]

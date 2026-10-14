@@ -26,6 +26,7 @@ Classes/Catalog.lua
 Classes/CharacterSnapshots.lua
 Classes/Event.lua
 Classes/GearHistory.lua
+Classes/Replay.lua
 Classes/Miscellaneous.lua
 Classes/Notes.lua
 Classes/Statistics.lua
@@ -47,6 +48,7 @@ UI/SummaryPanel.lua
 UI/EventsPanel.lua
 UI/GearPanel.lua
 UI/SnapshotPanel.lua
+UI/ReplayPanel.lua
 UI/MainContainer.lua
 UI/MinimapButton.lua
 UI/MinimapButton.xml

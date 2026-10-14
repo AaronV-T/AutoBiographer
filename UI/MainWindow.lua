@@ -8,9 +8,11 @@ AutoBiographer_MainWindow:SetFrameStrata("HIGH")
 AutoBiographer_MainWindow:Hide()
 AutoBiographer_SummaryPanel = CreateFrame("Frame", nil, AutoBiographer_MainWindow)
 AutoBiographer_TodoPanel = CreateFrame("Frame", nil, AutoBiographer_MainWindow)
+AutoBiographer_ReplayPanel = CreateFrame("Frame", nil, AutoBiographer_MainWindow)
 
 AutoBiographer_CustomEventDetailsWindow = CreateFrame("Frame", "AutoBiographerCustomEventDetail", AutoBiographer_MainWindow, "BasicFrameTemplate")
-AutoBiographer_DebugWindow = CreateFrame("Frame", "AutoBiographerDebug", AutoBiographer_MainWindow, "BasicFrameTemplate")
+AutoBiographer_DebugWindow = CreateFrame("Frame", "AutoBiographerDebug", UIParent, "BasicFrameTemplate")
+AutoBiographer_DebugWindow:SetFrameStrata("DIALOG")
 AutoBiographer_EventWindow = CreateFrame("Frame", "AutoBiographerEvent", AutoBiographer_MainWindow)
 AutoBiographer_GearPanel = CreateFrame("Frame", nil, AutoBiographer_MainWindow)
 AutoBiographer_SnapshotPanel = CreateFrame("Frame", nil, AutoBiographer_MainWindow)
@@ -18,7 +20,7 @@ AutoBiographer_NotesWindow = CreateFrame("Frame", "AutoBiographerNotes", AutoBio
 AutoBiographer_StatisticsWindow = CreateFrame("Frame", "AutoBiographerStatistics", AutoBiographer_MainWindow)
 AutoBiographer_VerificationWindow = CreateFrame("Frame", "AutoBiographerVerification", AutoBiographer_MainWindow, "BasicFrameTemplate")
 
-for section, panel in pairs({ Summary = AutoBiographer_SummaryPanel, Todos = AutoBiographer_TodoPanel, Events = AutoBiographer_EventWindow, GearHistory = AutoBiographer_GearPanel, Snapshots = AutoBiographer_SnapshotPanel,
+for section, panel in pairs({ Summary = AutoBiographer_SummaryPanel, Replay = AutoBiographer_ReplayPanel, Todos = AutoBiographer_TodoPanel, Events = AutoBiographer_EventWindow, GearHistory = AutoBiographer_GearPanel, Snapshots = AutoBiographer_SnapshotPanel,
   Statistics = AutoBiographer_StatisticsWindow, Notes = AutoBiographer_NotesWindow }) do
   panel.IsEmbeddedPanel = true
   panel.SectionName = section

@@ -1,7 +1,8 @@
 # Lib: HereBeDragons
 
-## [2.14.3-release](https://github.com/Nevcairiel/HereBeDragons/tree/2.14.3-release) (2024-07-24)
-[Full Changelog](https://github.com/Nevcairiel/HereBeDragons/compare/2.14.2-release...2.14.3-release) [Previous Releases](https://github.com/Nevcairiel/HereBeDragons/releases)
+## [2.18-release](https://github.com/Nevcairiel/HereBeDragons/tree/2.18-release) (2026-10-02)
+[Full Changelog](https://github.com/Nevcairiel/HereBeDragons/compare/2.17-release...2.18-release) [Previous Releases](https://github.com/Nevcairiel/HereBeDragons/releases)
 
-- Fix classic compat, which lacks GetMapWorldSize  
-    ... for reasons, why such a base API is missing  
+- Update World Map Data and zone walking for Forever  
+- Add Forever to the TOC  
+- Disable transform data on Forever  

@@ -37,6 +37,46 @@ local function CategoryIsChecked(category)
   return true
 end
 
+-- The journal and replay use the same categories, saved selections and menu
+-- behavior, so additions to the event list only need to be made in one place.
+AutoBiographer_EventFilters = {}
+
+function AutoBiographer_EventFilters:SetAll(enabled)
+  for _, subType in pairs(Enum.EventSubType) do
+    AutoBiographer_Settings.EventDisplayFilters[subType] = enabled
+  end
+end
+
+function AutoBiographer_EventFilters:InitializeDropdown(dropdown, onChanged)
+  UIDropDownMenu_SetText(dropdown, "Filters")
+  UIDropDownMenu_Initialize(dropdown, function()
+    for _, action in ipairs({ { "Select all", true }, { "Clear all", false } }) do
+      local info = UIDropDownMenu_CreateInfo()
+      info.text, info.notCheckable, info.keepShownOnClick = action[1], true, true
+      info.func = function()
+        self:SetAll(action[2])
+        if (UIDROPDOWNMENU_OPEN_MENU == dropdown) then UIDropDownMenu_Refresh(dropdown, nil, 1) end
+        onChanged()
+      end
+      UIDropDownMenu_AddButton(info)
+    end
+    for _, category in ipairs(eventCategories) do
+      local info = UIDropDownMenu_CreateInfo()
+      info.text = category.Name
+      info.checked = function() return CategoryIsChecked(category) end
+      info.isNotRadio, info.ignoreAsMenuSelection, info.keepShownOnClick = true, true, true
+      info.func = function()
+        local enabled = not CategoryIsChecked(category)
+        for _, name in ipairs(category.SubTypes) do
+          AutoBiographer_Settings.EventDisplayFilters[Enum.EventSubType[name]] = enabled
+        end
+        onChanged()
+      end
+      UIDropDownMenu_AddButton(info)
+    end
+  end)
+end
+
 local function CreateJournalButton(parent, text, width, onClick)
   local button = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
   button:SetSize(width, 24)
@@ -155,34 +195,7 @@ function AutoBiographer_EventWindow:Initialize()
   end)
 
   self.FilterDropdown = CreateFrame("Frame", nil, self, "UIDropDownMenuTemplate")
-  UIDropDownMenu_SetText(self.FilterDropdown, "Filters")
-  UIDropDownMenu_Initialize(self.FilterDropdown, function()
-    local info = UIDropDownMenu_CreateInfo()
-    info.notCheckable = true
-    info.keepShownOnClick = true
-    info.text = "Select all"
-    info.func = function() self:SetAllFilters(true) end
-    UIDropDownMenu_AddButton(info)
-    info.text = "Clear all"
-    info.func = function() self:SetAllFilters(false) end
-    UIDropDownMenu_AddButton(info)
-    for _, category in ipairs(eventCategories) do
-      info = UIDropDownMenu_CreateInfo()
-      info.text = category.Name
-      info.checked = function() return CategoryIsChecked(category) end
-      info.isNotRadio = true
-      info.ignoreAsMenuSelection = true
-      info.keepShownOnClick = true
-      info.func = function()
-        local enabled = not CategoryIsChecked(category)
-        for _, name in ipairs(category.SubTypes) do
-          AutoBiographer_Settings.EventDisplayFilters[Enum.EventSubType[name]] = enabled
-        end
-        self:Update(true)
-      end
-      UIDropDownMenu_AddButton(info)
-    end
-  end)
+  AutoBiographer_EventFilters:InitializeDropdown(self.FilterDropdown, function() self:Update(true) end)
 
   self.SortDropdown = CreateFrame("Frame", nil, self, "UIDropDownMenuTemplate")
   UIDropDownMenu_Initialize(self.SortDropdown, function()
@@ -394,9 +407,7 @@ function AutoBiographer_EventWindow:SelectEvent(eventIndex)
 end
 
 function AutoBiographer_EventWindow:SetAllFilters(enabled)
-  for _, subType in pairs(Enum.EventSubType) do
-    AutoBiographer_Settings.EventDisplayFilters[subType] = enabled
-  end
+  AutoBiographer_EventFilters:SetAll(enabled)
   if (UIDROPDOWNMENU_OPEN_MENU == self.FilterDropdown) then
     UIDropDownMenu_Refresh(self.FilterDropdown, nil, 1)
   end
