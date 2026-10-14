@@ -270,6 +270,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
       CurrentSubZone = nil,
       CurrentZone = nil,
       DatabaseVersion = 20,
+      ForeverBetaAnnouncementShownLastLogin = false,
       GuildName = nil,
       GuildRankIndex = nil,
       GuildRankName = nil,
@@ -948,6 +949,13 @@ end
 
 function EM.EventHandlers.PLAYER_ENTERING_WORLD(self, isLogin, isReload)
   self.PlayerEnteringWorldHasFired = true
+  if (isLogin and not Api.IsWoWForever()) then
+    local showAnnouncement = not self.PersistentPlayerInfo.ForeverBetaAnnouncementShownLastLogin
+    self.PersistentPlayerInfo.ForeverBetaAnnouncementShownLastLogin = showAnnouncement
+    if (showAnnouncement) then
+      print("\124cFFFFD700AutoBiographer is now available on the WoW Forever Beta! For those with access to the Beta, if you wish to help by testing the addon and reporting any issues or feedback, it would be greatly appreciated. Thank you!\124r")
+    end
+  end
   AutoBiographer_TodoPanel:QueueRefresh()
   if (Api.IsWoWForever() and (isLogin or isReload or not self.PlayerLevelUpStatSnapshot)) then
     self.PlayerLevelUpStatSnapshot = {}

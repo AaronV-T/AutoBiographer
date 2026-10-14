@@ -548,6 +548,7 @@ table.insert(MM.CharacterMigrations,
       end
 
       eventManager.PersistentPlayerInfo.HasBeenShownCustomEventReminder = nil
+      AddMissing(eventManager.PersistentPlayerInfo, { ForeverBetaAnnouncementShownLastLogin = false })
     end
   )
 )
