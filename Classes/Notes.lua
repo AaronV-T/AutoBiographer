@@ -42,15 +42,6 @@ function Notes.GetPreview(note, wordLimit)
   return table.concat(words, " ")
 end
 
-function Notes.Initialize(notes)
-  -- Additive collections: retain existing notes without requiring a data reset.
-  notes.GenericNotes = notes.GenericNotes or {}
-  notes.ItemNotes = notes.ItemNotes or {}
-  notes.QuestNotes = notes.QuestNotes or {}
-  notes.UnitNotes = notes.UnitNotes or {}
-  return notes
-end
-
 function Notes.Save(notes, subject, selected, content, behavior, skill)
   local collection = Notes.GetCollection(notes, subject)
   if (not collection) then return nil end

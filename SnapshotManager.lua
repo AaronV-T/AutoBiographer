@@ -39,8 +39,6 @@ end
 
 function manager:CaptureDetails(snapshot, includeAttributes)
   local catalogs = Controller.CharacterData.Catalogs
-  catalogs.SkillCatalog = catalogs.SkillCatalog or {}
-  catalogs.TalentCatalog = catalogs.TalentCatalog or {}
 
   if (not snapshot.Equipment) then
     local equipment, enchants = Api.GetPlayerSnapshotEquipment()
@@ -197,7 +195,6 @@ function manager:SnapshotRaid(bossId)
   local snapshots = Controller:GetCharacterSnapshots()
   if (snapshots.Raids[raid.Id]) then return end
   local catalogs = Controller.CharacterData.Catalogs
-  catalogs.RaidCatalog = catalogs.RaidCatalog or {}
   catalogs.RaidCatalog[raid.Id] = { Name = IsReadable(name, "string") and name or raid.Name }
   local snapshot = self:StartSnapshot(level)
   -- Never store a creature ID in the encounter ID field.

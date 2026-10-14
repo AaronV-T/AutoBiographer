@@ -1,41 +1,62 @@
 -- *** MigrationManager ***
 AutoBiographer_MigrationManager = {
-  Migrations = {}
+  AccountMigrations = {},
+  CharacterMigrations = {},
 }
 
 local MM = AutoBiographer_MigrationManager
 
-function MM:GetLatestDatabaseVersion()
-  return #self.Migrations
+function MM:GetLatestAccountDatabaseVersion()
+  return #self.AccountMigrations
 end
 
-function MM:RunMigrations(currentDatabaseVersion, eventManager, controller)
-  if (not currentDatabaseVersion) then currentDatabaseVersion = 0 end
-  if (currentDatabaseVersion >= #self.Migrations) then return end
+function MM:GetLatestCharacterDatabaseVersion()
+  return #self.CharacterMigrations
+end
 
-  for i = currentDatabaseVersion + 1, #self.Migrations do
-    self.Migrations[i]:Execute(eventManager, controller)
+local function RunMigrations(migrations, currentDatabaseVersion, eventManager, controller)
+  for i = (currentDatabaseVersion or 0) + 1, #migrations do
+    migrations[i]:Execute(eventManager, controller)
   end
+end
+
+function MM:RunAccountMigrations(currentDatabaseVersion, eventManager, controller)
+  RunMigrations(self.AccountMigrations, currentDatabaseVersion, eventManager, controller)
+end
+
+function MM:RunCharacterMigrations(currentDatabaseVersion, eventManager, controller)
+  RunMigrations(self.CharacterMigrations, currentDatabaseVersion, eventManager, controller)
 end
 
 -- *** Migration Base Class ***
 
 AutoBiographer_Migration = {}
-function AutoBiographer_Migration:New(migrationNum, func)
+function AutoBiographer_Migration:New(migrationNum, func, scope)
+  scope = scope or "Character"
   return {
     Execute = function(self, eventManager, controller)
-      controller:AddLog("Running migration " .. self.MigrationNumber .. "...", AutoBiographerEnum.LogLevel.Information)
+      controller:AddLog("Running " .. self.Scope .. " migration " .. self.MigrationNumber .. "...", AutoBiographerEnum.LogLevel.Information)
       func(eventManager, controller)
-      controller:AddLog("Migration " .. self.MigrationNumber .. " finished.", AutoBiographerEnum.LogLevel.Information)
-      eventManager.PersistentPlayerInfo.DatabaseVersion = self.MigrationNumber
+      controller:AddLog(self.Scope .. " migration " .. self.MigrationNumber .. " finished.", AutoBiographerEnum.LogLevel.Information)
+      local versionData = self.Scope == "Account" and AutoBiographer_Settings or eventManager.PersistentPlayerInfo
+      versionData.DatabaseVersion = self.MigrationNumber
     end,
-    MigrationNumber = migrationNum
+    MigrationNumber = migrationNum,
+    Scope = scope,
   }
 end
 
--- *** Concrete Migrations ***
+local function AddMissing(data, defaults)
+  for key, value in pairs(defaults) do
+    if (data[key] == nil) then data[key] = value end
+  end
+end
 
-table.insert(MM.Migrations, 
+-- *** Character Migrations ***
+-- Keep historical numbering, including no-op slots that used to migrate
+-- account settings. Those settings now belong to account migration 1.
+
+table.insert(MM.CharacterMigrations,
   AutoBiographer_Migration:New(
     1,
     function(eventManager, controller)
@@ -47,23 +68,18 @@ table.insert(MM.Migrations,
   )
 )
 
-table.insert(MM.Migrations, 
+table.insert(MM.CharacterMigrations,
   AutoBiographer_Migration:New(
     2,
     function(eventManager, controller)
-      if (AutoBiographer_Settings.Options["ShowMinimapButton"] == nil) then AutoBiographer_Settings.Options["ShowMinimapButton"] = true end
-      if (AutoBiographer_Settings.Options["ShowTimePlayedOnLevelUp"] == nil) then AutoBiographer_Settings.Options["ShowTimePlayedOnLevelUp"] = true end
     end
   )
 )
 
-table.insert(MM.Migrations, 
+table.insert(MM.CharacterMigrations,
   AutoBiographer_Migration:New(
     3,
     function(eventManager, controller)
-      if (AutoBiographer_Settings.Options["EnableDebugLogging"] == nil) then AutoBiographer_Settings.Options["EnableDebugLogging"] = false end
-      if (AutoBiographer_Settings.Options["TakeScreenshotOnlyOnFirstBossKill"] == nil) then AutoBiographer_Settings.Options["TakeScreenshotOnlyOnFirstBossKill"] = true end
-      
       for k,v in pairs(controller.CharacterData.Levels) do
         if (v.ExperienceStatistics == nil) then v.ExperienceStatistics = ExperienceStatistics.New() end
       end
@@ -71,7 +87,7 @@ table.insert(MM.Migrations,
   )
 )
 
-table.insert(MM.Migrations, 
+table.insert(MM.CharacterMigrations,
   AutoBiographer_Migration:New(
     4,
     function(eventManager, controller)
@@ -116,7 +132,7 @@ table.insert(MM.Migrations,
   )
 )
 
-table.insert(MM.Migrations, 
+table.insert(MM.CharacterMigrations,
   AutoBiographer_Migration:New(
     5,
     function(eventManager, controller)
@@ -164,7 +180,7 @@ table.insert(MM.Migrations,
   )
 )
 
-table.insert(MM.Migrations, 
+table.insert(MM.CharacterMigrations,
   AutoBiographer_Migration:New(
     6,
     function(eventManager, controller)
@@ -210,7 +226,7 @@ table.insert(MM.Migrations,
   )
 )
 
-table.insert(MM.Migrations, 
+table.insert(MM.CharacterMigrations,
   AutoBiographer_Migration:New(
     7,
     function(eventManager, controller)
@@ -229,19 +245,16 @@ table.insert(MM.Migrations,
   )
 )
 
-table.insert(MM.Migrations, 
+table.insert(MM.CharacterMigrations,
   AutoBiographer_Migration:New(
     8,
     function(eventManager, controller)
-      if (AutoBiographer_Settings.MapEventDisplayFilters == nil) then
-        AutoBiographer_Settings.MapEventDisplayFilters = {}
-      end
 
     end
   )
 )
 
-table.insert(MM.Migrations, 
+table.insert(MM.CharacterMigrations,
   AutoBiographer_Migration:New(
     9,
     function(eventManager, controller)
@@ -297,7 +310,7 @@ table.insert(MM.Migrations,
   )
 )
 
-table.insert(MM.Migrations, 
+table.insert(MM.CharacterMigrations,
   AutoBiographer_Migration:New(
     10,
     function(eventManager, controller)
@@ -334,18 +347,15 @@ table.insert(MM.Migrations,
   )
 )
 
-table.insert(MM.Migrations, 
+table.insert(MM.CharacterMigrations,
   AutoBiographer_Migration:New(
     11,
     function(eventManager, controller)
-      if (AutoBiographer_Settings.Options.ShowFriendlyPlayerToolTips == nil) then
-        AutoBiographer_Settings.Options.ShowFriendlyPlayerToolTips = true
-      end
     end
   )
 )
 
-table.insert(MM.Migrations, 
+table.insert(MM.CharacterMigrations,
   AutoBiographer_Migration:New(
     12,
     function(eventManager, controller)
@@ -373,7 +383,7 @@ table.insert(MM.Migrations,
   )
 )
 
-table.insert(MM.Migrations, 
+table.insert(MM.CharacterMigrations,
   AutoBiographer_Migration:New(
     13,
     function(eventManager, controller)
@@ -392,7 +402,7 @@ table.insert(MM.Migrations,
   )
 )
 
-table.insert(MM.Migrations, 
+table.insert(MM.CharacterMigrations,
   AutoBiographer_Migration:New(
     14,
     function(eventManager, controller)
@@ -418,65 +428,159 @@ table.insert(MM.Migrations,
   )
 )
 
-table.insert(MM.Migrations, 
+table.insert(MM.CharacterMigrations,
   AutoBiographer_Migration:New(
     15,
     function(eventManager, controller)
-      if (AutoBiographer_Settings.Options["EnableMilestoneMessages"] == nil) then AutoBiographer_Settings.Options["EnableMilestoneMessages"] = true end
     end
   )
 )
 
-table.insert(MM.Migrations,
+table.insert(MM.CharacterMigrations,
   AutoBiographer_Migration:New(
     16,
     function(eventManager, controller)
-      if (AutoBiographer_Settings.Options["TakeScreenshotOnAchievementEarned"] == nil) then AutoBiographer_Settings.Options["TakeScreenshotOnAchievementEarned"] = false end
     end
   )
 )
 
-table.insert(MM.Migrations, 
+table.insert(MM.CharacterMigrations,
   AutoBiographer_Migration:New(
     17,
     function(eventManager, controller)
-      if (AutoBiographer_Settings.Options["ShowLowRankCombatSkillWarnings"] == nil) then AutoBiographer_Settings.Options["ShowLowRankCombatSkillWarnings"] = true end
     end
   )
 )
 
-table.insert(MM.Migrations, 
+table.insert(MM.CharacterMigrations,
   AutoBiographer_Migration:New(
     18,
     function(eventManager, controller)
-      if (AutoBiographer_Settings.Options["ShowDiscoveryInfoOnToolTips"] == nil) then AutoBiographer_Settings.Options["ShowDiscoveryInfoOnToolTips"] = true end
     end
   )
 )
 
-table.insert(MM.Migrations, 
+table.insert(MM.CharacterMigrations,
   AutoBiographer_Migration:New(
     19,
     function(eventManager, controller)
-      if (AutoBiographer_Settings.Options["EnableCustomEventSharing"] == nil) then AutoBiographer_Settings.Options["EnableCustomEventSharing"] = true end
     end
   )
 )
 
-table.insert(MM.Migrations,
+table.insert(MM.CharacterMigrations,
   AutoBiographer_Migration:New(
     20,
     function(eventManager, controller)
-      for _, levelStatistics in pairs(controller.CharacterData.Levels) do
-        levelStatistics.DamageStatistics = DamageStatistics.New()
-      end
-      AutoBiographer_Settings.Options["ShowLowRankCombatSkillWarnings"] = nil
-    end
+      local catalogs = controller.CharacterData.Catalogs
+      AddMissing(catalogs, Catalogs.New())
 
-    -- damage stats
-    -- notes
-    -- todo tasks
-    -- distance stats (remove lazy init in controller)
-    -- gear
+      -- Version 19 stored one aggregate per category, using different enum
+      -- numbers. Keep those totals; their spell/source details were not saved.
+      local categories = AutoBiographerEnum.DamageOrHealingCategory
+      local upgradingDamage = (eventManager.PersistentPlayerInfo.DatabaseVersion or 0) < 20
+      for _, levelStatistics in pairs(controller.CharacterData.Levels) do
+        if (upgradingDamage) then
+          local old, migrated = levelStatistics.DamageStatistics or {}, DamageStatistics.New()
+          local function SpellTotal(oldCategory, category)
+            local breakdown = old[oldCategory]
+            if (breakdown) then
+              DamageStatistics.AddSpellBreakdown(migrated, category, 0, breakdown.Amount, breakdown.Over)
+              if (not catalogs.SpellCatalog[0]) then catalogs.SpellCatalog[0] = CatalogSpell.New(0, "Unknown", nil) end
+            end
+          end
+          local function RawTotal(oldCategory, category)
+            local breakdown = old[oldCategory]
+            if (breakdown) then DamageStatistics.AddRawBreakdown(migrated, category, breakdown.Amount, breakdown.Over) end
+          end
+          SpellTotal(0, categories.DamageDealt)
+          SpellTotal(5, categories.DamageDealt) -- Pet damage is included with the player's damage now.
+          SpellTotal(2, categories.HealingDealt)
+          SpellTotal(3, categories.HealingDealt)
+          RawTotal(1, categories.DamageTakenRaw)
+          RawTotal(4, categories.HealingTakenRaw)
+          RawTotal(6, categories.PetDamageTakenRaw)
+          levelStatistics.DamageStatistics = migrated
+        end
+        AddMissing(levelStatistics, {
+          DamageStatistics = DamageStatistics.New(),
+          DistanceStatistics = DistanceStatistics.New(),
+          MessageStatistics = MessageStatistics.New(),
+          TimeStatisticsByCompanionFamily = {},
+          TimeStatisticsBySpell = {},
+        })
+      end
+
+      local notes = controller.AccountData.Notes
+      local legacyNotes = _G["AUTOBIOGRAPHER_NOTES_CHAR"]
+      if (type(legacyNotes) == "table" and legacyNotes ~= notes) then
+        for _, note in ipairs(legacyNotes.GenericNotes or {}) do
+          if (not Notes.Contains(notes, note)) then table.insert(notes.GenericNotes, note) end
+        end
+        for id, note in pairs(legacyNotes.UnitNotes or {}) do
+          local unit = catalogs.UnitCatalog[id]
+          local name = unit and unit.Name or ("Unit #" .. tostring(id))
+          if (unit and unit.LastName) then name = name .. " " .. unit.LastName end
+          if (not note.Name) then note.Name = name end
+          local existing = notes.UnitNotes[id]
+          if (not existing) then
+            notes.UnitNotes[id] = note
+          elseif (existing ~= note and existing.Content ~= note.Content) then
+            -- One linked note per identity: retain a conflicting character
+            -- note as a named general note instead of overwriting either.
+            local copy = {}
+            for key, value in pairs(note) do copy[key] = value end
+            copy.Content = note.Name .. "\n" .. note.Content
+            table.insert(notes.GenericNotes, copy)
+          end
+        end
+      end
+      _G["AUTOBIOGRAPHER_NOTES_CHAR"] = nil
+
+      AddMissing(controller.CharacterData.Gear, GearHistory.New())
+      AddMissing(controller.CharacterData.Snapshots, CharacterSnapshots.New())
+      local tasks = controller.CharacterData.Todos
+      AddMissing(tasks, Todo.New())
+      for _, item in ipairs(tasks.Items) do
+        if (item.Enabled == false) then item.Completed = true end
+        item.Enabled = nil
+        if (item.Type == "Always") then item.Recurring = nil end
+      end
+
+      eventManager.PersistentPlayerInfo.HasBeenShownCustomEventReminder = nil
+    end
+  )
+)
+
+-- *** Account Migrations ***
+-- Released account settings have no independent version; nil starts at 0.
+table.insert(MM.AccountMigrations,
+  AutoBiographer_Migration:New(
+    1,
+    function(eventManager, controller)
+      local settings = AutoBiographer_Settings
+      AddMissing(settings, {
+        EventDisplayFilters = {}, MapEventDisplayFilters = {}, Options = {},
+        MapEventShowAnimation = false, MapEventShowCircle = true,
+        MapEventFollowExpansions = false, MinimapPos = -25,
+      })
+      AddMissing(settings.Options, {
+        EnableCustomEventSharing = true, EnableDebugLogging = false,
+        EnableMilestoneMessages = true, RecommendCampfireMessages = true,
+        ShareMilestonesAsEmotes = false, ShareMilestonesInGuild = false,
+        ShowDiscoveryInfoOnToolTips = true, ShowFriendlyPlayerToolTips = true,
+        ShowKillCountOnUnitToolTips = true, ShowMinimapButton = true,
+        ShowLevelUpStatMessages = true, ShowTimePlayedOnLevelUp = true,
+        TakeScreenshotOnAchievementEarned = false, TakeScreenshotOnBossKill = true,
+        TakeScreenshotOnLevelUp = true, TakeScreenshotOnlyOnFirstBossKill = true,
+      })
+      settings.Options.ShowLowRankCombatSkillWarnings = nil
+      for _, subType in pairs(AutoBiographerEnum.EventSubType) do
+        if (settings.EventDisplayFilters[subType] == nil) then settings.EventDisplayFilters[subType] = true end
+        if (settings.MapEventDisplayFilters[subType] == nil) then settings.MapEventDisplayFilters[subType] = true end
+      end
+      AddMissing(controller.AccountData.Notes, Notes.New())
+    end,
+    "Account"
   )
 )

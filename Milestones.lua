@@ -441,10 +441,6 @@ end
 function Milestones:Start()
   self.Definitions, self.Totals, self.Dirty, self.SharingQueue = {}, {}, {}, {}
   self.CheckPending, self.SharingPending = false, false
-  local options = AutoBiographer_Settings.Options
-  if (options.EnableMilestoneMessages == nil) then options.EnableMilestoneMessages = true end
-  if (options.ShareMilestonesInGuild == nil) then options.ShareMilestonesInGuild = false end
-  if (options.ShareMilestonesAsEmotes == nil) then options.ShareMilestonesAsEmotes = false end
   self:CreateDefinitions()
   self.Started = true
 end

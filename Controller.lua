@@ -11,10 +11,8 @@ local Api = AutoBiographer_Api
 function Controller:AddCompanionFamilyTime(familyId, familyName, seconds)
   if (not familyId or seconds <= 0) then return end
   local catalogs = self.CharacterData.Catalogs
-  catalogs.CompanionFamilyCatalog = catalogs.CompanionFamilyCatalog or {}
   if (familyName) then catalogs.CompanionFamilyCatalog[familyId] = familyName end
   local statistics = self:GetCurrentLevelStatistics()
-  statistics.TimeStatisticsByCompanionFamily = statistics.TimeStatisticsByCompanionFamily or {}
   statistics.TimeStatisticsByCompanionFamily[familyId] = (statistics.TimeStatisticsByCompanionFamily[familyId] or 0) + seconds
   AutoBiographer_Milestones:OnCompanionFamilyTime(familyId, familyName, seconds)
 end
@@ -22,8 +20,6 @@ end
 function Controller:AddDistance(distanceTrackingType, yards)
   if (distanceTrackingType == nil or yards <= 0) then return end
   local levelStatistics = self:GetCurrentLevelStatistics()
-  -- Create lazily for characters whose existing level records predate tracking.
-  if (not levelStatistics.DistanceStatistics) then levelStatistics.DistanceStatistics = DistanceStatistics.New() end
   DistanceStatistics.AddDistance(levelStatistics.DistanceStatistics, distanceTrackingType, yards)
   AutoBiographer_Milestones:OnStatChanged("Distance")
 end
@@ -74,7 +70,6 @@ function Controller:AddSpellTime(spellId, seconds)
     end
   end
   local statistics = self:GetCurrentLevelStatistics()
-  statistics.TimeStatisticsBySpell = statistics.TimeStatisticsBySpell or {}
   statistics.TimeStatisticsBySpell[spellId] = (statistics.TimeStatisticsBySpell[spellId] or 0) + seconds
   AutoBiographer_Milestones:OnSpellTime(spellId, seconds)
 end
@@ -615,7 +610,7 @@ function Controller:GetMoneyForAcquisitionMethod(moneyAcquisitionMethod, minLeve
 end
 
 function Controller:GetNotes()
-  return Notes.Initialize(self.AccountData.Notes)
+  return self.AccountData.Notes
 end
 
 function Controller:GetOtherPlayerStatByOtherPlayerTrackingType(otherPlayerTrackingType, minLevel, maxLevel)
@@ -661,7 +656,7 @@ function Controller:GetSpellCountBySpellTrackingType(spellTrackingType, minLevel
 end
 
 function Controller:GetTodos()
-  return Todo.Initialize(self.CharacterData.Todos)
+  return self.CharacterData.Todos
 end
 
 function Controller:GetTotalMoneyGained(minLevel, maxLevel)
@@ -1024,7 +1019,6 @@ end
 
 function Controller:OnMessageSent(messageTrackingType)
   local levelStatistics = self:GetCurrentLevelStatistics()
-  if (not levelStatistics.MessageStatistics) then levelStatistics.MessageStatistics = MessageStatistics.New() end
   MessageStatistics.Increment(levelStatistics.MessageStatistics, messageTrackingType)
   AutoBiographer_Milestones:OnStatChanged("Messages")
 end

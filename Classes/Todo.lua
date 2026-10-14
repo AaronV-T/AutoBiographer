@@ -1,6 +1,5 @@
 -- Definitions and completion state are saved; live condition results are not.
 Todo = {}
-local initialized = setmetatable({}, { __mode = "k" })
 local lastMatches = setmetatable({}, { __mode = "k" })
 
 local comparisons = {
@@ -64,21 +63,6 @@ function Todo.GetContext()
       if (counts[id] ~= false) then return counts[id] end
     end,
   }
-end
-
-function Todo.Initialize(data)
-  data.Items = data.Items or {}
-  if (data.ShowTracker == nil) then data.ShowTracker = true end
-  if (not initialized[data]) then
-    for _, item in ipairs(data.Items) do
-      -- Preserve the suppression of tasks saved with the old Enabled switch.
-      if (item.Enabled == false) then item.Completed = true end
-      item.Enabled = nil
-      if (item.Type == "Always") then item.Recurring = nil end
-    end
-    initialized[data] = true
-  end
-  return data
 end
 
 function Todo.Move(data, item, neighbor)

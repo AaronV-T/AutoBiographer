@@ -195,6 +195,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   
   if type(_G["AUTOBIOGRAPHER_SETTINGS"]) ~= "table" then
 		_G["AUTOBIOGRAPHER_SETTINGS"] = {
+      DatabaseVersion = 1,
       EventDisplayFilters = {}, -- Dict<EventSubType, bool>
       MapEventDisplayFilters = {}, -- Dict<EventSubType, bool>
       MapEventShowAnimation = false,
@@ -206,6 +207,8 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
         EnableDebugLogging = false,
         EnableMilestoneMessages = true,
         RecommendCampfireMessages = true,
+        ShareMilestonesAsEmotes = false,
+        ShareMilestonesInGuild = false,
         ShowDiscoveryInfoOnToolTips = true,
         ShowFriendlyPlayerToolTips = true,
         ShowKillCountOnUnitToolTips = true,
@@ -279,10 +282,9 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
 
   AutoBiographer_Databases.Initialiaze()
   
-  -- Database Migrations
-  if (not self.PersistentPlayerInfo.DatabaseVersion or self.PersistentPlayerInfo.DatabaseVersion < AutoBiographer_MigrationManager:GetLatestDatabaseVersion()) then
-    AutoBiographer_MigrationManager:RunMigrations(self.PersistentPlayerInfo.DatabaseVersion, EM, Controller)
-  end
+  -- Prepare account data first; character upgrades may import notes into it.
+  AutoBiographer_MigrationManager:RunAccountMigrations(AutoBiographer_Settings.DatabaseVersion, EM, Controller)
+  AutoBiographer_MigrationManager:RunCharacterMigrations(self.PersistentPlayerInfo.DatabaseVersion, EM, Controller)
   
   --
   local playerLevel = UnitLevel("player")
