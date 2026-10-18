@@ -71,11 +71,21 @@ local dashboardTabs = {
       { "Camped", "Times camped" },
       { "Jumps", "Jumps" },
     } },
+    { Title = "Fishing", Column = 1, Rows = {
+      { "FishingCasts", "Casts" },
+      { "FishingCatches", "Successful catches" },
+      { "FishGotAway", "Fish got away" },
+      { "FishingUnsuccessful", "Other unsuccessful attempts" },
+      { "FishingPending", "Pending attempts" },
+      { "ItemsFishing", "Items collected", nil, "Items" },
+      { "TimeFishing", "Time spent fishing", "time", "Time" },
+    } },
   } },
   { Name = "Economy", Sections = {
     { Title = "Items acquired", Column = 1, Details = "Items", Rows = {
       { "ItemsAuctionHouse", "Auction house" },
       { "ItemsCreate", "Created" },
+      { "ItemsFishing", "Fishing" },
       { "ItemsLoot", "Looted" },
       { "ItemsMail", "Mail" },
       { "ItemsMailCod", "Mail (COD)" },
@@ -158,6 +168,7 @@ local dashboardTabs = {
       { "TimeLoggedIn", "Total recorded", "time" },
       { "TimeInCombat", "In combat", "time" },
       { "TimeCasting", "Casting", "time" },
+      { "TimeFishing", "Fishing", "time" },
       { "TimeGrouped", "Grouped", "time" },
     } },
     { Title = "Other time", Column = 2, Details = "Time", Rows = {
@@ -499,9 +510,11 @@ function AutoBiographer_SummaryPanel:Update()
   values.QuestsRepeated = QuestStatistics.GetSum(questTotals, { Enum.QuestTrackingType.Completed }) - values.QuestsUnique
   values.SpellsStarted = Controller:GetSpellCountBySpellTrackingType(Enum.SpellTrackingType.StartedCasting, minLevel, maxLevel)
   values.SpellsSucceeded = Controller:GetSpellCountBySpellTrackingType(Enum.SpellTrackingType.SuccessfullyCast, minLevel, maxLevel)
-  for _, category in ipairs({ "Camped", "Jumps" }) do
+  for _, category in ipairs({ "Camped", "Jumps", "FishingCasts", "FishingCatches", "FishGotAway" }) do
     values[category] = Controller:GetMiscellaneousStatByMiscellaneousTrackingType(Enum.MiscellaneousTrackingType[category], minLevel, maxLevel)
   end
+  values.FishingPending = AutoBiographer_Fishing:GetPendingAttemptCount(minLevel, maxLevel)
+  values.FishingUnsuccessful = math.max(0, values.FishingCasts - values.FishingCatches - values.FishGotAway - values.FishingPending)
 
   values.ItemsTotal = 0
   for category, acquisitionMethod in pairs(Enum.ItemAcquisitionMethod) do

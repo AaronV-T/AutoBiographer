@@ -24,6 +24,7 @@ local headerDescriptions = {
   AH = "Items acquired from the auction house.",
   COD = "Items acquired through cash-on-delivery mail.",
   Create = "Items created by crafting.",
+  Fishing = "Items collected from fishing. In the Time view, time spent channeling Fishing.",
   Loot = "Items looted.",
   Mail = "Items received through ordinary mail.",
   Other = "Items acquired through other tracked methods.",
@@ -230,8 +231,8 @@ function AutoBiographer_StatisticsWindow:GetTableData(minLevel, maxLevel)
   elseif (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.Items) then
     local itemStatisticsByItem = Controller:GetAggregatedItemStatisticsDictionary(minLevel, maxLevel)
     tableData = {
-      HeaderValues = { "Item Name", "AH", "COD", "Create", "Loot", "Mail", "Other", "Trade", "Vendor" },
-      RowOffsets = { 0, 225, 275, 325, 375, 425, 475, 525, 575, 625 },
+      HeaderValues = { "Item Name", "AH", "COD", "Create", "Fishing", "Loot", "Mail", "Other", "Trade", "Vendor" },
+      RowOffsets = { 0, 225, 275, 325, 375, 425, 475, 525, 575, 625, 675 },
       Rows = {},
     }
     for catalogItemId, itemStatistics in pairs(itemStatisticsByItem) do
@@ -248,6 +249,7 @@ function AutoBiographer_StatisticsWindow:GetTableData(minLevel, maxLevel)
           ItemStatistics.GetSum(itemStatistics, { AutoBiographerEnum.ItemAcquisitionMethod.AuctionHouse }),
           ItemStatistics.GetSum(itemStatistics, { AutoBiographerEnum.ItemAcquisitionMethod.MailCod }),
           ItemStatistics.GetSum(itemStatistics, { AutoBiographerEnum.ItemAcquisitionMethod.Create }),
+          ItemStatistics.GetSum(itemStatistics, { AutoBiographerEnum.ItemAcquisitionMethod.Fishing }),
           ItemStatistics.GetSum(itemStatistics, { AutoBiographerEnum.ItemAcquisitionMethod.Loot }),
           ItemStatistics.GetSum(itemStatistics, { AutoBiographerEnum.ItemAcquisitionMethod.Mail }),
           ItemStatistics.GetSum(itemStatistics, { AutoBiographerEnum.ItemAcquisitionMethod.Other }),
@@ -385,8 +387,8 @@ function AutoBiographer_StatisticsWindow:GetTableData(minLevel, maxLevel)
   elseif (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.Time) then
     local timeStatisticsByArea = Controller:GetAggregatedTimeStatisticsDictionary(minLevel, maxLevel)
     tableData = {
-      HeaderValues = { "Area", "AFK", "Casting", "Dead", "Combat", "Total", "Taxi", "Grouped", "Gamepad" },
-      RowOffsets = { 0, 225, 285, 345, 405, 465, 525, 585, 645, 705 },
+      HeaderValues = { "Area", "AFK", "Casting", "Dead", "Combat", "Total", "Taxi", "Grouped", "Gamepad", "Fishing" },
+      RowOffsets = { 0, 225, 285, 345, 405, 465, 525, 585, 645, 705, 765 },
       Rows = {},
     }
 
@@ -401,6 +403,7 @@ function AutoBiographer_StatisticsWindow:GetTableData(minLevel, maxLevel)
       local onTaxi = TimeStatistics.GetSum(timeStatistics, { AutoBiographerEnum.TimeTrackingType.OnTaxi })
       local inParty = TimeStatistics.GetSum(timeStatistics, { AutoBiographerEnum.TimeTrackingType.InParty })
       local gamepadUI = TimeStatistics.GetSum(timeStatistics, { AutoBiographerEnum.TimeTrackingType.GamepadUI })
+      local fishing = TimeStatistics.GetSum(timeStatistics, { AutoBiographerEnum.TimeTrackingType.Fishing })
 
       if (not dictAggregatedByZone[zone]) then
         dictAggregatedByZone[zone] = {
@@ -413,6 +416,7 @@ function AutoBiographer_StatisticsWindow:GetTableData(minLevel, maxLevel)
           onTaxi,
           inParty,
           gamepadUI,
+          fishing,
         }
       else
         dictAggregatedByZone[zone][2] = dictAggregatedByZone[zone][2] + afk
@@ -423,6 +427,7 @@ function AutoBiographer_StatisticsWindow:GetTableData(minLevel, maxLevel)
         dictAggregatedByZone[zone][7] = dictAggregatedByZone[zone][7] + onTaxi
         dictAggregatedByZone[zone][8] = dictAggregatedByZone[zone][8] + inParty
         dictAggregatedByZone[zone][9] = dictAggregatedByZone[zone][9] + gamepadUI
+        dictAggregatedByZone[zone][10] = dictAggregatedByZone[zone][10] + fishing
       end
     end
 

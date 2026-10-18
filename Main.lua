@@ -449,7 +449,8 @@ function EM.EventHandlers.CHAT_MSG_LOOT(self, text, arg2, arg3, arg4, arg5, arg6
   if (string.find(text, "You create") == 1) then
     itemAcquisitionMethod = AutoBiographerEnum.ItemAcquisitionMethod.Create
   elseif (string.find(text, "You receive loot") == 1) then
-    itemAcquisitionMethod = AutoBiographerEnum.ItemAcquisitionMethod.Loot
+    itemAcquisitionMethod = AutoBiographer_Fishing:ConsumeLoot(id, quantity) and
+      AutoBiographerEnum.ItemAcquisitionMethod.Fishing or AutoBiographerEnum.ItemAcquisitionMethod.Loot
   elseif (string.find(text, "You receive item") == 1) then
     if (self:WasTradeRecentlyMade() and self.TradeInfo.OtherPlayerTradeItems) then
       local matchingTradeItem = self:GetItemWithIdAndQuantity(self.TradeInfo.OtherPlayerTradeItems, id, quantity)
@@ -813,6 +814,22 @@ function EM.EventHandlers.LEARNED_SPELL_IN_SKILL_LINE(self, spellId, skillLineIn
   Controller:OnSpellLearned(time(), HelperFunctions.GetCoordinatesByUnitId("player"), spellId, name, rank)
 end
 
+function EM.EventHandlers.LOOT_CLOSED(self)
+  AutoBiographer_Fishing:OnLootClosed()
+end
+
+function EM.EventHandlers.LOOT_OPENED(self)
+  AutoBiographer_Fishing:OnLootReady()
+end
+
+function EM.EventHandlers.LOOT_READY(self)
+  AutoBiographer_Fishing:OnLootReady()
+end
+
+function EM.EventHandlers.LOOT_SLOT_CLEARED(self, slotId)
+  AutoBiographer_Fishing:OnLootSlotCleared(slotId)
+end
+
 function EM.EventHandlers.MAIL_CLOSED(self, arg1, arg2)
   EM:MailboxClosed()
 end
@@ -1041,6 +1058,7 @@ function EM.EventHandlers.PLAYER_INTERACTION_MANAGER_FRAME_HIDE(self, type)
 end
 
 function EM.EventHandlers.PLAYER_LEAVING_WORLD(self)
+  AutoBiographer_Fishing:Stop()
   AutoBiographer_CampfireSharing:Reset()
   if (AutoBiographer_SnapshotManager) then AutoBiographer_SnapshotManager:Pause() end
   -- Equipment can already be unavailable here; keep the last known snapshot.
@@ -1454,18 +1472,33 @@ function EM.EventHandlers.UNIT_PET(self, unitId)
   if (not self:IsSecretValue(unitId) and unitId == "player") then self:UpdateClassActivity() end
 end
 
+function EM.EventHandlers.UI_ERROR_MESSAGE(self, errorType, message)
+  AutoBiographer_Fishing:OnInfoMessage(message)
+end
+
+function EM.EventHandlers.UI_INFO_MESSAGE(self, messageType, message)
+  AutoBiographer_Fishing:OnInfoMessage(message)
+end
+
 function EM.EventHandlers.UNIT_SPELLCAST_CHANNEL_START(self, unitId, castId, spellId, arg4, arg5)
-  if (unitId ~= "player") then return end
+  if (self:IsSecretValue(unitId) or unitId ~= "player") then return end
   --print("UNIT_SPELLCAST_CHANNEL_START. " .. unitId .. ", " .. tostring(arg2) .. ", " .. tostring(arg3) .. ", " .. tostring(arg4) .. ", " .. tostring(arg5))
+  AutoBiographer_Fishing:OnChannelStart(spellId, arg4)
   self:OnStartedCasting(spellId)
   self:UpdateClassActivity()
 end
 
 function EM.EventHandlers.UNIT_SPELLCAST_CHANNEL_STOP(self, unitId, arg2, arg3, arg4, arg5)
-  if (unitId ~= "player") then return end
+  if (self:IsSecretValue(unitId) or unitId ~= "player") then return end
   --print("UNIT_SPELLCAST_CHANNEL_STOP. " .. unitId .. ", " .. tostring(arg2) .. ", " .. tostring(arg3) .. ", " .. tostring(arg4) .. ", " .. tostring(arg5))
+  AutoBiographer_Fishing:OnChannelStop(arg3, arg5)
   self:OnStoppedCasting()
   self:UpdateClassActivity()
+end
+
+function EM.EventHandlers.UNIT_SPELLCAST_CHANNEL_UPDATE(self, unitId)
+  if (self:IsSecretValue(unitId) or unitId ~= "player") then return end
+  AutoBiographer_Fishing:OnChannelUpdate()
 end
 
 function EM.EventHandlers.UNIT_SPELLCAST_FAILED(self, unitId, arg2, arg3, arg4, arg5)
@@ -2683,6 +2716,7 @@ function EM:UpdatePlayerZone()
 end
 
 function EM:UpdateTimestamps(zone, subZone)
+  AutoBiographer_Fishing:Flush(zone, subZone)
   if (AutoBiographer_ClassActivity) then AutoBiographer_ClassActivity:Flush(zone, subZone) end
   -- Afk
   if (self.TemporaryTimestamps.MarkedAfk) then

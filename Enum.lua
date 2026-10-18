@@ -107,6 +107,7 @@ AutoBiographerEnum = {
     Mail = 6,
     MailCod = 7,
     Merchant = 8,
+    Fishing = 9,
   },
   KillTrackingType = {
     TaggedAssist = 0,
@@ -151,6 +152,9 @@ AutoBiographerEnum = {
     PlayerDeaths = 0, -- Deprecated
     Jumps = 1,
     Camped = 2,
+    FishingCasts = 3,
+    FishingCatches = 4,
+    FishGotAway = 5,
   },
   MoneyAcquisitionMethod = {
     AuctionHouseSale = 0,
@@ -222,6 +226,7 @@ AutoBiographerEnum = {
     BattleStance = 18,
     DefensiveStance = 19,
     BerserkerStance = 20,
+    Fishing = 21,
   },
   UnitType = {
     Creature = 0,

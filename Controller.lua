@@ -32,6 +32,11 @@ function Controller:AddEvent(event)
   end
 end
 
+function Controller:AddFishingStat(trackingType, levelNum)
+  local statistics = self.CharacterData.Levels[levelNum]
+  MiscellaneousStatistics.Add(statistics.MiscellaneousStatistics, trackingType, 1)
+end
+
 function Controller:AddLog(text, logLevel)
   if (logLevel == nil) then error("Unspecified logLevel. Log Text: '" .. text .. "'") end
   

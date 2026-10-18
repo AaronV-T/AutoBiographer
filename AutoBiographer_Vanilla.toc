@@ -35,6 +35,7 @@ Classes/Todo.lua
 
 SnapshotManager.lua
 ClassActivity.lua
+Fishing.lua
 Milestones.lua
 CampfireSharing.lua
 
