@@ -10,7 +10,6 @@ local optionGroups = {
   } },
   { Title = "Personal Messages", Controls = {
     { Name = "ShowTimePlayedOnLevelUp", Text = "Show time played upon leveling up." },
-    { Name = "ShowLevelUpStatMessages", Text = "Show health and stat gains upon leveling up in WoW Forever.", Availability = "Forever" },
     { Name = "EnableMilestoneMessages", Text = "Show personal milestone messages (minor and major)." },
   } },
   { Title = "Sharing", Controls = {
@@ -168,7 +167,6 @@ function AutoBiographer_OptionWindow:LoadOptions()
   self.cbScreenshotOnlyOnFirstBossKill:SetChecked(AutoBiographer_Settings.Options["TakeScreenshotOnlyOnFirstBossKill"])
   self.cbScreenshotOnAchievementEarned:SetChecked(AutoBiographer_Settings.Options["TakeScreenshotOnAchievementEarned"])
   self.cbShowMinimapButton:SetChecked(AutoBiographer_Settings.Options["ShowMinimapButton"])
-  self.cbShowLevelUpStatMessages:SetChecked(AutoBiographer_Settings.Options["ShowLevelUpStatMessages"])
   self.cbShowTimePlayedOnLevelUp:SetChecked(AutoBiographer_Settings.Options["ShowTimePlayedOnLevelUp"])
   self:UpdateDependencies()
 end
@@ -194,7 +192,6 @@ function AutoBiographer_OptionWindow:SaveOptions()
   AutoBiographer_Settings.Options["TakeScreenshotOnlyOnFirstBossKill"] = self.cbScreenshotOnlyOnFirstBossKill:GetChecked()
   AutoBiographer_Settings.Options["TakeScreenshotOnAchievementEarned"] = self.cbScreenshotOnAchievementEarned:GetChecked()
   AutoBiographer_Settings.Options["ShowMinimapButton"] = self.cbShowMinimapButton:GetChecked()
-  AutoBiographer_Settings.Options["ShowLevelUpStatMessages"] = self.cbShowLevelUpStatMessages:GetChecked()
   AutoBiographer_Settings.Options["ShowTimePlayedOnLevelUp"] = self.cbShowTimePlayedOnLevelUp:GetChecked()
   
   if (AutoBiographer_Settings.Options["ShowMinimapButton"] == false) then AutoBiographer_MinimapButton:Hide()

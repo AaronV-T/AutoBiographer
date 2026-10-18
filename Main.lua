@@ -25,15 +25,11 @@ AutoBiographer_EventManager = {
   MailboxUpdatesRunning = 0,
   MailInboxUpdatedAfterOpen = nil,
   MerchantIsOpen = nil,
-  HasLeveledUpSinceLastStatSnapshot = false,
   NewLevelToAddToHistory = nil,
   OtherPlayerAuraStates = {},
   PlayerCampAuraHistory = nil,
   PlayerCampAuraSnapshot = nil,
   PlayerCampTrackingStartedAt = nil,
-  PlayerLevelUpStatSnapshot = nil,
-  PlayerLevelUpStatSnapshotPending = false,
-  PlayerLevelUpTargetLevel = nil,
   PersistentPlayerInfo = nil,
   PlayerEnteringWorldHasFired = false,
   PlayerName = nil,
@@ -213,7 +209,6 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
         ShowFriendlyPlayerToolTips = true,
         ShowKillCountOnUnitToolTips = true,
         ShowMinimapButton = true,
-        ShowLevelUpStatMessages = true,
         ShowTimePlayedOnLevelUp = true,
         TakeScreenshotOnAchievementEarned = false,
         TakeScreenshotOnBossKill = true,
@@ -957,15 +952,6 @@ function EM.EventHandlers.PLAYER_ENTERING_WORLD(self, isLogin, isReload)
     end
   end
   AutoBiographer_TodoPanel:QueueRefresh()
-  if (Api.IsWoWForever() and (isLogin or isReload or not self.PlayerLevelUpStatSnapshot)) then
-    self.PlayerLevelUpStatSnapshot = {}
-    self.HasLeveledUpSinceLastStatSnapshot = false
-    self.PlayerLevelUpTargetLevel = nil
-    self:UpdatePlayerLevelUpResourceSnapshot("Health", UnitHealthMax("player"))
-    local manaPowerType = (Enum and Enum.PowerType and Enum.PowerType.Mana) or 0
-    self:UpdatePlayerLevelUpResourceSnapshot("Mana", UnitPowerMax("player", manaPowerType))
-    self:SchedulePlayerLevelUpStatSnapshot()
-  end
 
   local playerGuid = UnitGUID("player")
 
@@ -1076,11 +1062,6 @@ end
 function EM.EventHandlers.PLAYER_LEVEL_UP(self, newLevel)
   self:UpdateTimestamps(self.PersistentPlayerInfo.CurrentZone, self.PersistentPlayerInfo.CurrentSubZone)
   self.NewLevelToAddToHistory = newLevel
-  if (Api.IsWoWForever()) then
-    self.HasLeveledUpSinceLastStatSnapshot = true
-    self.PlayerLevelUpTargetLevel = newLevel
-    self:SchedulePlayerLevelUpStatSnapshot()
-  end
   
   local delay = 0.25
   C_Timer.After(delay, function()
@@ -1425,24 +1406,6 @@ function EM.EventHandlers.UNIT_INVENTORY_CHANGED(self, unitId)
   if (not self:IsSecretValue(unitId) and unitId == "player") then self:UpdatePlayerGear() end
 end
 
-function EM.EventHandlers.UNIT_MAXHEALTH(self, unitId)
-  if (self:IsSecretValue(unitId) or unitId ~= "player") then return end
-
-  local maxHealth = UnitHealthMax("player")
-  local value = self:IsSecretValue(maxHealth) and "<secret>" or tostring(maxHealth)
-  self:UpdatePlayerLevelUpResourceSnapshot("Health", maxHealth)
-end
-
-function EM.EventHandlers.UNIT_MAXPOWER(self, unitId, powerType)
-  if (self:IsSecretValue(unitId) or unitId ~= "player") then return end
-  if (self:IsSecretValue(powerType) or powerType ~= "MANA") then return end
-
-  local manaPowerType = (Enum and Enum.PowerType and Enum.PowerType.Mana) or 0
-  local maxMana = UnitPowerMax("player", manaPowerType)
-  local value = self:IsSecretValue(maxMana) and "<secret>" or tostring(maxMana)
-  self:UpdatePlayerLevelUpResourceSnapshot("Mana", maxMana)
-end
-
 function EM.EventHandlers.UNIT_DIED(self, unitGuid)
   --print("UNIT_DIED. " .. tostring(unitGuid))
   if (not Api.IsWoWForever()) then return end
@@ -1706,100 +1669,6 @@ function EM:GetItemWithIdAndQuantity(tab, id, quantity)
   end
 
   return nil
-end
-
-function EM:GetPlayerLevelUpStatSnapshot()
-  local manaPowerType = (Enum and Enum.PowerType and Enum.PowerType.Mana) or 0
-  local snapshot = {
-    Level = UnitLevel("player"),
-    Health = UnitHealthMax("player"),
-    Mana = UnitPowerMax("player", manaPowerType),
-  }
-  if (self:IsSecretValue(snapshot.Level) or not snapshot.Level) then return nil end
-  if (self:IsSecretValue(snapshot.Health) or self:IsSecretValue(snapshot.Mana) or
-      snapshot.Health == nil or snapshot.Mana == nil) then return nil end
-  if (self.PlayerLevelUpTargetLevel and snapshot.Level < self.PlayerLevelUpTargetLevel) then return nil end
-
-  for statId, statName in ipairs({ "Strength", "Agility", "Stamina", "Intellect", "Spirit" }) do
-    local stat, _, positiveBonus, negativeBonus = UnitStat("player", statId)
-    if (self:IsSecretValue(stat) or self:IsSecretValue(positiveBonus) or self:IsSecretValue(negativeBonus) or
-        stat == nil or positiveBonus == nil or negativeBonus == nil) then return nil end
-
-    -- The first return includes bonuses; this is the calculation used by
-    -- Blizzard's Classic character window to display the underlying stat.
-    snapshot[statName] = stat - positiveBonus - negativeBonus
-  end
-
-  local previousSnapshot = self.PlayerLevelUpStatSnapshot
-  if (self.HasLeveledUpSinceLastStatSnapshot and previousSnapshot and
-      Api.IsWoWForever() and AutoBiographer_Settings.Options["ShowLevelUpStatMessages"]) then
-    local healthIncrease = 0
-    local manaIncrease = 0
-    if (previousSnapshot.Health ~= nil) then
-      healthIncrease = (previousSnapshot.PostLevelUpHealth or snapshot.Health) - previousSnapshot.Health
-    end
-    if (previousSnapshot.Mana ~= nil) then
-      manaIncrease = (previousSnapshot.PostLevelUpMana or snapshot.Mana) - previousSnapshot.Mana
-    end
-
-    local function printSystemMessage(message)
-      local systemColor = ChatTypeInfo and ChatTypeInfo["SYSTEM"]
-      if (systemColor and DEFAULT_CHAT_FRAME) then
-        DEFAULT_CHAT_FRAME:AddMessage(message, systemColor.r, systemColor.g, systemColor.b)
-      else
-        print(message)
-      end
-    end
-
-    if (healthIncrease > 0 and manaIncrease > 0) then
-      printSystemMessage("You have gained " .. healthIncrease .. " hit points and " .. manaIncrease .. " mana.")
-    elseif (healthIncrease > 0) then
-      printSystemMessage("You have gained " .. healthIncrease .. " hit points.")
-    elseif (manaIncrease > 0) then
-      printSystemMessage("You have gained " .. manaIncrease .. " mana.")
-    end
-    for _, statName in ipairs({ "Strength", "Agility", "Stamina", "Intellect", "Spirit" }) do
-      if (previousSnapshot[statName] ~= nil) then
-        local increase = snapshot[statName] - previousSnapshot[statName]
-        if (increase > 0) then printSystemMessage("Your " .. statName .. " increases by " .. increase .. ".") end
-      end
-    end
-  end
-
-  -- Save the live maxima for the next level, not the earlier captured maxima.
-  -- Replacing the snapshot also clears its PostLevelUpHealth/Mana fields.
-  self.PlayerLevelUpStatSnapshot = snapshot
-  self.HasLeveledUpSinceLastStatSnapshot = false
-  self.PlayerLevelUpTargetLevel = nil
-  return snapshot
-end
-
-function EM:SchedulePlayerLevelUpStatSnapshot()
-  if (not Api.IsWoWForever() or self.PlayerLevelUpStatSnapshotPending) then return end
-  self.PlayerLevelUpStatSnapshotPending = true
-  local function trySnapshot()
-    if (self:GetPlayerLevelUpStatSnapshot() == nil) then
-      C_Timer.After(0.25, trySnapshot)
-    else
-      self.PlayerLevelUpStatSnapshotPending = false
-    end
-  end
-  -- Give the initial level-up resource events time to arrive. If attributes
-  -- remain secret, retry without replacing the baseline or captured maxima.
-  C_Timer.After(0.1, trySnapshot)
-end
-
-function EM:UpdatePlayerLevelUpResourceSnapshot(resourceName, maxValue)
-  if (not Api.IsWoWForever() or self:IsSecretValue(maxValue) or maxValue == nil) then return end
-  local snapshot = self.PlayerLevelUpStatSnapshot
-  if (not snapshot) then return end
-
-  if (self.HasLeveledUpSinceLastStatSnapshot) then
-    local postLevelUpKey = "PostLevelUp" .. resourceName
-    if (snapshot[postLevelUpKey] == nil) then snapshot[postLevelUpKey] = maxValue end
-  else
-    snapshot[resourceName] = maxValue
-  end
 end
 
 function EM:MailboxClosed()

@@ -380,7 +380,7 @@ function Sharing:ShowPrompt()
     self.Prompt = window
     window:SetPoint("TOP", UIParent, "TOP", 0, -4)
     window:SetFrameStrata("DIALOG")
-    window.TitleText:SetText("Campfire tales")
+    window.TitleText:SetText("AutoBiographer Campfire Tales")
     window.Message = window:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     window.Message:SetPoint("TOPLEFT", 12, -32)
     window.Message:SetWidth(336)
