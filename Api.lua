@@ -663,8 +663,11 @@ function Api.IsWoWForever()
 end
 
 function Api.RegisterQuestNoteMenu(handler)
+  -- Leave Forever's protected Gamepad UI menus untouched.
+  if (Api.IsWoWForever() and Api.IsGamepadUIEnabled()) then return false end
   if (not Menu or not Menu.ModifyMenu) then return false end
   Menu.ModifyMenu("MENU_QUEST_MAP_LOG_TITLE", function(owner, rootDescription)
+    if (Api.IsWoWForever() and Api.IsGamepadUIEnabled()) then return end
     handler(owner and owner.questID, function(label, callback) rootDescription:CreateButton(label, callback) end)
   end)
   return true
@@ -679,9 +682,11 @@ function Api.RegisterTooltipHandler(scriptType, tooltipDataType, handler)
 end
 
 function Api.RegisterUnitNoteMenu(handler)
+  if (Api.IsWoWForever() and Api.IsGamepadUIEnabled()) then return false end
   if (Menu and Menu.ModifyMenu) then
     for _, tag in ipairs({ "SELF", "TARGET", "PLAYER", "ENEMY_PLAYER", "PARTY", "RAID_PLAYER", "FOCUS" }) do
       Menu.ModifyMenu("MENU_UNIT_" .. tag, function(owner, rootDescription, context)
+        if (Api.IsWoWForever() and Api.IsGamepadUIEnabled()) then return end
         if (issecretvalue and issecretvalue(context)) then return end
         handler(context and context.unit, function(label, callback) rootDescription:CreateButton(label, callback) end)
       end)
@@ -690,6 +695,7 @@ function Api.RegisterUnitNoteMenu(handler)
   elseif (UnitPopup_ShowMenu and UIDropDownMenu_AddButton) then
     -- Append through the legacy menu API, never alter Blizzard's menu tables.
     hooksecurefunc("UnitPopup_ShowMenu", function(dropdown, which, unit)
+      if (Api.IsWoWForever() and Api.IsGamepadUIEnabled()) then return end
       if (UIDROPDOWNMENU_MENU_LEVEL and UIDROPDOWNMENU_MENU_LEVEL ~= 1) then return end
       if (issecretvalue and issecretvalue(unit)) then return end
       handler(unit or dropdown and dropdown.unit, function(label, callback)
