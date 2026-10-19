@@ -1644,24 +1644,30 @@ Api.RegisterTooltipHandler("OnTooltipSetItem", "Item", function(self, data)
 end)
 
 Api.RegisterTooltipHandler("OnTooltipSetUnit", "Unit", function(self)
-  local unitName, unitId = self:GetUnit()
-  if (not unitId) then return end
+  if (not self.GetUnit) then return end
+  local _, unitId = self:GetUnit()
+  -- Forever can restrict tooltip identity.
+  if (EM:IsSecretValue(unitId) or type(unitId) ~= "string" or unitId == "") then return end
 
-	local catalogUnitId = HelperFunctions.GetCatalogIdFromGuid(UnitGUID(unitId))
-  if (not catalogUnitId) then
-    return
-  end
+  local unitGuid = UnitGUID(unitId)
+  if (EM:IsSecretValue(unitGuid) or type(unitGuid) ~= "string" or unitGuid == "") then return end
+  local success, catalogUnitId = pcall(HelperFunctions.GetCatalogIdFromGuid, unitGuid)
+  if (not success or not catalogUnitId) then return end
 
-	if (AutoBiographer_Settings.Options["ShowKillCountOnUnitToolTips"] and UnitCanAttack("player", unitId)) then
+  local canAttack = UnitCanAttack("player", unitId)
+  local isPlayer = UnitIsPlayer(unitId)
+  if (EM:IsSecretValue(canAttack) or EM:IsSecretValue(isPlayer)) then return end
+
+	if (AutoBiographer_Settings.Options["ShowKillCountOnUnitToolTips"] and canAttack) then
     local killStatistics = Controller:GetAggregatedKillStatisticsByCatalogUnitId(catalogUnitId, 1, 9999)
-    if (UnitIsPlayer(unitId)) then
+    if (isPlayer) then
       GameTooltip:AddLine("Killed " .. tostring(KillStatistics.GetSum(killStatistics, { AutoBiographerEnum.KillTrackingType.TaggedKillingBlow, AutoBiographerEnum.KillTrackingType.UntaggedKillingBlow })) .. " times.")
     else
       GameTooltip:AddLine("Killed " .. tostring(KillStatistics.GetSum(killStatistics, { AutoBiographerEnum.KillTrackingType.TaggedAssist, AutoBiographerEnum.KillTrackingType.TaggedGroupAssistOrKillingBlow, AutoBiographerEnum.KillTrackingType.TaggedKillingBlow })) .. " times.")
     end
   end
 
-  if (AutoBiographer_Settings.Options["ShowFriendlyPlayerToolTips"] and not UnitCanAttack("player", unitId) and UnitIsPlayer(unitId)) then
+  if (AutoBiographer_Settings.Options["ShowFriendlyPlayerToolTips"] and not canAttack and isPlayer) then
     local otherPlayerStatistics = Controller:GetAggregatedOtherPlayerStatisticsByCatalogUnitId(catalogUnitId, 1, 9999)
     local tooltipString = ""
 
