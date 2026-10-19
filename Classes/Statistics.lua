@@ -7,6 +7,7 @@ function AggregatedStatistics.New()
     BattlegroundStatistics = BattlegroundStatistics.New(),
     DamageStatistics = DamageStatistics.New(),
     DeathStatistics = DeathStatistics.New(),
+    DeathStatisticsByUnit = {}, -- Dict<CatalogUnitId, count>
     DistanceStatistics = DistanceStatistics.New(), -- Dict<DistanceTrackingType, yards>
     ExperienceStatistics = ExperienceStatistics.New(),
     GatheringStatistics = nil,

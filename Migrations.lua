@@ -553,6 +553,49 @@ table.insert(MM.CharacterMigrations,
   )
 )
 
+table.insert(MM.CharacterMigrations,
+  AutoBiographer_Migration:New(
+    21,
+    function(eventManager, controller)
+      local levels = controller.CharacterData.Levels
+      local backfill, level = {}, nil
+      for levelNum, statistics in pairs(levels) do
+        if (not level or levelNum < level) then level = levelNum end
+        if (statistics.DeathStatisticsByUnit == nil) then
+          statistics.DeathStatisticsByUnit = {}
+          backfill[levelNum] = true
+        end
+      end
+      if (not level) then return end
+
+      -- Recover only identities actually retained in the journal. Death category
+      -- totals cannot reveal missing killers and must never be incremented here.
+      local events = {}
+      for index, event in ipairs(controller.CharacterData.Events) do
+        if (event.SubType == AutoBiographerEnum.EventSubType.LevelUp or
+            event.SubType == AutoBiographerEnum.EventSubType.PlayerDeath) then
+          events[#events + 1] = { Event = event, Index = index }
+        end
+      end
+      table.sort(events, function(a, b)
+        if ((a.Event.Timestamp or 0) ~= (b.Event.Timestamp or 0)) then
+          return (a.Event.Timestamp or 0) < (b.Event.Timestamp or 0)
+        end
+        return a.Index < b.Index
+      end)
+      for _, entry in ipairs(events) do
+        local event = entry.Event
+        if (event.SubType == AutoBiographerEnum.EventSubType.LevelUp) then
+          level = event.LevelNum
+        elseif (backfill[level] and event.KillerCuid ~= nil) then
+          local counts = levels[level].DeathStatisticsByUnit
+          counts[event.KillerCuid] = (counts[event.KillerCuid] or 0) + 1
+        end
+      end
+    end
+  )
+)
+
 -- *** Account Migrations ***
 -- Released account settings have no independent version; nil starts at 0.
 table.insert(MM.AccountMigrations,

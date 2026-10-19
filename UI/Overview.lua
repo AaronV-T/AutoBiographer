@@ -187,29 +187,11 @@ function Overview:BuildDeathSources(window)
   Add(deaths, "Drowning", values.DeathToDrowning or 0)
   Add(deaths, "Falling", values.DeathToFalling or 0)
   Add(deaths, "Other environment", values.DeathToEnvironment or 0)
-  -- Death events have no level field. Replay their level-up boundaries in order
-  -- without modifying the saved event list, so this ranking honours the filter.
-  local events, level = {}, Controller:GetCurrentLevelNum()
-  for recordedLevel in pairs(Controller.CharacterData.Levels) do level = math.min(level, recordedLevel) end
-  for index, event in ipairs(Controller:GetEvents() or {}) do
-    if (event.SubType == Enum.EventSubType.LevelUp or event.SubType == Enum.EventSubType.PlayerDeath) then
-      events[#events + 1] = { Event = event, Index = index }
-    end
-  end
-  table.sort(events, function(a, b)
-    if ((a.Event.Timestamp or 0) ~= (b.Event.Timestamp or 0)) then return (a.Event.Timestamp or 0) < (b.Event.Timestamp or 0) end
-    return a.Index < b.Index
-  end)
-  for _, entry in ipairs(events) do
-    local event = entry.Event
-    if (event.SubType == Enum.EventSubType.LevelUp) then
-      level = event.LevelNum
-    elseif (level >= window.DisplayMinLevel and level <= window.DisplayMaxLevel and event.KillerCuid ~= nil) then
-      local unit = Controller.CharacterData.Catalogs.UnitCatalog[event.KillerCuid]
-      local name = unit and unit.Name
-      if (name and unit.LastName and unit.LastName ~= "") then name = name .. " " .. unit.LastName end
-      Add(deaths, name or "Unknown source", 1)
-    end
+  for catalogUnitId, count in pairs(Controller:GetAggregatedDeathStatisticsDictionary(window.DisplayMinLevel, window.DisplayMaxLevel)) do
+    local unit = Controller.CharacterData.Catalogs.UnitCatalog[catalogUnitId]
+    local name = unit and unit.Name
+    if (name and unit.LastName and unit.LastName ~= "") then name = name .. " " .. unit.LastName end
+    Add(deaths, name or "Unknown source", count)
   end
   return deaths
 end

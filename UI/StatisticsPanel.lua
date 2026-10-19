@@ -10,6 +10,7 @@ local views = {
   { "Damage Dealt by Rank", Enum.StatisticsDisplayMode.DamageDealtByRank },
   { "Damage Taken by Spell", Enum.StatisticsDisplayMode.DamageTakenBySpell },
   { "Damage Taken by Unit", Enum.StatisticsDisplayMode.DamageTakenByUnit },
+  { "Deaths", Enum.StatisticsDisplayMode.Deaths },
   { "Healing Dealt", Enum.StatisticsDisplayMode.HealingDealt },
   { "Healing Dealt by Rank", Enum.StatisticsDisplayMode.HealingDealtByRank },
   { "Item Acquisitions", Enum.StatisticsDisplayMode.Items },
@@ -60,7 +61,7 @@ local headerDescriptions = {
   ["Money Net"] = "Money gained minus money lost at this level, not the character's wallet balance.",
   Kills = "Total tagged kills, including killing blows, assists, and group kills.",
   Quests = "Quest completions recorded at this level, including repeated quests.",
-  Deaths = "All deaths recorded at this level.",
+  Deaths = "Recorded deaths in the selected level range. Deaths by Unit counts only deaths attributed to that unit.",
 }
 
 local function CreateButton(parent, text, width, onClick)
@@ -204,6 +205,14 @@ function AutoBiographer_StatisticsWindow:GetTableData(minLevel, maxLevel)
     local unknownBreakdown = Controller:GetAggregatedDamageTakenUnknownBreakdown(minLevel, maxLevel)
     if (unknownBreakdown.Amount ~= 0 or unknownBreakdown.Over ~= 0) then
       table.insert(tableData.Rows, { "Unknown", unknownBreakdown.Amount - unknownBreakdown.Over, unknownBreakdown.Over, IsUnknown = true })
+    end
+  elseif (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.Deaths) then
+    tableData = { HeaderValues = { "Unit Name", "Deaths" }, RowOffsets = { 0, 450, 650 }, Rows = {} }
+    for catalogUnitId, count in pairs(Controller:GetAggregatedDeathStatisticsDictionary(minLevel, maxLevel)) do
+      local unit = Controller.CharacterData.Catalogs.UnitCatalog[catalogUnitId]
+      local name = unit and unit.Name or ("Unit ID: " .. tostring(catalogUnitId))
+      if (unit and unit.Name and unit.LastName and unit.LastName ~= "") then name = name .. " " .. unit.LastName end
+      table.insert(tableData.Rows, { name, count })
     end
   elseif (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.HealingDealt) then
     local abilitiesBySpellName = Controller:GetAggregatedDamageMeterAbilities({ AutoBiographerEnum.DamageOrHealingCategory.HealingDealt }, minLevel, maxLevel, true)

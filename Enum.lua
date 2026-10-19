@@ -196,6 +196,7 @@ AutoBiographerEnum = {
     Kills = 1,
     Levels = 12,
     OtherPlayers = 2,
+    Deaths = 13,
     Spells = 3,
     SpellsByRank = 11,
     Time = 4,

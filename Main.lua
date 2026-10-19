@@ -265,7 +265,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
       BattlegroundStatuses = {},
       CurrentSubZone = nil,
       CurrentZone = nil,
-      DatabaseVersion = 20,
+      DatabaseVersion = AutoBiographer_MigrationManager:GetLatestCharacterDatabaseVersion(),
       ForeverBetaAnnouncementShownLastLogin = false,
       GuildName = nil,
       GuildRankIndex = nil,

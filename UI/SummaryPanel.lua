@@ -21,7 +21,7 @@ local dashboardTabs = {
       { "GroupKills", "Group kills without damage" },
       { "Kills", "Total", IsTotal = true },
     } },
-    { Title = "Deaths", Column = 2, Rows = {
+    { Title = "Deaths", Column = 2, Details = "Deaths", Rows = {
       { "DeathToCreature", "Creatures" },
       { "DeathToDrowning", "Drowning" },
       { "DeathToEnvironment", "Other environment" },

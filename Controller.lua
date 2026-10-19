@@ -183,6 +183,18 @@ function Controller:GetAggregatedDamageTakenUnknownBreakdown(minLevel, maxLevel)
   return unknownBreakdown
 end
 
+function Controller:GetAggregatedDeathStatisticsDictionary(minLevel, maxLevel)
+  local deathsByUnit = {}
+  for levelNum, statistics in pairs(self.CharacterData.Levels) do
+    if (levelNum >= minLevel and levelNum <= maxLevel) then
+      for catalogUnitId, count in pairs(statistics.DeathStatisticsByUnit or {}) do
+        deathsByUnit[catalogUnitId] = (deathsByUnit[catalogUnitId] or 0) + count
+      end
+    end
+  end
+  return deathsByUnit
+end
+
 function Controller:GetAggregatedItemStatisticsDictionary(minLevel, maxLevel)
   local itemStatisticsDictionary = {}
   for levelNum, levelStatistics in pairs(self.CharacterData.Levels) do
@@ -904,7 +916,11 @@ function Controller:OnDeath(timestamp, coordinates, killerCatalogUnitId, killerL
     return
   end
 
-  DeathStatistics.Increment(self:GetCurrentLevelStatistics().DeathStatistics, deathTrackingType)
+  local statistics = self:GetCurrentLevelStatistics()
+  DeathStatistics.Increment(statistics.DeathStatistics, deathTrackingType)
+  if (killerCatalogUnitId ~= nil) then
+    statistics.DeathStatisticsByUnit[killerCatalogUnitId] = (statistics.DeathStatisticsByUnit[killerCatalogUnitId] or 0) + 1
+  end
   AutoBiographer_Milestones:OnStatChanged("Deaths")
 end
 
