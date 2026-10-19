@@ -38,6 +38,8 @@ local headerDescriptions = {
   ["Buffs (In Group)"] = "Qualifying buffs given to this player while they were in your group.",
   ["Duels (Win)"] = "Your duels won against this player.",
   ["Duels (Lose)"] = "Your duels lost to this player.",
+  ["Whispers Sent"] = "In-game whispers you sent to this player. Message contents are not saved.",
+  ["Whispers Received"] = "In-game whispers you received from this player. Message contents are not saved.",
   AFK = "Recorded time spent away from keyboard.",
   Casting = "Recorded time spent casting.",
   Dead = "Recorded time spent dead or as a ghost.",
@@ -309,8 +311,8 @@ function AutoBiographer_StatisticsWindow:GetTableData(minLevel, maxLevel)
   elseif (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.OtherPlayers) then
     local otherPlayerStatisticsByUnit = Controller:GetAggregatedOtherPlayerStatisticsDictionary(minLevel, maxLevel)
     tableData = {
-      HeaderValues = { "Unit Name", "Buffs (Outside)", "Buffs (In Group)", "Duels (Win)", "Duels (Lose)", "Time Grouped" },
-      RowOffsets = { 0, 170, 290, 400, 485, 570, 700 },
+      HeaderValues = { "Unit Name", "Buffs (Outside)", "Buffs (In Group)", "Duels (Win)", "Duels (Lose)", "Time Grouped", "Whispers Sent", "Whispers Received" },
+      RowOffsets = { 0, 170, 290, 400, 485, 570, 700, 815, 950 },
       Rows = {},
     }
     for catalogUnitId, otherPlayerStatistics in pairs(otherPlayerStatisticsByUnit) do
@@ -327,6 +329,8 @@ function AutoBiographer_StatisticsWindow:GetTableData(minLevel, maxLevel)
         OtherPlayerStatistics.GetSum(otherPlayerStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.DuelsLostToPlayer }),
         OtherPlayerStatistics.GetSum(otherPlayerStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.DuelsWonAgainstPlayer }),
         OtherPlayerStatistics.GetSum(otherPlayerStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.TimeSpentGroupedWithPlayer }),
+        OtherPlayerStatistics.GetSum(otherPlayerStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.WhispersSentToPlayer }),
+        OtherPlayerStatistics.GetSum(otherPlayerStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.WhispersReceivedFromPlayer }),
       }
       table.insert(tableData.Rows, row)
     end

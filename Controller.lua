@@ -1097,6 +1097,14 @@ function Controller:OnSkillLevelIncreased(timestamp, coordinates, skillName, ski
   end
 end
 
+function Controller:OnWhisper(otherPlayerCatalogUnitId, outgoing)
+  local statistics = self:GetCurrentLevelStatistics().OtherPlayerStatisticsByOtherPlayer
+  if (not statistics[otherPlayerCatalogUnitId]) then statistics[otherPlayerCatalogUnitId] = OtherPlayerStatistics.New() end
+  local trackingType = outgoing and AutoBiographerEnum.OtherPlayerTrackingType.WhispersSentToPlayer or
+    AutoBiographerEnum.OtherPlayerTrackingType.WhispersReceivedFromPlayer
+  OtherPlayerStatistics.Add(statistics[otherPlayerCatalogUnitId], trackingType, 1)
+end
+
 function Controller:PrintEvents()
   for _,v in pairs(self.CharacterData.Events) do
     print(Event.ToString(v, self.CharacterData.Catalogs))

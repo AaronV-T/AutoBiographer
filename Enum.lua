@@ -174,6 +174,8 @@ AutoBiographerEnum = {
     TimeSpentGroupedWithPlayer = 2,
     BuffsGivenToPlayerNotGrouped = 3,
     BuffsGivenToPlayerWhileGrouped = 4,
+    WhispersSentToPlayer = 5,
+    WhispersReceivedFromPlayer = 6,
   },
   PlayerRating = {
     NotApplicable = 0,

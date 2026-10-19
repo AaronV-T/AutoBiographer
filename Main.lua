@@ -20,6 +20,7 @@ AutoBiographer_EventManager = {
   LastPlayerDeadEventTimestamp = nil,
   LastPlayerMoney = nil,
   LastSentChatLineId = nil,
+  LastReceivedWhisperLineId = nil,
   MailboxIsOpen = nil,
   MailboxMessages = nil,
   MailboxUpdatesRunning = 0,
@@ -627,8 +628,12 @@ function EM.EventHandlers.CHAT_MSG_TRADESKILLS(self, text, arg2, arg3, arg4, arg
   --print(arg2)
 end
 
+function EM.EventHandlers.CHAT_MSG_WHISPER(self, ...)
+  self:OnWhisper(false, ...)
+end
+
 function EM.EventHandlers.CHAT_MSG_WHISPER_INFORM(self, ...)
-  self:OnMessageSent(messageTypes.Whisper, true, ...)
+  if (self:OnMessageSent(messageTypes.Whisper, true, ...)) then self:OnWhisper(true, ...) end
 end
 
 function EM.EventHandlers.CHAT_MSG_YELL(self, ...)
@@ -1762,6 +1767,44 @@ function EM:OnMessageSent(messageTrackingType, outgoingOnly, ...)
     self.LastSentChatLineId = lineId
   end
   Controller:OnMessageSent(messageTrackingType)
+  return true
+end
+
+function EM:OnWhisper(outgoing, ...)
+  if (not self.PlayerEnteringWorldHasFired) then return end
+  -- WHISPER identifies the sender; WHISPER_INFORM identifies the recipient.
+  -- Never inspect or persist the message text.
+  local otherGuid = select(12, ...)
+  local playerGuid = UnitGUID("player")
+  if (self:IsSecretValue(otherGuid) or self:IsSecretValue(playerGuid) or
+      type(otherGuid) ~= "string" or not playerGuid or otherGuid == playerGuid or
+      not string.match(otherGuid, "^Player%-")) then return end
+  local success, catalogUnitId = pcall(HelperFunctions.GetCatalogIdFromGuid, otherGuid)
+  if (not success or not catalogUnitId) then return end
+
+  -- Outgoing messages were already deduplicated by OnMessageSent. Keep incoming
+  -- line IDs separate so receiving a whisper cannot affect sent-message totals.
+  if (not outgoing) then
+    local lineId = select(11, ...)
+    if (not self:IsSecretValue(lineId) and type(lineId) == "number" and lineId > 0) then
+      if (lineId == self.LastReceivedWhisperLineId) then return end
+      self.LastReceivedWhisperLineId = lineId
+    end
+  end
+
+  local fullName = select(2, ...)
+  local name, lastName
+  if (not self:IsSecretValue(fullName) and type(fullName) == "string" and fullName ~= "") then
+    name = fullName
+    if (Api.IsWoWForever()) then
+      local firstName, surname = string.match(fullName, "^(%S+)%s+(.+)$")
+      if (firstName) then name, lastName = firstName, surname end
+    end
+  end
+  Controller:UpdateCatalogUnit(CatalogUnit.New(
+    catalogUnitId, nil, nil, nil, nil, name, lastName, nil, nil, AutoBiographerEnum.UnitType.Player
+  ))
+  Controller:OnWhisper(catalogUnitId, outgoing)
 end
 
 function EM:OnStartedCasting(spellId)
