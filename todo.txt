@@ -1,14 +1,16 @@
-Add announcement to Wow classic that forever addon is available and needs testers.
-Update Curseforge page and categories
+Promote content creators?
 
 
-
-Track fishing stats attempts and successful.
+Fix kill tracking in dungeons
 Track travel history?
-Track whispers to and from specific players?
-Fix controller issues
+Track dungeon runs/clears: runs started, count of runs per bosses defeated, fastest completed run
+Track milestones for dmg per spell and kills per unit. Milestones for PVP.
+Event for first items equipped
+Option to switch between miles and kilometers
+Change quest event icon
 Custom campfire stories?
 Battlegrounds & pvp verify stats
+Show pvp kills/deaths in nice screen
 Right-click chat message to save it and link it to the person who posted it.
 Chat commands: Add note, add task
 Startup hints
@@ -18,10 +20,11 @@ other player stat: rezzes
 Session stats
 Show highlights when dieing in hardcore? Share most unique stats when dieing in hardcore?
 Character notes and account notes
+Show collective playtime across all characters
+Program to backup and sync data
 
 
 
-death stats by killer
 event button
 Notice on unknown mobs, items, zones/subzones.
 Screenshot deaths.
