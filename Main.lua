@@ -158,8 +158,10 @@ local function FindUnitGUIDByUnitName(unitName)
 end
 
 local function FindUnitIdByUnitGUID(unitGuid)
+	if (EM:IsSecretValue(unitGuid) or type(unitGuid) ~= "string" or unitGuid == "") then return nil end
 	for i = 1, #validUnitIds do
-		if UnitGUID(validUnitIds[i]) == unitGuid then return validUnitIds[i] end
+		local candidateGuid = UnitGUID(validUnitIds[i])
+		if (not EM:IsSecretValue(candidateGuid) and candidateGuid == unitGuid) then return validUnitIds[i] end
 	end
 	return nil
 end
