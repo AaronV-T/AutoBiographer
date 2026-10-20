@@ -35,6 +35,7 @@ end
 function Controller:AddFishingStat(trackingType, levelNum)
   local statistics = self.CharacterData.Levels[levelNum]
   MiscellaneousStatistics.Add(statistics.MiscellaneousStatistics, trackingType, 1)
+  AutoBiographer_Milestones:OnStatChanged("Fishing")
 end
 
 function Controller:AddLog(text, logLevel)
@@ -732,6 +733,7 @@ function Controller:OnAcquiredItem(timestamp, coordinates, itemAcquisitionMethod
   
   if (not self:GetCurrentLevelStatistics().ItemStatisticsByItem[catalogItem.Id]) then self:GetCurrentLevelStatistics().ItemStatisticsByItem[catalogItem.Id] = ItemStatistics.New() end
   ItemStatistics.AddCount(self:GetCurrentLevelStatistics().ItemStatisticsByItem[catalogItem.Id], itemAcquisitionMethod, quantity)
+  AutoBiographer_Milestones:OnAcquiredItem(catalogItem.Id, itemAcquisitionMethod, quantity)
   AutoBiographer_Milestones:OnStatChanged("Items")
 end
 
@@ -953,6 +955,7 @@ function Controller:OnEquippedItem(timestamp, slotId, itemId)
     local name, _, rarity, level, _, itemType, subType = Api.GetItemInfo(itemId)
     self:UpdateCatalogItem(CatalogItem.New(itemId, name, rarity, level, itemType, subType, nil, true))
     self:AddEvent(FirstEquippedItemEvent.New(timestamp, HelperFunctions.GetCoordinatesByUnitId("player"), itemId))
+    AutoBiographer_Milestones:OnStatChanged("Equipment")
   end
   if (changed and AutoBiographer_GearPanel and AutoBiographer_GearPanel.QueueRefresh) then
     AutoBiographer_GearPanel:QueueRefresh()
@@ -1009,6 +1012,7 @@ function Controller:OnKill(timestamp, coordinates, kill)
       Controller:OnBossKill(time(), HelperFunctions.GetCoordinatesByUnitId("player"), kill.CatalogUnitId, self.CharacterData.Catalogs.UnitCatalog[kill.CatalogUnitId].Name, hasKilledUnitBefore)
     end
   end
+  AutoBiographer_Milestones:OnKill(kill)
   AutoBiographer_Milestones:OnStatChanged("Kills")
 end
 

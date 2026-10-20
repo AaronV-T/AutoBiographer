@@ -5,7 +5,8 @@ local Milestones = AutoBiographer_Milestones
 -- Source of truth for milestone thresholds and sharing eligibility.
 -- Missing MinorModulus/MajorStart means there are no milestones of that kind.
 -- Time values are seconds, money is copper, and distance is yards.
--- CompanionTime and SpellTime apply separately to each family/aura.
+-- CompanionTime, CreatureKillingBlows, ItemAcquired, ItemCrafted and SpellTime
+-- apply separately to each family, creature, item or aura.
 Milestones.Configuration = {
   MajorMultiplier = 10,
   MinorModuliByLevel = {
@@ -20,16 +21,24 @@ Milestones.Configuration = {
   Types = {
     BuffsGiven         = { MinorModulus = 1000,  MajorStart = 1000,    Shareable = true },
     Camped             = { MinorModulus = 100,  MajorStart = 100,     Shareable = true },
-    CompanionTime      = { MinorModulus = 86400,  MajorStart = 86400,   Shareable = true },
+    CompanionTime      = { MinorModulus = 86400,  MajorStart = 86400,   Shareable = true }, -- This is per companion family.
+    CreatureKillingBlows = { MinorModulus = 100, MajorStart = 1000,     Shareable = true }, -- This is per creature.
     CreatureTypesKilled = { MinorModulus = 100, MajorStart = 100,     Shareable = true },
     DamageDealt        = { MinorModuliByLevel = "DamageOrHealing", MajorStart = 100000, Shareable = true },
     Deaths             = { MinorModulus = 100,  MajorStart = 100,     Shareable = false },
     Distance           = { MinorModulus = 100000,  MajorStart = 1000000,  Shareable = true },
+    DistanceMounted    = { MinorModulus = 100000,  MajorStart = 1000000,  Shareable = true },
+    DistanceOnFoot     = { MinorModulus = 100000,  MajorStart = 1000000,  Shareable = true },
+    DistanceSwimming   = { MinorModulus = 100000,  MajorStart = 1000000,  Shareable = true },
     DrowningDeaths     = { MinorModulus = 10,  MajorStart = 10,      Shareable = false },
     DuelsWon           = { MinorModulus = 10,  MajorStart = 10,      Shareable = true },
     Experience         = { MinorModulus = 1000000,  MajorStart = 1000000, Shareable = true },
     FallingDeaths      = { MinorModulus = 10,  MajorStart = 10,      Shareable = false },
+    FishingCasts       = { MinorModulus = 1000, MajorStart = 1000,    Shareable = true },
+    FishingCatches     = { MinorModulus = 1000, MajorStart = 1000,    Shareable = true },
     HealingDealt       = { MinorModuliByLevel = "DamageOrHealing", MajorStart = 100000, Shareable = true },
+    ItemAcquired       = { MinorModulus = 1000, MajorStart = 1000,    Shareable = true }, -- This is per item.
+    ItemCrafted        = { MinorModulus = 1000,  MajorStart = 1000,     Shareable = true }, -- This is per item.
     ItemsCrafted       = { MinorModulus = 1000,  MajorStart = 1000,    Shareable = true },
     Jumps              = { MinorModulus = 1000, MajorStart = 10000,   Shareable = true },
     Kills              = { MinorModulus = 1000, MajorStart = 1000,    Shareable = true },
@@ -38,14 +47,17 @@ Milestones.Configuration = {
     Quests             = { MinorModulus = 100,  MajorStart = 100,     Shareable = true },
     Shapeshifts        = { MinorModulus = 1000,  MajorStart = 1000,    Shareable = true },
     SpellsCast         = { MinorModulus = 10000,  MajorStart = 10000,   Shareable = true },
-    SpellTime          = { MinorModulus = 86400,  MajorStart = 86400,   Shareable = true },
+    SpellTime          = { MinorModulus = 86400,  MajorStart = 86400,   Shareable = true }, -- This is per spell.
     TimeAquaticForm    = { MinorModulus = 86400,  MajorStart = 86400,   Shareable = true },
     TimeBattleStance   = { MinorModulus = 86400,  MajorStart = 86400,   Shareable = true },
     TimeBearForm       = { MinorModulus = 86400,  MajorStart = 86400,   Shareable = true },
     TimeBerserkerStance = { MinorModulus = 86400, MajorStart = 86400,   Shareable = true },
+    TimeCasting        = { MinorModulus = 86400,  MajorStart = 86400,   Shareable = true },
     TimeCatForm        = { MinorModulus = 86400,  MajorStart = 86400,   Shareable = true },
+    TimeCombat         = { MinorModulus = 86400,  MajorStart = 86400,   Shareable = true },
     TimeDefensiveStance = { MinorModulus = 86400, MajorStart = 86400,   Shareable = true },
     TimeFeignDeath     = { MinorModulus = 86400,  MajorStart = 86400,   Shareable = true },
+    TimeFishing        = { MinorModulus = 86400,  MajorStart = 86400,   Shareable = true },
     TimeGhostWolf      = { MinorModulus = 86400,  MajorStart = 86400,   Shareable = true },
     TimeGrouped        = { MinorModulus = 86400,  MajorStart = 86400,   Shareable = false },
     TimeMindControl    = { MinorModulus = 86400,  MajorStart = 86400,   Shareable = true },
@@ -54,6 +66,9 @@ Milestones.Configuration = {
     TimeShadowform     = { MinorModulus = 86400,  MajorStart = 86400,   Shareable = true },
     TimeStealthed      = { MinorModulus = 86400,  MajorStart = 86400,   Shareable = true },
     TimeTravelForm     = { MinorModulus = 86400,  MajorStart = 86400,   Shareable = true },
+    UniqueItemsAcquired = { MinorModulus = 100, MajorStart = 1000,     Shareable = true },
+    UniqueItemsCrafted  = { MinorModulus = 25,  MajorStart = 100,     Shareable = true },
+    UniqueItemsEquipped = { MinorModulus = 25,  MajorStart = 100,     Shareable = true },
     UniquePlayersBuffed = { MinorModulus = 100, MajorStart = 100,     Shareable = true },
   },
 }
@@ -164,6 +179,15 @@ function Milestones:CreateDefinitions()
     end
     return total
   end)
+  Add("DistanceMounted", "Distance", "travelled %s yards on a mount", function()
+    return controller:GetDistanceByDistanceTrackingType(enum.DistanceTrackingType.Mounted, 1, MaxLevel())
+  end)
+  Add("DistanceOnFoot", "Distance", "travelled %s yards on foot", function()
+    return controller:GetDistanceByDistanceTrackingType(enum.DistanceTrackingType.OnFoot, 1, MaxLevel())
+  end)
+  Add("DistanceSwimming", "Distance", "swum %s yards", function()
+    return controller:GetDistanceByDistanceTrackingType(enum.DistanceTrackingType.Swimming, 1, MaxLevel())
+  end)
   Add("DrowningDeaths", "Deaths", "died to drowning %s times", function()
     return controller:GetDeathsByDeathTrackingType(enum.DeathTrackingType.DeathToDrowning, 1, MaxLevel())
   end)
@@ -178,6 +202,12 @@ function Milestones:CreateDefinitions()
   end)
   Add("FallingDeaths", "Deaths", "died to falling %s times", function()
     return controller:GetDeathsByDeathTrackingType(enum.DeathTrackingType.DeathToFalling, 1, MaxLevel())
+  end)
+  Add("FishingCasts", "Fishing", "cast a fishing line %s times", function()
+    return controller:GetMiscellaneousStatByMiscellaneousTrackingType(enum.MiscellaneousTrackingType.FishingCasts, 1, MaxLevel())
+  end)
+  Add("FishingCatches", "Fishing", "completed %s successful fishing attempts", function()
+    return controller:GetMiscellaneousStatByMiscellaneousTrackingType(enum.MiscellaneousTrackingType.FishingCatches, 1, MaxLevel())
   end)
   Add("HealingDealt", "Damage", "done %s healing", function()
     return controller:GetDamageOrHealing(enum.DamageOrHealingCategory.HealingDealt, 1, MaxLevel())
@@ -219,10 +249,40 @@ function Milestones:CreateDefinitions()
   Add("SpellsCast", "Spells", "successfully cast %s spells", function()
     return controller:GetSpellCountBySpellTrackingType(enum.SpellTrackingType.SuccessfullyCast, 1, MaxLevel())
   end)
+  Add("UniqueItemsAcquired", "Items", "acquired %s different items", function()
+    local count = 0
+    for _, item in pairs(controller.CharacterData.Catalogs.ItemCatalog) do
+      if (item.Acquired) then count = count + 1 end
+    end
+    return count
+  end)
+  Add("UniqueItemsCrafted", "Items", "crafted %s different items", function()
+    local count = 0
+    for _, statistics in pairs(controller:GetAggregatedItemStatisticsDictionary(1, MaxLevel())) do
+      if ((statistics[enum.ItemAcquisitionMethod.Create] or 0) > 0) then count = count + 1 end
+    end
+    return count
+  end)
+  Add("UniqueItemsEquipped", "Equipment", "equipped %s different items", function()
+    local count = 0
+    for _, item in pairs(controller.CharacterData.Catalogs.ItemCatalog) do
+      if (item.Equipped) then count = count + 1 end
+    end
+    return count
+  end)
   Add("UniquePlayersBuffed", "Buffs", "buffed %s different players outside your group", function()
     return controller:GetUniqueOtherPlayerCountByOtherPlayerTrackingType(enum.OtherPlayerTrackingType.BuffsGivenToPlayerNotGrouped, 1, MaxLevel())
   end)
 
+  self:AddTimedDefinition("TimeCasting", "Time", "casting", function()
+    return controller:GetTimeForTimeTrackingType(enum.TimeTrackingType.Casting, 1, MaxLevel())
+  end)
+  self:AddTimedDefinition("TimeCombat", "Time", "in combat", function()
+    return controller:GetTimeForTimeTrackingType(enum.TimeTrackingType.InCombat, 1, MaxLevel())
+  end)
+  self:AddTimedDefinition("TimeFishing", "Time", "fishing", function()
+    return controller:GetTimeForTimeTrackingType(enum.TimeTrackingType.Fishing, 1, MaxLevel())
+  end)
   self:AddTimedDefinition("TimeGrouped", "Time", "in a group", function()
     return controller:GetTimeForTimeTrackingType(enum.TimeTrackingType.InParty, 1, MaxLevel())
   end)
@@ -263,6 +323,38 @@ function Milestones:Flush()
   self:ResumeSharing()
 end
 
+function Milestones:OnAcquiredItem(itemId, acquisitionMethod, quantity)
+  if (not self.Started) then return end
+  local controller, enum = AutoBiographer_Controller, AutoBiographerEnum
+  for _, ruleKey in ipairs({ "ItemAcquired", "ItemCrafted" }) do
+    local crafted = ruleKey == "ItemCrafted"
+    if (not crafted or acquisitionMethod == enum.ItemAcquisitionMethod.Create) then
+      local key = ruleKey .. itemId
+      if (not self.Definitions[key]) then
+        self:AddDefinition(key, key, function(amount)
+          local item = controller.CharacterData.Catalogs.ItemCatalog[itemId]
+          return (crafted and "crafted " or "acquired ") .. Count(amount) .. " of " .. (item and item.Name or "item #" .. itemId)
+        end, function()
+          local total = 0
+          for _, level in pairs(controller.CharacterData.Levels) do
+            local statistics = level.ItemStatisticsByItem[itemId]
+            if (statistics) then
+              total = total + (crafted and (statistics[enum.ItemAcquisitionMethod.Create] or 0) or
+                ItemStatistics.GetSum(statistics, enum.ItemAcquisitionMethod))
+            end
+          end
+          return total
+        end, ruleKey)
+        -- Register lazily after this acquisition, but baseline before its delta.
+        -- Older totals won't replay announcements after a login or reload.
+        self.Totals[key] = self.Totals[key] - quantity
+      end
+      -- Only recheck the changed item, not every item encountered this session.
+      self:OnStatChanged(key)
+    end
+  end
+end
+
 function Milestones:OnCompanionFamilyTime(familyId, familyName, seconds)
   if (not self.Started) then return end
   local key = "CompanionTime" .. familyId
@@ -273,6 +365,26 @@ function Milestones:OnCompanionFamilyTime(familyId, familyName, seconds)
     self.Totals[key] = self.Totals[key] - seconds
   end
   self:OnStatChanged("CompanionTime")
+end
+
+function Milestones:OnKill(kill)
+  if (not self.Started or not kill.PlayerGotKillingBlow or
+      HelperFunctions.GetUnitTypeFromCatalogUnitId(kill.CatalogUnitId) ~= AutoBiographerEnum.UnitType.Creature) then return end
+  local controller, enum = AutoBiographer_Controller, AutoBiographerEnum
+  local unitId = kill.CatalogUnitId
+  local key = "CreatureKillingBlows" .. unitId
+  if (not self.Definitions[key]) then
+    self:AddDefinition(key, key, function(amount)
+      local unit = controller.CharacterData.Catalogs.UnitCatalog[unitId]
+      return "landed " .. Count(amount) .. " killing blows against " .. (unit and unit.Name or "creature #" .. unitId)
+    end, function()
+      return KillStatistics.GetSum(controller:GetAggregatedKillStatisticsByCatalogUnitId(unitId, 1, controller:GetCurrentLevelNum()), {
+        enum.KillTrackingType.TaggedKillingBlow, enum.KillTrackingType.UntaggedKillingBlow,
+      })
+    end, "CreatureKillingBlows")
+    self.Totals[key] = self.Totals[key] - 1
+  end
+  self:OnStatChanged(key)
 end
 
 function Milestones:OnSpellTime(spellId, seconds)
