@@ -800,7 +800,14 @@ end
 
 
 function EM.EventHandlers.GET_ITEM_INFO_RECEIVED(self, itemId, success)
-  if (self:IsSecretValue(itemId) or self:IsSecretValue(success) or not success or not Controller.CharacterData.Todos) then return end
+  if (self:IsSecretValue(itemId) or self:IsSecretValue(success) or not success) then return end
+  if (Controller.CharacterData.Catalogs and Catalogs.PlayerHasEquippedItem(Controller.CharacterData.Catalogs, itemId)
+      and Controller:CatalogItemIsIncomplete(itemId)) then
+    local name, _, rarity, level, _, itemType, subType = Api.GetItemInfo(itemId)
+    Controller:UpdateCatalogItem(CatalogItem.New(itemId, name, rarity, level, itemType, subType))
+    if (AutoBiographer_EventWindow and AutoBiographer_EventWindow.QueueRefresh) then AutoBiographer_EventWindow:QueueRefresh() end
+  end
+  if (not Controller.CharacterData.Todos) then return end
   for _, item in ipairs(Controller:GetTodos().Items) do
     if (item.ItemId == itemId) then AutoBiographer_TodoPanel:QueueRefresh(); return end
   end

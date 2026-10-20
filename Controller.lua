@@ -949,6 +949,11 @@ end
 
 function Controller:OnEquippedItem(timestamp, slotId, itemId)
   local changed = GearHistory.RecordChange(self:GetGearHistory(), timestamp, slotId, itemId)
+  if (changed and itemId > 0 and not Catalogs.PlayerHasEquippedItem(self.CharacterData.Catalogs, itemId)) then
+    local name, _, rarity, level, _, itemType, subType = Api.GetItemInfo(itemId)
+    self:UpdateCatalogItem(CatalogItem.New(itemId, name, rarity, level, itemType, subType, nil, true))
+    self:AddEvent(FirstEquippedItemEvent.New(timestamp, HelperFunctions.GetCoordinatesByUnitId("player"), itemId))
+  end
   if (changed and AutoBiographer_GearPanel and AutoBiographer_GearPanel.QueueRefresh) then
     AutoBiographer_GearPanel:QueueRefresh()
   end
@@ -1160,7 +1165,7 @@ function Controller:UpdateCatalogItem(catalogItem)
   if (not self.CharacterData.Catalogs.ItemCatalog[catalogItem.Id]) then
     self.CharacterData.Catalogs.ItemCatalog[catalogItem.Id] = catalogItem
   else
-    CatalogItem.Update(self.CharacterData.Catalogs.ItemCatalog[catalogItem.Id], catalogItem.Id, catalogItem.Name, catalogItem.Rarity, catalogItem.Level, catalogItem.Type, catalogItem.SubType, catalogItem.Acquired)
+    CatalogItem.Update(self.CharacterData.Catalogs.ItemCatalog[catalogItem.Id], catalogItem.Id, catalogItem.Name, catalogItem.Rarity, catalogItem.Level, catalogItem.Type, catalogItem.SubType, catalogItem.Acquired, catalogItem.Equipped)
   end
   
   if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog("CatalogItem Updated: " .. CatalogItem.ToString(self.CharacterData.Catalogs.ItemCatalog[catalogItem.Id]) .. ".", AutoBiographerEnum.LogLevel.Debug) end

@@ -21,6 +21,11 @@ function Catalogs.PlayerHasAcquiredItem(catalogs, catalogItemId)
   return catalogItem and catalogItem.Acquired
 end
 
+function Catalogs.PlayerHasEquippedItem(catalogs, catalogItemId)
+  local catalogItem = catalogs.ItemCatalog[catalogItemId]
+  return catalogItem and catalogItem.Equipped
+end
+
 function Catalogs.PlayerHasKilledBoss(catalogs, catalogBossId)
   local catalogBoss = catalogs.BossCatalog[catalogBossId]
   return catalogBoss ~= nil and catalogBoss.Killed
@@ -61,7 +66,7 @@ end
 -- *** CatalogItem ***
 
 CatalogItem = {}
-function CatalogItem.New(id, name, rarity, level, type, subType, playerHasAcquired)
+function CatalogItem.New(id, name, rarity, level, type, subType, playerHasAcquired, playerHasEquipped)
   return {
     Id = id,
     Name = name,
@@ -70,14 +75,15 @@ function CatalogItem.New(id, name, rarity, level, type, subType, playerHasAcquir
     Type = type,
     SubType = subType,
     Acquired = playerHasAcquired,
+    Equipped = playerHasEquipped,
   }
 end
 
 function CatalogItem.ToString(cu)
-  return tostring(cu.Id) .. ", " .. tostring(cu.Name) .. ", "  .. tostring(cu.Rarity) .. ", " .. tostring(cu.Level) .. ", " .. tostring(cu.Type) .. ", " .. tostring(cu.SubType) .. ", " .. tostring(cu.Acquired)
+  return tostring(cu.Id) .. ", " .. tostring(cu.Name) .. ", "  .. tostring(cu.Rarity) .. ", " .. tostring(cu.Level) .. ", " .. tostring(cu.Type) .. ", " .. tostring(cu.SubType) .. ", " .. tostring(cu.Acquired) .. ", " .. tostring(cu.Equipped)
 end
 
-function CatalogItem.Update(ci, id, name, rarity, level, type, subType, playerHasAcquired)
+function CatalogItem.Update(ci, id, name, rarity, level, type, subType, playerHasAcquired, playerHasEquipped)
   if (id ~= nil) then ci.Id = id end
   if (name ~= nil) then ci.Name = name end
   if (rarity ~= nil) then ci.Rarity = rarity end
@@ -85,6 +91,7 @@ function CatalogItem.Update(ci, id, name, rarity, level, type, subType, playerHa
   if (type ~= nil) then ci.Type = type end
   if (subType ~= nil) then ci.SubType = subType end
   if (playerHasAcquired ~= nil) then ci.Acquired = playerHasAcquired end
+  if (playerHasEquipped ~= nil) then ci.Equipped = playerHasEquipped end
 end
 
 -- *** CatalogUnit ***

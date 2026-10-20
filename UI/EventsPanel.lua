@@ -8,6 +8,7 @@ local eventCategories = {
   { Name = "Custom events", SubTypes = { "Custom" } },
   { Name = "Deaths", SubTypes = { "PlayerDeath" } },
   { Name = "First items acquired", SubTypes = { "FirstAcquiredItem" } },
+  { Name = "First items equipped", SubTypes = { "FirstEquippedItem" } },
   { Name = "First kills", SubTypes = { "FirstKill" } },
   { Name = "First subzone visits", SubTypes = { "SubZoneFirstVisit" } },
   { Name = "First zone visits", SubTypes = { "ZoneFirstVisit" } },

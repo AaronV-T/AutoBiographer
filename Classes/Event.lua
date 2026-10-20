@@ -19,6 +19,8 @@ function Event.GetIconPath(e)
   elseif (e.Type == AutoBiographerEnum.EventType.Item) then
     if (e.SubType == AutoBiographerEnum.EventSubType.FirstAcquiredItem) then
       return "Interface\\Icons\\inv_misc_bag_10_black"
+    elseif (e.SubType == AutoBiographerEnum.EventSubType.FirstEquippedItem) then
+      return "Interface\\Icons\\inv_chest_chain_05"
     end
   elseif (e.Type == AutoBiographerEnum.EventType.Kill) then
     if (e.SubType == AutoBiographerEnum.EventSubType.BossKill) then
@@ -142,6 +144,10 @@ function Event.ToString(e, catalogs, excludeTimestamp)
       local itemName = "#" .. e.CatalogItemId
       if (catalogs and catalogs.ItemCatalog and catalogs.ItemCatalog[e.CatalogItemId] and catalogs.ItemCatalog[e.CatalogItemId].Name) then itemName = catalogs.ItemCatalog[e.CatalogItemId].Name end
       return timestampString .. "You acquired " .. itemName .. " for the first time."
+    elseif (e.SubType == AutoBiographerEnum.EventSubType.FirstEquippedItem) then
+      local itemName = "#" .. e.CatalogItemId
+      if (catalogs and catalogs.ItemCatalog and catalogs.ItemCatalog[e.CatalogItemId] and catalogs.ItemCatalog[e.CatalogItemId].Name) then itemName = catalogs.ItemCatalog[e.CatalogItemId].Name end
+      return timestampString .. "You equipped " .. itemName .. " for the first time."
     end
   elseif (e.Type == AutoBiographerEnum.EventType.Kill) then
     if (e.SubType == AutoBiographerEnum.EventSubType.BossKill) then
@@ -281,6 +287,14 @@ function FirstAcquiredItemEvent.New(timestamp, coordinates, catalogItemId)
   local newInstance = WorldEvent.New(timestamp, AutoBiographerEnum.EventType.Item, AutoBiographerEnum.EventSubType.FirstAcquiredItem, coordinates)
   newInstance.CatalogItemId = catalogItemId
   
+  return newInstance
+end
+
+FirstEquippedItemEvent = {}
+function FirstEquippedItemEvent.New(timestamp, coordinates, catalogItemId)
+  local newInstance = WorldEvent.New(timestamp, AutoBiographerEnum.EventType.Item, AutoBiographerEnum.EventSubType.FirstEquippedItem, coordinates)
+  newInstance.CatalogItemId = catalogItemId
+
   return newInstance
 end
 

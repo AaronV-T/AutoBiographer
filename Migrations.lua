@@ -596,6 +596,30 @@ table.insert(MM.CharacterMigrations,
   )
 )
 
+table.insert(MM.CharacterMigrations,
+  AutoBiographer_Migration:New(
+    22,
+    function(eventManager, controller)
+      local catalogs = controller.CharacterData.Catalogs
+      local function MarkEquipped(itemId)
+        if (itemId > 0) then
+          local item = catalogs.ItemCatalog[itemId]
+          if (not item) then
+            item = CatalogItem.New(itemId)
+            catalogs.ItemCatalog[itemId] = item
+          end
+          item.Equipped = true
+        end
+      end
+      -- Previously observed gear is not newly equipped. Preserve the existing
+      -- log and journal rather than creating retrospective first-equip events.
+      local gear = controller.CharacterData.Gear
+      for _, change in ipairs(gear.Changes) do MarkEquipped(change.ItemId) end
+      for _, itemId in pairs(gear.Snapshot) do MarkEquipped(itemId) end
+    end
+  )
+)
+
 -- *** Account Migrations ***
 -- Released account settings have no independent version; nil starts at 0.
 table.insert(MM.AccountMigrations,
@@ -624,6 +648,18 @@ table.insert(MM.AccountMigrations,
         if (settings.MapEventDisplayFilters[subType] == nil) then settings.MapEventDisplayFilters[subType] = true end
       end
       AddMissing(controller.AccountData.Notes, Notes.New())
+    end,
+    "Account"
+  )
+)
+
+table.insert(MM.AccountMigrations,
+  AutoBiographer_Migration:New(
+    2,
+    function(eventManager, controller)
+      local subType = AutoBiographerEnum.EventSubType.FirstEquippedItem
+      AddMissing(AutoBiographer_Settings.EventDisplayFilters, { [subType] = true })
+      AddMissing(AutoBiographer_Settings.MapEventDisplayFilters, { [subType] = true })
     end,
     "Account"
   )

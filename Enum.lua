@@ -88,6 +88,7 @@ AutoBiographerEnum = {
     ArenaWon = 19,
     Custom = 20,
     StatisticMilestone = 21,
+    FirstEquippedItem = 22,
   },
   ExperienceTrackingType = {
     Discovery = 0,
