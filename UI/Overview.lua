@@ -489,7 +489,7 @@ function Overview:Update(window)
   for _, card in ipairs(root.Headlines) do
     local metric = card.Metric
     local value = metric[6] == "money" and Api.FormatMoney(values[metric[1]] or 0) or
-      metric[1] == "DistanceTotal" and (Number((values.DistanceTotal or 0) / 1760) .. " mi") or Number(values[metric[1]])
+      metric[1] == "DistanceTotal" and HF.FormatDistance(values.DistanceTotal) or Number(values[metric[1]])
     card.Value:SetText(value)
     card.Data = { Title = metric[2], Name = value, Description = metric[3] }
   end

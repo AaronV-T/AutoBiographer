@@ -859,7 +859,7 @@ function AutoBiographer_StatisticsWindow:ShowRowTooltip(owner, row, column)
     end
     GameTooltip:AddDoubleLine("AFK time", HF.SecondsToTimeString(statistics.AfkTime, true), 0.8, 0.8, 0.8, 1, 1, 1)
     GameTooltip:AddDoubleLine("Grouped time", HF.SecondsToTimeString(statistics.GroupedTime, true), 0.8, 0.8, 0.8, 1, 1, 1)
-    GameTooltip:AddDoubleLine("Distance travelled", HF.CommaValue(HF.Round(statistics.DistanceTravelled / 1760, 1)) .. " mi", 0.8, 0.8, 0.8, 1, 1, 1)
+    GameTooltip:AddDoubleLine("Distance travelled", HF.FormatDistance(statistics.DistanceTravelled), 0.8, 0.8, 0.8, 1, 1, 1)
   end
   GameTooltip:Show()
 end

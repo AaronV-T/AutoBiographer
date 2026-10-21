@@ -4,6 +4,7 @@ local Api = AutoBiographer_Api
 local optionGroups = {
   { Title = "Display & Tooltips", Controls = {
     { Name = "ShowMinimapButton", Text = "Show button on the minimap." },
+    { Name = "UseKilometers", Text = "Show distances in kilometers instead of miles." },
     { Name = "FriendlyPlayerTooltip", Text = "Show duel and grouped time info on friendly player tooltips." },
     { Name = "KillCountTooltip", Text = "Show kill count on enemy tooltips." },
     { Name = "DiscoveryTooltip", Text = "Show 'Added in Forever' on tooltips for Forever-specific items and creatures.", Availability = "Forever" },
@@ -167,6 +168,7 @@ function AutoBiographer_OptionWindow:LoadOptions()
   self.cbScreenshotOnlyOnFirstBossKill:SetChecked(AutoBiographer_Settings.Options["TakeScreenshotOnlyOnFirstBossKill"])
   self.cbScreenshotOnAchievementEarned:SetChecked(AutoBiographer_Settings.Options["TakeScreenshotOnAchievementEarned"])
   self.cbShowMinimapButton:SetChecked(AutoBiographer_Settings.Options["ShowMinimapButton"])
+  self.cbUseKilometers:SetChecked(AutoBiographer_Settings.Options["UseKilometers"])
   self.cbShowTimePlayedOnLevelUp:SetChecked(AutoBiographer_Settings.Options["ShowTimePlayedOnLevelUp"])
   self:UpdateDependencies()
 end
@@ -192,11 +194,13 @@ function AutoBiographer_OptionWindow:SaveOptions()
   AutoBiographer_Settings.Options["TakeScreenshotOnlyOnFirstBossKill"] = self.cbScreenshotOnlyOnFirstBossKill:GetChecked()
   AutoBiographer_Settings.Options["TakeScreenshotOnAchievementEarned"] = self.cbScreenshotOnAchievementEarned:GetChecked()
   AutoBiographer_Settings.Options["ShowMinimapButton"] = self.cbShowMinimapButton:GetChecked()
+  AutoBiographer_Settings.Options["UseKilometers"] = self.cbUseKilometers:GetChecked()
   AutoBiographer_Settings.Options["ShowTimePlayedOnLevelUp"] = self.cbShowTimePlayedOnLevelUp:GetChecked()
   
   if (AutoBiographer_Settings.Options["ShowMinimapButton"] == false) then AutoBiographer_MinimapButton:Hide()
   else AutoBiographer_MinimapButton:Show() end
   AutoBiographer_Milestones:ResumeSharing()
+  if (AutoBiographer_MainWindow and AutoBiographer_MainWindow:IsShown()) then AutoBiographer_MainWindow:Update() end
 end
 
 AutoBiographer_OptionWindow.name = "AutoBiographer"

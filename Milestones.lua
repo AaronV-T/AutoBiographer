@@ -148,6 +148,11 @@ function Milestones:CreateDefinitions()
   local function Add(key, group, template, getter)
     self:AddDefinition(key, group, function(amount) return string.format(template, Count(amount)) end, getter)
   end
+  local function AddDistance(key, template, getter)
+    self:AddDefinition(key, "Distance", function(amount)
+      return string.format(template, HelperFunctions.FormatDistance(amount, true))
+    end, getter)
+  end
   Add("BuffsGiven", "Buffs", "given %s buffs to other players", function()
     return controller:GetOtherPlayerStatByOtherPlayerTrackingType(enum.OtherPlayerTrackingType.BuffsGivenToPlayerNotGrouped, 1, MaxLevel()) +
       controller:GetOtherPlayerStatByOtherPlayerTrackingType(enum.OtherPlayerTrackingType.BuffsGivenToPlayerWhileGrouped, 1, MaxLevel())
@@ -172,20 +177,20 @@ function Milestones:CreateDefinitions()
     end
     return total
   end)
-  Add("Distance", "Distance", "travelled %s yards", function()
+  AddDistance("Distance", "travelled %s", function()
     local total = 0
     for _, distanceType in pairs(enum.DistanceTrackingType) do
       total = total + controller:GetDistanceByDistanceTrackingType(distanceType, 1, MaxLevel())
     end
     return total
   end)
-  Add("DistanceMounted", "Distance", "travelled %s yards on a mount", function()
+  AddDistance("DistanceMounted", "travelled %s on a mount", function()
     return controller:GetDistanceByDistanceTrackingType(enum.DistanceTrackingType.Mounted, 1, MaxLevel())
   end)
-  Add("DistanceOnFoot", "Distance", "travelled %s yards on foot", function()
+  AddDistance("DistanceOnFoot", "travelled %s on foot", function()
     return controller:GetDistanceByDistanceTrackingType(enum.DistanceTrackingType.OnFoot, 1, MaxLevel())
   end)
-  Add("DistanceSwimming", "Distance", "swum %s yards", function()
+  AddDistance("DistanceSwimming", "swum %s", function()
     return controller:GetDistanceByDistanceTrackingType(enum.DistanceTrackingType.Swimming, 1, MaxLevel())
   end)
   Add("DrowningDeaths", "Deaths", "died to drowning %s times", function()

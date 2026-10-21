@@ -664,3 +664,13 @@ table.insert(MM.AccountMigrations,
     "Account"
   )
 )
+
+table.insert(MM.AccountMigrations,
+  AutoBiographer_Migration:New(
+    3,
+    function(eventManager, controller)
+      AddMissing(AutoBiographer_Settings.Options, { UseKilometers = false })
+    end,
+    "Account"
+  )
+)

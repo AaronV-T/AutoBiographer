@@ -581,9 +581,8 @@ function AutoBiographer_SummaryPanel:Update()
           row.Values[1]:SetText(HF.SecondsToTimeString(value or 0, true))
           row.FullValues[1] = HF.SecondsToTimeString(value or 0)
         elseif (format == "distance") then
-          local miles = HF.CommaValue(HF.Round((value or 0) / 1760, 1))
-          row.Values[1]:SetText(miles .. " mi")
-          row.FullValues[1] = miles .. " miles"
+          row.Values[1]:SetText(HF.FormatDistance(value))
+          row.FullValues[1] = HF.FormatDistance(value, true)
         elseif (format == "money") then
           row.Values[1]:SetText(Api.FormatMoney(value or 0))
           row.FullValues[1] = Api.FormatMoney(value or 0)
@@ -596,7 +595,7 @@ function AutoBiographer_SummaryPanel:Update()
   end
   if (self.ActiveTab == "Overview") then AutoBiographer_Overview:Update(self) end
   self.Footer:SetText(self.ActiveTab == "Overview" and ("Your recorded story | " .. self.DropdownText .. " | Click a highlight to explore") or
-    self.ActiveTab == "Travel" and "Horizontal distance in miles; areas without readable coordinates are not recorded." or
+    self.ActiveTab == "Travel" and ("Horizontal distance in " .. select(2, HF.GetDistanceUnit()) .. "; areas without readable coordinates are not recorded.") or
     self.ActiveTab == "Time" and "Time categories overlap; they do not add up to total play time." or
     ("Recorded statistics | " .. self.DropdownText))
   if (level and level.TimePlayedThisLevel) then

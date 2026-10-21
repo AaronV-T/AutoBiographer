@@ -4,7 +4,8 @@ local Sharing = AutoBiographer_CampfireSharing
 local Controller, Api, Enum = AutoBiographer_Controller, AutoBiographer_Api, AutoBiographerEnum
 
 -- All story eligibility, labels and wording live here. Minimums are expressed
--- in the displayed unit (counts, kilometres, hours or gold). Milestone minimums
+-- in configuration units (counts, kilometers, hours or gold), independent of
+-- the player's distance display preference. Milestone minimums
 -- instead come from Milestones.Configuration.Types[Milestone].MajorStart.
 -- Fill the two placement lists with spell IDs when they have been identified.
 Sharing.Configuration = {
@@ -17,7 +18,7 @@ Sharing.Configuration = {
   Channel = "SAY",
   Types = {
     AquaticTravel = { Label = "Aquatic journeys", Source = "Distance", Metric = "AquaticForm", Class = "DRUID", Minimum = 10, Unit = "Km",
-      Message = "I have travelled at least {quantity} kilometres in Aquatic Form. There is another world beneath the waves." },
+      Message = "I have travelled at least {quantity} {distanceUnit} in Aquatic Form. There is another world beneath the waves." },
     AuctionTrading = { Label = "Auction trading", Source = "Money", Metric = "AuctionHouseSale", Minimum = 100, Unit = "Gold",
       Message = "My auction sales have brought in at least {quantity} gold. There is adventure in a good bargain, too." },
     BattleExperience = { Label = "Battle experience", Source = "Milestone", Milestone = "Kills",
@@ -53,11 +54,11 @@ Sharing.Configuration = {
     FavoriteHaunt = { Label = "A favorite haunt", Source = "Areas", Minimum = 10, Unit = "Hours",
       Message = "I have spent at least {quantity} hours in {name}. I know that place rather well." },
     FlightPaths = { Label = "Views from above", Source = "Distance", Metric = "FlightPath", Minimum = 500, Unit = "Km",
-      Message = "I have travelled at least {quantity} kilometres by flight. The views almost make up for the landings." },
+      Message = "I have travelled at least {quantity} {distanceUnit} by flight. The views almost make up for the landings." },
     Generosity = { Label = "A little generosity", Source = "Buffs", Milestone = "BuffsGiven",
       Message = "I have given {quantity} buffs to adventurers outside my party. A little magic can make a stranger's road easier." },
     GhostWolfTravel = { Label = "Running with the wind", Source = "Distance", Metric = "GhostWolf", Class = "SHAMAN", Minimum = 100, Unit = "Km",
-      Message = "I have travelled at least {quantity} kilometres as a Ghost Wolf. The wind makes excellent company." },
+      Message = "I have travelled at least {quantity} {distanceUnit} as a Ghost Wolf. The wind makes excellent company." },
     Healing = { Label = "The healer's path", Source = "Damage", Metric = "HealingDealt", Milestone = "HealingDealt",
       Message = "My healing has restored {quantity} health. Not every victory is won by drawing blood." },
     HunterCompanionship = { Label = "Faithful companions", Source = "Companions", Class = "HUNTER", Milestone = "CompanionTime", Unit = "Hours",
@@ -84,7 +85,7 @@ Sharing.Configuration = {
     Questing = { Label = "Doing favours", Source = "Milestone", Milestone = "Quests",
       Message = "I have completed {quantity} quests. Somehow, everyone still has one more favour to ask." },
     Riding = { Label = "Life in the saddle", Source = "Distance", Metric = "Mounted", Minimum = 250, Unit = "Km",
-      Message = "I have ridden at least {quantity} kilometres. My mount deserves a share of the glory." },
+      Message = "I have ridden at least {quantity} {distanceUnit}. My mount deserves a share of the glory." },
     Shadowform = { Label = "Embracing the shadows", Source = "Time", Metric = "Shadowform", Class = "PRIEST", Milestone = "TimeShadowform", Unit = "Hours",
       Message = "I have spent at least {quantity} hours in Shadowform. The darkness and I have an understanding." },
     Shopping = { Label = "A merchant's favorite", Source = "Items", Metric = "Merchant", Minimum = 100,
@@ -96,15 +97,15 @@ Sharing.Configuration = {
     Stealth = { Label = "Unseen journeys", Source = "Time", Metric = "Stealthed", Classes = { "ROGUE", "DRUID" }, Milestone = "TimeStealthed", Unit = "Hours",
       Message = "I have spent at least {quantity} hours hidden in the shadows. Not every journey needs an audience." },
     Swimming = { Label = "Beneath the waves", Source = "Distance", Metric = "Swimming", Minimum = 10, Unit = "Km",
-      Message = "I have swum at least {quantity} kilometres. Dry socks are a luxury I no longer take for granted." },
+      Message = "I have swum at least {quantity} {distanceUnit}. Dry socks are a luxury I no longer take for granted." },
     TakingPunishment = { Label = "Taking punishment", Source = "Damage", Metric = "DamageTakenRaw", Minimum = 100000,
       Message = "I have endured {quantity} damage. I am beginning to think armour is a worthwhile investment." },
     TotemCalling = { Label = "Calling the elements", Source = "Casts", NamePattern = " Totem$", Class = "SHAMAN", Minimum = 100,
       Message = "I have called upon {name} {quantity} times. The elements have heard rather a lot from me." },
     TravelFormTravel = { Label = "Four-legged travels", Source = "Distance", Metric = "TravelForm", Class = "DRUID", Minimum = 100, Unit = "Km",
-      Message = "I have covered at least {quantity} kilometres in Travel Form. Four legs make light work of a long road." },
+      Message = "I have covered at least {quantity} {distanceUnit} in Travel Form. Four legs make light work of a long road." },
     Walking = { Label = "Worn-out boots", Source = "Distance", Metric = "OnFoot", Minimum = 100, Unit = "Km",
-      Message = "My boots have carried me at least {quantity} kilometres across Azeroth. Most of the soles are still attached." },
+      Message = "My boots have carried me at least {quantity} {distanceUnit} across Azeroth. Most of the soles are still attached." },
     WarriorStances = { Label = "A warrior's footing", Source = "Casts", Class = "WARRIOR", Minimum = 100,
       SpellIds = { 2457, 71, 2458 },
       Message = "I have entered {name} {quantity} times. There is a proper footing for every fight." },
@@ -282,8 +283,14 @@ function Sharing:Dismiss()
 end
 
 function Sharing:FormatMessage(rule, candidate)
-  local quantity = HelperFunctions.CommaValue(math.floor(candidate.Amount))
-  return (rule.Message:gsub("{quantity}", function() return quantity end):gsub("{name}", function() return candidate.Name or "" end))
+  local amount, distanceUnit = candidate.Amount, ""
+  if (rule.Unit == "Km") then
+    local _, name, factor = HelperFunctions.GetDistanceUnit()
+    amount, distanceUnit = amount * (factor / 0.0009144), name
+  end
+  local quantity = HelperFunctions.CommaValue(math.floor(amount))
+  return (rule.Message:gsub("{quantity}", function() return quantity end):gsub("{name}", function() return candidate.Name or "" end)
+    :gsub("{distanceUnit}", function() return distanceUnit end))
 end
 
 function Sharing:GetMinimum(rule)

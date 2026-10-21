@@ -194,7 +194,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   
   if type(_G["AUTOBIOGRAPHER_SETTINGS"]) ~= "table" then
 		_G["AUTOBIOGRAPHER_SETTINGS"] = {
-      DatabaseVersion = 1,
+      DatabaseVersion = AutoBiographer_MigrationManager:GetLatestAccountDatabaseVersion(),
       EventDisplayFilters = {}, -- Dict<EventSubType, bool>
       MapEventDisplayFilters = {}, -- Dict<EventSubType, bool>
       MapEventShowAnimation = false,
@@ -217,6 +217,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
         TakeScreenshotOnBossKill = true,
         TakeScreenshotOnLevelUp = true,
         TakeScreenshotOnlyOnFirstBossKill = true,
+        UseKilometers = false,
       }, 
     }
     for k,v in pairs(AutoBiographerEnum.EventSubType) do

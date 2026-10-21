@@ -37,6 +37,12 @@ function HF.GetCoordinatesByUnitId(unitId)
   return Coordinates.New(worldInstance, mapId, x, y)
 end
 
+function HF.GetDistanceUnit()
+  local options = AutoBiographer_Settings and AutoBiographer_Settings.Options
+  if (options and options.UseKilometers) then return "km", "kilometers", 0.0009144 end
+  return "mi", "miles", 1 / 1760
+end
+
 function HF.GetGameVersion()
   local v1, v2, v3 = strsplit(".", GetBuildInfo())
   v1 = tonumber(v1)
@@ -207,6 +213,11 @@ end
 function HF.CommaValue(n) -- credit http://richard.warburton.it
 	local left,num,right = string.match(n,'^([^%d]*%d)(%d*)(.-)$')
 	return left..(num:reverse():gsub('(%d%d%d)','%1,'):reverse())..right
+end
+
+function HF.FormatDistance(yards, fullUnits)
+  local abbreviation, name, factor = HF.GetDistanceUnit()
+  return HF.CommaValue(HF.Round((yards or 0) * factor, 1)) .. " " .. (fullUnits and name or abbreviation)
 end
 
 function HF.SecondsToTimeString(totalSeconds, shorten)
