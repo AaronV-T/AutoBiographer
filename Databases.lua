@@ -661,6 +661,10 @@ function AutoBiographer_Databases.Initialiaze()
     [604] = Coordinates.New(571, 121, 76.43, 21.43), -- Gundrak
     [608] = Coordinates.New(571, 125, 67.86, 69.43), -- The Violet Hold
     [619] = Coordinates.New(571, 115, 28.46, 51.71), -- Ahn'haket: The Old Kingdom
+    [2959] = Coordinates.New(0, 1416, 8.91, 59.72), -- City of Dalaran
+    [2998] = Coordinates.New(0, 1437, 47.95, 56.33), -- Excavation Site: Wetlands
+    [2999] = Coordinates.New(0, 1458, 71.75, 11.42), -- Ruins of Lordaeron
+    [3065] = Coordinates.New(0, 1455, 27.99, 47.78), -- The Hall of Thanes
   }
 
   AutoBiographer_Databases.ItemDatabase = AutoBiographer_ItemDatabase
