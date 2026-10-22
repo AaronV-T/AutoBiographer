@@ -40,6 +40,29 @@ function Api.GetAuraDataByIndex(unitId, index, filter)
   if (success) then return auraData end
 end
 
+function Api.GetBattlefieldPlayerFaction()
+  -- Modern scoreboards identify the player by GUID, not a display name that
+  -- may include a Forever last name or a cross-realm suffix.
+  if (C_PvP and C_PvP.GetScoreInfoByPlayerGuid and UnitGUID) then
+    local guid = UnitGUID("player")
+    if (IsReadable(guid, "string")) then
+      local success, info = pcall(C_PvP.GetScoreInfoByPlayerGuid, guid)
+      if (success and IsReadable(info, "table") and IsReadable(info.faction, "number")) then return info.faction end
+    end
+  end
+
+  if (not GetNumBattlefieldScores or not GetBattlefieldScore) then return nil end
+  local playerName, lastName = Api.GetUnitName("player")
+  if (not IsReadable(playerName, "string")) then return nil end
+  if (IsReadable(lastName, "string") and lastName ~= "") then playerName = playerName .. " " .. lastName end
+  local count = GetNumBattlefieldScores()
+  if (not IsReadable(count, "number")) then return nil end
+  for index = 1, count do
+    local name, _, _, _, _, faction = GetBattlefieldScore(index)
+    if (IsReadable(name, "string") and name == playerName and IsReadable(faction, "number")) then return faction end
+  end
+end
+
 function Api.GetDamageMeterAvailability()
   if (not C_DamageMeter or not C_DamageMeter.IsDamageMeterAvailable) then
     return nil, "C_DamageMeter.IsDamageMeterAvailable is unavailable."
@@ -655,6 +678,17 @@ end
 
 function Api.IsGamepadUIEnabled()
   return GetCVar and GetCVar("InputDeviceInterfaceStyle") == "1"
+end
+
+function Api.IsUnitInHomeGroup(unitId)
+  if (not LE_PARTY_CATEGORY_HOME) then return nil end
+  local inParty = ReadBoolean(UnitInParty, unitId, LE_PARTY_CATEGORY_HOME)
+  if (inParty == true) then return true end
+
+  local success, raidIndex = pcall(UnitInRaid, unitId, LE_PARTY_CATEGORY_HOME)
+  if (not success or (issecretvalue and issecretvalue(raidIndex))) then return nil end
+  if (type(raidIndex) == "number") then return raidIndex > 0 end
+  if (raidIndex == nil) then return inParty end
 end
 
 function Api.IsWoWForever()

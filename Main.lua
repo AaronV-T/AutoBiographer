@@ -576,6 +576,8 @@ end
 
 function EM.EventHandlers.CHAT_MSG_SYSTEM(self, text)
   if (not self.PlayerEnteringWorldHasFired) then return end
+  -- Battleground system messages can be secret; never pass them to string parsing.
+  if (self:IsSecretValue(text) or type(text) ~= "string") then return end
 
   -- Capture entire names, not individual words: Forever names include surnames.
   local winnerFullName, loserFullName = string.match(text, "^(.+) has defeated (.+) in a duel%.?$")
@@ -879,7 +881,6 @@ function EM.EventHandlers.MERCHANT_SHOW(self, arg1, arg2)
 end
 
 function EM.EventHandlers.PARTY_KILL(self, attackerGuid, targetGuid)
-  --print("PARTY_KILL. " .. tostring(attackerGuid) .. ", " .. tostring(targetGuid))
   if (not Api.IsWoWForever()) then return end
 
   local deadUnit = self:GetOrCreateDeadUnit(targetGuid, false)
@@ -1201,12 +1202,13 @@ end
 
 function EM.EventHandlers.UPDATE_BATTLEFIELD_STATUS(self, battleFieldIndex)
   local status, mapName, instanceID, minlevel, maxlevel, teamSize, registeredMatch = GetBattlefieldStatus(battleFieldIndex)
-  --print("Status: " .. tostring(status) .. ". MapName: " .. tostring(mapName) .. ". InstanceId: " .. tostring(instanceID) .. ". MinLevel: " .. tostring(minlevel) .. ". MaxLevel: " .. tostring(maxlevel) .. ". TeamSize: " .. tostring(teamSize) .. ". RegisteredMatch: " .. tostring(registeredMatch))
-  if (status == nil or status == "none" or status == "error") then
+  if (self:IsSecretValue(status) or self:IsSecretValue(mapName) or self:IsSecretValue(teamSize)
+      or status == nil or status == "none" or status == "error") then
     return
   end
   
-  local isBattleground = teamSize == nil or teamSize == 0
+  -- Forever returns "BATTLEGROUND" in the legacy arena team-size slot.
+  local isBattleground = teamSize == nil or teamSize == 0 or teamSize == "BATTLEGROUND"
 
   -- Get the arena or battleground ID (Note: GetBattlegroundInfo is not a reliable function and should be avoided).
   local battlegroundId = nil
@@ -1264,40 +1266,38 @@ function EM.EventHandlers.UPDATE_BATTLEFIELD_STATUS(self, battleFieldIndex)
     return
   end
 
-  -- If the last status for this battlefield was "confirm": the player must have just joined the battlefield.
-  if (lastStatus == "confirm") then
+  -- Count entry on the first active update, even if the confirmation update
+  -- was missed or unreadable. Persisted active/finished states prevent repeats
+  -- from subsequent updates or a UI reload in the same match.
+  if (lastStatus ~= "active") then
     if (isBattleground) then Controller:OnBattlegroundJoined(time(), battlegroundId)
     else Controller:OnArenaJoined(time(), registeredMatch, teamSize, arenaId)
     end
   end
 
+  -- Remember the join even if the final scoreboard hasn't arrived yet.
+  if (isBattleground) then self.PersistentPlayerInfo.BattlegroundStatuses[battlegroundId] = status
+  else self.PersistentPlayerInfo.ArenaStatuses[teamSize] = status
+  end
+
   -- If the match isn't over: save status and return.
   local winner = GetBattlefieldWinner()
-  if (winner == nil) then
-    if (isBattleground) then self.PersistentPlayerInfo.BattlegroundStatuses[battlegroundId] = status
-    else self.PersistentPlayerInfo.ArenaStatuses[teamSize] = status
-    end
-
+  if (self:IsSecretValue(winner) or winner == nil) then
     return
   end
 
   -- The match just ended.
-  local numScores = GetNumBattlefieldScores()
-  for i = 1, numScores do
-    name, killingBlows, honorableKills, deaths, honorGained, faction, rank, race, class = GetBattlefieldScore(i);
-    if (name == UnitName("player")) then
-      local playerWon = faction == winner
-
-      if (isBattleground) then Controller:OnBattlegroundFinished(time(), battlegroundId, playerWon)
-      else Controller:OnArenaFinished(time(), registeredMatch, teamSize, arenaId, playerWon)
-      end
-
-      if (isBattleground) then self.PersistentPlayerInfo.BattlegroundStatuses[battlegroundId] = "finished"
-      else self.PersistentPlayerInfo.ArenaStatuses[teamSize] = "finished"
-      end
-
-      break
-    end
+  local faction = Api.GetBattlefieldPlayerFaction()
+  if (faction == nil) then
+    return
+  end
+  local playerWon = faction == winner
+  if (isBattleground) then
+    Controller:OnBattlegroundFinished(time(), battlegroundId, playerWon)
+    self.PersistentPlayerInfo.BattlegroundStatuses[battlegroundId] = "finished"
+  else
+    Controller:OnArenaFinished(time(), registeredMatch, teamSize, arenaId, playerWon)
+    self.PersistentPlayerInfo.ArenaStatuses[teamSize] = "finished"
   end
 end
 
@@ -1440,7 +1440,6 @@ function EM.EventHandlers.UNIT_INVENTORY_CHANGED(self, unitId)
 end
 
 function EM.EventHandlers.UNIT_DIED(self, unitGuid)
-  --print("UNIT_DIED. " .. tostring(unitGuid))
   if (not Api.IsWoWForever()) then return end
 
   local deadUnit = self:GetOrCreateDeadUnit(unitGuid, true)
@@ -1908,10 +1907,23 @@ function EM:UpdateGamepadUIState()
 end
 
 function EM:UpdateGroupMemberInfo()
+  local _, instanceType = IsInInstance()
+  if (self:IsSecretValue(instanceType)) then return end
+  local inBattleground = instanceType == "pvp"
+
   -- Populate list of unit GUIDs in player's party/raid.
   local unitGuidsInGroup = {}
   local rosterIncomplete = false
   local function AddGroupMember(unitId)
+    -- A battleground's automatic raid is not the group the player queued with.
+    if (inBattleground) then
+      local inHomeGroup = Api.IsUnitInHomeGroup(unitId)
+      if (inHomeGroup == nil) then
+        rosterIncomplete = true
+        return
+      end
+      if (not inHomeGroup) then return end
+    end
     local guid = UnitGUID(unitId)
     if (self:IsSecretValue(guid)) then
       rosterIncomplete = true
@@ -2669,21 +2681,23 @@ function EM:TrimDamageMeterRecordedTotals()
 end
  
 function EM:UpdatePlayerFlags()
-  -- 
-  local playerWasAffectingCombat = self.PlayerFlags.AffectingCombat
-  self.PlayerFlags.AffectingCombat = UnitAffectingCombat("player")
-  
-  local playerWasAfk = self.PlayerFlags.Afk
-  self.PlayerFlags.Afk = UnitIsAFK("player")
-  
-  local playerWasDeadOrGhost = self.PlayerFlags.IsDeadOrGhost
-  self.PlayerFlags.IsDeadOrGhost = UnitIsDeadOrGhost("player")
-  
-  local playerWasInParty = self.PlayerFlags.InParty
-  self.PlayerFlags.InParty = UnitInParty("player")
-  
-  local playerWasOnTaxi = self.PlayerFlags.OnTaxi
-  self.PlayerFlags.OnTaxi = UnitOnTaxi("player")
+  local function UpdateFlag(name, value)
+    local previous = self.PlayerFlags[name]
+    if (self:IsSecretValue(previous)) then
+      previous = nil
+      self.PlayerFlags[name] = nil
+    end
+    -- Keep the last readable state while the client restricts a flag. Treating
+    -- an unreadable value as false would incorrectly end its time interval.
+    if (not self:IsSecretValue(value)) then self.PlayerFlags[name] = value end
+    return previous
+  end
+
+  local playerWasAffectingCombat = UpdateFlag("AffectingCombat", UnitAffectingCombat("player"))
+  local playerWasAfk = UpdateFlag("Afk", UnitIsAFK("player"))
+  local playerWasDeadOrGhost = UpdateFlag("IsDeadOrGhost", UnitIsDeadOrGhost("player"))
+  local playerWasInParty = UpdateFlag("InParty", UnitInParty("player"))
+  local playerWasOnTaxi = UpdateFlag("OnTaxi", UnitOnTaxi("player"))
   
   -- Special 
   if (playerWasAffectingCombat and not self.PlayerFlags.AffectingCombat) then

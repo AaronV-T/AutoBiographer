@@ -11,6 +11,7 @@ function AutoBiographer_Databases.Initialiaze()
     [2] = "Warsong Gulch",
     [3] = "Arathi Basin",
     [4] = "Eye of the Storm",
+    [5] = "Darkspear Islands",
   }
 
   AutoBiographer_Databases.BossDatabase = {

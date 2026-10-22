@@ -1,15 +1,9 @@
-Promote content creators?
-
-
-Fix kill tracking in dungeons
-Track travel history?
 Track dungeon runs/clears: runs started, count of runs per bosses defeated, fastest completed run
 Track milestones for dmg per spell and kills per unit. Milestones for PVP.
-Event for first items equipped
-Option to switch between miles and kilometers
+Track roll stats
+Remove extra space on events tab.
 Change quest event icon
 Custom campfire stories?
-Battlegrounds & pvp verify stats
 Show pvp kills/deaths in nice screen
 Right-click chat message to save it and link it to the person who posted it.
 Chat commands: Add note, add task

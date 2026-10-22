@@ -40,6 +40,7 @@ local dashboardTabs = {
       Columns = { "Wins", "Losses", "Incomplete" }, Rows = {
       { "Battleground1", "Alterac Valley", "results" },
       { "Battleground3", "Arathi Basin", "results" },
+      { "Battleground5", "Darkspear Islands", "results", nil, "IsForever" },
       { "Battleground4", "Eye of the Storm", "results", nil, "HasArenas" },
       { "Battleground2", "Warsong Gulch", "results" },
     } },
@@ -462,6 +463,7 @@ function AutoBiographer_SummaryPanel:Update()
   local values = {}
   self.DashboardValues = values
   values.HasArenas = self.GameVersion == 2
+  values.IsForever = Api.IsWoWForever()
   values.IsDruid = self.PlayerClass == "DRUID"
   values.IsShaman = self.PlayerClass == "SHAMAN"
   values.CanStealth = self.PlayerClass == "DRUID" or self.PlayerClass == "ROGUE"
@@ -551,7 +553,7 @@ function AutoBiographer_SummaryPanel:Update()
   self:UpdateClassTimeRows(minLevel, maxLevel)
 
   if (self.GameVersion < 3) then
-    for _, id in ipairs({ 1, 2, 3, 4 }) do
+    for id in pairs(AutoBiographer_Databases.BattlegroundDatabase) do
       local joined, losses, wins = Controller:GetBattlegroundStatsByBattlegroundId(id, minLevel, maxLevel)
       values["Battleground" .. id] = { wins, losses, joined - losses - wins }
     end
