@@ -228,6 +228,65 @@ function Api.GetPlayerFormSpellId()
   if (IsReadable(second, "string") and IsReadable(fifth, "number")) then return fifth end
 end
 
+function Api.GetPlayerLootRolls()
+  local results = {}
+  local history = C_LootHistory
+  if (not history) then return results end
+  local types = AutoBiographerEnum.LootRollType
+  local function Add(key, link, roll, rollType)
+    if (not IsReadable(link, "string") or not IsReadable(roll, "number") or roll < 0 or roll > 100
+        or roll ~= math.floor(roll) or rollType == nil) then return end
+    local itemId = tonumber(link:match("item:(%d+)"))
+    if (not itemId or itemId <= 0) then return end
+    results[#results + 1] = { Key = key, ItemId = itemId, ItemLink = link, Roll = roll, RollType = rollType }
+  end
+
+  if (history.GetAllEncounterInfos and history.GetSortedDropsForEncounter) then
+    local success, encounters = pcall(history.GetAllEncounterInfos)
+    if (not success or not IsReadable(encounters, "table")) then return results end
+    for _, encounter in ipairs(encounters) do
+      if (IsReadable(encounter, "table") and IsReadable(encounter.encounterID, "number") and IsReadable(encounter.startTime, "number")) then
+        local ok, drops = pcall(history.GetSortedDropsForEncounter, encounter.encounterID)
+        if (ok and IsReadable(drops, "table")) then
+          for _, drop in ipairs(drops) do
+            if (IsReadable(drop, "table") and IsReadable(drop.lootListKey, "number") and IsReadable(drop.rollInfos, "table")) then
+              for _, info in ipairs(drop.rollInfos) do
+                if (IsReadable(info, "table") and IsReadable(info.isSelf, "boolean") and info.isSelf and IsReadable(info.state, "number")) then
+                  local rollType
+                  -- EncounterLootDropRollState: NeedMainSpec=0, NeedOffSpec=1,
+                  -- Transmog=2, Greed=3, NoRoll=4, Pass=5.
+                  if (info.state == 0 or info.state == 1) then rollType = types.Need
+                  elseif (info.state == 3) then rollType = types.Greed end
+                  Add("encounter:" .. encounter.encounterID .. ":" .. encounter.startTime .. ":" .. drop.lootListKey,
+                    drop.itemHyperlink, info.roll, rollType)
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+  elseif (history.GetNumItems and history.GetItem and history.GetPlayerInfo) then
+    local success, count = pcall(history.GetNumItems)
+    if (not success or not IsReadable(count, "number")) then return results end
+    for index = 1, count do
+      local ok, rollId, link, players = pcall(history.GetItem, index)
+      if (ok and IsReadable(rollId, "number") and IsReadable(players, "number")) then
+        for playerIndex = 1, players do
+          local found, name, class, choice, roll, isWinner, isSelf = pcall(history.GetPlayerInfo, index, playerIndex)
+          if (found and IsReadable(isSelf, "boolean") and isSelf and IsReadable(choice, "number")) then
+            local rollType
+            if (choice == 1) then rollType = types.Need
+            elseif (choice == 2) then rollType = types.Greed end
+            Add("roll:" .. rollId, link, roll, rollType)
+          end
+        end
+      end
+    end
+  end
+  return results
+end
+
 function Api.GetPlayerSnapshotAttributes()
   local success, result = pcall(function()
     local health, mana = UnitHealthMax("player"), UnitPowerMax("player", 0)

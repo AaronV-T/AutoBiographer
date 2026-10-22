@@ -196,6 +196,16 @@ function Controller:GetAggregatedDeathStatisticsDictionary(minLevel, maxLevel)
   return deathsByUnit
 end
 
+function Controller:GetAggregatedItemRolls(minLevel, maxLevel)
+  local rolls = {}
+  for level, statistics in pairs(self.CharacterData.Levels) do
+    if (level >= minLevel and level <= maxLevel) then
+      for _, roll in ipairs(statistics.RollStatistics.ItemRolls) do rolls[#rolls + 1] = roll end
+    end
+  end
+  return rolls
+end
+
 function Controller:GetAggregatedItemStatisticsDictionary(minLevel, maxLevel)
   local itemStatisticsDictionary = {}
   for levelNum, levelStatistics in pairs(self.CharacterData.Levels) do
@@ -364,6 +374,16 @@ function Controller:GetAggregatedQuestStatisticsTotals(minLevel, maxLevel, quest
   end
 
   return totalsQuestStatistics
+end
+
+function Controller:GetAggregatedRandomRolls(minLevel, maxLevel)
+  local counts = {}
+  for level, statistics in pairs(self.CharacterData.Levels) do
+    if (level >= minLevel and level <= maxLevel) then
+      for roll, count in pairs(statistics.RollStatistics.RandomRolls) do counts[roll] = (counts[roll] or 0) + count end
+    end
+  end
+  return counts
 end
 
 function Controller:GetAggregatedSpellStatisticsDictionary(minLevel, maxLevel)
@@ -982,6 +1002,15 @@ function Controller:OnGuildRankChanged(timestamp, guildRankIndex, guildRankName)
   self:AddEvent(GuildRankChangedEvent.New(timestamp, guildRankIndex, guildRankName))
 end
 
+function Controller:OnItemRolled(timestamp, itemId, roll, rollType, itemLink)
+  local name, link, rarity, level, minLevel, itemType, itemSubType = Api.GetItemInfo(itemId)
+  if (not name and itemLink) then name = itemLink:match("%[(.-)%]") end
+  self:UpdateCatalogItem(CatalogItem.New(itemId, name, rarity, level, itemType, itemSubType))
+  table.insert(self:GetCurrentLevelStatistics().RollStatistics.ItemRolls, {
+    Timestamp = timestamp, ItemId = itemId, Roll = roll, RollType = rollType,
+  })
+end
+
 function Controller:OnJoinedGuild(timestamp, guildName)
   if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog("JoinedGuild: " .. " " .. tostring(guildName) .. ".", AutoBiographerEnum.LogLevel.Debug) end
   self:AddEvent(GuildJoinedEvent.New(timestamp, guildName))
@@ -1070,6 +1099,11 @@ function Controller:OnQuestTurnedIn(timestamp, coordinates, questId, questTitle,
   QuestStatistics.Increment(self:GetCurrentLevelStatistics().QuestStatisticsByQuest[questId], AutoBiographerEnum.QuestTrackingType.Completed)
 
   AutoBiographer_Milestones:OnStatChanged("Quests")
+end
+
+function Controller:OnRandomRolled(roll)
+  local counts = self:GetCurrentLevelStatistics().RollStatistics.RandomRolls
+  counts[roll] = (counts[roll] or 0) + 1
 end
 
 function Controller:OnReputationLevelChanged(timestamp, coordinates, faction, reputationLevel)

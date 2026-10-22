@@ -19,6 +19,7 @@ function AggregatedStatistics.New()
     OtherPlayerStatisticsByOtherPlayer = {}, -- Dict<CatalogUnitId, PlayerStatistics>
     PvpStatistics = nil,
     QuestStatisticsByQuest = {}, -- Dict<QuestId, QuestStatistics>
+    RollStatistics = RollStatistics.New(),
     SpellStatisticsBySpell = {}, -- Dict<CatalogSpellId, SpellStatistics>
     TimeStatisticsByArea = {}, -- Dict<ZoneName-SubZoneName, TimeStatistics>
     TimeStatisticsByCompanionFamily = {}, -- Dict<CreatureFamilyId, seconds>
@@ -394,6 +395,16 @@ function QuestStatistics.GetSum(qs, questTrackingTypes)
   end
 
   return sum
+end
+
+-- *** RollStatistics ***
+
+RollStatistics = {}
+function RollStatistics.New()
+  return {
+    ItemRolls = {}, -- Array<{ Timestamp, ItemId, Roll, RollType }>; names live in ItemCatalog.
+    RandomRolls = {}, -- Dict<roll number (1-100), count>; only rolls with exactly this range.
+  }
 end
 
 -- *** SpellStatistics ***

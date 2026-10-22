@@ -127,6 +127,10 @@ AutoBiographerEnum = {
     Error = 4,
     Fatal = 5
   },
+  LootRollType = {
+    Need = 0,
+    Greed = 1,
+  },
   MessageTrackingType = {
     BattleNetWhisper = 0,
     Battleground = 1,
@@ -193,10 +197,12 @@ AutoBiographerEnum = {
     SuccessfullyCast = 1,
   },
   StatisticsDisplayMode = {
+    ItemRolls = 15,
     Items = 0,
     Kills = 1,
     Levels = 12,
     OtherPlayers = 2,
+    RandomRolls = 14,
     Deaths = 13,
     Spells = 3,
     SpellsByRank = 11,

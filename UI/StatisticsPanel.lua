@@ -14,14 +14,20 @@ local views = {
   { "Healing Dealt", Enum.StatisticsDisplayMode.HealingDealt },
   { "Healing Dealt by Rank", Enum.StatisticsDisplayMode.HealingDealtByRank },
   { "Item Acquisitions", Enum.StatisticsDisplayMode.Items },
+  { "Item Rolls", Enum.StatisticsDisplayMode.ItemRolls },
   { "Kills", Enum.StatisticsDisplayMode.Kills },
   { "Levels", Enum.StatisticsDisplayMode.Levels },
   { "Other Players", Enum.StatisticsDisplayMode.OtherPlayers },
+  { "Random Rolls", Enum.StatisticsDisplayMode.RandomRolls },
   { "Spells", Enum.StatisticsDisplayMode.Spells },
   { "Spells by Rank", Enum.StatisticsDisplayMode.SpellsByRank },
   { "Time", Enum.StatisticsDisplayMode.Time },
 }
 local headerDescriptions = {
+  Roll = "Your rolled number. Random Rolls only includes rolls with a range of exactly 1-100.",
+  ["Times Rolled"] = "How many times your character rolled this number in the selected level range.",
+  ["Roll Type"] = "Whether you rolled Need or Greed for the item. Passes, disenchant and transmog rolls are not included.",
+  ["Rolled At"] = "When AutoBiographer observed your item-roll result.",
   AH = "Items acquired from the auction house.",
   COD = "Items acquired through cash-on-delivery mail.",
   Create = "Items created by crafting.",
@@ -271,6 +277,21 @@ function AutoBiographer_StatisticsWindow:GetTableData(minLevel, maxLevel)
         table.insert(tableData.Rows, row)
       end
     end
+  elseif (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.ItemRolls) then
+    tableData = {
+      HeaderValues = { "Item Name", "Roll", "Roll Type", "Rolled At" },
+      RowOffsets = { 0, 350, 450, 550, 765 },
+      Rows = {},
+      NonAdditiveColumns = { [2] = true, [3] = true, [4] = true },
+    }
+    for _, roll in ipairs(Controller:GetAggregatedItemRolls(minLevel, maxLevel)) do
+      local item = Controller.CharacterData.Catalogs.ItemCatalog[roll.ItemId]
+      local row = { item and item.Name or ("Item ID: " .. roll.ItemId), roll.Roll,
+        roll.RollType == Enum.LootRollType.Need and "Need" or "Greed", date("%Y-%m-%d %H:%M:%S", roll.Timestamp) }
+      row.ItemId = roll.ItemId
+      table.insert(tableData.Rows, row)
+    end
+
   elseif (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.Kills) then
     local killStatisticsByUnit = Controller:GetAggregatedKillStatisticsDictionary(minLevel, maxLevel)
     tableData = {
@@ -343,6 +364,11 @@ function AutoBiographer_StatisticsWindow:GetTableData(minLevel, maxLevel)
       }
       table.insert(tableData.Rows, row)
     end
+  elseif (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.RandomRolls) then
+    local counts = Controller:GetAggregatedRandomRolls(minLevel, maxLevel)
+    tableData = { HeaderValues = { "Roll", "Times Rolled" }, RowOffsets = { 0, 350, 765 }, Rows = {} }
+    for roll = 1, 100 do table.insert(tableData.Rows, { roll, counts[roll] or 0 }) end
+
   elseif (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.Spells) then
     local spellStatisticsBySpell = Controller:GetAggregatedSpellStatisticsDictionary(minLevel, maxLevel)
     tableData = {
@@ -478,7 +504,8 @@ function AutoBiographer_StatisticsWindow:GetViewState()
   if (not self.ViewStates[mode]) then
     self.ViewStates[mode] = {
       Search = "", LevelFilter = "All", MinLevel = 1, MaxLevel = Controller:GetCurrentLevelNum(),
-      SortColumn = 1, SortDirection = mode == Enum.StatisticsDisplayMode.Levels and "DESC" or "ASC", Scroll = 0,
+      SortColumn = mode == Enum.StatisticsDisplayMode.ItemRolls and 4 or 1,
+      SortDirection = (mode == Enum.StatisticsDisplayMode.Levels or mode == Enum.StatisticsDisplayMode.ItemRolls) and "DESC" or "ASC", Scroll = 0,
     }
   end
   return self.ViewStates[mode]
@@ -676,7 +703,7 @@ function AutoBiographer_StatisticsWindow:RenderStatisticsTable()
     text:SetPoint("RIGHT", -18, 0)
     text:SetWordWrap(false)
     -- Set alignment explicitly; columns containing names are text, all others are numeric.
-    text:SetJustifyH((i == 1 or label == "Unit Name") and "LEFT" or "RIGHT")
+    text:SetJustifyH((i == 1 or label == "Unit Name" or label == "Roll Type" or label == "Rolled At") and "LEFT" or "RIGHT")
     header.Arrow:SetTexture(state.SortDirection == "ASC" and "Interface\\Buttons\\UI-ScrollBar-ScrollUpButton-Up" or "Interface\\Buttons\\UI-ScrollBar-ScrollDownButton-Up")
     header.Arrow:SetShown(state.SortColumn == i)
     header:SetScript("OnClick", function()
@@ -896,6 +923,7 @@ function AutoBiographer_StatisticsWindow:UpdateFilteredRows(resetScroll)
   local search = string.lower(state.Search)
   local rows, totals = {}, {}
   local rateColumns = self.CurrentTableData.RateColumns or {}
+  local nonAdditiveColumns = self.CurrentTableData.NonAdditiveColumns or {}
   for _, row in ipairs(self.CurrentTableData.Rows) do
     local names = {}
     for i, value in ipairs(row) do
@@ -907,7 +935,7 @@ function AutoBiographer_StatisticsWindow:UpdateFilteredRows(resetScroll)
     if (search == "" or string.find(string.lower(table.concat(names, " ")), search, 1, true)) then
       table.insert(rows, row)
       for i, value in ipairs(row) do
-        if (type(value) == "number" and self.CurrentTableData.HeaderValues[i] ~= "Rank" and self.CurrentTableData.HeaderValues[i] ~= "Level" and not rateColumns[i]) then
+        if (type(value) == "number" and self.CurrentTableData.HeaderValues[i] ~= "Rank" and self.CurrentTableData.HeaderValues[i] ~= "Level" and not rateColumns[i] and not nonAdditiveColumns[i]) then
           totals[i] = (totals[i] or 0) + value
         end
       end
@@ -927,7 +955,7 @@ function AutoBiographer_StatisticsWindow:UpdateFilteredRows(resetScroll)
   end)
   -- Numeric columns still show a zero total when there are no matching rows.
   for i, label in ipairs(self.CurrentTableData.HeaderValues) do
-    if (i > 1 and label ~= "Rank" and label ~= "Unit Name") then totals[i] = totals[i] or 0 end
+    if (i > 1 and label ~= "Rank" and label ~= "Unit Name" and not nonAdditiveColumns[i]) then totals[i] = totals[i] or 0 end
   end
   self.FilteredRows, self.FilteredTotals = rows, totals
   if (resetScroll) then state.Scroll = 0 end

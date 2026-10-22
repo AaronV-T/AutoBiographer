@@ -569,10 +569,11 @@ function EM.EventHandlers.CHAT_MSG_SKILL(self, text)
   end
 end
 
-function EM.EventHandlers.CHAT_MSG_SYSTEM(self, text)
+function EM.EventHandlers.CHAT_MSG_SYSTEM(self, text, ...)
   if (not self.PlayerEnteringWorldHasFired) then return end
   -- Battleground system messages can be secret; never pass them to string parsing.
   if (self:IsSecretValue(text) or type(text) ~= "string") then return end
+  AutoBiographer_Rolls:OnSystemMessage(text, select(10, ...))
 
   -- Capture entire names, not individual words: Forever names include surnames.
   local winnerFullName, loserFullName = string.match(text, "^(.+) has defeated (.+) in a duel%.?$")
@@ -848,6 +849,20 @@ function EM.EventHandlers.LOOT_SLOT_CLEARED(self, slotId)
   AutoBiographer_Fishing:OnLootSlotCleared(slotId)
 end
 
+-- Both generations of loot history use the normal addon event dispatcher.
+for _, eventName in ipairs({ "LOOT_HISTORY_FULL_UPDATE", "LOOT_HISTORY_ROLL_CHANGED", "LOOT_HISTORY_ROLL_COMPLETE",
+    "LOOT_HISTORY_UPDATE_DROP", "LOOT_HISTORY_UPDATE_ENCOUNTER" }) do
+  if (Api.IsEventAvailable(eventName, C_LootHistory and C_LootHistory.GetNumItems ~= nil)) then
+    EM.EventHandlers[eventName] = function(self) AutoBiographer_Rolls:OnLootHistoryChanged() end
+  end
+end
+
+if (Api.IsEventAvailable("LOOT_HISTORY_CLEAR_HISTORY", C_LootHistory ~= nil)) then
+  function EM.EventHandlers.LOOT_HISTORY_CLEAR_HISTORY(self)
+    AutoBiographer_Rolls.SeenLootRolls = {}
+  end
+end
+
 function EM.EventHandlers.MAIL_CLOSED(self, arg1, arg2)
   EM:MailboxClosed()
 end
@@ -1032,6 +1047,7 @@ function EM.EventHandlers.PLAYER_ENTERING_WORLD(self, isLogin, isReload)
   self:UpdatePlayerCampAuras(false)
   AutoBiographer_CampfireSharing:OnPlayerAuras(true)
   self:UpdatePlayerFlags()
+  AutoBiographer_Rolls:Start()
   self:ScheduleDamageMeterSessionBaselines()
   if (Api.IsWoWForever()) then self.LastRestedExperiencePool = Api.GetRestedExperiencePool() end
   self:StartDistanceTracking()
