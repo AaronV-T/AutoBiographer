@@ -797,7 +797,7 @@ function Controller:OnBossKill(timestamp, coordinates, bossId, bossName, hasKill
 
   local matchingBossKillEvent = nil
   local matchingEventIndex = #self.CharacterData.Events
-  while (matchingBossKillEvent == nil and timestamp - self.CharacterData.Events[matchingEventIndex].Timestamp < 2) do
+  while (matchingEventIndex > 0 and matchingBossKillEvent == nil and timestamp - self.CharacterData.Events[matchingEventIndex].Timestamp < 2) do
     local event = self.CharacterData.Events[matchingEventIndex]
     if (event.Type == AutoBiographerEnum.EventType.Kill and event.SubType == AutoBiographerEnum.EventSubType.BossKill and event.BossName == bossName) then 
       matchingBossKillEvent = event
@@ -807,6 +807,9 @@ function Controller:OnBossKill(timestamp, coordinates, bossId, bossName, hasKill
   end
 
   if (matchingBossKillEvent ~= nil) then
+    -- BOSS_KILL and ENCOUNTER_END can report the same encounter. Do not
+    -- recreate its journal event, screenshot or raid snapshot.
+    if (matchingBossKillEvent.BossId == bossId) then return end
     if (isFromRegularKillEvent) then
       Controller:AddLog("This is a regular unit kill and I found a matching boss kill event from an actual boss. Returning.", AutoBiographerEnum.LogLevel.Debug)
       return

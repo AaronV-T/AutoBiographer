@@ -329,13 +329,7 @@ function EM.EventHandlers.BAG_UPDATE_DELAYED(self)
 end
 
 function EM.EventHandlers.BOSS_KILL(self, bossId, bossName)
-  local hasKilledBossBefore = true
-  if (not Catalogs.PlayerHasKilledBoss(Controller.CharacterData.Catalogs, bossId)) then
-    hasKilledBossBefore = false
-    Controller:UpdateCatalogBoss(CatalogBoss.New(bossId, bossName, true))
-  end
-
-  Controller:OnBossKill(time(), HelperFunctions.GetCoordinatesByUnitId("player"), bossId, bossName, hasKilledBossBefore)
+  self:OnBossKill(bossId, bossName)
 end
 
 function EM.EventHandlers.ACHIEVEMENT_EARNED(self, arg1)
@@ -566,6 +560,7 @@ function EM.EventHandlers.CHAT_MSG_SAY(self, ...)
 end
 
 function EM.EventHandlers.CHAT_MSG_SKILL(self, text)
+  if (self:IsSecretValue(text) or type(text) ~= "string") then return end
   if (string.find(text, "Your skill in") ~= 1) then return end
   
   local skillName, skillLevel = string.match(text, "Your skill in (.+) has increased to (%d+).")
@@ -801,6 +796,12 @@ function EM.EventHandlers.DAMAGE_METER_RESET(self)
   self:OnDamageMeterReset()
 end
 
+
+if (Api.IsEventAvailable("ENCOUNTER_END", Api.IsWoWForever())) then
+  function EM.EventHandlers.ENCOUNTER_END(self, encounterId, encounterName, difficultyId, groupSize, success)
+    if (not self:IsSecretValue(success) and success == 1) then self:OnBossKill(encounterId, encounterName) end
+  end
+end
 
 function EM.EventHandlers.GET_ITEM_INFO_RECEIVED(self, itemId, success)
   if (self:IsSecretValue(itemId) or self:IsSecretValue(success) or not success) then return end
@@ -1761,6 +1762,15 @@ function EM:MailMoneyTakenFromOneMessage(message)
   end
 
   message.moneyIsAssumedTaken = true
+end
+
+function EM:OnBossKill(bossId, bossName)
+  if (self:IsSecretValue(bossId) or self:IsSecretValue(bossName)
+      or type(bossId) ~= "number" or bossId <= 0 or type(bossName) ~= "string" or bossName == "") then return end
+
+  local hasKilledBossBefore = Catalogs.PlayerHasKilledBoss(Controller.CharacterData.Catalogs, bossId)
+  if (not hasKilledBossBefore) then Controller:UpdateCatalogBoss(CatalogBoss.New(bossId, bossName, true)) end
+  Controller:OnBossKill(time(), HelperFunctions.GetCoordinatesByUnitId("player"), bossId, bossName, hasKilledBossBefore)
 end
 
 function EM:OnMessageSent(messageTrackingType, outgoingOnly, ...)

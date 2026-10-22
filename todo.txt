@@ -1,4 +1,3 @@
-Track dungeon runs/clears: runs started, count of runs per bosses defeated, fastest completed run
 Track milestones for dmg per spell and kills per unit. Milestones for PVP.
 Track roll stats
 Remove extra space on events tab.
