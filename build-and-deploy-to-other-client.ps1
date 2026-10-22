@@ -4,7 +4,7 @@
 #>
 
 param(
-  [ValidateSet("anniversary", "classic_era")]
+  [ValidateSet("anniversary", "classic_era", "mists")]
   [string]$Client = "anniversary"
 )
 
@@ -14,6 +14,7 @@ $deployDir = Join-Path $repoRoot "Deploys"
 $clientDirectory = switch ($Client) {
   "anniversary" { "_anniversary_" }
   "classic_era" { "_classic_era_" }
+  "mists" { "_classic_" }
 }
 $targetAddOns = Join-Path $repoRoot "..\..\..\..\$clientDirectory\Interface\AddOns"
 

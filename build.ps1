@@ -1,13 +1,13 @@
-$addonVersionLineCata = Select-String -Pattern "## Version" -Path ".\AutoBiographer_Cata.toc"
-$addonVersionCata = $addonVersionLineCata.ToString().Substring($addonVersionLineCata.ToString().LastIndexOf(" ") + 1)
+$addonVersionLineMists = Select-String -Pattern "## Version" -Path ".\AutoBiographer_Mists.toc"
+$addonVersionMists = $addonVersionLineMists.ToString().Substring($addonVersionLineMists.ToString().LastIndexOf(" ") + 1)
 $addonVersionLineTbc = Select-String -Pattern "## Version" -Path ".\AutoBiographer_TBC.toc"
 $addonVersionTbc = $addonVersionLineTbc.ToString().Substring($addonVersionLineTbc.ToString().LastIndexOf(" ") + 1)
 $addonVersionLineVanilla = Select-String -Pattern "## Version" -Path ".\AutoBiographer_Vanilla.toc"
 $addonVersionVanilla = $addonVersionLineVanilla.ToString().Substring($addonVersionLineVanilla.ToString().LastIndexOf(" ") + 1)
-$addonVersionLineWotlk = Select-String -Pattern "## Version" -Path ".\AutoBiographer_Wrath.toc"
-$addonVersionWotlk = $addonVersionLineWotlk.ToString().Substring($addonVersionLineWotlk.ToString().LastIndexOf(" ") + 1)
+$addonVersionLineForever = Select-String -Pattern "## Version" -Path ".\AutoBiographer.toc"
+$addonVersionForever = $addonVersionLineForever.ToString().Substring($addonVersionLineForever.ToString().LastIndexOf(" ") + 1)
 
-if ($addonVersionVanilla -ne $addonVersionTbc -or $addonVersionTbc -ne $addonVersionWotlk -or $addonVersionWotlk -ne $addonVersionCata) {
+if ($addonVersionVanilla -ne $addonVersionTbc -or $addonVersionTbc -ne $addonVersionForever -or $addonVersionForever -ne $addonVersionMists) {
   throw "Versions don't match in TOC files."
 }
 
