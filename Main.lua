@@ -997,7 +997,7 @@ function EM.EventHandlers.PLAYER_ENTERING_WORLD(self, isLogin, isReload)
     local showAnnouncement = not self.PersistentPlayerInfo.ForeverBetaAnnouncementShownLastLogin
     self.PersistentPlayerInfo.ForeverBetaAnnouncementShownLastLogin = showAnnouncement
     if (showAnnouncement) then
-      print("\124cFFFFD700AutoBiographer is now available on the WoW Forever Beta! For those with access to the Beta, if you wish to help by testing the addon and reporting any issues or feedback, it would be greatly appreciated. Thank you!\124r")
+      print("\124cFFFFD700AutoBiographer supports WoW Forever! You can preinstall the addon now so it's ready to record your adventures when WoW Forever launches on November 4.\124r")
     end
   end
   AutoBiographer_TodoPanel:QueueRefresh()

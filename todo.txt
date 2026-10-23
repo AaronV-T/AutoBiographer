@@ -1,5 +1,4 @@
 Track milestones for dmg per spell and kills per unit. Milestones for PVP.
-Track roll stats
 Remove extra space on events tab.
 Change quest event icon
 Custom campfire stories?
@@ -15,17 +14,12 @@ Show highlights when dieing in hardcore? Share most unique stats when dieing in 
 Character notes and account notes
 Show collective playtime across all characters
 Program to backup and sync data
+Bestiary of enemies encountered
 
 
 
-event button
-Notice on unknown mobs, items, zones/subzones.
 Screenshot deaths.
-Show tips to transfer data after character transfer.
-Track autoattacks/shots. Track results (hit, miss, dodge, parry) and damage done of attacks and spells.
 Make map events more efficient.
-Add WotLK raids.
-Progressive map events WotLK improvement (use Azeroth map, move icons instead of delete)
 
 
 
