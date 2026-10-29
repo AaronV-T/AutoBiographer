@@ -93,14 +93,14 @@ local function CreateJournalRow(window)
   row.DateLabel = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
   row.DateLabel:SetPoint("LEFT", 8, 0)
   row.Icon = row:CreateTexture(nil, "ARTWORK")
-  row.Icon:SetPoint("TOPLEFT", 8, -6)
+  row.Icon:SetPoint("TOPLEFT", 8, -3)
   row.Icon:SetSize(20, 20)
   row.TimeLabel = row:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-  row.TimeLabel:SetPoint("TOPLEFT", 38, -9)
+  row.TimeLabel:SetPoint("TOPLEFT", 38, -6)
   row.TimeLabel:SetWidth(60)
   row.TimeLabel:SetJustifyH("LEFT")
   row.Description = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-  row.Description:SetPoint("TOPLEFT", 106, -6)
+  row.Description:SetPoint("TOPLEFT", 106, -3)
   row.Description:SetJustifyH("LEFT")
   row.Description:SetJustifyV("TOP")
   row.Description:SetWordWrap(true)
@@ -378,7 +378,7 @@ function AutoBiographer_EventWindow:RenderJournalRows()
       row.Icon:SetTexture(Event.GetIconPath(entry.Event))
       row.TimeLabel:SetText(entry.TimeLabel)
       row.Description:SetWidth(self.JournalTextWidth)
-      row.Description:SetHeight(entry.Height - 12)
+      row.Description:SetHeight(entry.Height - 6)
       row.Description:SetText(entry.Description)
     else
       row.DateLabel:SetText(entry.DateLabel)
@@ -458,7 +458,7 @@ function AutoBiographer_EventWindow:Update(resetScroll)
   local top, previousDay = 0, nil
   for _, entry in ipairs(matches) do
     if (entry.DayKey ~= previousDay) then
-      local heading = { Key = "day:" .. entry.DayKey, DateLabel = entry.DateLabel, Top = top, Height = 28 }
+      local heading = { Key = "day:" .. entry.DayKey, DateLabel = entry.DateLabel, Top = top, Height = 24 }
       table.insert(entries, heading)
       offsets[heading.Key] = top
       top = top + heading.Height
@@ -466,7 +466,7 @@ function AutoBiographer_EventWindow:Update(resetScroll)
     end
     self.MeasureText:SetText(entry.Description)
     entry.Top = top
-    entry.Height = math.max(32, math.min(34, self.MeasureText:GetStringHeight()) + 12)
+    entry.Height = math.max(26, math.min(34, self.MeasureText:GetStringHeight()) + 6)
     top = top + entry.Height
     table.insert(entries, entry)
     offsets[entry.Key] = entry.Top

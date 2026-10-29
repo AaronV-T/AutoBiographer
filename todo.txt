@@ -1,5 +1,4 @@
 Track milestones for dmg per spell and kills per unit. Milestones for PVP.
-Remove extra space on events tab.
 Change quest event icon
 Custom campfire stories?
 Show pvp kills/deaths in nice screen
@@ -13,7 +12,7 @@ Session stats
 Show highlights when dieing in hardcore? Share most unique stats when dieing in hardcore?
 Character notes and account notes
 Show collective playtime across all characters
-Program to backup and sync data
+Program to backup and sync data + 1 million features (rankings, see all your characters, share a link to your character, etc)
 Bestiary of enemies encountered
 
 
