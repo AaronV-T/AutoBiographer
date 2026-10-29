@@ -403,19 +403,21 @@ end
 
 function Overview:ApplySnapshotEquipment(root)
   local model, snapshot = root.Model, root.AppearanceSnapshot
-  if (not model or not snapshot or root.ApplyingEquipment) then return true end
+  if (not model or root.ApplyingEquipment) then return true end
   root.ApplyingEquipment = true
   local success = pcall(function()
     -- Clear all prior gear, including slots empty in the selected snapshot.
-    model:Undress()
-    for _, slot in ipairs(visibleEquipmentSlots) do
-      local id = snapshot.Equipment[slot]
-      if (id and id > 0) then
-        local enchant = snapshot.Enchants and snapshot.Enchants[slot] or 0
-        local hand = slot == 16 and "MAINHANDSLOT" or slot == 17 and "SECONDARYHANDSLOT" or nil
-        model:TryOn("item:" .. id .. ":" .. enchant, hand)
+    if (snapshot) then
+      model:Undress()
+      for _, slot in ipairs(visibleEquipmentSlots) do
+        local id = snapshot.Equipment[slot]
+        if (id and id > 0 and (slot < 16 or slot > 18)) then
+          local enchant = snapshot.Enchants and snapshot.Enchants[slot] or 0
+          model:TryOn("item:" .. id .. ":" .. enchant)
+        end
       end
     end
+    Api.ApplyCharacterPreviewWeapons(model, snapshot and snapshot.Equipment, snapshot and snapshot.Enchants)
   end)
   root.ApplyingEquipment = false
   if (not success) then
@@ -445,9 +447,7 @@ function Overview:RefreshModel(root)
       if (model[method]) then model[method](model, false) end
     end
     model:SetUnit("player", false, true)
-    if (snapshot) then
-      if (not self:ApplySnapshotEquipment(root)) then error("Snapshot preview unavailable") end
-    end
+    if (not self:ApplySnapshotEquipment(root)) then error("Character preview unavailable") end
     if (model.SetFacing) then model:SetFacing(0.35) end
   end)
   model:SetShown(success); root.Portrait:SetShown(not success)

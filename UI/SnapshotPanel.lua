@@ -39,13 +39,13 @@ function panel:ApplyPreviewEquipment()
     model:Undress()
     for _, slot in ipairs(visibleSlots) do
       local id = model.Snapshot.Equipment[slot]
-      if (id and id > 0) then
+      if (id and id > 0 and (slot < 16 or slot > 18)) then
         local enchant = model.Snapshot.Enchants and model.Snapshot.Enchants[slot] or 0
-        local hand = slot == 16 and "MAINHANDSLOT" or slot == 17 and "SECONDARYHANDSLOT" or nil
         -- Numeric TryOn arguments are appearance IDs on modern clients.
-        model:TryOn("item:" .. id .. ":" .. enchant, hand)
+        model:TryOn("item:" .. id .. ":" .. enchant)
       end
     end
+    Api.ApplyCharacterPreviewWeapons(model, model.Snapshot.Equipment, model.Snapshot.Enchants)
   end)
   self.ApplyingPreview = false
   self.PreviewMessage:SetText(success and "Recorded gear on your current appearance.\nTransmog is not recorded." or "Equipment preview unavailable on this client.")

@@ -184,6 +184,35 @@ function Api.GetPlayerClass()
   if (success and IsReadable(class, "string")) then return class end
 end
 
+function Api.ApplyCharacterPreviewWeapons(model, equipment, enchants)
+  -- Trying on a ranged weapon can replace the displayed melee weapons.
+  -- Clear all weapon slots, then apply only the class's preferred weapons.
+  for slot = 16, 18 do model:UndressSlot(slot) end
+  local hunter = Api.GetPlayerClass() == "HUNTER"
+  for slot = hunter and 18 or 16, hunter and 18 or 17 do
+    local link
+    if (equipment) then
+      local id = equipment[slot]
+      if (id and id > 0) then link = "item:" .. id .. ":" .. (enchants and enchants[slot] or 0) end
+    else
+      -- Live Overview previews use current gear; historical previews must
+      -- never fill an empty or unrecorded slot with the player's live gear.
+      local id = Api.GetEquippedItemId(slot)
+      if (id and id > 0) then
+        if (GetInventoryItemLink) then
+          local success, itemLink = pcall(GetInventoryItemLink, "player", slot)
+          if (success and IsReadable(itemLink, "string")) then link = itemLink end
+        end
+        link = link or ("item:" .. id .. ":0")
+      end
+    end
+    if (link) then
+      local hand = slot == 16 and "MAINHANDSLOT" or slot == 17 and "SECONDARYHANDSLOT" or nil
+      model:TryOn(link, hand)
+    end
+  end
+end
+
 function Api.GetPlayerCompanionFamily()
   local exists = ReadBoolean(UnitExists, "pet")
   if (exists == nil) then return nil end

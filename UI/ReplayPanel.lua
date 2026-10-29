@@ -1,4 +1,5 @@
 local Controller = AutoBiographer_Controller
+local Api = AutoBiographer_Api
 local panel = AutoBiographer_ReplayPanel
 local Hbd = LibStub("HereBeDragons-2.0")
 local visibleSlots = { 1, 3, 4, 5, 6, 7, 8, 9, 10, 15, 16, 17, 18, 19 }
@@ -185,11 +186,11 @@ function panel:ApplyEquipment()
     model:Undress()
     for _, slot in ipairs(visibleSlots) do
       local id = self.Equipment[slot]
-      if (id and id > 0) then
-        local hand = slot == 16 and "MAINHANDSLOT" or slot == 17 and "SECONDARYHANDSLOT" or nil
-        model:TryOn("item:" .. id .. ":" .. (self.Enchants[slot] or 0), hand)
+      if (id and id > 0 and (slot < 16 or slot > 18)) then
+        model:TryOn("item:" .. id .. ":" .. (self.Enchants[slot] or 0))
       end
     end
+    Api.ApplyCharacterPreviewWeapons(model, self.Equipment, self.Enchants)
   end)
   self.ApplyingEquipment = false
   if (not success) then self.PreviewMessage:SetText("Equipment preview unavailable on this client.") end
