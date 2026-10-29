@@ -56,7 +56,7 @@ function Event.GetIconPath(e)
     end
   elseif (e.Type == AutoBiographerEnum.EventType.Quest) then
     if (e.SubType == AutoBiographerEnum.EventSubType.QuestTurnIn) then
-      return "Interface\\Icons\\inv_misc_questionmark"
+      return "Interface\\AddOns\\AutoBiographer\\Icons\\quest-turn-in-gold"
     end
   end
   
