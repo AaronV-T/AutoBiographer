@@ -1,6 +1,7 @@
 -- *** Notes ***
 
 Notes = {}
+Notes.MaxContentLength = 1000
 function Notes.New()
   return {
     GenericNotes = {}, -- Dict<int, Note>

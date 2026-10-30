@@ -418,15 +418,3 @@ function SN:UpdateRatings(panel)
     end
   end
 end
-
-SLASH_AUTOBIOGRAPHERNOTE1 = "/abnote"
-function SlashCmdList.AUTOBIOGRAPHERNOTE(text)
-  if (not AutoBiographer_NotesWindow.PanelReady) then return end
-  local subject = SN:GetLinkedSubject(text)
-  if (not subject and string.match(text, "^%s*$")) then subject = SN:GetUnitSubject("target", true) end
-  if (subject) then SN:Open(subject)
-  else
-    AutoBiographer_MainWindow:ShowSection("Notes")
-    SN:ShowPicker(AutoBiographer_NotesWindow)
-  end
-end

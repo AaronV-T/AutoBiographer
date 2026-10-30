@@ -88,6 +88,72 @@ function SlashCmdList.AUTOBIOGRAPHER()
   end
 end
 
+SLASH_AUTOBIOGRAPHERNOTE1 = "/abnote"
+function SlashCmdList.AUTOBIOGRAPHERNOTE(text)
+  local panel = AutoBiographer_NotesWindow
+  if (not panel.PanelReady or (issecretvalue and issecretvalue(text))) then return end
+  text = string.match(text or "", "^%s*(.-)%s*$")
+  local SN = AutoBiographer_SubjectNotes
+  -- A leading link takes priority; links inside the note remain part of its text.
+  local link = string.match(text, "^(|c%x%x%x%x%x%x%x%x|H[^|]+|h.-|h|r)") or
+    string.match(text, "^(|H[^|]+|h.-|h)")
+  if (not link) then
+    local token = string.match(text, "^(%S+)")
+    if (token and (string.match(token, "^item:%d+[:%d%-]*$") or string.match(token, "^quest:%d+[:%d%-]*$"))) then link = token end
+  end
+  local subject = link and SN:GetLinkedSubject(link)
+  local content = subject and string.match(string.sub(text, #link + 1), "^%s*(.-)%s*$") or text
+  if (not subject) then subject = SN:GetUnitSubject("target", true) end
+  if (content ~= "") then
+    local editingSubject = subject and panel.SelectedSubject and panel.SelectedSubject.Type == subject.Type and panel.SelectedSubject.Id == subject.Id
+    local function SaveNote()
+      local notes = Controller:GetNotes()
+      local existing = subject and Notes.GetCollection(notes, subject)[subject.Id]
+      local appended = existing and existing.Content and existing.Content ~= ""
+      local combined = appended and (existing.Content .. "\n" .. content) or content
+      local _, length = string.gsub(combined, "[^\128-\191]", "")
+      if (length > Notes.MaxContentLength) then
+        print("|cffff0000[AutoBiographer]|r Note would exceed the " .. Notes.MaxContentLength .. "-character limit.")
+        return
+      end
+      local saved = Notes.Save(notes, subject, existing, combined, existing and existing.BehaviorRating or 0, existing and existing.SkillRating or 0)
+      if (not saved) then return end
+      if (editingSubject) then panel:LoadNote(saved, false, subject) end
+      panel:Update()
+      local message = subject and ((appended and "Appended to" or "Saved") .. " note for " .. SN:GetSubjectTitle(subject) .. ".") or "Saved generic note."
+      print("|cffffd700[AutoBiographer]|r " .. message)
+    end
+    -- Saving to another subject leaves an unrelated editor draft untouched.
+    if (editingSubject and panel:IsDirty()) then
+      AutoBiographer_MainWindow:ShowSection("Notes")
+      panel:RequestLeaveDraft(SaveNote)
+    else SaveNote() end
+    return
+  end
+  if (subject) then SN:Open(subject)
+  else
+    AutoBiographer_MainWindow:ShowSection("Notes")
+    panel:NewNote()
+  end
+end
+
+SLASH_AUTOBIOGRAPHERTASK1 = "/abtask"
+function SlashCmdList.AUTOBIOGRAPHERTASK(text)
+  local panel = AutoBiographer_TodoPanel
+  if (not panel.PanelReady or (issecretvalue and issecretvalue(text))) then return end
+  local title = string.match(text or "", "^%s*(.-)%s*$")
+  if (title == "") then
+    AutoBiographer_MainWindow:ShowSection("Todos")
+    panel:SelectTask(nil, true)
+    return
+  end
+  local saved, message = Todo.Save(Controller:GetTodos(), nil, { Title = title, Type = "Always" })
+  if (not saved) then print("|cffff0000[AutoBiographer]|r " .. message); return end
+  -- Quick creation leaves an open task draft and its filters untouched.
+  panel:QueueRefresh()
+  print("|cffffd700[AutoBiographer]|r Task added: " .. saved.Title)
+end
+
 SLASH_AUTOBIOGRAPHERVERIFY1, SLASH_AUTOBIOGRAPHERVERIFY2 = "/autobiographerverify", "/abverify"
 function SlashCmdList.AUTOBIOGRAPHERVERIFY()
   if (not AutoBiographer_MainWindow:IsShown()) then

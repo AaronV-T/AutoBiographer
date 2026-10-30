@@ -1,21 +1,20 @@
 Custom campfire stories?
-Show pvp kills/deaths in nice screen
-Chat commands: Add note, add task
-Startup hints
-Session stats
-Show highlights when dieing in hardcore? Share most unique stats when dieing in hardcore?
-Show collective playtime across all characters
 Program to backup and sync data + 1 million features (rankings, see all your characters, share a link to your character, etc)
-Bestiary of enemies encountered
+Startup hints
 
 
-Right-click chat message to save it and link it to the person who posted it.
 Does healing include shielding?
-Screenshot deaths?
 Add new dungeons and raids locations. Make snapshotting work for new raid bosses, or use dungeon clearing achievements to determine snapshots to take.
+Show highlights when dieing in hardcore? Share most unique stats when dieing in hardcore?
+Show pvp kills/deaths in nice screen
+All Characters summary page (collective stats)
+Bestiary of enemies encountered
+Right-click chat message to save it and link it to the person who posted it.
+Screenshot deaths?
 Gamepad UI: Re-enable notes menu items and map event button.
 Character notes and account notes
 Make map events more efficient.
+Session stats
 
 
 

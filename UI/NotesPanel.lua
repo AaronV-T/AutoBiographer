@@ -1,6 +1,6 @@
 local Controller = AutoBiographer_Controller
 local HF = HelperFunctions
-local noteLimit = 1000
+local noteLimit = Notes.MaxContentLength
 local rowHeight = 76
 local sortOrders = {
   { Name = "Recently updated", Key = "Updated" },
