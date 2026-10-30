@@ -3,8 +3,9 @@ local navigationGroups = {
   { Title = "Character", Sections = { "Summary", "Statistics", "Snapshots", "GearHistory" } },
   { Title = "Event Journal", Sections = { "Replay", "Events" } },
   { Title = "Tools", Sections = { "Notes", "Todos" } },
+  { Title = "All Characters", Sections = { "Characters", "CharacterMap" } },
 }
-local sectionLabels = { GearHistory = "Gear Log", Replay = "Adventure Replay", Events = "Event Log", Todos = "Tasks" }
+local sectionLabels = { Characters = "Roster", CharacterMap = "Map", GearHistory = "Gear Log", Replay = "Adventure Replay", Events = "Event Log", Todos = "Tasks" }
 local sidebarLeft = 10
 local sidebarWidth = 136
 
@@ -168,6 +169,8 @@ function AutoBiographer_MainWindow:Initialize()
   self.PanelHost:SetPoint("BOTTOMRIGHT", -10, 12)
   self.Panels = {
     Summary = AutoBiographer_SummaryPanel,
+    Characters = AutoBiographer_CharactersPanel,
+    CharacterMap = AutoBiographer_CharacterMapPanel,
     Events = AutoBiographer_EventWindow,
     Replay = AutoBiographer_ReplayPanel,
     Statistics = AutoBiographer_StatisticsWindow,

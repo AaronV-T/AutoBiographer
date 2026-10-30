@@ -243,6 +243,9 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   if type(_G["AUTOBIOGRAPHER_NOTES"]) ~= "table" then
     _G["AUTOBIOGRAPHER_NOTES"] = Notes.New()
   end
+  if type(_G["AUTOBIOGRAPHER_CHARACTERS"]) ~= "table" then
+    _G["AUTOBIOGRAPHER_CHARACTERS"] = CharacterRoster.New()
+  end
   if type(_G["AUTOBIOGRAPHER_SNAPSHOTS_CHAR"]) ~= "table" then
     _G["AUTOBIOGRAPHER_SNAPSHOTS_CHAR"] = CharacterSnapshots.New()
   end
@@ -251,6 +254,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   end
   Controller.AccountData = {
     Notes = _G["AUTOBIOGRAPHER_NOTES"],
+    Characters = _G["AUTOBIOGRAPHER_CHARACTERS"],
   }
   
   Controller.CharacterData = {
@@ -285,6 +289,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   -- Prepare account data first; character upgrades may import notes into it.
   AutoBiographer_MigrationManager:RunAccountMigrations(AutoBiographer_Settings.DatabaseVersion, EM, Controller)
   AutoBiographer_MigrationManager:RunCharacterMigrations(self.PersistentPlayerInfo.DatabaseVersion, EM, Controller)
+  AutoBiographer_CharacterRosterManager:Initialize(Controller.AccountData.Characters)
   
   --
   local playerLevel = UnitLevel("player")
@@ -311,6 +316,8 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   AutoBiographer_OptionWindow:Initialize()
   AutoBiographer_StatisticsWindow:Initialize()
   AutoBiographer_TodoPanel:Initialize()
+  AutoBiographer_CharactersPanel:Initialize()
+  AutoBiographer_CharacterMapPanel:Initialize()
   AutoBiographer_VerificationWindow:Initialize()
   AutoBiographer_MainWindow:Initialize()
 
@@ -2921,6 +2928,7 @@ function EM:ClearAllData(doNotRequireConfirmation, doNotReloadUI)
   local func = function(confirmed)
     if (not confirmed) then return end
     _G["AUTOBIOGRAPHER_SETTINGS"] = nil
+    _G["AUTOBIOGRAPHER_CHARACTERS"] = nil
     self:ClearCharacterData(true, doNotReloadUI)
   end
   

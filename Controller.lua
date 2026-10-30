@@ -983,6 +983,7 @@ function Controller:OnEquippedItem(timestamp, slotId, itemId)
   if (changed and AutoBiographer_GearPanel and AutoBiographer_GearPanel.QueueRefresh) then
     AutoBiographer_GearPanel:QueueRefresh()
   end
+  if (changed and AutoBiographer_CharacterRosterManager) then AutoBiographer_CharacterRosterManager:QueueCapture() end
   return changed
 end
 
