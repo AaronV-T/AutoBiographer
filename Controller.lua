@@ -481,6 +481,16 @@ function Controller:GetBattlegroundStatsByBattlegroundId(battlegroundId, minLeve
   return joined, losses, wins
 end
 
+function Controller:GetBattlegroundWins(minLevel, maxLevel)
+  local wins = 0
+  for level, statistics in pairs(self.CharacterData.Levels) do
+    if (level >= minLevel and level <= maxLevel) then
+      for _, battleground in pairs(statistics.BattlegroundStatistics or {}) do wins = wins + (battleground.wins or 0) end
+    end
+  end
+  return wins
+end
+
 function Controller:GetCharacterSnapshots()
   return self.CharacterData.Snapshots
 end
@@ -782,6 +792,7 @@ function Controller:OnBattlegroundFinished(timestamp, battlegroundId, playerWon)
   if (playerWon) then
     self:AddEvent(BattlegroundWonEvent.New(timestamp, battlegroundId))
     BattlegroundStatistics.IncrementWins(self:GetCurrentLevelStatistics().BattlegroundStatistics, battlegroundId)
+    AutoBiographer_Milestones:OnStatChanged("Battlegrounds")
   else
     self:AddEvent(BattlegroundLostEvent.New(timestamp, battlegroundId))
     BattlegroundStatistics.IncrementLosses(self:GetCurrentLevelStatistics().BattlegroundStatistics, battlegroundId)
@@ -853,6 +864,10 @@ end
 function Controller:OnCamped()
   MiscellaneousStatistics.Add(self:GetCurrentLevelStatistics().MiscellaneousStatistics, AutoBiographerEnum.MiscellaneousTrackingType.Camped, 1)
   AutoBiographer_Milestones:OnStatChanged("Camped")
+end
+
+function Controller:OnCampfireTaleShared()
+  MiscellaneousStatistics.Add(self:GetCurrentLevelStatistics().MiscellaneousStatistics, AutoBiographerEnum.MiscellaneousTrackingType.CampfireTalesShared, 1)
 end
 
 function Controller:OnChangedSubZone(timestamp, coordinates, zoneName, subZoneName)

@@ -160,6 +160,7 @@ AutoBiographerEnum = {
     FishingCasts = 3,
     FishingCatches = 4,
     FishGotAway = 5,
+    CampfireTalesShared = 6,
   },
   MoneyAcquisitionMethod = {
     AuctionHouseSale = 0,

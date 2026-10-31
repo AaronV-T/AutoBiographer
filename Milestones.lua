@@ -19,6 +19,7 @@ Milestones.Configuration = {
     },
   },
   Types = {
+    BattlegroundsWon   = { MinorModulus = 10,    MajorStart = 100,     Shareable = true },
     BuffsGiven         = { MinorModulus = 1000,  MajorStart = 1000,    Shareable = true },
     Camped             = { MinorModulus = 100,  MajorStart = 100,     Shareable = true },
     CompanionTime      = { MinorModulus = 86400,  MajorStart = 86400,   Shareable = true }, -- This is per companion family.
@@ -153,6 +154,9 @@ function Milestones:CreateDefinitions()
       return string.format(template, HelperFunctions.FormatDistance(amount, true))
     end, getter)
   end
+  Add("BattlegroundsWon", "Battlegrounds", "won %s battlegrounds", function()
+    return controller:GetBattlegroundWins(1, MaxLevel())
+  end)
   Add("BuffsGiven", "Buffs", "given %s buffs to other players", function()
     return controller:GetOtherPlayerStatByOtherPlayerTrackingType(enum.OtherPlayerTrackingType.BuffsGivenToPlayerNotGrouped, 1, MaxLevel()) +
       controller:GetOtherPlayerStatByOtherPlayerTrackingType(enum.OtherPlayerTrackingType.BuffsGivenToPlayerWhileGrouped, 1, MaxLevel())
