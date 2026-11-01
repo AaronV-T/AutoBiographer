@@ -10,6 +10,7 @@ AutoBiographer_SummaryPanel = CreateFrame("Frame", nil, AutoBiographer_MainWindo
 AutoBiographer_CharactersPanel = CreateFrame("Frame", nil, AutoBiographer_MainWindow)
 AutoBiographer_CharacterMapPanel = CreateFrame("Frame", nil, AutoBiographer_MainWindow)
 AutoBiographer_TodoPanel = CreateFrame("Frame", nil, AutoBiographer_MainWindow)
+AutoBiographer_CampfireTalesPanel = CreateFrame("Frame", nil, AutoBiographer_MainWindow)
 AutoBiographer_ReplayPanel = CreateFrame("Frame", nil, AutoBiographer_MainWindow)
 
 AutoBiographer_CustomEventDetailsWindow = CreateFrame("Frame", "AutoBiographerCustomEventDetail", AutoBiographer_MainWindow, "BasicFrameTemplate")
@@ -24,7 +25,7 @@ AutoBiographer_VerificationWindow = CreateFrame("Frame", "AutoBiographerVerifica
 
 for section, panel in pairs({ Summary = AutoBiographer_SummaryPanel, Replay = AutoBiographer_ReplayPanel, Todos = AutoBiographer_TodoPanel, Events = AutoBiographer_EventWindow, GearHistory = AutoBiographer_GearPanel, Snapshots = AutoBiographer_SnapshotPanel,
   Statistics = AutoBiographer_StatisticsWindow, Notes = AutoBiographer_NotesWindow, Characters = AutoBiographer_CharactersPanel,
-  CharacterMap = AutoBiographer_CharacterMapPanel }) do
+  CharacterMap = AutoBiographer_CharacterMapPanel, CampfireTales = AutoBiographer_CampfireTalesPanel }) do
   panel.IsEmbeddedPanel = true
   panel.SectionName = section
   panel:Hide()

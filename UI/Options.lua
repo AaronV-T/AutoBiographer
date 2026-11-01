@@ -16,7 +16,7 @@ local optionGroups = {
   { Title = "Sharing", Controls = {
     { Name = "ShareMilestonesInGuild", Text = "Automatically share major milestones in guild chat." },
     { Name = "ShareMilestonesAsEmotes", Text = "Offer major milestones as emotes (click to send)." },
-    { Name = "RecommendCampfireMessages", Text = "Recommend messages to share at campfires.", Availability = "Forever" },
+    { Name = "RecommendCampfireMessages", Text = "Automatically open Campfire Tales when sitting at a campfire." },
     { Name = "EnableCustomEventSharing", Text = "Allow guild members to share custom events with you." },
   } },
   { Title = "Screenshots", Controls = {
@@ -186,6 +186,10 @@ function AutoBiographer_OptionWindow:SaveOptions()
   AutoBiographer_Settings.Options["EnableDebugLogging"] = self.cbEnableDebugLogging:GetChecked()
   AutoBiographer_Settings.Options["EnableMilestoneMessages"] = self.cbEnableMilestoneMessages:GetChecked()
   AutoBiographer_Settings.Options["RecommendCampfireMessages"] = self.cbRecommendCampfireMessages:GetChecked()
+  if (not AutoBiographer_Settings.Options.RecommendCampfireMessages and AutoBiographer_CampfireSharing.AutomaticPending) then
+    AutoBiographer_CampfireSharing.Pending = false
+    AutoBiographer_CampfireSharing:Dismiss()
+  end
   AutoBiographer_Settings.Options["ShowFriendlyPlayerToolTips"] = self.cbFriendlyPlayerTooltip:GetChecked()
   AutoBiographer_Settings.Options["ShowKillCountOnUnitToolTips"] = self.cbKillCountTooltip:GetChecked()
   AutoBiographer_Settings.Options["ShowDiscoveryInfoOnToolTips"] = self.cbDiscoveryTooltip:GetChecked()

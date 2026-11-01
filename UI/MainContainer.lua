@@ -2,10 +2,10 @@ local Api = AutoBiographer_Api
 local navigationGroups = {
   { Title = "Character", Sections = { "Summary", "Statistics", "Snapshots", "GearHistory" } },
   { Title = "Event Journal", Sections = { "Replay", "Events" } },
-  { Title = "Tools", Sections = { "Notes", "Todos" } },
+  { Title = "Tools", Sections = { "Notes", "Todos", "CampfireTales" } },
   { Title = "All Characters", Sections = { "Characters", "CharacterMap" } },
 }
-local sectionLabels = { Characters = "Roster", CharacterMap = "Map", GearHistory = "Gear Log", Replay = "Adventure Replay", Events = "Event Log", Todos = "Tasks" }
+local sectionLabels = { Characters = "Roster", CharacterMap = "Map", GearHistory = "Gear Log", Replay = "Adventure Replay", Events = "Event Log", Todos = "Tasks", CampfireTales = "Campfire Tales" }
 local sidebarLeft = 10
 local sidebarWidth = 136
 
@@ -178,6 +178,7 @@ function AutoBiographer_MainWindow:Initialize()
     Snapshots = AutoBiographer_SnapshotPanel,
     Notes = AutoBiographer_NotesWindow,
     Todos = AutoBiographer_TodoPanel,
+    CampfireTales = AutoBiographer_CampfireTalesPanel,
   }
   AutoBiographer_SummaryPanel:Initialize()
   for _, panel in pairs(self.Panels) do

@@ -1,4 +1,4 @@
--- Campfire stories use existing character statistics; nothing here is saved.
+-- Automatic tales use existing statistics; personal tales live in the character's library.
 AutoBiographer_CampfireSharing = { RecentlyShared = {} }
 local Sharing = AutoBiographer_CampfireSharing
 local Controller, Api, Enum = AutoBiographer_Controller, AutoBiographer_Api, AutoBiographerEnum
@@ -16,6 +16,7 @@ Sharing.Configuration = {
   OfferCount = 3,
   TopCandidateCount = 5,
   RecentCategoryCount = 3,
+  InitialHideSeconds = 3600,
   Channel = "SAY",
   Qualifiers = {
     { Text = "at least" },
@@ -511,9 +512,48 @@ function Sharing:ChooseCandidate(candidates, minimum)
   return eligible[math.random(math.min(self.Configuration.TopCandidateCount, #eligible))]
 end
 
+function Sharing:BuildPersonalOffers()
+  local eligible, fresh, recent = {}, {}, {}
+  for _, key in ipairs(self.RecentlyShared) do recent[key] = true end
+  for _, tale in ipairs(Controller:GetCampfireTales().Items) do
+    local values = CampfireTales.Validate(tale.Title, tale.Text)
+    if (values) then
+      local offer = { Key = "Personal:" .. tale.Id, Label = values.Title, Messages = { values.Text }, Tale = tale }
+      eligible[#eligible + 1] = offer
+      if (not recent[offer.Key]) then fresh[#fresh + 1] = offer end
+    end
+  end
+  local pool = #fresh >= math.min(self.Configuration.OfferCount, #eligible) and fresh or eligible
+  local offers = {}
+  for index = 1, math.min(self.Configuration.OfferCount, #pool) do offers[index] = table.remove(pool, math.random(#pool)) end
+  return offers
+end
+
+function Sharing:BuildSuggestions()
+  local personal, automatic, suggestions = {}, {}, {}
+  for index, offer in ipairs(self.PersonalOffers) do personal[#personal + 1] = { Offer = offer, Index = index, Personal = true } end
+  for index, offer in ipairs(self.Offers) do automatic[#automatic + 1] = { Offer = offer, Index = index, Personal = false } end
+  local function Pick(pool) suggestions[#suggestions + 1] = table.remove(pool, math.random(#pool)) end
+  -- Reserve one of each kind before filling the remaining slot at random.
+  if (#personal > 0 and #automatic > 0) then Pick(personal); Pick(automatic) end
+  local remaining = {}
+  for _, pool in ipairs({ personal, automatic }) do
+    for _, suggestion in ipairs(pool) do remaining[#remaining + 1] = suggestion end
+  end
+  while (#suggestions < self.Configuration.OfferCount and #remaining > 0) do Pick(remaining) end
+  for index = #suggestions, 2, -1 do
+    local other = math.random(index)
+    suggestions[index], suggestions[other] = suggestions[other], suggestions[index]
+  end
+  return suggestions
+end
+
 function Sharing:Dismiss()
-  self.Offers = nil
+  self.Offers, self.PersonalOffers, self.Suggestions, self.TestMode, self.AutomaticPending = nil, nil, nil, nil, nil
   if (self.Prompt) then self.Prompt:Hide() end
+  if (AutoBiographer_CampfireTalesPanel.ReturnButton and not self:CanUseCampfire()) then
+    AutoBiographer_CampfireTalesPanel.ReturnButton:SetEnabled(false)
+  end
 end
 
 function Sharing:FormatMessage(rule, candidate, template)
@@ -559,7 +599,73 @@ function Sharing:IsResting()
   return false
 end
 
+function Sharing:UpdateHiddenTime()
+  local library = Controller:GetCampfireTales()
+  if (self.PlayedAt) then
+    local now = GetTime()
+    local elapsed = math.max(0, now - self.PlayedAt)
+    self.PlayedAt = now
+    if (library.HideRemaining) then library.HideRemaining = math.max(0, library.HideRemaining - elapsed) end
+  end
+  if (library.HideRemaining == 0) then library.HideRemaining = nil end
+  return library.HideRemaining or 0
+end
+
+function Sharing:ShouldOpenAutomatically()
+  return self:UpdateHiddenTime() == 0 and AutoBiographer_Settings.Options.RecommendCampfireMessages
+end
+
+function Sharing:ScheduleHiddenTime()
+  self.HideGeneration = (self.HideGeneration or 0) + 1
+  local generation = self.HideGeneration
+  local remaining = self:UpdateHiddenTime()
+  if (remaining <= 0 or not self.PlayedAt) then return end
+  C_Timer.After(remaining, function()
+    if (generation ~= self.HideGeneration or not self.PlayedAt) then return end
+    if (self:UpdateHiddenTime() > 0) then self:ScheduleHiddenTime(); return end
+    if (self:ShouldOpenAutomatically() and self:IsResting() == true) then
+      self.Resting, self.Pending, self.AutomaticPending = true, true, true
+      self:Resume()
+    end
+  end)
+end
+
+function Sharing:HideSuggestions()
+  self:UpdateHiddenTime()
+  local library = Controller:GetCampfireTales()
+  library.HideDuration = library.HideDuration and library.HideDuration * 2 or self.Configuration.InitialHideSeconds
+  library.HideRemaining = library.HideDuration
+  self.PlayedAt = GetTime()
+  self.Pending = false
+  self:Dismiss()
+  self:ScheduleHiddenTime()
+end
+
+function Sharing:ResetHiddenTime()
+  local library = Controller:GetCampfireTales()
+  library.HideDuration, library.HideRemaining = nil, nil
+  self.HideGeneration = (self.HideGeneration or 0) + 1
+end
+
+function Sharing:OnEnteringWorld()
+  -- The saved remainder carries between sessions; the clock runs only in-world.
+  Controller:GetCampfireTales().PausedUntilLogin = nil -- Retire the old login-based pause.
+  self.PlayedAt = GetTime()
+  self:ScheduleHiddenTime()
+end
+
+function Sharing:OnLeavingWorld()
+  self:UpdateHiddenTime()
+  self.PlayedAt = nil
+  self.HideGeneration = (self.HideGeneration or 0) + 1
+  self:Reset()
+end
+
 function Sharing:OnPlayerAuras(baseline)
+  if (self.TestMode) then
+    if (not baseline) then return end
+    self:Reset()
+  end
   local resting = self:IsResting()
   if (resting == nil) then return end -- Secret aura data is not a removal.
   if (baseline) then
@@ -571,8 +677,8 @@ function Sharing:OnPlayerAuras(baseline)
     if (self.Resting == nil) then self.Resting = true; return end
     if (not self.Resting) then
       self.Resting = true
-      if (AutoBiographer_Settings.Options["RecommendCampfireMessages"]) then
-        self.Pending = true
+      if (self:ShouldOpenAutomatically()) then
+        self.Pending, self.AutomaticPending = true, true
         self:Resume()
       end
     end
@@ -592,7 +698,10 @@ function Sharing:OnPlayerAuras(baseline)
 end
 
 function Sharing:Pause()
+  self.Pausing = true
   if (self.Prompt) then self.Prompt:Hide() end
+  self.Pausing = nil
+  if (AutoBiographer_CampfireTalesPanel.ReturnButton) then AutoBiographer_CampfireTalesPanel.ReturnButton:SetEnabled(false) end
 end
 
 function Sharing:Reset()
@@ -601,17 +710,44 @@ function Sharing:Reset()
   self:Dismiss()
 end
 
+function Sharing:CanUseCampfire()
+  return not InCombatLockdown() and (self.TestMode == true or self:IsResting() == true)
+end
+
 function Sharing:Resume()
-  if (InCombatLockdown() or not self.Pending or self:IsResting() ~= true) then return end
+  if (self.AutomaticPending and not self:ShouldOpenAutomatically()) then
+    self.Pending = false
+    self:Dismiss()
+    return
+  end
+  local available = self:CanUseCampfire()
+  local editor = AutoBiographer_CampfireTalesPanel
+  if (editor.ReturnButton) then editor.ReturnButton:SetEnabled(available) end
+  if (not self.Pending or not available or editor:IsVisible()) then return end
+  local refresh = not self.Offers or not self.PersonalOffers or not self.Suggestions
   if (not self.Offers) then self.Offers = self:BuildOffers() end
-  if (#self.Offers < self.Configuration.OfferCount) then self.Pending = false; return end
+  if (not self.PersonalOffers) then self.PersonalOffers = self:BuildPersonalOffers() end
+  if (refresh) then self.Suggestions = self:BuildSuggestions() end
   self:ShowPrompt()
 end
 
-function Sharing:Share(index)
-  if (InCombatLockdown() or self:IsResting() ~= true) then return end
-  local offer = self.Offers and self.Offers[index]
+function Sharing:ShareSuggestion(index)
+  local suggestion = self.Suggestions and self.Suggestions[index]
+  if (suggestion) then self:Share(suggestion.Index, suggestion.Personal) end
+end
+
+function Sharing:Share(index, personal)
+  if (not self:CanUseCampfire()) then return end
+  local offers = self.Offers
+  if (personal) then offers = self.PersonalOffers end
+  local offer = offers and offers[index]
   if (not offer) then return end
+  if (personal) then
+    local tale = offer.Tale
+    local values = CampfireTales.Contains(Controller:GetCampfireTales(), tale) and CampfireTales.Validate(tale.Title, tale.Text)
+    if (not values) then self.PersonalOffers = nil; self:Resume(); return end
+    offer.Messages = { values.Text }
+  end
   local message = offer.Messages[math.random(#offer.Messages)]
   -- This call must remain directly in the button's click handler, not a timer.
   local ok, sent = pcall(Api.SendMilestoneMessage, message, self.Configuration.Channel)
@@ -620,6 +756,8 @@ function Sharing:Share(index)
     return
   end
   Controller:OnCampfireTaleShared()
+  self:ResetHiddenTime()
+  if (personal) then offer.Tale.LastSharedTimestamp = time() end
   for recentIndex = #self.RecentlyShared, 1, -1 do
     if (self.RecentlyShared[recentIndex] == offer.Key) then table.remove(self.RecentlyShared, recentIndex) end
   end
@@ -629,40 +767,131 @@ function Sharing:Share(index)
   self:Dismiss()
 end
 
+function Sharing:OpenCrafting()
+  if (not self:CanUseCampfire()) then return end
+  self:Pause()
+  AutoBiographer_MainWindow:ShowSection("CampfireTales")
+end
+
 function Sharing:ShowPrompt()
   if (not self.Prompt) then
     local window = CreateFrame("Frame", "AutoBiographerCampfireSharing", UIParent, "BasicFrameTemplate")
     self.Prompt = window
-    window:SetPoint("TOP", UIParent, "TOP", 0, -4)
+    local position = Controller:GetCampfireTales().WindowPosition
+    if (position) then window:SetPoint(position.Point, UIParent, position.RelativePoint, position.X, position.Y)
+    else window:SetPoint("TOP", UIParent, "TOP", 0, -4) end
     window:SetFrameStrata("DIALOG")
-    window.TitleText:SetText("AutoBiographer Campfire Tales")
+    window:SetMovable(true)
+    window:SetClampedToScreen(true)
+    window:EnableMouse(true)
+    local function StopDragging()
+      if (not window.IsMoving) then return end
+      window:StopMovingOrSizing()
+      window.IsMoving = false
+      local point, _, relativePoint, x, y = window:GetPoint()
+      Controller:GetCampfireTales().WindowPosition = { Point = point, RelativePoint = relativePoint, X = x, Y = y }
+    end
+    window.DragBar = CreateFrame("Frame", nil, window)
+    window.DragBar:SetPoint("TOPLEFT")
+    window.DragBar:SetPoint("TOPRIGHT", -26, 0)
+    window.DragBar:SetHeight(22)
+    window.DragBar:EnableMouse(true)
+    window.DragBar:RegisterForDrag("LeftButton")
+    window.DragBar:SetScript("OnDragStart", function()
+      if (window.IsMoving) then return end
+      window.IsMoving = true
+      window:StartMoving()
+    end)
+    window.DragBar:SetScript("OnDragStop", StopDragging)
     window.Message = window:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     window.Message:SetPoint("TOPLEFT", 12, -32)
-    window.Message:SetWidth(336)
+    window.Message:SetWidth(232)
     window.Message:SetJustifyH("LEFT")
-    window.Message:SetText("Choose a tale to share. The story is revealed when you speak.")
+    window.Message:SetText("Choose a tale to share.")
     window.Buttons = {}
     for index = 1, self.Configuration.OfferCount do
       local button = CreateFrame("Button", nil, window, "UIPanelButtonTemplate")
-      button:SetSize(336, 26)
-      button:SetPoint("TOPLEFT", 12, -68 - (index - 1) * 32)
-      button:SetScript("OnClick", function() self:Share(index) end)
+      button:SetSize(356, 26)
+      button:SetPoint("TOPLEFT", 12, -58 - (index - 1) * 32)
+      button:SetNormalFontObject("GameFontNormalSmall")
+      button:SetText("")
+      button:GetFontString():SetWidth(336)
+      button:GetFontString():SetWordWrap(false)
+      button:SetScript("OnClick", function() self:ShareSuggestion(index) end)
+      button:SetScript("OnEnter", function()
+        local suggestion = self.Suggestions and self.Suggestions[index]
+        if (not suggestion) then return end
+        GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
+        GameTooltip:SetText(suggestion.Offer.Label)
+        GameTooltip:AddLine(suggestion.Personal and "Your saved tale" or "Automatic tale", 1, 0.82, 0)
+        if (suggestion.Personal) then GameTooltip:AddLine(suggestion.Offer.Messages[1], 1, 1, 1, true) end
+        GameTooltip:Show()
+      end)
+      button:SetScript("OnLeave", function() GameTooltip:Hide() end)
       window.Buttons[index] = button
     end
+    window.Empty = window:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    window.Empty:SetPoint("TOPLEFT", 12, -64)
+    window.Empty:SetText("No tales to suggest yet. Craft your first one.")
+    window.Craft = CreateFrame("Button", nil, window, "UIPanelButtonTemplate")
+    window.Craft:SetSize(110, 24)
+    window.Craft:SetPoint("TOPRIGHT", -12, -28)
+    window.Craft:SetText("Craft a tale")
+    window.Craft:SetScript("OnClick", function() self:OpenCrafting() end)
+    window.Craft:SetScript("OnEnter", function(button)
+      GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
+      GameTooltip:SetText("Craft a tale")
+      GameTooltip:AddLine("Use your recorded events for inspiration, write and edit your own story, and save it to share at a campfire.", 1, 1, 1, true)
+      GameTooltip:Show()
+    end)
+    window.Craft:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    window.HideSuggestions = CreateFrame("Button", nil, window, "UIPanelButtonTemplate")
+    window.HideSuggestions:SetSize(170, 24)
+    window.HideSuggestions:SetPoint("BOTTOMRIGHT", -12, 12)
+    window.HideSuggestions:SetText("Hide for a while")
+    window.HideSuggestions:SetScript("OnClick", function() self:HideSuggestions() end)
+    window.HideSuggestions:SetScript("OnEnter", function(button)
+      GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
+      GameTooltip:SetText("Hide for a while")
+      GameTooltip:AddLine("Close the Campfire Tales window and temporarily prevent it from opening automatically. You can still open it manually.", 1, 1, 1, true)
+      GameTooltip:Show()
+    end)
+    window.HideSuggestions:SetScript("OnLeave", function() GameTooltip:Hide() end)
     local function Skip() self.Pending = false; self:Dismiss() end
     window.Skip = CreateFrame("Button", nil, window, "UIPanelButtonTemplate")
     window.Skip:SetSize(100, 24)
-    window.Skip:SetPoint("BOTTOM", 0, 12)
-    window.Skip:SetText("Not now")
+    window.Skip:SetPoint("BOTTOMLEFT", 12, 12)
+    window.Skip:SetText("Close")
     window.Skip:SetScript("OnClick", Skip)
+    window.Skip:SetScript("OnEnter", function(button)
+      GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
+      GameTooltip:SetText("Close")
+      GameTooltip:AddLine("Close the Campfire Tales window. It may open again the next time you rest at a campfire.", 1, 1, 1, true)
+      GameTooltip:Show()
+    end)
+    window.Skip:SetScript("OnLeave", function() GameTooltip:Hide() end)
     window.CloseButton:SetScript("OnClick", Skip)
+    window:EnableKeyboard(true)
+    window:SetScript("OnKeyDown", function(frame, key)
+      frame:SetPropagateKeyboardInput(key ~= "ESCAPE")
+      if (key == "ESCAPE") then Skip() end
+    end)
+    -- Escape hides special frames directly. Treat that as dismissing the picker,
+    -- while Pause (combat or opening the editor) retains the current choices.
+    table.insert(UISpecialFrames, "AutoBiographerCampfireSharing")
+    window:SetScript("OnHide", function()
+      StopDragging()
+      if (not self.Pausing and self.Pending) then Skip() end
+    end)
   end
   local window = self.Prompt
-  window:SetSize(360, 112 + #self.Offers * 32)
+  window.TitleText:SetText("AutoBiographer Campfire Tales" .. (self.TestMode and " (Test)" or ""))
   for index, button in ipairs(window.Buttons) do
-    local offer = self.Offers[index]
-    button:SetShown(offer ~= nil)
-    if (offer) then button:SetText(offer.Label) end
+    local suggestion = self.Suggestions[index]
+    button:SetShown(suggestion ~= nil)
+    if (suggestion) then button:SetText((suggestion.Personal and "Your tale: " or "") .. suggestion.Offer.Label) end
   end
+  window.Empty:SetShown(#self.Suggestions == 0)
+  window:SetSize(380, 102 + math.max(1, #self.Suggestions) * 32)
   window:Show()
 end

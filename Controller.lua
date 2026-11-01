@@ -707,6 +707,10 @@ function Controller:GetTodos()
   return self.CharacterData.Todos
 end
 
+function Controller:GetCampfireTales()
+  return self.CharacterData.CampfireTales
+end
+
 function Controller:GetTotalMoneyGained(minLevel, maxLevel)
   local sum = 0
   for k,v in pairs(self.CharacterData.Levels) do

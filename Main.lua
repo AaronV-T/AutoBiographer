@@ -315,6 +315,9 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   if type(_G["AUTOBIOGRAPHER_SNAPSHOTS_CHAR"]) ~= "table" then
     _G["AUTOBIOGRAPHER_SNAPSHOTS_CHAR"] = CharacterSnapshots.New()
   end
+  if type(_G["AUTOBIOGRAPHER_TALES_CHAR"]) ~= "table" then
+    _G["AUTOBIOGRAPHER_TALES_CHAR"] = CampfireTales.New()
+  end
   if type(_G["AUTOBIOGRAPHER_TODOS_CHAR"]) ~= "table" then
     _G["AUTOBIOGRAPHER_TODOS_CHAR"] = Todo.New()
   end
@@ -324,6 +327,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   }
   
   Controller.CharacterData = {
+    CampfireTales = _G["AUTOBIOGRAPHER_TALES_CHAR"],
     Catalogs = _G["AUTOBIOGRAPHER_CATALOGS_CHAR"],
     Events = _G["AUTOBIOGRAPHER_EVENTS_CHAR"],
     Gear = _G["AUTOBIOGRAPHER_GEAR_CHAR"],
@@ -382,6 +386,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   AutoBiographer_OptionWindow:Initialize()
   AutoBiographer_StatisticsWindow:Initialize()
   AutoBiographer_TodoPanel:Initialize()
+  AutoBiographer_CampfireTalesPanel:Initialize()
   AutoBiographer_CharactersPanel:Initialize()
   AutoBiographer_CharacterMapPanel:Initialize()
   AutoBiographer_VerificationWindow:Initialize()
@@ -1066,6 +1071,7 @@ end
 
 function EM.EventHandlers.PLAYER_ENTERING_WORLD(self, isLogin, isReload)
   self.PlayerEnteringWorldHasFired = true
+  AutoBiographer_CampfireSharing:OnEnteringWorld()
   if (isLogin and not Api.IsWoWForever()) then
     local showAnnouncement = not self.PersistentPlayerInfo.ForeverBetaAnnouncementShownLastLogin
     self.PersistentPlayerInfo.ForeverBetaAnnouncementShownLastLogin = showAnnouncement
@@ -1165,7 +1171,7 @@ end
 
 function EM.EventHandlers.PLAYER_LEAVING_WORLD(self)
   AutoBiographer_Fishing:Stop()
-  AutoBiographer_CampfireSharing:Reset()
+  AutoBiographer_CampfireSharing:OnLeavingWorld()
   if (AutoBiographer_SnapshotManager) then AutoBiographer_SnapshotManager:Pause() end
   -- Equipment can already be unavailable here; keep the last known snapshot.
   self.GearTrackingReady = false
@@ -3041,13 +3047,10 @@ function EM:GetPosition()
 end
 
 function EM:Test()
-  print("[AutoBiographer] Test")
-
-  local creatureTypesKilled = 0
-  for _, unit in pairs(Controller.CharacterData.Catalogs.UnitCatalog) do
-    if (unit.Killed and unit.UType == AutoBiographerEnum.UnitType.Creature) then
-      creatureTypesKilled = creatureTypesKilled + 1
-    end
-  end
-  print("[AutoBiographer] Creature types killed: " .. creatureTypesKilled)
+  local sharing = AutoBiographer_CampfireSharing
+  sharing:Reset()
+  sharing.TestMode, sharing.Pending = true, true
+  if (AutoBiographer_CampfireTalesPanel:IsVisible()) then AutoBiographer_MainWindow:Hide() end
+  if (InCombatLockdown()) then print("[AutoBiographer] Campfire tales will open when combat ends.") end
+  sharing:Resume()
 end
