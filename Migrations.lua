@@ -685,3 +685,13 @@ table.insert(MM.AccountMigrations,
     "Account"
   )
 )
+
+table.insert(MM.AccountMigrations,
+  AutoBiographer_Migration:New(
+    4,
+    function(eventManager, controller)
+      AddMissing(AutoBiographer_Settings.Options, { ShowWorldMapEventButton = true })
+    end,
+    "Account"
+  )
+)

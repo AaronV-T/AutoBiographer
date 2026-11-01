@@ -815,9 +815,13 @@ function AutoBiographer_WorldMapOverlayWindowToggleButton_Initialize()
     end
   )
 
-  -- The legacy map button causes a Blizzard-UI protected-action warning when
-  -- the Forever Gamepad UI is active.
-  if (HelperFunctions.GetGameVersion() >= 4 or (Api.IsWoWForever() and Api.IsGamepadUIEnabled())) then
-    frame:Hide()
-  end
+  AutoBiographer_WorldMapOverlayWindowToggleButton_UpdateVisibility()
+end
+
+function AutoBiographer_WorldMapOverlayWindowToggleButton_UpdateVisibility()
+  local frame = AutoBiographer_WorldMapOverlayWindowToggleButton
+  if (not frame) then return end
+  -- Keep the legacy button disabled on unsupported maps and the Forever Gamepad UI.
+  local supported = HelperFunctions.GetGameVersion() < 4 and not (Api.IsWoWForever() and Api.IsGamepadUIEnabled())
+  frame:SetShown(supported and AutoBiographer_Settings.Options.ShowWorldMapEventButton ~= false)
 end

@@ -278,6 +278,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
         ShowFriendlyPlayerToolTips = true,
         ShowKillCountOnUnitToolTips = true,
         ShowMinimapButton = true,
+        ShowWorldMapEventButton = true,
         ShowTimePlayedOnLevelUp = true,
         TakeScreenshotOnAchievementEarned = false,
         TakeScreenshotOnBossKill = true,
