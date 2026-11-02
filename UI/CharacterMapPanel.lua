@@ -38,7 +38,7 @@ function panel:GetMapInfo(id)
 end
 
 function panel:HasFocusedTextInput()
-  return self.SearchBox:HasFocus()
+  return self.SearchBox:HasFocus() or self.LevelRange:HasFocus()
 end
 
 function panel:Initialize()
@@ -84,6 +84,12 @@ function panel:Initialize()
       UIDropDownMenu_AddButton(info)
     end
   end)
+  self.LevelRange = AutioBiographer_WindowHelper:CreateLevelRange(self, function(minLevel, maxLevel)
+    self.MapView.MinLevel, self.MapView.MaxLevel = minLevel, maxLevel
+    self:Update()
+  end)
+  self.LevelRange:SetPoint("TOPLEFT", 514, -5)
+  self.LevelRange:SetRange(self.MapView.MinLevel, self.MapView.MaxLevel)
   self.RefreshButton = Button(self, "Refresh", 80, function() manager:Capture(); self:Update() end)
   self.RefreshButton:SetPoint("BOTTOMRIGHT", -22, 14)
   self.SearchBox = CreateFrame("EditBox", nil, self, "InputBoxTemplate")
@@ -112,6 +118,8 @@ function panel:Initialize()
   self.UpButton:SetPoint("TOPLEFT", 590, -39)
   self.ClearButton = Button(self, "Clear filters", 96, function()
     self.Filters.Realm, self.Filters.Faction, self.Filters.ShowHidden = nil, nil, nil
+    self.MapView.MinLevel, self.MapView.MaxLevel = nil, nil
+    self.LevelRange:SetRange(nil, nil)
     self.SearchBox:SetText(""); self:Update()
   end)
   self.ClearButton:SetPoint("BOTTOMRIGHT", -112, 14)
@@ -145,7 +153,7 @@ function panel:Initialize()
   self.Footer = Label(self, "GameFontDisableSmall"); self.Footer:SetPoint("BOTTOMLEFT", 18, 20)
   self.PanelReady = true
   self:SetScript("OnShow", function() manager:Capture(); self:Update() end)
-  self:SetScript("OnHide", function() self.SearchBox:ClearFocus(); GameTooltip:Hide() end)
+  self:SetScript("OnHide", function() self.SearchBox:ClearFocus(); self.LevelRange:ClearFocus(); GameTooltip:Hide() end)
   self:LayoutPanel(); self:Hide()
 end
 
@@ -170,7 +178,8 @@ end
 function panel:Update()
   if (not self.PanelReady) then return end
   self.Entries = CharacterRoster.GetEntries(Controller.AccountData.Characters, { Search = self.SearchBox:GetText(),
-    Realm = self.Filters.Realm, Faction = self.Filters.Faction, ShowHidden = self.Filters.ShowHidden, Sort = "Name" })
+    Realm = self.Filters.Realm, Faction = self.Filters.Faction, ShowHidden = self.Filters.ShowHidden, Sort = "Name",
+    MinLevel = self.MapView.MinLevel, MaxLevel = self.MapView.MaxLevel })
   local selected
   for _, entry in ipairs(self.Entries) do if (entry.Id == self.SelectedId) then selected = entry; break end end
   if (not selected) then

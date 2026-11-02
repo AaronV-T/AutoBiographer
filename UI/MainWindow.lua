@@ -41,6 +41,69 @@ AutioBiographer_WindowHelper = {
   SearchInputWidth = 200,
 }
 
+-- Empty bounds include all levels on that side of the range.
+function AutioBiographer_WindowHelper:CreateLevelRange(parent, onChanged)
+  local range = CreateFrame("Frame", nil, parent)
+  range:SetSize(198, 24)
+  function range:SetRange(minLevel, maxLevel)
+    self.MinLevel, self.MaxLevel = minLevel, maxLevel
+    self.Minimum:SetText(minLevel and tostring(minLevel) or "")
+    self.Maximum:SetText(maxLevel and tostring(maxLevel) or "")
+  end
+  function range:Apply()
+    local function Bound(box)
+      local value = tonumber(box:GetText())
+      return value and math.max(1, math.min(9999, math.floor(value))) or nil
+    end
+    local minLevel, maxLevel = Bound(self.Minimum), Bound(self.Maximum)
+    if (minLevel and maxLevel) then maxLevel = math.max(minLevel, maxLevel) end
+    local changed = minLevel ~= self.MinLevel or maxLevel ~= self.MaxLevel
+    self:SetRange(minLevel, maxLevel)
+    if (changed) then onChanged(minLevel, maxLevel) end
+  end
+  function range:HasFocus()
+    return self.Minimum:HasFocus() or self.Maximum:HasFocus()
+  end
+  function range:ClearFocus()
+    self.Minimum:ClearFocus(); self.Maximum:ClearFocus()
+  end
+  local previous
+  for index, name in ipairs({ "Minimum", "Maximum" }) do
+    local label = range:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    label:SetText(index == 1 and "Levels" or "to")
+    label:SetWidth(index == 1 and 34 or 12)
+    label:SetWordWrap(false)
+    if (previous) then label:SetPoint("LEFT", previous, "RIGHT", 8, 0)
+    else label:SetPoint("LEFT", 0, 0) end
+    local box = CreateFrame("EditBox", nil, range, "InputBoxTemplate")
+    box:SetPoint("LEFT", label, "RIGHT", 8, 0)
+    box:SetSize(56, 22)
+    box:SetAutoFocus(false); box:SetNumeric(true); box:SetMaxLetters(4)
+    box:SetScript("OnEnterPressed", function(editBox) editBox:ClearFocus() end)
+    box:SetScript("OnEscapePressed", function(editBox)
+      range:SetRange(range.MinLevel, range.MaxLevel)
+      editBox:ClearFocus()
+    end)
+    box:SetScript("OnEditFocusLost", function() range:Apply() end)
+    box:SetScript("OnTabPressed", function(editBox)
+      editBox:ClearFocus()
+      local nextBox = name == "Minimum" and range.Maximum or range.Minimum
+      nextBox:SetFocus(); nextBox:HighlightText()
+    end)
+    box:SetScript("OnEnter", function(editBox)
+      GameTooltip:SetOwner(editBox, "ANCHOR_RIGHT")
+      GameTooltip:SetText(name .. " level")
+      GameTooltip:AddLine("Includes both end levels. Leave blank for no limit. Press Enter or leave the field to apply.", 1, 1, 1, true)
+      GameTooltip:Show()
+    end)
+    box:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    range[name] = box
+    previous = box
+  end
+  range:SetScript("OnHide", function() range:ClearFocus() end)
+  return range
+end
+
 function AutioBiographer_WindowHelper:LayoutSearchToolbar(panel, dropdowns)
   panel.SearchBox:SetSize(self.SearchInputWidth, 24)
   panel.SearchBox:ClearAllPoints()

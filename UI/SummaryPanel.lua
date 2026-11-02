@@ -302,6 +302,11 @@ function AutoBiographer_SummaryPanel:Initialize()
   UIDropDownMenu_Initialize(self.Dropdown, function(dropdown, level, menuList)
     self:UpdateLevelFilter(level, menuList)
   end)
+  self.LevelRange = AutioBiographer_WindowHelper:CreateLevelRange(self, function(minLevel, maxLevel)
+    self:SetLevelRange(minLevel, maxLevel)
+  end)
+  self.LevelRange:SetPoint("TOPLEFT", 210, -13)
+  self:SetLevelRange(self.DisplayMinLevel, self.DisplayMaxLevel)
   for i, tab in ipairs(dashboardTabs) do
     local button = AutioBiographer_WindowHelper:CreateTab(self, tab.Name, 100, function() self:SelectTab(tab.Name) end)
     button:SetPoint("TOPLEFT", 18 + (i - 1) * 106, -49)
@@ -443,6 +448,22 @@ function AutoBiographer_SummaryPanel:OpenStatistics(viewName)
   window:SelectView(Enum.StatisticsDisplayMode[viewName], self.DisplayMinLevel,
     math.min(self.DisplayMaxLevel, Controller:GetCurrentLevelNum()))
   AutoBiographer_MainWindow:ShowSection("Statistics")
+end
+
+function AutoBiographer_SummaryPanel:HasFocusedTextInput()
+  return self.LevelRange:HasFocus()
+end
+
+function AutoBiographer_SummaryPanel:SetLevelRange(minLevel, maxLevel)
+  minLevel, maxLevel = minLevel or 1, maxLevel or 9999
+  self.DisplayMinLevel, self.DisplayMaxLevel = minLevel, maxLevel
+  local allLevels = minLevel == 1 and maxLevel == 9999
+  self.DropdownText = allLevels and "All Levels" or
+    minLevel == maxLevel and ("Level " .. minLevel) or
+    maxLevel == 9999 and ("Levels " .. minLevel .. "+") or ("Levels " .. minLevel .. " - " .. maxLevel)
+  self.LevelRange:SetRange(not allLevels and minLevel or nil, maxLevel ~= 9999 and maxLevel or nil)
+  UIDropDownMenu_SetText(self.Dropdown, self.DropdownText)
+  if (self.PanelReady) then self:Update() end
 end
 
 function AutoBiographer_SummaryPanel:SelectTab(name)
@@ -645,9 +666,7 @@ end
 function AutoBiographer_SummaryPanel:UpdateLevelFilter(level, menuList)
   local info = UIDropDownMenu_CreateInfo()
   info.func = function(button, minLevel, maxLevel)
-    self.DropdownText = button.value
-    self.DisplayMinLevel, self.DisplayMaxLevel = minLevel, maxLevel
-    self:Update()
+    self:SetLevelRange(minLevel, maxLevel)
   end
   if (not level or level == 1) then
     info.text, info.arg1, info.arg2 = "All Levels", 1, 9999

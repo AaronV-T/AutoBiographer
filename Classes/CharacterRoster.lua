@@ -25,7 +25,9 @@ function CharacterRoster.GetEntries(data, options)
   local entries, search = {}, string.lower(options.Search or "")
   for _, entry in pairs(data.Entries) do
     if ((options.ShowHidden or not entry.Hidden) and (not options.Realm or entry.Realm == options.Realm) and
-      (not options.Faction or entry.Faction == options.Faction)) then
+      (not options.Faction or entry.Faction == options.Faction) and
+      (not options.MinLevel or entry.Level and entry.Level >= options.MinLevel) and
+      (not options.MaxLevel or entry.Level and entry.Level <= options.MaxLevel)) then
       local text = table.concat({ CharacterRoster.GetName(entry), entry.ClassName or entry.Class or "", entry.Race or "",
         entry.Realm or "", entry.FactionName or entry.Faction or "", entry.Zone or "", entry.SubZone or "",
         entry.Guild or "", entry.Note or "" }, " ")
