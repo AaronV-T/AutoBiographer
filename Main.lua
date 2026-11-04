@@ -322,6 +322,9 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
   if type(_G["AUTOBIOGRAPHER_TODOS_CHAR"]) ~= "table" then
     _G["AUTOBIOGRAPHER_TODOS_CHAR"] = Todo.New()
   end
+  if type(_G["AUTOBIOGRAPHER_TRAVEL_CHAR"]) ~= "table" then
+    _G["AUTOBIOGRAPHER_TRAVEL_CHAR"] = TravelHistory.New()
+  end
   Controller.AccountData = {
     Notes = _G["AUTOBIOGRAPHER_NOTES"],
     Characters = _G["AUTOBIOGRAPHER_CHARACTERS"],
@@ -335,6 +338,7 @@ function EM.EventHandlers.ADDON_LOADED(self, addonName, ...)
     Levels = _G["AUTOBIOGRAPHER_LEVELS_CHAR"],
     Snapshots = _G["AUTOBIOGRAPHER_SNAPSHOTS_CHAR"],
     Todos = _G["AUTOBIOGRAPHER_TODOS_CHAR"],
+    TravelHistory = _G["AUTOBIOGRAPHER_TRAVEL_CHAR"],
   }
   
   if type(_G["AUTOBIOGRAPHER_INFO_CHAR"]) ~= "table" then
@@ -1982,6 +1986,7 @@ function EM:StopDistanceTracking()
   self.DistanceTrackingActive = false
   self.DistanceTrackingGeneration = self.DistanceTrackingGeneration + 1
   self.LastDistancePosition = nil
+  self.ActiveTravelSegment = nil
 end
 
 function EM:SuppressTimePlayedMessages()
@@ -2952,37 +2957,52 @@ function EM:UpdateTimestamps(zone, subZone)
   end
 end
 
+local travelMaximumSpeeds = {
+  [AutoBiographerEnum.DistanceTrackingType.FlightPath] = 200,
+  [AutoBiographerEnum.DistanceTrackingType.Ghost] = 40,
+  [AutoBiographerEnum.DistanceTrackingType.Mounted] = 70,
+  [AutoBiographerEnum.DistanceTrackingType.OnFoot] = 35,
+  [AutoBiographerEnum.DistanceTrackingType.Swimming] = 35,
+}
+
 function EM:UpdateTravelDistance()
   if (not self.DistanceTrackingActive) then return end
   local x, y, instanceId = Api.GetPlayerWorldPosition()
-  local trackingType = x and Api.GetTravelTrackingType()
-  if (x == nil or trackingType == nil) then
+  if (x == nil) then
     self.LastDistancePosition = nil
+    self.ActiveTravelSegment = nil
     return
   end
-  local now = GetTime()
-  local levelNum = Controller:GetCurrentLevelNum()
-  local previous = self.LastDistancePosition
-  self.LastDistancePosition = { X = x, Y = y, InstanceId = instanceId,
-    Timestamp = now, TrackingType = trackingType, LevelNum = levelNum }
-  if (not previous or previous.InstanceId ~= instanceId or previous.TrackingType ~= trackingType or previous.LevelNum ~= levelNum) then return end
-  local elapsed = now - previous.Timestamp
-  -- Allow scheduling jitter around the one-second interval, but do not bridge
-  -- loading screens, long frame stalls, or missing samples.
-  if (elapsed <= 0 or elapsed > 2) then return end
-  local deltaX, deltaY = x - previous.X, y - previous.Y
-  local yards = math.sqrt(deltaX * deltaX + deltaY * deltaY)
-  local maximumSpeeds = {
-    [AutoBiographerEnum.DistanceTrackingType.FlightPath] = 200,
-    [AutoBiographerEnum.DistanceTrackingType.Ghost] = 40,
-    [AutoBiographerEnum.DistanceTrackingType.Mounted] = 70,
-    [AutoBiographerEnum.DistanceTrackingType.OnFoot] = 35,
-    [AutoBiographerEnum.DistanceTrackingType.Swimming] = 35,
+  local sample = {
+    X = x, Y = y, InstanceId = instanceId, Timestamp = GetTime(),
+    TrackingType = Api.GetTravelTrackingType(), LevelNum = Controller:GetCurrentLevelNum(),
+    MapId = Api.GetPlayerMapId(),
   }
-  -- Broad speed limits allow normal movement and reject teleport-like jumps.
-  -- Every rejected segment becomes the next baseline, never a delayed jump.
-  if (yards > (maximumSpeeds[trackingType] or 35) * elapsed + 2) then return end
-  Controller:AddDistance(trackingType, yards)
+  local previous = self.LastDistancePosition
+  self.LastDistancePosition = sample
+
+  local connected, yards = false, 0
+  if (previous and previous.InstanceId == instanceId) then
+    local elapsed = sample.Timestamp - previous.Timestamp
+    -- Allow timer jitter while leaving gaps for loading screens and long stalls.
+    if (elapsed > 0 and elapsed <= 2) then
+      local deltaX, deltaY = x - previous.X, y - previous.Y
+      yards = math.sqrt(deltaX * deltaX + deltaY * deltaY)
+      -- Movement may span a change of travel type. Allow either type's speed for the trail.
+      local maxSpeed = math.max(travelMaximumSpeeds[previous.TrackingType] or 35,
+        travelMaximumSpeeds[sample.TrackingType] or 35)
+      connected = yards <= maxSpeed * elapsed + 2
+    end
+  end
+
+  if (connected and not sample.MapId) then sample.MapId = previous.MapId end
+  self.ActiveTravelSegment = TravelHistory.Record(Controller.CharacterData.TravelHistory,
+    self.ActiveTravelSegment, sample, connected)
+
+  local trackingType = sample.TrackingType
+  if (connected and trackingType and previous.TrackingType == trackingType and previous.LevelNum == sample.LevelNum) then
+    Controller:AddDistance(trackingType, yards)
+  end
 end
 
 function EM:WasTradeRecentlyMade()
@@ -3022,6 +3042,9 @@ function EM:ClearCharacterData(doNotRequireConfirmation, doNotReloadUI)
     _G["AUTOBIOGRAPHER_SNAPSHOTS_CHAR"] = nil
     _G["AUTOBIOGRAPHER_INFO_CHAR"] = nil
     _G["AUTOBIOGRAPHER_TODOS_CHAR"] = nil
+    _G["AUTOBIOGRAPHER_TRAVEL_CHAR"] = nil
+    Controller.CharacterData.TravelHistory = nil
+    self.ActiveTravelSegment = nil
     if (not doNotReloadUI) then ReloadUI() end
   end
   print(doNotRequireConfirmation)

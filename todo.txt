@@ -1,10 +1,8 @@
-Program to backup and sync data + 1 million features (rankings, see all your characters, share a link to your character, etc)
-Startup hints
-
-
-
+Track how many times player has openened different UI (world map, bag, character panel, etc) and track addon feature usage.
 Does healing include shielding?
 Add new dungeons and raids locations. Make snapshotting work for new raid bosses, or use dungeon clearing achievements to determine snapshots to take.
+Program to backup and sync data + 1 million features (rankings, see all your characters, share a link to your character, etc)
+Startup hints
 Show highlights when dieing in hardcore? Share most unique stats when dieing in hardcore?
 Show pvp kills/deaths in nice screen
 All Characters summary page (collective stats)

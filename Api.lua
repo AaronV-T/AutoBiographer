@@ -618,6 +618,12 @@ function Api.GetPlayerWorldPosition()
   return x, y, instanceId
 end
 
+function Api.GetPlayerMapId()
+  if (not C_Map or not C_Map.GetBestMapForUnit) then return nil end
+  local success, mapId = pcall(C_Map.GetBestMapForUnit, "player")
+  if (success and IsReadable(mapId, "number") and mapId > 0 and mapId < math.huge) then return mapId end
+end
+
 function Api.GetQuestLogEntries()
   local entries = {}
   local count = 0
