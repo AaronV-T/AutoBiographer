@@ -1416,6 +1416,10 @@ function EM.EventHandlers.TIME_PLAYED_MSG(self, totalTimePlayed, levelTimePlayed
       for i = 1, #chatFramesToRegister do
         _G["ChatFrame" .. chatFramesToRegister[i]]:RegisterEvent("TIME_PLAYED_MSG")
       end
+      if (self.TimePlayedMessageChattynatorFiltered) then
+        self.TimePlayedMessageChattynatorFiltered = nil
+        EM:SetChattynatorTimePlayedFilter(false)
+      end
       self.TimePlayedMessageChatFramesToRegister = nil
     end)
   end
@@ -1999,6 +2003,19 @@ function EM:SuppressTimePlayedMessages()
       chatFrame:UnregisterEvent("TIME_PLAYED_MSG")
     end
   end
+  -- Chattynator replaces the default chat frames with its own event listener,
+  -- so it has to be told separately to hide the response.
+  if (EM:SetChattynatorTimePlayedFilter(true)) then
+    self.TimePlayedMessageChattynatorFiltered = true
+  end
+end
+
+-- Returns true if Chattynator is loaded and the filter was applied.
+function EM:SetChattynatorTimePlayedFilter(state)
+  local api = Chattynator and Chattynator.API
+  if (not (api and type(api.FilterTimePlayed) == "function")) then return false end
+  local ok = pcall(api.FilterTimePlayed, state)
+  return ok
 end
 
 function EM:UpdateClassActivity()
