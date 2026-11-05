@@ -176,14 +176,6 @@ function Controller:GetAggregatedDamageTakenByUnit(damageOrHealingCategories, mi
   return breakdownsByUnit
 end
 
-function Controller:GetAggregatedDamageTakenUnknownBreakdown(minLevel, maxLevel)
-  local rawAmount, rawOver = self:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageTakenRaw, minLevel, maxLevel)
-  local attributedAmount, attributedOver = self:GetDamageOrHealing(AutoBiographerEnum.DamageOrHealingCategory.DamageTaken, minLevel, maxLevel)
-  local unknownBreakdown = DamageBreakdown.New()
-  unknownBreakdown.Amount = rawAmount - rawOver - (attributedAmount - attributedOver)
-  return unknownBreakdown
-end
-
 function Controller:GetAggregatedDeathStatisticsDictionary(minLevel, maxLevel)
   local deathsByUnit = {}
   for levelNum, statistics in pairs(self.CharacterData.Levels) do

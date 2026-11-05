@@ -500,7 +500,7 @@ function AutoBiographer_SummaryPanel:Update()
 
   for _, category in ipairs({ "DamageDealt", "DamageTaken", "PetDamageTaken", "HealingDealt", "HealingTaken" }) do
     local enumName = category
-    if (category == "DamageTaken" or category == "PetDamageTaken" or category == "HealingTaken") then
+    if (category == "PetDamageTaken" or category == "HealingTaken") then
       enumName = category .. "Raw"
     end
     local amount, over = Controller:GetDamageOrHealing(Enum.DamageOrHealingCategory[enumName], minLevel, maxLevel)

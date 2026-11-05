@@ -194,10 +194,6 @@ function AutoBiographer_StatisticsWindow:GetTableData(minLevel, maxLevel)
         table.insert(tableData.Rows, { spellName, unitName, breakdown.Amount - breakdown.Over, breakdown.Over, SpellId = spellId })
       end
     end
-    local unknownBreakdown = Controller:GetAggregatedDamageTakenUnknownBreakdown(minLevel, maxLevel)
-    if (unknownBreakdown.Amount ~= 0 or unknownBreakdown.Over ~= 0) then
-      table.insert(tableData.Rows, { "Unknown", "Unknown", unknownBreakdown.Amount - unknownBreakdown.Over, unknownBreakdown.Over, IsUnknown = true })
-    end
   elseif (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.DamageTakenByUnit) then
     local breakdownsByUnit = Controller:GetAggregatedDamageTakenByUnit({ AutoBiographerEnum.DamageOrHealingCategory.DamageTaken }, minLevel, maxLevel)
     tableData = {
@@ -207,10 +203,6 @@ function AutoBiographer_StatisticsWindow:GetTableData(minLevel, maxLevel)
     }
     for unitName, breakdown in pairs(breakdownsByUnit) do
       table.insert(tableData.Rows, { unitName, breakdown.Amount - breakdown.Over, breakdown.Over })
-    end
-    local unknownBreakdown = Controller:GetAggregatedDamageTakenUnknownBreakdown(minLevel, maxLevel)
-    if (unknownBreakdown.Amount ~= 0 or unknownBreakdown.Over ~= 0) then
-      table.insert(tableData.Rows, { "Unknown", unknownBreakdown.Amount - unknownBreakdown.Over, unknownBreakdown.Over, IsUnknown = true })
     end
   elseif (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.Deaths) then
     tableData = { HeaderValues = { "Unit Name", "Deaths" }, RowOffsets = { 0, 450, 650 }, Rows = {} }
@@ -493,7 +485,7 @@ function AutoBiographer_StatisticsWindow:GetTableData(minLevel, maxLevel)
     end
     for _, row in ipairs(tableData.Rows) do
       local spellId = spellIdsByName[row[1]]
-      if (not row.SpellId and not row.IsUnknown and spellId and spellId ~= 0) then row.SpellId = spellId end
+      if (not row.SpellId and spellId and spellId ~= 0) then row.SpellId = spellId end
     end
   end
   return tableData, isRankView
@@ -870,9 +862,6 @@ function AutoBiographer_StatisticsWindow:ShowRowTooltip(owner, row, column)
     local value = row[i]
     local text = IsDurationColumn(self, i) and HF.SecondsToTimeString(value, true) or FormatValue(self, i, value, row)
     GameTooltip:AddDoubleLine(self.CurrentTableData.HeaderValues[i], text, 0.8, 0.8, 0.8, 1, 1, 1)
-  end
-  if (row.IsUnknown) then
-    GameTooltip:AddLine("Raw damage taken that could not be attributed to a unit or spell by the damage meter.", 1, 1, 1, true)
   end
   if (row.LevelStatistics) then
     local statistics, xp = row.LevelStatistics, row.LevelStatistics.Experience

@@ -1507,8 +1507,7 @@ end
 -- end
 
 function EM.EventHandlers.UNIT_COMBAT(self, unitId, action, ind, dmg, dmgType)
-  --print("UNIT_COMBAT. " .. tostring(unitId) .. ", " .. tostring(action) .. ", " .. tostring(ind) .. ", " .. tostring(dmg) .. ", " .. tostring(dmgType))
-  if (not dmg or dmg <= 0) then return end
+  if (self:IsSecretValue(unitId) or self:IsSecretValue(action) or self:IsSecretValue(dmg) or not dmg or dmg <= 0) then return end
 
   -- UNIT_COMBAT reports incoming effective amounts for the affected unit.
   -- WOUND is damage received and HEAL is healing received.
