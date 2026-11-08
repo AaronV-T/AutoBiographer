@@ -1,3 +1,4 @@
+local L = AutoBiographer_L
 -- A read-only highlight reel. All figures come from existing character records;
 -- this view adds no saved data and never changes the underlying statistics.
 AutoBiographer_Overview = {}
@@ -107,7 +108,7 @@ function Overview:BuildHighlights(window)
   end
   local messages = {}
   for category, trackingType in pairs(Enum.MessageTrackingType) do
-    Add(messages, messageNames[category], window.DashboardValues["Messages" .. category] or 0)
+    Add(messages, L[messageNames[category]], window.DashboardValues["Messages" .. category] or 0)
   end
   local deaths = self:BuildDeathSources(window)
   local highlights = {}
@@ -119,49 +120,49 @@ function Overview:BuildHighlights(window)
         entry.Value = (format or Number)(entry.Amount)
       end
       highlights[#highlights + 1] = { Title = title, Name = entries[1].Name, Description = entries[1].Description,
-        Entries = entries, Caption = caption, View = view, Icon = icon }
+        Entries = entries, Caption = L[caption], View = view, Icon = icon }
     end
   end
-  Highlight("Your signature moves", casts, function(n) return Number(n) .. " successful casts, across all ranks" end,
+  Highlight(L["Your signature moves"], casts, function(n) return L("%s successful casts, across all ranks", Number(n)) end,
     "Spells", "Interface\\Icons\\spell_holy_magicalsentry", "Successful casts, across all ranks")
-  Highlight("Where you made memories", zones, function(n) return HF.SecondsToTimeString(n, true) .. " recorded here" end,
+  Highlight(L["Where you made memories"], zones, function(n) return L("%s recorded here", HF.SecondsToTimeString(n, true)) end,
     "Time", "Interface\\Icons\\inv_misc_map_01", "Recorded time in each zone", function(n) return HF.SecondsToTimeString(n, true) end)
-  Highlight("Bane of their kind", creatures, function(n) return Number(n) .. " personal killing blows" end,
+  Highlight(L["Bane of their kind"], creatures, function(n) return L("%s personal killing blows", Number(n)) end,
     "Kills", "Interface\\Icons\\ability_dualwield", "Personal killing blows, tagged and untagged")
-  Highlight("The end of the road", deaths, function(n) return Number(n) .. " deaths" end,
+  Highlight(L["The end of the road"], deaths, function(n) return L("%s deaths", Number(n)) end,
     "Deaths", "Interface\\Icons\\ability_backstab", "Most frequent sources of death")
-  Highlight("Your hardest hitters", damageNames, function(n) return Number(n) .. " effective damage" end,
+  Highlight(L["Your hardest hitters"], damageNames, function(n) return L("%s effective damage", Number(n)) end,
     "DamageDealt", "Interface\\Icons\\spell_fire_flamebolt", "Effective damage, across all ranks")
-  Highlight("Your healing touch", healingNames, function(n) return Number(n) .. " effective healing" end,
+  Highlight(L["Your healing touch"], healingNames, function(n) return L("%s effective healing", Number(n)) end,
     "HealingDealt", "Interface\\Icons\\spell_holy_flashheal", "Effective healing, across all ranks")
-  Highlight("Your favorite finds", acquired, function(n) return Number(n) .. " acquired" end,
+  Highlight(L["Your favorite finds"], acquired, function(n) return L("%s acquired", Number(n)) end,
     "Items", "Interface\\Icons\\inv_misc_bag_10", "Items acquired by any method")
-  Highlight("Made by your hands", items, function(n) return Number(n) .. " crafted by you" end,
+  Highlight(L["Made by your hands"], items, function(n) return L("%s crafted by you", Number(n)) end,
     "Items", "Interface\\Icons\\trade_blacksmithing", "Items crafted")
-  Highlight("Your travelling companions", players, function(n) return HF.SecondsToTimeString(n, true) .. " adventuring together" end,
+  Highlight(L["Your travelling companions"], players, function(n) return L("%s adventuring together", HF.SecondsToTimeString(n, true)) end,
     "OtherPlayers", "Interface\\Icons\\spell_holy_prayerofhealing", "Time adventuring together", function(n) return HF.SecondsToTimeString(n, true) end)
-  Highlight("Your voice in Azeroth", messages, function(n) return Number(n) .. " messages sent" end,
+  Highlight(L["Your voice in Azeroth"], messages, function(n) return L("%s messages sent", Number(n)) end,
     "Social", "Interface\\Icons\\inv_misc_note_01", "Messages sent by chat type")
 
   local class, states = window.PlayerClass, {}
   for _, state in ipairs(AutoBiographer_ClassActivity and AutoBiographer_ClassActivity.StateDefinitions or {}) do
     if (state[3] == class and state[1] ~= "MindControl" and state[1] ~= "FeignDeath") then
-      Add(states, state[2], window.DashboardValues["Time" .. state[1]] or 0)
+      Add(states, L[state[2]], window.DashboardValues["Time" .. state[1]] or 0)
     end
   end
-  local title, totals, timeValue, view = "Your class in action", states, true, "Time"
-  if (class == "DRUID") then title = "Your favorite form"
-  elseif (class == "WARRIOR") then title = "Your favorite stance"
-  elseif (class == "ROGUE") then title = "Life in the shadows"
-  elseif (class == "SHAMAN") then title, totals, timeValue, view = "Your elemental calling", totemCasts, false, "Spells"
+  local title, totals, timeValue, view = L["Your class in action"], states, true, "Time"
+  if (class == "DRUID") then title = L["Your favorite form"]
+  elseif (class == "WARRIOR") then title = L["Your favorite stance"]
+  elseif (class == "ROGUE") then title = L["Life in the shadows"]
+  elseif (class == "SHAMAN") then title, totals, timeValue, view = L["Your elemental calling"], totemCasts, false, "Spells"
   elseif (class == "WARLOCK" or class == "HUNTER") then
     totals = {}
     for id, seconds in pairs(Controller:GetAggregatedCompanionFamilyTime(minLevel, maxLevel)) do
       Add(totals, (catalogs.CompanionFamilyCatalog or {})[id], seconds)
     end
-    title = class == "WARLOCK" and "Your demonic companion" or "Your faithful companion"
+    title = class == "WARLOCK" and L["Your demonic companion"] or L["Your faithful companion"]
   elseif (class == "PALADIN") then
-    totals, title = {}, "Your guiding aura"
+    totals, title = {}, L["Your guiding aura"]
     for id, seconds in pairs(Controller:GetAggregatedSpellTime(minLevel, maxLevel)) do
       local spell = catalogs.SpellCatalog[id]
       if (spell) then Add(totals, spell.Name, seconds) end
@@ -172,26 +173,26 @@ function Overview:BuildHighlights(window)
     -- Classes without readable time data still get a truthful ability spotlight.
     local useHealing = (window.DashboardValues.HealingDealt or 0) > (window.DashboardValues.DamageDealt or 0)
     name, amount = Best(useHealing and healingNames or damageNames)
-    title, timeValue, view = useHealing and "Your healing touch" or "Your hardest hitter", false, useHealing and "HealingDealt" or "DamageDealt"
+    title, timeValue, view = useHealing and L["Your healing touch"] or L["Your hardest hitter"], false, useHealing and "HealingDealt" or "DamageDealt"
   end
   local spotlight = name and { Title = title, Name = name, View = view,
     SummaryTab = (class == "PALADIN" or class == "DRUID") and timeValue and "Time" or nil,
     Description = timeValue and (HF.SecondsToTimeString(amount, true) .. " recorded") or
-      view == "Spells" and (Number(amount) .. " successful casts") or
-      (Number(amount) .. " effective " .. (view == "HealingDealt" and "healing" or "damage")) }
+      view == "Spells" and L("%s successful casts", Number(amount)) or
+      L(view == "HealingDealt" and "%s effective healing" or "%s effective damage", Number(amount)) }
   return highlights, spotlight
 end
 
 function Overview:BuildDeathSources(window)
   local values, deaths = window.DashboardValues, {}
-  Add(deaths, "Drowning", values.DeathToDrowning or 0)
-  Add(deaths, "Falling", values.DeathToFalling or 0)
-  Add(deaths, "Other environment", values.DeathToEnvironment or 0)
+  Add(deaths, L["Drowning"], values.DeathToDrowning or 0)
+  Add(deaths, L["Falling"], values.DeathToFalling or 0)
+  Add(deaths, L["Other environment"], values.DeathToEnvironment or 0)
   for catalogUnitId, count in pairs(Controller:GetAggregatedDeathStatisticsDictionary(window.DisplayMinLevel, window.DisplayMaxLevel)) do
     local unit = Controller.CharacterData.Catalogs.UnitCatalog[catalogUnitId]
     local name = unit and unit.Name
     if (name and unit.LastName and unit.LastName ~= "") then name = name .. " " .. unit.LastName end
-    Add(deaths, name or "Unknown source", count)
+    Add(deaths, name or L["Unknown source"], count)
   end
   return deaths
 end
@@ -211,22 +212,22 @@ function Overview:BuildJourney()
     if (event.SubType == Enum.EventSubType.LevelUp) then
       local snapshot = snapshots.Levels and snapshots.Levels[event.LevelNum]
       seenLevels[event.LevelNum] = true
-      Include({ Key = "level:" .. event.LevelNum, Title = "Reached level " .. event.LevelNum,
+      Include({ Key = "level:" .. event.LevelNum, Title = L("Reached level %s", event.LevelNum),
         Timestamp = event.Timestamp or 0, Event = event, EventIndex = index, Snapshot = snapshot })
     elseif (event.SubType == Enum.EventSubType.StatisticMilestone) then
-      Include({ Key = "event:" .. index, Title = "Milestone: " .. (event.Text or ((event.Statistic or "Statistic") .. " " .. Number(event.Amount))),
+      Include({ Key = "event:" .. index, Title = L["Milestone: "] .. (event.Text or ((event.Statistic or L["Statistic"]) .. " " .. Number(event.Amount))),
         Timestamp = event.Timestamp or 0, Event = event, EventIndex = index })
     end
   end
   for level, snapshot in pairs(snapshots.Levels or {}) do
     if (not seenLevels[level]) then
-      Include({ Key = "level:" .. level, Title = level == 1 and "Your adventure began" or ("Reached level " .. level),
+      Include({ Key = "level:" .. level, Title = level == 1 and L["Your adventure began"] or L("Reached level %s", level),
         Timestamp = snapshot.Timestamp or 0, Snapshot = snapshot })
     end
   end
   for id, snapshot in pairs(snapshots.Raids or {}) do
     local raid = (Controller.CharacterData.Catalogs.RaidCatalog or {})[id]
-    Include({ Key = "raid:" .. id, Title = "First clear: " .. (raid and raid.Name or ("Raid #" .. id)),
+    Include({ Key = "raid:" .. id, Title = L["First clear: "] .. (raid and L[raid.Name] or (L["Raid #"] .. id)),
       Timestamp = snapshot.Timestamp or 0, Snapshot = snapshot })
   end
   return entries
@@ -265,7 +266,7 @@ local function Card(parent, color)
       GameTooltip:AddLine(self.Data.Name or "", 1, 1, 1, true)
       GameTooltip:AddLine(self.Data.Description or "", 0.8, 0.8, 0.8, true)
     end
-    GameTooltip:AddLine("Click to explore", 0.6, 0.6, 0.6)
+    GameTooltip:AddLine(L["Click to explore"], 0.6, 0.6, 0.6)
     GameTooltip:Show()
   end)
   card:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -332,8 +333,8 @@ function Overview:Initialize(window)
     card.Icon = card:CreateTexture(nil, "ARTWORK")
     card.Icon:SetSize(24, 24); card.Icon:SetPoint("TOPRIGHT", -12, -12); card.Icon:SetTexture(metric[5])
     card.Value = Label(card, "GameFontNormalLarge", metric[6] == "money" and 18 or 26); card.Value:SetPoint("TOPLEFT", 14, -12)
-    card.Title = Label(card, "GameFontHighlight"); card.Title:SetPoint("TOPLEFT", 14, -52); card.Title:SetText(metric[2])
-    card.Description = Label(card, "GameFontDisableSmall"); card.Description:SetPoint("TOPLEFT", 14, -74); card.Description:SetText(metric[3])
+    card.Title = Label(card, "GameFontHighlight"); card.Title:SetPoint("TOPLEFT", 14, -52); card.Title:SetText(L[metric[2]])
+    card.Description = Label(card, "GameFontDisableSmall"); card.Description:SetPoint("TOPLEFT", 14, -74); card.Description:SetText(L[metric[3]])
     card:SetScript("OnClick", function()
       if (Enum.StatisticsDisplayMode[metric[4]] ~= nil) then window:OpenStatistics(metric[4]) else window:SelectTab(metric[4]) end
     end)
@@ -360,15 +361,15 @@ function Overview:Initialize(window)
     root.Highlights[index] = card
   end
   root.EmptyHighlights = Label(root, "GameFontHighlight")
-  root.EmptyHighlights:SetText("Your legend is just beginning. Fight, craft and adventure with others to discover your personal highlights.")
+  root.EmptyHighlights:SetText(L["Your legend is just beginning. Fight, craft and adventure with others to discover your personal highlights."])
   root.EmptyHighlights:SetWordWrap(true)
   root.Journey = Card(root, color); root.Journey:SetScript("OnEnter", nil)
   root.JourneyHeading = Label(root.Journey, "GameFontNormalLarge", 18)
-  root.JourneyHeading:SetText("Chapters of your journey"); root.JourneyHeading:SetPoint("TOPLEFT", 14, -12)
+  root.JourneyHeading:SetText(L["Chapters of your journey"]); root.JourneyHeading:SetPoint("TOPLEFT", 14, -12)
   root.JourneyScope = Label(root.Journey, "GameFontDisableSmall")
-  root.JourneyScope:SetText("Latest lifetime milestones - click to revisit"); root.JourneyScope:SetPoint("TOPLEFT", 14, -36)
+  root.JourneyScope:SetText(L["Latest lifetime milestones - click to revisit"]); root.JourneyScope:SetPoint("TOPLEFT", 14, -36)
   root.JourneyEmpty = Label(root.Journey, "GameFontHighlight")
-  root.JourneyEmpty:SetText("Your next level-up or major milestone will begin the next chapter.")
+  root.JourneyEmpty:SetText(L["Your next level-up or major milestone will begin the next chapter."])
   root.JourneyEmpty:SetPoint("TOPLEFT", 14, -66)
   for index = 1, 4 do
     local row = CreateFrame("Button", nil, root.Journey)
@@ -378,8 +379,8 @@ function Overview:Initialize(window)
     row:SetScript("OnClick", function(self) Overview:OpenJourney(self.Entry) end)
     row:SetScript("OnEnter", function(self)
       GameTooltip:SetOwner(self, "ANCHOR_RIGHT"); GameTooltip:SetText(self.Entry.Title, 1, 0.82, 0)
-      GameTooltip:AddLine(self.Entry.Timestamp > 0 and date("%Y-%m-%d %H:%M", self.Entry.Timestamp) or "Date not recorded", 1, 1, 1)
-      GameTooltip:AddLine(self.Entry.Snapshot and "Click to view this character snapshot" or "Click to view this event", 0.7, 0.7, 0.7)
+      GameTooltip:AddLine(self.Entry.Timestamp > 0 and date(L["%Y-%m-%d %H:%M"], self.Entry.Timestamp) or L["Date not recorded"], 1, 1, 1)
+      GameTooltip:AddLine(self.Entry.Snapshot and L["Click to view this character snapshot"] or L["Click to view this event"], 0.7, 0.7, 0.7)
       GameTooltip:Show()
     end)
     row:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -422,7 +423,7 @@ function Overview:ApplySnapshotEquipment(root)
   root.ApplyingEquipment = false
   if (not success) then
     model:Hide(); root.Portrait:Show()
-    root.Scope:SetText("Highlights: " .. root.Window.DropdownText .. " | Appearance: snapshot preview unavailable")
+    root.Scope:SetText(L("Highlights: %s | Appearance: snapshot preview unavailable", root.Window.DropdownText))
   end
   return success
 end
@@ -430,12 +431,12 @@ end
 function Overview:RefreshModel(root)
   local snapshot, level = self:GetAppearanceSnapshot(root.Window)
   root.AppearanceSnapshot = snapshot
-  local appearance = snapshot and ("level " .. level .. " snapshot gear (no transmog)") or
-    level and ("current equipment (no level " .. level .. " gear snapshot)") or "current equipment"
-  root.Scope:SetText("Highlights: " .. root.Window.DropdownText .. " | Appearance: " .. appearance)
+  local appearance = snapshot and L("level %s snapshot gear (no transmog)", level) or
+    level and L("current equipment (no level %s gear snapshot)", level) or L["current equipment"]
+  root.Scope:SetText(L("Highlights: %s | Appearance: %s", root.Window.DropdownText, appearance))
   if (SetPortraitTexture) then pcall(SetPortraitTexture, root.Portrait, "player") end
   if (not root.Model) then
-    if (snapshot) then root.Scope:SetText("Highlights: " .. root.Window.DropdownText .. " | Appearance: snapshot preview unavailable") end
+    if (snapshot) then root.Scope:SetText(L("Highlights: %s | Appearance: snapshot preview unavailable", root.Window.DropdownText)) end
     return
   end
   local model = root.Model
@@ -452,7 +453,7 @@ function Overview:RefreshModel(root)
   end)
   model:SetShown(success); root.Portrait:SetShown(not success)
   if (not success and snapshot) then
-    root.Scope:SetText("Highlights: " .. root.Window.DropdownText .. " | Appearance: snapshot preview unavailable")
+    root.Scope:SetText(L("Highlights: %s | Appearance: snapshot preview unavailable", root.Window.DropdownText))
   end
 end
 
@@ -478,12 +479,12 @@ end
 function Overview:Update(window)
   local root, values = window.Overview, window.DashboardValues
   local name, lastName = Api.GetUnitName("player")
-  root.Name:SetText((name or AutoBiographer_EventManager.PlayerName or "Adventurer") .. (lastName and (" " .. lastName) or ""))
+  root.Name:SetText((name or AutoBiographer_EventManager.PlayerName or L["Adventurer"]) .. (lastName and (" " .. lastName) or ""))
   local race = UnitRace and UnitRace("player")
   local className = UnitClass and UnitClass("player")
-  root.Identity:SetText("Level " .. Controller:GetCurrentLevelNum() .. " " ..
-    (Readable(race) and race and (race .. " ") or "") .. (Readable(className) and className or window.PlayerClass or "Adventurer"))
-  root.PlayTime:SetText(HF.SecondsToTimeString(values.TimeLoggedIn or 0, true) .. " of recorded adventures")
+  root.Identity:SetText(L["Level "] .. Controller:GetCurrentLevelNum() .. " " ..
+    (Readable(race) and race and (race .. " ") or "") .. (Readable(className) and className or window.PlayerClass or L["Adventurer"]))
+  root.PlayTime:SetText(L("%s of recorded adventures", HF.SecondsToTimeString(values.TimeLoggedIn or 0, true)))
   self:RefreshModel(root)
   root.HighlightData, root.Spotlight.Data = self:BuildHighlights(window)
   for _, card in ipairs(root.Headlines) do
@@ -516,7 +517,7 @@ function Overview:Update(window)
   for index, row in ipairs(root.JourneyRows) do
     row.Entry = root.JourneyData[index]
     if (row.Entry) then
-      row.Date:SetText(row.Entry.Timestamp > 0 and date("%b %d, %Y", row.Entry.Timestamp) or "Undated")
+      row.Date:SetText(row.Entry.Timestamp > 0 and date(L["%b %d, %Y"], row.Entry.Timestamp) or L["Undated"])
       row.Title:SetText(row.Entry.Title)
     end
     row:SetShown(row.Entry ~= nil)

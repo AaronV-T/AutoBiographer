@@ -1,27 +1,28 @@
+local L = AutoBiographer_L
 local Controller = AutoBiographer_Controller
 local HF = HelperFunctions
 local Enum = AutoBiographerEnum
 
 -- Keep the existing subtype filters, including the combined guild and PvP groups.
 local eventCategories = {
-  { Name = "Boss kills", SubTypes = { "BossKill" } },
-  { Name = "Custom events", SubTypes = { "Custom" } },
-  { Name = "Deaths", SubTypes = { "PlayerDeath" } },
-  { Name = "First items acquired", SubTypes = { "FirstAcquiredItem" } },
-  { Name = "First items equipped", SubTypes = { "FirstEquippedItem" } },
-  { Name = "First kills", SubTypes = { "FirstKill" } },
-  { Name = "First subzone visits", SubTypes = { "SubZoneFirstVisit" } },
-  { Name = "First zone visits", SubTypes = { "ZoneFirstVisit" } },
-  { Name = "Guild changes", SubTypes = { "GuildJoined", "GuildLeft", "GuildRankChanged" } },
-  { Name = "Level ups", SubTypes = { "LevelUp" } },
-  { Name = "PvP: arenas & battlegrounds", SubTypes = {
+  { Name = L["Boss kills"], SubTypes = { "BossKill" } },
+  { Name = L["Custom events"], SubTypes = { "Custom" } },
+  { Name = L["Deaths"], SubTypes = { "PlayerDeath" } },
+  { Name = L["First items acquired"], SubTypes = { "FirstAcquiredItem" } },
+  { Name = L["First items equipped"], SubTypes = { "FirstEquippedItem" } },
+  { Name = L["First kills"], SubTypes = { "FirstKill" } },
+  { Name = L["First subzone visits"], SubTypes = { "SubZoneFirstVisit" } },
+  { Name = L["First zone visits"], SubTypes = { "ZoneFirstVisit" } },
+  { Name = L["Guild changes"], SubTypes = { "GuildJoined", "GuildLeft", "GuildRankChanged" } },
+  { Name = L["Level ups"], SubTypes = { "LevelUp" } },
+  { Name = L["PvP: arenas & battlegrounds"], SubTypes = {
     "ArenaJoined", "ArenaLost", "ArenaWon", "BattlegroundJoined", "BattlegroundLost", "BattlegroundWon",
   } },
-  { Name = "Quests completed", SubTypes = { "QuestTurnIn" } },
-  { Name = "Reputation changes", SubTypes = { "ReputationLevelChanged" } },
-  { Name = "Skill milestones", SubTypes = { "SkillMilestone" } },
-  { Name = "Spells learned", SubTypes = { "SpellLearned" } },
-  { Name = "Statistic milestones", SubTypes = { "StatisticMilestone" } },
+  { Name = L["Quests completed"], SubTypes = { "QuestTurnIn" } },
+  { Name = L["Reputation changes"], SubTypes = { "ReputationLevelChanged" } },
+  { Name = L["Skill milestones"], SubTypes = { "SkillMilestone" } },
+  { Name = L["Spells learned"], SubTypes = { "SpellLearned" } },
+  { Name = L["Statistic milestones"], SubTypes = { "StatisticMilestone" } },
 }
 
 local categoryBySubType = {}
@@ -49,9 +50,9 @@ function AutoBiographer_EventFilters:SetAll(enabled)
 end
 
 function AutoBiographer_EventFilters:InitializeDropdown(dropdown, onChanged)
-  UIDropDownMenu_SetText(dropdown, "Filters")
+  UIDropDownMenu_SetText(dropdown, L["Filters"])
   UIDropDownMenu_Initialize(dropdown, function()
-    for _, action in ipairs({ { "Select all", true }, { "Clear all", false } }) do
+    for _, action in ipairs({ { L["Select all"], true }, { L["Clear all"], false } }) do
       local info = UIDropDownMenu_CreateInfo()
       info.text, info.notCheckable, info.keepShownOnClick = action[1], true, true
       info.func = function()
@@ -143,7 +144,7 @@ local function GetJournalLocation(event, mapNames)
         local info = C_Map.GetMapInfo(coordinates.MapId)
         if (info) then mapName = info.name end
       end
-      mapName = mapName or ("Map #" .. coordinates.MapId)
+      mapName = mapName or (L["Map #"] .. coordinates.MapId)
       mapNames[coordinates.MapId] = mapName
     end
     location = location or mapName
@@ -151,9 +152,9 @@ local function GetJournalLocation(event, mapNames)
       location = location .. string.format(" | %.1f, %.1f", coordinates.X, coordinates.Y)
     end
   elseif (event.Coordinates and event.Coordinates.InstanceId) then
-    location = location or ("Instance #" .. event.Coordinates.InstanceId)
+    location = location or (L["Instance #"] .. event.Coordinates.InstanceId)
   end
-  return location or "Location not recorded"
+  return location or L["Location not recorded"]
 end
 
 function AutoBiographer_EventWindow:CaptureScrollAnchor()
@@ -166,7 +167,7 @@ end
 
 function AutoBiographer_EventWindow:Initialize()
   AutioBiographer_WindowHelper:InitialzationHelper(self, 800, 650, 150, "Events", -55)
-  self.Title:SetText("AutoBiographer Events")
+  self.Title:SetText(L["AutoBiographer Events"])
   self.JournalEntries = {}
   self.EntriesByEventIndex = {}
   self.RowPool = {}
@@ -180,7 +181,7 @@ function AutoBiographer_EventWindow:Initialize()
   self.SearchBox:SetText("")
   self.SearchHint = self.SearchBox:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
   self.SearchHint:SetPoint("LEFT", 2, 0)
-  self.SearchHint:SetText("Search events...")
+  self.SearchHint:SetText(L["Search events..."])
   self.SearchBox:SetScript("OnEscapePressed", function(box) box:ClearFocus() end)
   self.SearchBox:SetScript("OnEnterPressed", function(box)
     box:ClearFocus()
@@ -202,7 +203,7 @@ function AutoBiographer_EventWindow:Initialize()
   UIDropDownMenu_Initialize(self.SortDropdown, function()
     for _, order in ipairs({ "Newest", "Oldest" }) do
       local info = UIDropDownMenu_CreateInfo()
-      info.text = order .. " first"
+      info.text = L[order .. " first"]
       info.checked = self.SortOrder == order
       info.func = function()
         self.SortOrder = order
@@ -213,7 +214,7 @@ function AutoBiographer_EventWindow:Initialize()
     end
   end)
 
-  self.CreateCustomEventBtn = CreateJournalButton(self, "Create Event", 120, function()
+  self.CreateCustomEventBtn = CreateJournalButton(self, L["Create Event"], 120, function()
     if (AutoBiographer_CustomEventDetailsWindow:IsVisible()) then AutoBiographer_CustomEventDetailsWindow:Update()
     else AutoBiographer_CustomEventDetailsWindow:Toggle() end
   end)
@@ -249,7 +250,7 @@ function AutoBiographer_EventWindow:Initialize()
   self.EmptyMessage = self:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   self.EmptyMessage:SetPoint("CENTER", self.ScrollFrame, "CENTER", 0, 0)
   self.EmptyMessage:SetWidth(650)
-  self.EmptyMessage:SetText("No events match your search and filters.")
+  self.EmptyMessage:SetText(L["No events match your search and filters."])
   self.EmptyMessage:Hide()
 
   self.DetailsPanel = CreateFrame("Frame", nil, self)
@@ -304,9 +305,9 @@ function AutoBiographer_EventWindow:Initialize()
 
   self.EventCount = self:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
   self.EventCount:SetPoint("BOTTOMLEFT", 18, 20)
-  self.ResetButton = CreateJournalButton(self, "Clear filters", 96, function() self:ResetFilters() end)
+  self.ResetButton = CreateJournalButton(self, L["Clear filters"], 96, function() self:ResetFilters() end)
   self.ResetButton:SetPoint("BOTTOMRIGHT", -112, 14)
-  self.RefreshButton = CreateJournalButton(self, "Refresh", 80, function() self:Update() end)
+  self.RefreshButton = CreateJournalButton(self, L["Refresh"], 80, function() self:Update() end)
   self.RefreshButton:SetPoint("BOTTOMRIGHT", -22, 14)
   self.Initialized = true
   self.PanelReady = true
@@ -426,10 +427,10 @@ function AutoBiographer_EventWindow:Update(resetScroll)
   for eventIndex, event in ipairs(events) do
     if (AutoBiographer_Settings.EventDisplayFilters[event.SubType]) then
       local description = Controller:GetEventString(event, true)
-      local category = categoryBySubType[event.SubType] or "Event"
+      local category = categoryBySubType[event.SubType] or L["Event"]
       local location = GetJournalLocation(event, self.MapNames)
       local timestamp = event.Timestamp
-      local dateLabel = timestamp and date("%B %d, %Y", timestamp) or "Unknown date"
+      local dateLabel = timestamp and date(L["%B %d, %Y"], timestamp) or L["Unknown date"]
       local searchable = description .. " " .. category .. " " .. location .. " " .. dateLabel .. " " .. HF.TimestampToDateString(timestamp)
       if (search == "" or string.find(string.lower(searchable), search, 1, true)) then
         table.insert(matches, {
@@ -483,9 +484,9 @@ function AutoBiographer_EventWindow:Update(resetScroll)
   self.ScrollFrame.Scrollbar:SetValue(math.min(newScroll, self.MaxScroll))
   self.ScrollFrame.Scrollbar:SetShown(self.MaxScroll > 0)
   self.EmptyMessage:SetShown(#matches == 0)
-  self.EventCount:SetText(HF.CommaValue(#matches) .. " of " .. HF.CommaValue(#events) .. " events")
+  self.EventCount:SetText(L("%s of %s events", HF.CommaValue(#matches), HF.CommaValue(#events)))
   self:UpdateFilterSummary()
-  UIDropDownMenu_SetText(self.SortDropdown, self.SortOrder .. " first")
+  UIDropDownMenu_SetText(self.SortDropdown, L[self.SortOrder .. " first"])
   self:RenderJournalRows()
   self:UpdateDetails()
 end
@@ -494,13 +495,13 @@ function AutoBiographer_EventWindow:UpdateDetails(resetScroll)
   local entry = self.EntriesByEventIndex[self.SelectedEventIndex]
   if (entry) then
     self.DetailsTitle:SetText(entry.Category .. " | " ..
-      (entry.Event.Timestamp and HF.TimestampToDateString(entry.Event.Timestamp) or "Unknown date"))
+      (entry.Event.Timestamp and HF.TimestampToDateString(entry.Event.Timestamp) or L["Unknown date"]))
     self.DetailsLocation:SetText(entry.Location)
     self.DetailsText:SetText(entry.Description)
   else
-    self.DetailsTitle:SetText("Event details")
+    self.DetailsTitle:SetText(L["Event details"])
     self.DetailsLocation:SetText("")
-    self.DetailsText:SetText("Select an event above to read its full description and recorded location.")
+    self.DetailsText:SetText(L["Select an event above to read its full description and recorded location."])
   end
   local height = math.max(1, self.DetailsText:GetStringHeight())
   self.DetailsContent:SetHeight(height)
@@ -512,13 +513,13 @@ function AutoBiographer_EventWindow:UpdateDetails(resetScroll)
 end
 
 function AutoBiographer_EventWindow:UpdateFilterSummary()
-  UIDropDownMenu_SetText(self.FilterDropdown, "Filters")
+  UIDropDownMenu_SetText(self.FilterDropdown, L["Filters"])
   local selected, total = 0, 0
   for _, subType in pairs(Enum.EventSubType) do
     total = total + 1
     if (AutoBiographer_Settings.EventDisplayFilters[subType]) then selected = selected + 1 end
   end
-  local text = selected == total and "All event types" or (selected .. " of " .. total .. " event types")
-  if (self.SearchBox:GetText() ~= "") then text = text .. " | Search active" end
-  self.FilterSummary:SetText(text .. " | Click an event to view details")
+  local text = selected == total and L["All event types"] or L("%s of %s event types", selected, total)
+  if (self.SearchBox:GetText() ~= "") then text = text .. L[" | Search active"] end
+  self.FilterSummary:SetText(text .. L[" | Click an event to view details"])
 end

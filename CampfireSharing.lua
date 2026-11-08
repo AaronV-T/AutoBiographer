@@ -1,3 +1,4 @@
+local L = AutoBiographer_L
 -- Automatic tales use existing statistics; personal tales live in the character's library.
 AutoBiographer_CampfireSharing = { RecentlyShared = {} }
 local Sharing = AutoBiographer_CampfireSharing
@@ -19,319 +20,319 @@ Sharing.Configuration = {
   InitialHideSeconds = 3600,
   Channel = "SAY",
   Qualifiers = {
-    { Text = "at least" },
-    { Text = "no fewer than" },
-    { Text = "over", Strict = true },
-    { Text = "more than", Strict = true },
+    { Text = L["at least"] },
+    { Text = L["no fewer than"] },
+    { Text = L["over"], Strict = true },
+    { Text = L["more than"], Strict = true },
   },
   Types = {
-    AquaticTravel = { Label = "Aquatic journeys", Source = "Distance", Metric = "AquaticForm", Class = "DRUID", Minimum = 10, Unit = "Km",
+    AquaticTravel = { Label = L["Aquatic journeys"], Source = "Distance", Metric = "AquaticForm", Class = "DRUID", Minimum = 10, Unit = "Km",
       Messages = {
-        "I have travelled {qualifier} {quantity} {distanceUnit} in Aquatic Form. There is another world beneath the waves.",
-        "{Qualifier} {quantity} {distanceUnit} of my travels have been in Aquatic Form. The fish are starting to recognize me.",
-        "I have covered {qualifier} {quantity} {distanceUnit} in Aquatic Form. A road is useful, but so is a good current.",
+        L["I have travelled {qualifier} {quantity} {distanceUnit} in Aquatic Form. There is another world beneath the waves."],
+        L["{Qualifier} {quantity} {distanceUnit} of my travels have been in Aquatic Form. The fish are starting to recognize me."],
+        L["I have covered {qualifier} {quantity} {distanceUnit} in Aquatic Form. A road is useful, but so is a good current."],
       } },
-    AuctionTrading = { Label = "Auction trading", Source = "Money", Metric = "AuctionHouseSale", Minimum = 100, Unit = "Gold",
+    AuctionTrading = { Label = L["Auction trading"], Source = "Money", Metric = "AuctionHouseSale", Minimum = 100, Unit = "Gold",
       Messages = {
-        "My auction sales have brought in {qualifier} {quantity} gold. There is adventure in a good bargain, too.",
-        "I have made {qualifier} {quantity} gold from auction sales. Sometimes the fiercest competition is over a price tag.",
-        "{Qualifier} {quantity} gold has come my way through auctions. One adventurer's spare loot is another's treasure.",
+        L["My auction sales have brought in {qualifier} {quantity} gold. There is adventure in a good bargain, too."],
+        L["I have made {qualifier} {quantity} gold from auction sales. Sometimes the fiercest competition is over a price tag."],
+        L["{Qualifier} {quantity} gold has come my way through auctions. One adventurer's spare loot is another's treasure."],
       } },
-    BattleExperience = { Label = "Battle experience", Source = "Milestone", Milestone = "Kills",
+    BattleExperience = { Label = L["Battle experience"], Source = "Milestone", Milestone = "Kills",
       Messages = {
-        "{Qualifier} {quantity} enemies killed, and I still check behind me before making camp.",
-        "I have had a hand in slaying {qualifier} {quantity} foes. There's a reason I keep my weapons close.",
-        "{Qualifier} {quantity} enemies have fallen with my help. Some put up more of a fight than others.",
+        L["{Qualifier} {quantity} enemies killed, and I still check behind me before making camp."],
+        L["I have had a hand in slaying {qualifier} {quantity} foes. There's a reason I keep my weapons close."],
+        L["{Qualifier} {quantity} enemies have fallen with my help. Some put up more of a fight than others."],
       } },
-    BattlegroundVictories = { Label = "Battleground victories", Source = "Milestone", Milestone = "BattlegroundsWon",
+    BattlegroundVictories = { Label = L["Battleground victories"], Source = "Milestone", Milestone = "BattlegroundsWon",
       Messages = {
-        "I have won {qualifier} {quantity} battlegrounds. Some victories are earned one stubborn stand at a time.",
-        "{Qualifier} {quantity} battleground victories are behind me. The best ones started with someone refusing to give up.",
-        "I have been on the winning side of {qualifier} {quantity} battlegrounds. A plan helps; friends who follow it help more.",
+        L["I have won {qualifier} {quantity} battlegrounds. Some victories are earned one stubborn stand at a time."],
+        L["{Qualifier} {quantity} battleground victories are behind me. The best ones started with someone refusing to give up."],
+        L["I have been on the winning side of {qualifier} {quantity} battlegrounds. A plan helps; friends who follow it help more."],
       } },
-    BearForm = { Label = "Life as a bear", Source = "Time", Metric = "BearForm", Class = "DRUID", Milestone = "TimeBearForm", Unit = "Hours",
+    BearForm = { Label = L["Life as a bear"], Source = "Time", Metric = "BearForm", Class = "DRUID", Milestone = "TimeBearForm", Unit = "Hours",
       Messages = {
-        "I have spent {qualifier} {quantity} hours as a bear. Some problems call for a larger pair of paws.",
-        "{Qualifier} {quantity} hours in Bear Form have taught me one thing: few arguments survive a good growl.",
-        "I have worn a bear's shape for {qualifier} {quantity} hours. Fur is excellent armour against a cold night.",
+        L["I have spent {qualifier} {quantity} hours as a bear. Some problems call for a larger pair of paws."],
+        L["{Qualifier} {quantity} hours in Bear Form have taught me one thing: few arguments survive a good growl."],
+        L["I have worn a bear's shape for {qualifier} {quantity} hours. Fur is excellent armour against a cold night."],
       } },
-    CampEquipment = { Label = "Camp comforts", Source = "Casts", SpellList = "CampEquipmentPlacementSpellIds", Minimum = 25,
+    CampEquipment = { Label = L["Camp comforts"], Source = "Casts", SpellList = "CampEquipmentPlacementSpellIds", Minimum = 25,
       Messages = {
-        "I have used {name} {qualifier} {quantity} times to furnish campsites. Comfort takes preparation.",
-        "{Qualifier} {quantity} times, {name} has helped me make camp. Even a weary adventurer deserves a little comfort.",
-        "I have set up {name} {qualifier} {quantity} times. A campsite starts feeling like home when you unpack the right things.",
+        L["I have used {name} {qualifier} {quantity} times to furnish campsites. Comfort takes preparation."],
+        L["{Qualifier} {quantity} times, {name} has helped me make camp. Even a weary adventurer deserves a little comfort."],
+        L["I have set up {name} {qualifier} {quantity} times. A campsite starts feeling like home when you unpack the right things."],
       } },
-    CampfireBuilding = { Label = "Building campfires", Source = "Casts", SpellList = "CampfirePlacementSpellIds", Combine = true, Minimum = 25,
+    CampfireBuilding = { Label = L["Building campfires"], Source = "Casts", SpellList = "CampfirePlacementSpellIds", Combine = true, Minimum = 25,
       Messages = {
-        "I have lit {qualifier} {quantity} campfires. Wherever the road ends, I bring a little warmth.",
-        "{Qualifier} {quantity} campfires have started by my hand. A spark and some company can improve almost any evening.",
-        "I have built {qualifier} {quantity} campfires along the way. Finding dry wood is an adventure of its own.",
+        L["I have lit {qualifier} {quantity} campfires. Wherever the road ends, I bring a little warmth."],
+        L["{Qualifier} {quantity} campfires have started by my hand. A spark and some company can improve almost any evening."],
+        L["I have built {qualifier} {quantity} campfires along the way. Finding dry wood is an adventure of its own."],
       } },
-    Camping = { Label = "Nights by the fire", Source = "Milestone", Milestone = "Camped",
+    Camping = { Label = L["Nights by the fire"], Source = "Milestone", Milestone = "Camped",
       Messages = {
-        "I have rested at campfires {qualifier} {quantity} times. A warm fire is sometimes the finest treasure in Azeroth.",
-        "{Qualifier} {quantity} rests beside a campfire, and the crackle of burning wood still sounds like a welcome.",
-        "I have stopped to rest by a fire {qualifier} {quantity} times. The road can wait until my boots are warm.",
+        L["I have rested at campfires {qualifier} {quantity} times. A warm fire is sometimes the finest treasure in Azeroth."],
+        L["{Qualifier} {quantity} rests beside a campfire, and the crackle of burning wood still sounds like a welcome."],
+        L["I have stopped to rest by a fire {qualifier} {quantity} times. The road can wait until my boots are warm."],
       } },
-    CatForm = { Label = "Life as a cat", Source = "Time", Metric = "CatForm", Class = "DRUID", Milestone = "TimeCatForm", Unit = "Hours",
+    CatForm = { Label = L["Life as a cat"], Source = "Time", Metric = "CatForm", Class = "DRUID", Milestone = "TimeCatForm", Unit = "Hours",
       Messages = {
-        "I have spent {qualifier} {quantity} hours as a cat. Patience, claws, and the occasional nap.",
-        "{Qualifier} {quantity} hours in Cat Form have sharpened my instincts. My interest in dangling string is unrelated.",
-        "I have prowled about as a cat for {qualifier} {quantity} hours. Soft paws can carry you into surprising trouble.",
+        L["I have spent {qualifier} {quantity} hours as a cat. Patience, claws, and the occasional nap."],
+        L["{Qualifier} {quantity} hours in Cat Form have sharpened my instincts. My interest in dangling string is unrelated."],
+        L["I have prowled about as a cat for {qualifier} {quantity} hours. Soft paws can carry you into surprising trouble."],
       } },
-    Collecting = { Label = "Collecting", Source = "Items", Minimum = 100,
+    Collecting = { Label = L["Collecting"], Source = "Items", Minimum = 100,
       Messages = {
-        "I am something of a collector of {name}. {Qualifier} {quantity} have passed through my hands.",
-        "{Qualifier} {quantity} {name} have found their way into my bags. I keep telling myself there is room for one more.",
-        "I have acquired {qualifier} {quantity} {name} on my travels. Every collection begins with something you cannot leave behind.",
+        L["I am something of a collector of {name}. {Qualifier} {quantity} have passed through my hands."],
+        L["{Qualifier} {quantity} {name} have found their way into my bags. I keep telling myself there is room for one more."],
+        L["I have acquired {qualifier} {quantity} {name} on my travels. Every collection begins with something you cannot leave behind."],
       } },
-    Crafting = { Label = "A crafter's specialty", Source = "Items", Metric = "Create", Minimum = 50,
+    Crafting = { Label = L["A crafter's specialty"], Source = "Items", Metric = "Create", Minimum = 50,
       Messages = {
-        "I have crafted {qualifier} {quantity} {name}. My hands could probably make them in my sleep.",
-        "{Qualifier} {quantity} {name} have come from my own handiwork. Practice leaves its mark on the tools.",
-        "I have made {qualifier} {quantity} {name}. There is a particular satisfaction in turning supplies into something useful.",
+        L["I have crafted {qualifier} {quantity} {name}. My hands could probably make them in my sleep."],
+        L["{Qualifier} {quantity} {name} have come from my own handiwork. Practice leaves its mark on the tools."],
+        L["I have made {qualifier} {quantity} {name}. There is a particular satisfaction in turning supplies into something useful."],
       } },
-    CraftingExperience = { Label = "Crafting experience", Source = "Milestone", Milestone = "ItemsCrafted",
+    CraftingExperience = { Label = L["Crafting experience"], Source = "Milestone", Milestone = "ItemsCrafted",
       Messages = {
-        "I have created {qualifier} {quantity} items. Every masterpiece begins with a crowded bag.",
-        "{Qualifier} {quantity} crafted items bear the work of my hands. Some even turned out exactly as planned.",
-        "I have made {qualifier} {quantity} items over the years. The tools grow familiar, but the work never quite gets old.",
+        L["I have created {qualifier} {quantity} items. Every masterpiece begins with a crowded bag."],
+        L["{Qualifier} {quantity} crafted items bear the work of my hands. Some even turned out exactly as planned."],
+        L["I have made {qualifier} {quantity} items over the years. The tools grow familiar, but the work never quite gets old."],
       } },
-    Deaths = { Label = "Lessons from the grave", Source = "Milestone", Milestone = "Deaths",
+    Deaths = { Label = L["Lessons from the grave"], Source = "Milestone", Milestone = "Deaths",
       Messages = {
-        "I have died {qualifier} {quantity} times. Each return has taught me something, though apparently not quite enough.",
-        "{Qualifier} {quantity} deaths, and I am still here to tell the tale. Persistence may be my strongest talent.",
-        "I have made {qualifier} {quantity} trips beyond the veil. You would think I would know the way back by now.",
+        L["I have died {qualifier} {quantity} times. Each return has taught me something, though apparently not quite enough."],
+        L["{Qualifier} {quantity} deaths, and I am still here to tell the tale. Persistence may be my strongest talent."],
+        L["I have made {qualifier} {quantity} trips beyond the veil. You would think I would know the way back by now."],
       } },
-    DemonCompanionship = { Label = "Demonic company", Source = "Companions", Class = "WARLOCK", Milestone = "CompanionTime", Unit = "Hours",
+    DemonCompanionship = { Label = L["Demonic company"], Source = "Companions", Class = "WARLOCK", Milestone = "CompanionTime", Unit = "Hours",
       Messages = {
-        "I have spent {qualifier} {quantity} hours accompanied by {name}. Our arrangement remains mutually convenient.",
-        "{Qualifier} {quantity} hours in the company of {name}. We agree on very little, except which way the enemies are.",
-        "I have kept {name} company for {qualifier} {quantity} hours. I prefer not to ask what they think of the arrangement.",
+        L["I have spent {qualifier} {quantity} hours accompanied by {name}. Our arrangement remains mutually convenient."],
+        L["{Qualifier} {quantity} hours in the company of {name}. We agree on very little, except which way the enemies are."],
+        L["I have kept {name} company for {qualifier} {quantity} hours. I prefer not to ask what they think of the arrangement."],
       } },
-    DestructivePower = { Label = "Destructive power", Source = "Damage", Metric = "DamageDealt", Milestone = "DamageDealt",
+    DestructivePower = { Label = L["Destructive power"], Source = "Damage", Metric = "DamageDealt", Milestone = "DamageDealt",
       Messages = {
-        "My enemies have felt {qualifier} {quantity} points of damage. Apparently, they needed convincing.",
-        "I have dealt {qualifier} {quantity} damage in my travels. Some obstacles require a very firm introduction.",
-        "{Qualifier} {quantity} damage dealt, and there always seems to be another fight around the bend.",
+        L["My enemies have felt {qualifier} {quantity} points of damage. Apparently, they needed convincing."],
+        L["I have dealt {qualifier} {quantity} damage in my travels. Some obstacles require a very firm introduction."],
+        L["{Qualifier} {quantity} damage dealt, and there always seems to be another fight around the bend."],
       } },
-    DruidShapeshifting = { Label = "Changing shapes", Source = "Milestone", Class = "DRUID", Milestone = "Shapeshifts",
+    DruidShapeshifting = { Label = L["Changing shapes"], Source = "Milestone", Class = "DRUID", Milestone = "Shapeshifts",
       Messages = {
-        "I have changed forms {qualifier} {quantity} times. Choosing just one shape would be terribly limiting.",
-        "{Qualifier} {quantity} changes of shape, and I still occasionally forget which feet I am standing on.",
-        "I have shapeshifted {qualifier} {quantity} times. It pays to have the right paws for the occasion.",
+        L["I have changed forms {qualifier} {quantity} times. Choosing just one shape would be terribly limiting."],
+        L["{Qualifier} {quantity} changes of shape, and I still occasionally forget which feet I am standing on."],
+        L["I have shapeshifted {qualifier} {quantity} times. It pays to have the right paws for the occasion."],
       } },
-    Duelling = { Label = "Friendly challenges", Source = "Milestone", Milestone = "DuelsWon",
+    Duelling = { Label = L["Friendly challenges"], Source = "Milestone", Milestone = "DuelsWon",
       Messages = {
-        "I have won {qualifier} {quantity} duels. There's always someone eager to try their luck.",
-        "{Qualifier} {quantity} duels have ended in my favour. A bow afterward matters just as much as the opening move.",
-        "I have claimed victory in {qualifier} {quantity} duels. The best opponents teach you something before they yield.",
+        L["I have won {qualifier} {quantity} duels. There's always someone eager to try their luck."],
+        L["{Qualifier} {quantity} duels have ended in my favour. A bow afterward matters just as much as the opening move."],
+        L["I have claimed victory in {qualifier} {quantity} duels. The best opponents teach you something before they yield."],
       } },
-    Earnings = { Label = "Earning a living", Source = "Milestone", Milestone = "MoneyGained", Unit = "Gold",
+    Earnings = { Label = L["Earning a living"], Source = "Milestone", Milestone = "MoneyGained", Unit = "Gold",
       Messages = {
-        "I have earned {qualifier} {quantity} gold on my travels. Keeping it is another matter entirely.",
-        "My travels have earned me {qualifier} {quantity} gold. Adventure pays well enough, until the repair bill arrives.",
-        "My adventures have brought me {qualifier} {quantity} gold. Somehow, the next journey always needs funding.",
+        L["I have earned {qualifier} {quantity} gold on my travels. Keeping it is another matter entirely."],
+        L["My travels have earned me {qualifier} {quantity} gold. Adventure pays well enough, until the repair bill arrives."],
+        L["My adventures have brought me {qualifier} {quantity} gold. Somehow, the next journey always needs funding."],
       } },
-    FamiliarFaces = { Label = "Familiar faces", Source = "Milestone", Milestone = "UniquePlayersBuffed",
+    FamiliarFaces = { Label = L["Familiar faces"], Source = "Milestone", Milestone = "UniquePlayersBuffed",
       Messages = {
-        "I have buffed {qualifier} {quantity} different adventurers outside my party. Perhaps our paths will cross again.",
-        "{Qualifier} {quantity} different adventurers outside my party have received a buff from me. A small kindness travels far.",
-        "I have shared buffs with {qualifier} {quantity} different adventurers beyond my party. Strangers need looking after, too.",
+        L["I have buffed {qualifier} {quantity} different adventurers outside my party. Perhaps our paths will cross again."],
+        L["{Qualifier} {quantity} different adventurers outside my party have received a buff from me. A small kindness travels far."],
+        L["I have shared buffs with {qualifier} {quantity} different adventurers beyond my party. Strangers need looking after, too."],
       } },
-    FamiliarRegion = { Label = "A familiar region", Source = "Zones", Minimum = 10, Unit = "Hours",
+    FamiliarRegion = { Label = L["A familiar region"], Source = "Zones", Minimum = 10, Unit = "Hours",
       Messages = {
-        "I have spent {qualifier} {quantity} hours across {name}. There is more to a region than any single stop along the way.",
-        "{Qualifier} {quantity} hours of my travels have been spent in {name}. Its roads and landmarks are becoming old friends.",
-        "I have called {name} my surroundings for {qualifier} {quantity} hours. The whole region is beginning to feel familiar.",
+        L["I have spent {qualifier} {quantity} hours across {name}. There is more to a region than any single stop along the way."],
+        L["{Qualifier} {quantity} hours of my travels have been spent in {name}. Its roads and landmarks are becoming old friends."],
+        L["I have called {name} my surroundings for {qualifier} {quantity} hours. The whole region is beginning to feel familiar."],
       } },
-    FamiliarSpot = { Label = "A favorite spot", Source = "Areas", Minimum = 10, Unit = "Hours",
+    FamiliarSpot = { Label = L["A favorite spot"], Source = "Areas", Minimum = 10, Unit = "Hours",
       Messages = {
-        "I have spent {qualifier} {quantity} hours in {name}. I know that place rather well.",
-        "{Qualifier} {quantity} hours of my life have been spent in {name}. Some places have a way of keeping you around.",
-        "I have lingered in {name} for {qualifier} {quantity} hours. By now, even the familiar turns have stories attached.",
+        L["I have spent {qualifier} {quantity} hours in {name}. I know that place rather well."],
+        L["{Qualifier} {quantity} hours of my life have been spent in {name}. Some places have a way of keeping you around."],
+        L["I have lingered in {name} for {qualifier} {quantity} hours. By now, even the familiar turns have stories attached."],
       } },
-    FishingCatches = { Label = "A patient angler", Source = "Milestone", Milestone = "FishingCatches",
+    FishingCatches = { Label = L["A patient angler"], Source = "Milestone", Milestone = "FishingCatches",
       Messages = {
-        "I have reeled in {qualifier} {quantity} successful catches. The fish insist most of them were a misunderstanding.",
-        "{Qualifier} {quantity} successful catches have come up on my line. The secret is patience, or so I tell anyone watching.",
-        "I have landed {qualifier} {quantity} successful fishing catches. Every bobber hides the promise of a good story.",
+        L["I have reeled in {qualifier} {quantity} successful catches. The fish insist most of them were a misunderstanding."],
+        L["{Qualifier} {quantity} successful catches have come up on my line. The secret is patience, or so I tell anyone watching."],
+        L["I have landed {qualifier} {quantity} successful fishing catches. Every bobber hides the promise of a good story."],
       } },
-    FishingTime = { Label = "Waiting for a bite", Source = "Time", Metric = "Fishing", Milestone = "TimeFishing", Unit = "Hours",
+    FishingTime = { Label = L["Waiting for a bite"], Source = "Time", Metric = "Fishing", Milestone = "TimeFishing", Unit = "Hours",
       Messages = {
-        "I have spent {qualifier} {quantity} hours fishing. Patience is a virtue, and apparently one of my most practiced professions.",
-        "{Qualifier} {quantity} hours with a fishing line in the water. There are worse ways to watch the world go by.",
-        "I have fished for {qualifier} {quantity} hours. A quiet bank can be every bit as memorable as a battlefield.",
+        L["I have spent {qualifier} {quantity} hours fishing. Patience is a virtue, and apparently one of my most practiced professions."],
+        L["{Qualifier} {quantity} hours with a fishing line in the water. There are worse ways to watch the world go by."],
+        L["I have fished for {qualifier} {quantity} hours. A quiet bank can be every bit as memorable as a battlefield."],
       } },
-    FlightPaths = { Label = "Views from above", Source = "Distance", Metric = "FlightPath", Minimum = 500, Unit = "Km",
+    FlightPaths = { Label = L["Views from above"], Source = "Distance", Metric = "FlightPath", Minimum = 500, Unit = "Km",
       Messages = {
-        "I have travelled {qualifier} {quantity} {distanceUnit} by flight. The views almost make up for the landings.",
-        "{Qualifier} {quantity} {distanceUnit} of flight paths have carried me over Azeroth. The world looks kinder from up there.",
-        "I have flown {qualifier} {quantity} {distanceUnit} on flight paths. I still check that my bags are fastened before takeoff.",
+        L["I have travelled {qualifier} {quantity} {distanceUnit} by flight. The views almost make up for the landings."],
+        L["{Qualifier} {quantity} {distanceUnit} of flight paths have carried me over Azeroth. The world looks kinder from up there."],
+        L["I have flown {qualifier} {quantity} {distanceUnit} on flight paths. I still check that my bags are fastened before takeoff."],
       } },
-    Generosity = { Label = "A little generosity", Source = "Buffs", Milestone = "BuffsGiven",
+    Generosity = { Label = L["A little generosity"], Source = "Buffs", Milestone = "BuffsGiven",
       Messages = {
-        "I have given {qualifier} {quantity} buffs to adventurers outside my party. A little magic can make a stranger's road easier.",
-        "{Qualifier} {quantity} buffs have gone to adventurers beyond my party. Good fortune is better when you can share it.",
-        "I have offered {qualifier} {quantity} buffs to people outside my party. It is a simple way to wish someone safe travels.",
+        L["I have given {qualifier} {quantity} buffs to adventurers outside my party. A little magic can make a stranger's road easier."],
+        L["{Qualifier} {quantity} buffs have gone to adventurers beyond my party. Good fortune is better when you can share it."],
+        L["I have offered {qualifier} {quantity} buffs to people outside my party. It is a simple way to wish someone safe travels."],
       } },
-    GhostWolfTravel = { Label = "Running with the wind", Source = "Distance", Metric = "GhostWolf", Class = "SHAMAN", Minimum = 100, Unit = "Km",
+    GhostWolfTravel = { Label = L["Running with the wind"], Source = "Distance", Metric = "GhostWolf", Class = "SHAMAN", Minimum = 100, Unit = "Km",
       Messages = {
-        "I have travelled {qualifier} {quantity} {distanceUnit} as a Ghost Wolf. The wind makes excellent company.",
-        "I have covered {qualifier} {quantity} {distanceUnit} in Ghost Wolf form. The road feels different on four paws.",
-        "I have covered {qualifier} {quantity} {distanceUnit} as a Ghost Wolf. The spirits know a thing or two about travelling light.",
+        L["I have travelled {qualifier} {quantity} {distanceUnit} as a Ghost Wolf. The wind makes excellent company."],
+        L["I have covered {qualifier} {quantity} {distanceUnit} in Ghost Wolf form. The road feels different on four paws."],
+        L["I have covered {qualifier} {quantity} {distanceUnit} as a Ghost Wolf. The spirits know a thing or two about travelling light."],
       } },
-    Healing = { Label = "The healer's path", Source = "Damage", Metric = "HealingDealt", Milestone = "HealingDealt",
+    Healing = { Label = L["The healer's path"], Source = "Damage", Metric = "HealingDealt", Milestone = "HealingDealt",
       Messages = {
-        "My healing has restored {qualifier} {quantity} health. Not every victory is won by drawing blood.",
-        "I have healed {qualifier} {quantity} health on my travels. Sometimes the bravest thing is keeping someone else standing.",
-        "{Qualifier} {quantity} health restored, and I still breathe easier when everyone makes it out together.",
+        L["My healing has restored {qualifier} {quantity} health. Not every victory is won by drawing blood."],
+        L["I have healed {qualifier} {quantity} health on my travels. Sometimes the bravest thing is keeping someone else standing."],
+        L["{Qualifier} {quantity} health restored, and I still breathe easier when everyone makes it out together."],
       } },
-    HunterCompanionship = { Label = "Faithful companions", Source = "Companions", Class = "HUNTER", Milestone = "CompanionTime", Unit = "Hours",
+    HunterCompanionship = { Label = L["Faithful companions"], Source = "Companions", Class = "HUNTER", Milestone = "CompanionTime", Unit = "Hours",
       Messages = {
-        "I have spent {qualifier} {quantity} hours beside my {name} companions. Some friendships need no words.",
-        "{Qualifier} {quantity} hours with my {name} companions have taught me the value of a friend with sharper teeth.",
-        "My {name} companions and I have travelled together for {qualifier} {quantity} hours. They always know when it is time to eat.",
+        L["I have spent {qualifier} {quantity} hours beside my {name} companions. Some friendships need no words."],
+        L["{Qualifier} {quantity} hours with my {name} companions have taught me the value of a friend with sharper teeth."],
+        L["My {name} companions and I have travelled together for {qualifier} {quantity} hours. They always know when it is time to eat."],
       } },
-    HuntingVariety = { Label = "A varied bestiary", Source = "Milestone", Milestone = "CreatureTypesKilled",
+    HuntingVariety = { Label = L["A varied bestiary"], Source = "Milestone", Milestone = "CreatureTypesKilled",
       Messages = {
-        "{Qualifier} {quantity} different kinds of creatures have fallen before me. Azeroth keeps finding new teeth to throw my way.",
-        "I have defeated {qualifier} {quantity} different kinds of creatures. My field guide could use a few more pages.",
-        "{Qualifier} {quantity} kinds of creatures have met their end on my travels. There is always something unfamiliar in the next thicket.",
+        L["{Qualifier} {quantity} different kinds of creatures have fallen before me. Azeroth keeps finding new teeth to throw my way."],
+        L["I have defeated {qualifier} {quantity} different kinds of creatures. My field guide could use a few more pages."],
+        L["{Qualifier} {quantity} kinds of creatures have met their end on my travels. There is always something unfamiliar in the next thicket."],
       } },
-    Jumping = { Label = "Taking the scenic leap", Source = "Milestone", Milestone = "Jumps",
+    Jumping = { Label = L["Taking the scenic leap"], Source = "Milestone", Milestone = "Jumps",
       Messages = {
-        "I have jumped {qualifier} {quantity} times. Roads are merely suggestions.",
-        "{Qualifier} {quantity} jumps, and I still cannot leave a low wall untested.",
-        "I have leapt {qualifier} {quantity} times on my travels. Walking in a straight line lacks a certain flair.",
+        L["I have jumped {qualifier} {quantity} times. Roads are merely suggestions."],
+        L["{Qualifier} {quantity} jumps, and I still cannot leave a low wall untested."],
+        L["I have leapt {qualifier} {quantity} times on my travels. Walking in a straight line lacks a certain flair."],
       } },
-    Looting = { Label = "Spoils of adventure", Source = "Items", Metric = "Loot", Minimum = 100,
+    Looting = { Label = L["Spoils of adventure"], Source = "Items", Metric = "Loot", Minimum = 100,
       Messages = {
-        "I have looted {qualifier} {quantity} {name}. Adventure has a curious way of filling one's pockets.",
-        "{Qualifier} {quantity} {name} have ended up among my spoils. Leaving things behind has never been my strongest skill.",
-        "I have gathered {qualifier} {quantity} {name} as loot. There is a reason I keep looking for larger bags.",
+        L["I have looted {qualifier} {quantity} {name}. Adventure has a curious way of filling one's pockets."],
+        L["{Qualifier} {quantity} {name} have ended up among my spoils. Leaving things behind has never been my strongest skill."],
+        L["I have gathered {qualifier} {quantity} {name} as loot. There is a reason I keep looking for larger bags."],
       } },
-    MageConjuring = { Label = "Magical provisions", Source = "Casts", NamePattern = "^Conjure ", Class = "MAGE", Minimum = 100,
+    MageConjuring = { Label = L["Magical provisions"], Source = "Casts", NamePattern = L["^Conjure "], Class = "MAGE", Minimum = 100,
       Messages = {
-        "I have cast {name} {qualifier} {quantity} times. Being prepared is much easier with a little magic.",
-        "{Qualifier} {quantity} casts of {name}, and nobody can accuse me of arriving empty-handed.",
-        "I have used {name} {qualifier} {quantity} times. Provisioning is easier when the supplies come out of thin air.",
+        L["I have cast {name} {qualifier} {quantity} times. Being prepared is much easier with a little magic."],
+        L["{Qualifier} {quantity} casts of {name}, and nobody can accuse me of arriving empty-handed."],
+        L["I have used {name} {qualifier} {quantity} times. Provisioning is easier when the supplies come out of thin air."],
       } },
-    MagePortals = { Label = "Shortcuts through Azeroth", Source = "Casts", NamePattern = "^Portal: ", Class = "MAGE", Minimum = 25,
+    MagePortals = { Label = L["Shortcuts through Azeroth"], Source = "Casts", NamePattern = "^Portal: ", Class = "MAGE", Minimum = 25,
       Messages = {
-        "I have cast {name} {qualifier} {quantity} times. Sometimes the best road is no road at all.",
-        "{Qualifier} {quantity} casts of {name} have saved someone a long walk. I do hope they remembered everything.",
-        "I have opened {name} {qualifier} {quantity} times. The journey is much shorter when you fold the distance.",
+        L["I have cast {name} {qualifier} {quantity} times. Sometimes the best road is no road at all."],
+        L["{Qualifier} {quantity} casts of {name} have saved someone a long walk. I do hope they remembered everything."],
+        L["I have opened {name} {qualifier} {quantity} times. The journey is much shorter when you fold the distance."],
       } },
-    MonsterHunting = { Label = "Monster hunting", Source = "Kills", Minimum = 50,
+    MonsterHunting = { Label = L["Monster hunting"], Source = "Kills", Minimum = 50,
       Messages = {
-        "They call me the bane of {name}. I have personally slain {qualifier} {quantity} of their kind.",
-        "I have personally slain {qualifier} {quantity} of the creatures known as {name}. We have crossed paths rather often.",
-        "{Qualifier} {quantity} of the creatures called {name} have fallen by my hand. I have learned to recognize their approach.",
+        L["They call me the bane of {name}. I have personally slain {qualifier} {quantity} of their kind."],
+        L["I have personally slain {qualifier} {quantity} of the creatures known as {name}. We have crossed paths rather often."],
+        L["{Qualifier} {quantity} of the creatures called {name} have fallen by my hand. I have learned to recognize their approach."],
       } },
-    MoonkinForm = { Label = "Feathers and magic", Source = "Time", Metric = "MoonkinForm", Class = "DRUID", Milestone = "TimeMoonkinForm", Unit = "Hours",
+    MoonkinForm = { Label = L["Feathers and magic"], Source = "Time", Metric = "MoonkinForm", Class = "DRUID", Milestone = "TimeMoonkinForm", Unit = "Hours",
       Messages = {
-        "I have spent {qualifier} {quantity} hours in Moonkin Form. Feathers and formidable magic make a fine combination.",
-        "{Qualifier} {quantity} hours as a moonkin have taught me to allow extra room when passing through a doorway.",
-        "I have worn Moonkin Form for {qualifier} {quantity} hours. There is wisdom in the stars, and warmth in all these feathers.",
+        L["I have spent {qualifier} {quantity} hours in Moonkin Form. Feathers and formidable magic make a fine combination."],
+        L["{Qualifier} {quantity} hours as a moonkin have taught me to allow extra room when passing through a doorway."],
+        L["I have worn Moonkin Form for {qualifier} {quantity} hours. There is wisdom in the stars, and warmth in all these feathers."],
       } },
-    OldEnemies = { Label = "Old enemies", Source = "Enemies", Minimum = 5000,
+    OldEnemies = { Label = L["Old enemies"], Source = "Enemies", Minimum = 5000,
       Messages = {
-        "Foes called {name} have dealt {qualifier} {quantity} damage to me. We have a complicated relationship.",
-        "I have taken {qualifier} {quantity} damage from enemies known as {name}. Familiarity has done little for their manners.",
-        "{Qualifier} {quantity} damage from {name}, and somehow we keep meeting. I would prefer a less painful reunion.",
+        L["Foes called {name} have dealt {qualifier} {quantity} damage to me. We have a complicated relationship."],
+        L["I have taken {qualifier} {quantity} damage from enemies known as {name}. Familiarity has done little for their manners."],
+        L["{Qualifier} {quantity} damage from {name}, and somehow we keep meeting. I would prefer a less painful reunion."],
       } },
-    PaladinAuras = { Label = "A constant aura", Source = "SpellTime", Class = "PALADIN", Milestone = "SpellTime", Unit = "Hours",
+    PaladinAuras = { Label = L["A constant aura"], Source = "SpellTime", Class = "PALADIN", Milestone = "SpellTime", Unit = "Hours",
       SpellIds = { 465, 7294, 19746, 19876, 19888, 19891, 20218 },
       Messages = {
-        "I have spent {qualifier} {quantity} hours bearing {name}. Faith is a constant companion.",
-        "{Qualifier} {quantity} hours with {name} have accompanied my travels. Conviction need not be loud to be felt.",
-        "I have carried {name} for {qualifier} {quantity} hours. A steady presence can be a comfort on a dangerous road.",
+        L["I have spent {qualifier} {quantity} hours bearing {name}. Faith is a constant companion."],
+        L["{Qualifier} {quantity} hours with {name} have accompanied my travels. Conviction need not be loud to be felt."],
+        L["I have carried {name} for {qualifier} {quantity} hours. A steady presence can be a comfort on a dangerous road."],
       } },
-    Questing = { Label = "Doing favours", Source = "Milestone", Milestone = "Quests",
+    Questing = { Label = L["Doing favours"], Source = "Milestone", Milestone = "Quests",
       Messages = {
-        "I have completed {qualifier} {quantity} quests. Somehow, everyone still has one more favour to ask.",
-        "{Qualifier} {quantity} quests finished, and there is always another worried face waiting down the road.",
-        "I have seen {qualifier} {quantity} quests through to the end. A simple errand rarely stays simple for long.",
+        L["I have completed {qualifier} {quantity} quests. Somehow, everyone still has one more favour to ask."],
+        L["{Qualifier} {quantity} quests finished, and there is always another worried face waiting down the road."],
+        L["I have seen {qualifier} {quantity} quests through to the end. A simple errand rarely stays simple for long."],
       } },
-    Riding = { Label = "Life in the saddle", Source = "Distance", Metric = "Mounted", Minimum = 250, Unit = "Km",
+    Riding = { Label = L["Life in the saddle"], Source = "Distance", Metric = "Mounted", Minimum = 250, Unit = "Km",
       Messages = {
-        "I have ridden {qualifier} {quantity} {distanceUnit}. My mount deserves a share of the glory.",
-        "{Qualifier} {quantity} {distanceUnit} have passed beneath me in the saddle. Good company makes a long road shorter.",
-        "I have covered {qualifier} {quantity} {distanceUnit} while mounted. I owe my mount more than a few quiet evenings.",
+        L["I have ridden {qualifier} {quantity} {distanceUnit}. My mount deserves a share of the glory."],
+        L["{Qualifier} {quantity} {distanceUnit} have passed beneath me in the saddle. Good company makes a long road shorter."],
+        L["I have covered {qualifier} {quantity} {distanceUnit} while mounted. I owe my mount more than a few quiet evenings."],
       } },
-    Shadowform = { Label = "Embracing the shadows", Source = "Time", Metric = "Shadowform", Class = "PRIEST", Milestone = "TimeShadowform", Unit = "Hours",
+    Shadowform = { Label = L["Embracing the shadows"], Source = "Time", Metric = "Shadowform", Class = "PRIEST", Milestone = "TimeShadowform", Unit = "Hours",
       Messages = {
-        "I have spent {qualifier} {quantity} hours in Shadowform. The darkness and I have an understanding.",
-        "{Qualifier} {quantity} hours in Shadowform have made bright sunshine feel rather insistent.",
-        "I have embraced Shadowform for {qualifier} {quantity} hours. Some truths are easier to hear in the dark.",
+        L["I have spent {qualifier} {quantity} hours in Shadowform. The darkness and I have an understanding."],
+        L["{Qualifier} {quantity} hours in Shadowform have made bright sunshine feel rather insistent."],
+        L["I have embraced Shadowform for {qualifier} {quantity} hours. Some truths are easier to hear in the dark."],
       } },
-    Shopping = { Label = "A merchant's favorite", Source = "Items", Metric = "Merchant", Minimum = 100,
+    Shopping = { Label = L["A merchant's favorite"], Source = "Items", Metric = "Merchant", Minimum = 100,
       Messages = {
-        "I have bought {qualifier} {quantity} {name} from merchants. I suspect they are rather pleased to see me.",
-        "{Qualifier} {quantity} {name} have come to me over a merchant's counter. A familiar customer ought to earn a discount.",
-        "I have purchased {qualifier} {quantity} {name} from merchants. Apparently, I know what I like.",
+        L["I have bought {qualifier} {quantity} {name} from merchants. I suspect they are rather pleased to see me."],
+        L["{Qualifier} {quantity} {name} have come to me over a merchant's counter. A familiar customer ought to earn a discount."],
+        L["I have purchased {qualifier} {quantity} {name} from merchants. Apparently, I know what I like."],
       } },
-    SignatureAttack = { Label = "A signature attack", Source = "Abilities", Metric = "DamageDealt", Minimum = 10000,
+    SignatureAttack = { Label = L["A signature attack"], Source = "Abilities", Metric = "DamageDealt", Minimum = 10000,
       Messages = {
-        "{name} is something of a specialty of mine. It has dealt {qualifier} {quantity} damage.",
-        "I have dealt {qualifier} {quantity} damage with {name}. There is comfort in having a reliable answer to trouble.",
-        "{Qualifier} {quantity} damage has come from my use of {name}. My enemies may recognize it by now.",
+        L["{name} is something of a specialty of mine. It has dealt {qualifier} {quantity} damage."],
+        L["I have dealt {qualifier} {quantity} damage with {name}. There is comfort in having a reliable answer to trouble."],
+        L["{Qualifier} {quantity} damage has come from my use of {name}. My enemies may recognize it by now."],
       } },
-    SignatureHealing = { Label = "A trusted healing spell", Source = "Abilities", Metric = "HealingDealt", Minimum = 10000,
+    SignatureHealing = { Label = L["A trusted healing spell"], Source = "Abilities", Metric = "HealingDealt", Minimum = 10000,
       Messages = {
-        "I have restored {qualifier} {quantity} health with {name}. There is comfort in knowing which spell to reach for.",
-        "{Qualifier} {quantity} health restored with {name}. A familiar spell can steady your hands when things look grim.",
-        "My use of {name} has healed {qualifier} {quantity} health. I am always glad to have it ready.",
+        L["I have restored {qualifier} {quantity} health with {name}. There is comfort in knowing which spell to reach for."],
+        L["{Qualifier} {quantity} health restored with {name}. A familiar spell can steady your hands when things look grim."],
+        L["My use of {name} has healed {qualifier} {quantity} health. I am always glad to have it ready."],
       } },
-    Stealth = { Label = "Unseen journeys", Source = "Time", Metric = "Stealthed", Classes = { "ROGUE", "DRUID" }, Milestone = "TimeStealthed", Unit = "Hours",
+    Stealth = { Label = L["Unseen journeys"], Source = "Time", Metric = "Stealthed", Classes = { "ROGUE", "DRUID" }, Milestone = "TimeStealthed", Unit = "Hours",
       Messages = {
-        "I have spent {qualifier} {quantity} hours hidden in the shadows. Not every journey needs an audience.",
-        "{Qualifier} {quantity} hours in stealth have taught me how much people say when they think nobody is listening.",
-        "I have kept out of sight for {qualifier} {quantity} hours. Sometimes the safest path is the one nobody sees you take.",
+        L["I have spent {qualifier} {quantity} hours hidden in the shadows. Not every journey needs an audience."],
+        L["{Qualifier} {quantity} hours in stealth have taught me how much people say when they think nobody is listening."],
+        L["I have kept out of sight for {qualifier} {quantity} hours. Sometimes the safest path is the one nobody sees you take."],
       } },
-    Swimming = { Label = "Beneath the waves", Source = "Distance", Metric = "Swimming", Minimum = 10, Unit = "Km",
+    Swimming = { Label = L["Beneath the waves"], Source = "Distance", Metric = "Swimming", Minimum = 10, Unit = "Km",
       Messages = {
-        "I have swum {qualifier} {quantity} {distanceUnit}. Dry socks are a luxury I no longer take for granted.",
-        "{Qualifier} {quantity} {distanceUnit} of swimming have carried me across Azeroth's waters. The shore always looks closer at first.",
-        "I have covered {qualifier} {quantity} {distanceUnit} by swimming. I have learned to appreciate a well-placed bridge.",
+        L["I have swum {qualifier} {quantity} {distanceUnit}. Dry socks are a luxury I no longer take for granted."],
+        L["{Qualifier} {quantity} {distanceUnit} of swimming have carried me across Azeroth's waters. The shore always looks closer at first."],
+        L["I have covered {qualifier} {quantity} {distanceUnit} by swimming. I have learned to appreciate a well-placed bridge."],
       } },
-    TakingPunishment = { Label = "Taking punishment", Source = "Damage", Metric = "DamageTakenRaw", Minimum = 100000,
+    TakingPunishment = { Label = L["Taking punishment"], Source = "Damage", Metric = "DamageTakenRaw", Minimum = 100000,
       Messages = {
-        "I have endured {qualifier} {quantity} damage. I am beginning to think armour is a worthwhile investment.",
-        "{Qualifier} {quantity} damage has come my way. I would rather be counting coins, but here we are.",
-        "I have weathered {qualifier} {quantity} damage on my travels. Some lessons arrive with rather more force than others.",
+        L["I have endured {qualifier} {quantity} damage. I am beginning to think armour is a worthwhile investment."],
+        L["{Qualifier} {quantity} damage has come my way. I would rather be counting coins, but here we are."],
+        L["I have weathered {qualifier} {quantity} damage on my travels. Some lessons arrive with rather more force than others."],
       } },
-    TimeInCombat = { Label = "Time in battle", Source = "Time", Metric = "InCombat", Milestone = "TimeCombat", Unit = "Hours",
+    TimeInCombat = { Label = L["Time in battle"], Source = "Time", Metric = "InCombat", Milestone = "TimeCombat", Unit = "Hours",
       Messages = {
-        "I have spent {qualifier} {quantity} hours in combat. Peace and quiet are beginning to sound rather adventurous.",
-        "{Qualifier} {quantity} hours of fighting have brought me here. The sound of a quiet campfire is a welcome change.",
-        "I have been in combat for {qualifier} {quantity} hours. A peaceful meal is never something I take for granted.",
+        L["I have spent {qualifier} {quantity} hours in combat. Peace and quiet are beginning to sound rather adventurous."],
+        L["{Qualifier} {quantity} hours of fighting have brought me here. The sound of a quiet campfire is a welcome change."],
+        L["I have been in combat for {qualifier} {quantity} hours. A peaceful meal is never something I take for granted."],
       } },
-    TotemCalling = { Label = "Calling the elements", Source = "Casts", NamePattern = " Totem$", Class = "SHAMAN", Minimum = 100,
+    TotemCalling = { Label = L["Calling the elements"], Source = "Casts", NamePattern = L[" Totem$"], Class = "SHAMAN", Minimum = 100,
       Messages = {
-        "I have called upon {name} {qualifier} {quantity} times. The elements have heard rather a lot from me.",
-        "{Qualifier} {quantity} times, I have set down {name}. A little help from the elements goes a long way.",
-        "I have summoned {name} {qualifier} {quantity} times. It is reassuring to know just where the elements are standing.",
+        L["I have called upon {name} {qualifier} {quantity} times. The elements have heard rather a lot from me."],
+        L["{Qualifier} {quantity} times, I have set down {name}. A little help from the elements goes a long way."],
+        L["I have summoned {name} {qualifier} {quantity} times. It is reassuring to know just where the elements are standing."],
       } },
-    TravelFormTravel = { Label = "Four-legged travels", Source = "Distance", Metric = "TravelForm", Class = "DRUID", Minimum = 100, Unit = "Km",
+    TravelFormTravel = { Label = L["Four-legged travels"], Source = "Distance", Metric = "TravelForm", Class = "DRUID", Minimum = 100, Unit = "Km",
       Messages = {
-        "I have covered {qualifier} {quantity} {distanceUnit} in Travel Form. Four legs make light work of a long road.",
-        "{Qualifier} {quantity} {distanceUnit} have passed beneath my feet in Travel Form. The open road is a fine place to stretch your legs.",
-        "I have travelled {qualifier} {quantity} {distanceUnit} in Travel Form. Nature has a shape for every journey.",
+        L["I have covered {qualifier} {quantity} {distanceUnit} in Travel Form. Four legs make light work of a long road."],
+        L["{Qualifier} {quantity} {distanceUnit} have passed beneath my feet in Travel Form. The open road is a fine place to stretch your legs."],
+        L["I have travelled {qualifier} {quantity} {distanceUnit} in Travel Form. Nature has a shape for every journey."],
       } },
-    Walking = { Label = "Worn-out boots", Source = "Distance", Metric = "OnFoot", Minimum = 100, Unit = "Km",
+    Walking = { Label = L["Worn-out boots"], Source = "Distance", Metric = "OnFoot", Minimum = 100, Unit = "Km",
       Messages = {
-        "My boots have carried me {qualifier} {quantity} {distanceUnit} across Azeroth. Most of the soles are still attached.",
-        "I have travelled {qualifier} {quantity} {distanceUnit} on foot. You notice more of the world when you take it step by step.",
-        "{Qualifier} {quantity} {distanceUnit} on foot, and every worn patch on my boots has a story behind it.",
+        L["My boots have carried me {qualifier} {quantity} {distanceUnit} across Azeroth. Most of the soles are still attached."],
+        L["I have travelled {qualifier} {quantity} {distanceUnit} on foot. You notice more of the world when you take it step by step."],
+        L["{Qualifier} {quantity} {distanceUnit} on foot, and every worn patch on my boots has a story behind it."],
       } },
-    WarriorStances = { Label = "A warrior's footing", Source = "Casts", Class = "WARRIOR", Minimum = 100,
+    WarriorStances = { Label = L["A warrior's footing"], Source = "Casts", Class = "WARRIOR", Minimum = 100,
       SpellIds = { 2457, 71, 2458 },
       Messages = {
-        "I have entered {name} {qualifier} {quantity} times. There is a proper footing for every fight.",
-        "{Qualifier} {quantity} times, I have taken up {name}. A battle can turn on where you plant your feet.",
-        "I have switched to {name} {qualifier} {quantity} times. The right stance is the beginning of a good answer.",
+        L["I have entered {name} {qualifier} {quantity} times. There is a proper footing for every fight."],
+        L["{Qualifier} {quantity} times, I have taken up {name}. A battle can turn on where you plant your feet."],
+        L["I have switched to {name} {qualifier} {quantity} times. The right stance is the beginning of a good answer."],
       } },
   },
 }
@@ -574,7 +575,8 @@ function Sharing:FormatMessage(rule, candidate, template)
   end
   local qualifier = qualifiers[math.random(#qualifiers)]
   return (template:gsub("{[Qq]ualifier}", function(token)
-      return token == "{Qualifier}" and qualifier:gsub("^%l", string.upper) or qualifier
+      -- Capitalize the first letter, including the German umlaut "ü" (UTF-8 \195\188 -> "Ü" \195\156).
+      return token == "{Qualifier}" and (qualifier:gsub("^\195\188", "\195\156"):gsub("^%l", string.upper)) or qualifier
     end):gsub("{quantity}", function() return quantity end):gsub("{name}", function() return candidate.Name or "" end)
     :gsub("{distanceUnit}", function() return distanceUnit end))
 end
@@ -752,7 +754,7 @@ function Sharing:Share(index, personal)
   -- This call must remain directly in the button's click handler, not a timer.
   local ok, sent = pcall(Api.SendMilestoneMessage, message, self.Configuration.Channel)
   if (not ok or not sent) then
-    print("[AutoBiographer] Unable to share a campfire story right now. Try again when chat is available.")
+    print(L["[AutoBiographer] Unable to share a campfire story right now. Try again when chat is available."])
     return
   end
   Controller:OnCampfireTaleShared()
@@ -807,7 +809,7 @@ function Sharing:ShowPrompt()
     window.Message:SetPoint("TOPLEFT", 12, -32)
     window.Message:SetWidth(232)
     window.Message:SetJustifyH("LEFT")
-    window.Message:SetText("Choose a tale to share.")
+    window.Message:SetText(L["Choose a tale to share."])
     window.Buttons = {}
     for index = 1, self.Configuration.OfferCount do
       local button = CreateFrame("Button", nil, window, "UIPanelButtonTemplate")
@@ -823,7 +825,7 @@ function Sharing:ShowPrompt()
         if (not suggestion) then return end
         GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
         GameTooltip:SetText(suggestion.Offer.Label)
-        GameTooltip:AddLine(suggestion.Personal and "Your saved tale" or "Automatic tale", 1, 0.82, 0)
+        GameTooltip:AddLine(suggestion.Personal and L["Your saved tale"] or L["Automatic tale"], 1, 0.82, 0)
         if (suggestion.Personal) then GameTooltip:AddLine(suggestion.Offer.Messages[1], 1, 1, 1, true) end
         GameTooltip:Show()
       end)
@@ -832,28 +834,28 @@ function Sharing:ShowPrompt()
     end
     window.Empty = window:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     window.Empty:SetPoint("TOPLEFT", 12, -64)
-    window.Empty:SetText("No tales to suggest yet. Craft your first one.")
+    window.Empty:SetText(L["No tales to suggest yet. Craft your first one."])
     window.Craft = CreateFrame("Button", nil, window, "UIPanelButtonTemplate")
     window.Craft:SetSize(110, 24)
     window.Craft:SetPoint("TOPRIGHT", -12, -28)
-    window.Craft:SetText("Craft a tale")
+    window.Craft:SetText(L["Craft a tale"])
     window.Craft:SetScript("OnClick", function() self:OpenCrafting() end)
     window.Craft:SetScript("OnEnter", function(button)
       GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
-      GameTooltip:SetText("Craft a tale")
-      GameTooltip:AddLine("Use your recorded events for inspiration, write and edit your own story, and save it to share at a campfire.", 1, 1, 1, true)
+      GameTooltip:SetText(L["Craft a tale"])
+      GameTooltip:AddLine(L["Use your recorded events for inspiration, write and edit your own story, and save it to share at a campfire."], 1, 1, 1, true)
       GameTooltip:Show()
     end)
     window.Craft:SetScript("OnLeave", function() GameTooltip:Hide() end)
     window.HideSuggestions = CreateFrame("Button", nil, window, "UIPanelButtonTemplate")
     window.HideSuggestions:SetSize(170, 24)
     window.HideSuggestions:SetPoint("BOTTOMRIGHT", -12, 12)
-    window.HideSuggestions:SetText("Hide for a while")
+    window.HideSuggestions:SetText(L["Hide for a while"])
     window.HideSuggestions:SetScript("OnClick", function() self:HideSuggestions() end)
     window.HideSuggestions:SetScript("OnEnter", function(button)
       GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
-      GameTooltip:SetText("Hide for a while")
-      GameTooltip:AddLine("Close the Campfire Tales window and temporarily prevent it from opening automatically. You can still open it manually.", 1, 1, 1, true)
+      GameTooltip:SetText(L["Hide for a while"])
+      GameTooltip:AddLine(L["Close the Campfire Tales window and temporarily prevent it from opening automatically. You can still open it manually."], 1, 1, 1, true)
       GameTooltip:Show()
     end)
     window.HideSuggestions:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -861,12 +863,12 @@ function Sharing:ShowPrompt()
     window.Skip = CreateFrame("Button", nil, window, "UIPanelButtonTemplate")
     window.Skip:SetSize(100, 24)
     window.Skip:SetPoint("BOTTOMLEFT", 12, 12)
-    window.Skip:SetText("Close")
+    window.Skip:SetText(L["Close"])
     window.Skip:SetScript("OnClick", Skip)
     window.Skip:SetScript("OnEnter", function(button)
       GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
-      GameTooltip:SetText("Close")
-      GameTooltip:AddLine("Close the Campfire Tales window. It may open again the next time you rest at a campfire.", 1, 1, 1, true)
+      GameTooltip:SetText(L["Close"])
+      GameTooltip:AddLine(L["Close the Campfire Tales window. It may open again the next time you rest at a campfire."], 1, 1, 1, true)
       GameTooltip:Show()
     end)
     window.Skip:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -885,11 +887,11 @@ function Sharing:ShowPrompt()
     end)
   end
   local window = self.Prompt
-  window.TitleText:SetText("AutoBiographer Campfire Tales" .. (self.TestMode and " (Test)" or ""))
+  window.TitleText:SetText(L["AutoBiographer Campfire Tales"] .. (self.TestMode and " (Test)" or ""))
   for index, button in ipairs(window.Buttons) do
     local suggestion = self.Suggestions[index]
     button:SetShown(suggestion ~= nil)
-    if (suggestion) then button:SetText((suggestion.Personal and "Your tale: " or "") .. suggestion.Offer.Label) end
+    if (suggestion) then button:SetText((suggestion.Personal and L["Your tale: "] or "") .. suggestion.Offer.Label) end
   end
   window.Empty:SetShown(#self.Suggestions == 0)
   window:SetSize(380, 102 + math.max(1, #self.Suggestions) * 32)

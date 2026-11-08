@@ -1,3 +1,4 @@
+local L = AutoBiographer_L
 local panel = AutoBiographer_CampfireTalesPanel
 local Controller, Tales = AutoBiographer_Controller, CampfireTales
 local savedPageSize, memoryPageSize = 5, 5
@@ -42,7 +43,7 @@ local function Row(parent, height, callback)
 end
 
 local function DateText(timestamp)
-  return timestamp and HelperFunctions.TimestampToDateString(timestamp) or "Date unknown"
+  return timestamp and HelperFunctions.TimestampToDateString(timestamp) or L["Date unknown"]
 end
 
 local function SavedRow(window, index)
@@ -79,24 +80,24 @@ end
 function panel:Initialize()
   self.SavedPage, self.MemoryPage = 1, 1
   self.SavedRows, self.MemoryRows, self.Memories, self.FilteredMemories = {}, {}, {}, {}
-  self.NewButton = Button(self, "New tale", 110, function() self:RequestLeaveDraft(function() self:LoadDraft(nil) end) end)
+  self.NewButton = Button(self, L["New tale"], 110, function() self:RequestLeaveDraft(function() self:LoadDraft(nil) end) end)
   self.NewButton:SetPoint("TOPLEFT", 24, -5)
-  self.ReturnButton = Button(self, "Back to campfire", 140, function()
+  self.ReturnButton = Button(self, L["Back to campfire"], 140, function()
     if (not AutoBiographer_CampfireSharing:CanUseCampfire()) then return end
     AutoBiographer_CampfireSharing.Pending, AutoBiographer_CampfireSharing.AutomaticPending = true, nil
     AutoBiographer_MainWindow:Hide()
     AutoBiographer_CampfireSharing:Resume()
   end)
   self.ReturnButton:SetPoint("TOPRIGHT", -22, -5)
-  self.Hint = Label(self, "Choose a recorded memory for inspiration, or write a tale of your own.", 24, -40, "GameFontDisableSmall")
+  self.Hint = Label(self, L["Choose a recorded memory for inspiration, or write a tale of your own."], 24, -40, "GameFontDisableSmall")
   self.Hint:SetPoint("TOPRIGHT", -22, -40)
 
   self.Library = CreateFrame("Frame", nil, self)
   self.Library:SetPoint("TOPLEFT", 18, -68)
   self.Library:SetWidth(250)
   Background(self.Library)
-  Label(self.Library, "Your saved tales", 12, -12)
-  self.SavedEmpty = Label(self.Library, "No saved tales yet.\nWrite one or choose a recorded memory.", 16, -50, "GameFontDisableSmall")
+  Label(self.Library, L["Your saved tales"], 12, -12)
+  self.SavedEmpty = Label(self.Library, L["No saved tales yet.\nWrite one or choose a recorded memory."], 16, -50, "GameFontDisableSmall")
   self.SavedEmpty:SetWidth(218)
   self.SavedPrevious = Button(self.Library, "<", 30, function() self.SavedPage = self.SavedPage - 1; self:RenderLibrary() end)
   self.SavedPrevious:SetPoint("BOTTOMLEFT", 8, 8)
@@ -110,7 +111,7 @@ function panel:Initialize()
   self.MemoryBrowser:SetPoint("BOTTOMLEFT", 18, 44)
   self.MemoryBrowser:SetWidth(250)
   Background(self.MemoryBrowser)
-  Label(self.MemoryBrowser, "Recorded memories", 12, -12)
+  Label(self.MemoryBrowser, L["Recorded memories"], 12, -12)
   self.SearchBox = CreateFrame("EditBox", nil, self.MemoryBrowser, "InputBoxTemplate")
   self.SearchBox:SetPoint("TOPLEFT", 16, -36)
   self.SearchBox:SetSize(218, 24)
@@ -118,8 +119,8 @@ function panel:Initialize()
   self.SearchBox:SetMaxLetters(150)
   self.SearchBox:SetScript("OnEscapePressed", function(box) box:ClearFocus() end)
   self.SearchBox:SetScript("OnTextChanged", function() self.MemoryPage = 1; self:FilterMemories() end)
-  self.SearchHint = Label(self.SearchBox, "Search events or dates...", 2, -5, "GameFontDisableSmall")
-  self.MemoryEmpty = Label(self.MemoryBrowser, "No recorded memories yet.", 16, -80, "GameFontDisableSmall")
+  self.SearchHint = Label(self.SearchBox, L["Search events or dates..."], 2, -5, "GameFontDisableSmall")
+  self.MemoryEmpty = Label(self.MemoryBrowser, L["No recorded memories yet."], 16, -80, "GameFontDisableSmall")
   self.MemoryEmpty:SetWidth(218)
   self.MemoryPrevious = Button(self.MemoryBrowser, "<", 30, function() self.MemoryPage = self.MemoryPage - 1; self:RenderMemories() end)
   self.MemoryPrevious:SetPoint("BOTTOMLEFT", 8, 8)
@@ -132,7 +133,7 @@ function panel:Initialize()
   self.Editor:SetPoint("TOPLEFT", 282, -68)
   self.Editor:SetPoint("BOTTOMRIGHT", -22, 44)
   Background(self.Editor)
-  Label(self.Editor, "Tale title", 14, -14)
+  Label(self.Editor, L["Tale title"], 14, -14)
   self.TitleBox = CreateFrame("EditBox", nil, self.Editor, "InputBoxTemplate")
   self.TitleBox:SetPoint("TOPLEFT", 20, -36)
   self.TitleBox:SetPoint("TOPRIGHT", -20, -36)
@@ -143,7 +144,7 @@ function panel:Initialize()
   self.TitleBox:SetScript("OnTextChanged", function()
     if (not self.Loading) then self.DraftTitle = self.TitleBox:GetText(); self:UpdateEditorState() end
   end)
-  Label(self.Editor, "Your story (one message in /say)", 14, -82)
+  Label(self.Editor, L["Your story (one message in /say)"], 14, -82)
   self.StoryScroll = CreateFrame("ScrollFrame", nil, self.Editor, "InputScrollFrameTemplate")
   self.StoryScroll:SetPoint("TOPLEFT", 14, -106)
   self.StoryScroll:SetPoint("TOPRIGHT", -28, -106)
@@ -156,7 +157,7 @@ function panel:Initialize()
     if (not self.Loading) then self.DraftText = box:GetText(); self:UpdateEditorState() end
   end)
   self.StoryScroll.EditBox:SetScript("OnEscapePressed", function(box) box:ClearFocus() end)
-  self.MemoryHeading = Label(self.Editor, "Memory suggestion", 14, 0)
+  self.MemoryHeading = Label(self.Editor, L["Memory suggestion"], 14, 0)
   self.MemoryHeading:ClearAllPoints()
   self.MemoryHeading:SetPoint("TOPLEFT", 14, -282)
   self.MemoryPreview = self.Editor:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
@@ -166,13 +167,13 @@ function panel:Initialize()
   self.MemoryPreview:SetJustifyH("LEFT")
   self.MemoryPreview:SetJustifyV("TOP")
   self.MemoryPreview:SetWordWrap(true)
-  self.UseMemoryButton = Button(self.Editor, "Use opening", 110, function() self:UseMemory(false) end)
+  self.UseMemoryButton = Button(self.Editor, L["Use opening"], 110, function() self:UseMemory(false) end)
   self.UseMemoryButton:SetPoint("TOPLEFT", 14, -438)
-  self.NextOpeningButton = Button(self.Editor, "Next opening", 110, function()
+  self.NextOpeningButton = Button(self.Editor, L["Next opening"], 110, function()
     if (self.SelectedMemory) then self.Opening = self.Opening % #self.SelectedMemory.Suggestions + 1; self:UpdateMemoryPreview() end
   end)
   self.NextOpeningButton:SetPoint("LEFT", self.UseMemoryButton, "RIGHT", 8, 0)
-  self.AppendMemoryButton = Button(self.Editor, "Append memory", 120, function() self:UseMemory(true) end)
+  self.AppendMemoryButton = Button(self.Editor, L["Append memory"], 120, function() self:UseMemory(true) end)
   self.AppendMemoryButton:SetPoint("LEFT", self.NextOpeningButton, "RIGHT", 8, 0)
   self.Status = self.Editor:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
   self.Status:SetPoint("TOPLEFT", 14, -238)
@@ -181,9 +182,9 @@ function panel:Initialize()
   self.Status:SetHeight(34)
   self.Count = self.Editor:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
   self.Count:SetPoint("TOPRIGHT", -14, -240)
-  self.SaveButton = Button(self.Editor, "Save tale", 100, function() self:SaveDraft() end)
+  self.SaveButton = Button(self.Editor, L["Save tale"], 100, function() self:SaveDraft() end)
   self.SaveButton:SetPoint("BOTTOMLEFT", 14, 14)
-  self.DeleteButton = Button(self.Editor, "Delete", 80, function() self:DeleteTale() end)
+  self.DeleteButton = Button(self.Editor, L["Delete"], 80, function() self:DeleteTale() end)
   self.DeleteButton:SetPoint("BOTTOMRIGHT", -14, 14)
 
   self.Footer = self:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
@@ -191,10 +192,10 @@ function panel:Initialize()
   self.Footer:SetPoint("BOTTOMRIGHT", -230, 20)
   self.Footer:SetJustifyH("LEFT")
   self.Footer:SetWordWrap(false)
-  self.Footer:SetText("Save your edits to keep them after a reload or logout.")
-  self.RefreshButton = Button(self, "Refresh", 80, function() self:Update() end)
+  self.Footer:SetText(L["Save your edits to keep them after a reload or logout."])
+  self.RefreshButton = Button(self, L["Refresh"], 80, function() self:Update() end)
   self.RefreshButton:SetPoint("BOTTOMRIGHT", -22, 14)
-  self.ClearButton = Button(self, "Clear filters", 96, function() self.SearchBox:SetText(""); self:FilterMemories() end)
+  self.ClearButton = Button(self, L["Clear filters"], 96, function() self.SearchBox:SetText(""); self:FilterMemories() end)
   self.ClearButton:SetPoint("BOTTOMRIGHT", -112, 14)
 
   self.Decision = CreateFrame("Frame", nil, self, "BasicFrameTemplate")
@@ -202,16 +203,16 @@ function panel:Initialize()
   self.Decision:SetPoint("CENTER")
   self.Decision:SetFrameLevel(self:GetFrameLevel() + 30)
   self.Decision:EnableMouse(true)
-  self.Decision.TitleText:SetText("Campfire Tales")
+  self.Decision.TitleText:SetText(L["Campfire Tales"])
   self.Decision.Message = Label(self.Decision, "", 20, -45, "GameFontHighlight")
   self.Decision.Message:SetSize(360, 70)
-  self.Decision.Accept = Button(self.Decision, "Discard", 110, function()
+  self.Decision.Accept = Button(self.Decision, L["Discard"], 110, function()
     local action = self.PendingAction
     self.Decision:Hide()
     if (action) then action() end
   end)
   self.Decision.Accept:SetPoint("BOTTOMLEFT", 24, 18)
-  self.Decision.Cancel = Button(self.Decision, "Cancel", 110, function() self.Decision:Hide() end)
+  self.Decision.Cancel = Button(self.Decision, L["Cancel"], 110, function() self.Decision:Hide() end)
   self.Decision.Cancel:SetPoint("BOTTOMRIGHT", -24, 18)
   self.Decision.CloseButton:SetScript("OnClick", function() self.Decision:Hide() end)
   self.Decision:SetScript("OnHide", function() self.PendingAction = nil end)
@@ -264,13 +265,13 @@ end
 
 function panel:Confirm(message, label, action)
   self.PendingAction = action
-  self.Decision.Message:SetText(message)
-  self.Decision.Accept:SetText(label)
+  self.Decision.Message:SetText(L[message])
+  self.Decision.Accept:SetText(L[label])
   self.Decision:Show()
 end
 
 function panel:RequestLeaveDraft(action)
-  if (self:IsDirty()) then self:Confirm("Discard unsaved changes to this tale?", "Discard", action)
+  if (self:IsDirty()) then self:Confirm(L["Discard unsaved changes to this tale?"], L["Discard"], action)
   else action() end
 end
 
@@ -294,11 +295,11 @@ end
 function panel:UpdateEditorState()
   local valid, message = Tales.Validate(self.DraftTitle, self.DraftText)
   local bytes = #Tales.PlainText(self.DraftText)
-  self.Count:SetText(bytes .. " / " .. Tales.MaxMessageBytes .. " bytes")
+  self.Count:SetText(L("%s / %s bytes", bytes, Tales.MaxMessageBytes))
   self.Count:SetTextColor(bytes > Tales.MaxMessageBytes and 1 or 0.8, bytes > Tales.MaxMessageBytes and 0.2 or 0.8, bytes > Tales.MaxMessageBytes and 0.2 or 0.8)
   self.SaveButton:SetEnabled(valid ~= nil and self:IsDirty())
   self.DeleteButton:SetEnabled(self.Selected ~= nil)
-  self.Status:SetText(valid and (self:IsDirty() and "Unsaved changes" or "Saved") or message)
+  self.Status:SetText(valid and (self:IsDirty() and L["Unsaved changes"] or L["Saved"]) or message)
 end
 
 function panel:RenderLibrary()
@@ -322,7 +323,7 @@ function panel:RenderLibrary()
     if (row.Entry) then row.Label:SetText(row.Entry.Title); row.Selection:SetShown(row.Entry == self.Selected) end
   end
   self.SavedEmpty:SetShown(#items == 0)
-  self.SavedCount:SetText(self.SavedPage .. " / " .. pages .. " | " .. #items .. " tales")
+  self.SavedCount:SetText(L("%s / %s | %s tales", self.SavedPage, pages, #items))
   self.SavedPrevious:SetEnabled(self.SavedPage > 1)
   self.SavedNext:SetEnabled(self.SavedPage < pages)
 end
@@ -355,8 +356,8 @@ function panel:RenderMemories()
     end
   end
   self.MemoryEmpty:SetShown(#self.FilteredMemories == 0)
-  self.MemoryEmpty:SetText(#self.Memories == 0 and "No recorded memories yet. You can still write your own story." or "No matching memories.")
-  self.MemoryCount:SetText(self.MemoryPage .. " / " .. pages .. " | " .. #self.FilteredMemories .. " events")
+  self.MemoryEmpty:SetText(#self.Memories == 0 and L["No recorded memories yet. You can still write your own story."] or L["No matching memories."])
+  self.MemoryCount:SetText(L("%s / %s | %s events", self.MemoryPage, pages, #self.FilteredMemories))
   self.MemoryPrevious:SetEnabled(self.MemoryPage > 1)
   self.MemoryNext:SetEnabled(self.MemoryPage < pages)
 end
@@ -370,7 +371,7 @@ end
 function panel:UpdateMemoryPreview()
   local memory = self.SelectedMemory
   self.MemoryPreview:SetText(memory and (DateText(memory.Timestamp) .. " | " .. memory.Description .. "\n\n" .. memory.Suggestions[self.Opening]) or
-    "Choose an event from Recorded memories. Browse the suggested openings, then use or append one and edit it freely.")
+    L["Choose an event from Recorded memories. Browse the suggested openings, then use or append one and edit it freely."])
   for _, button in ipairs({ self.UseMemoryButton, self.NextOpeningButton, self.AppendMemoryButton }) do button:SetEnabled(memory ~= nil) end
 end
 
@@ -386,7 +387,7 @@ function panel:UseMemory(append)
     self:SyncDraft()
     self.StoryScroll.EditBox:SetFocus()
   end
-  if (not append and self.DraftText:find("%S")) then self:Confirm("Replace the current story text with this opening?", "Replace", Apply)
+  if (not append and self.DraftText:find("%S")) then self:Confirm(L["Replace the current story text with this opening?"], L["Replace"], Apply)
   else Apply() end
 end
 
@@ -402,7 +403,7 @@ end
 function panel:DeleteTale()
   local tale = self.Selected
   if (not tale) then return end
-  self:Confirm("Delete this saved tale? Unsaved edits will also be discarded.", "Delete", function()
+  self:Confirm(L["Delete this saved tale? Unsaved edits will also be discarded."], L["Delete"], function()
     Tales.Delete(Controller:GetCampfireTales(), tale)
     self:LoadDraft(nil)
     AutoBiographer_CampfireSharing.PersonalOffers = nil

@@ -1,3 +1,4 @@
+local L = AutoBiographer_L
 AutoBiographer_ConfirmWindow = {}
 function AutoBiographer_ConfirmWindow.New(message, callback)
   local window = CreateFrame("Frame", "Confirm", UIParent, "BasicFrameTemplate") 
@@ -27,7 +28,7 @@ function AutoBiographer_ConfirmWindow.New(message, callback)
   window.AcceptBtn = CreateFrame("Button", nil, window, "UIPanelButtonTemplate");
   window.AcceptBtn :SetPoint("BOTTOM", window, "BOTTOM", -75, 10);
   window.AcceptBtn :SetSize(140, 40);
-  window.AcceptBtn :SetText("Accept");
+  window.AcceptBtn :SetText(L["Accept"]);
   window.AcceptBtn :SetNormalFontObject("GameFontNormalLarge");
   window.AcceptBtn :SetHighlightFontObject("GameFontHighlightLarge");
   window.AcceptBtn :SetScript("OnClick", 
@@ -40,7 +41,7 @@ function AutoBiographer_ConfirmWindow.New(message, callback)
   window.CancelBtn = CreateFrame("Button", nil, window, "UIPanelButtonTemplate");
   window.CancelBtn :SetPoint("BOTTOM", window, "BOTTOM", 75, 10);
   window.CancelBtn :SetSize(140, 40);
-  window.CancelBtn :SetText("Cancel");
+  window.CancelBtn :SetText(L["Cancel"]);
   window.CancelBtn :SetNormalFontObject("GameFontNormalLarge");
   window.CancelBtn :SetHighlightFontObject("GameFontHighlightLarge");
   window.CancelBtn :SetScript("OnClick", 

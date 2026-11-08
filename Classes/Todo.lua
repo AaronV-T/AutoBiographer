@@ -1,3 +1,4 @@
+local L = AutoBiographer_L
 -- Definitions and completion state are saved; live condition results are not.
 Todo = {}
 local lastMatches = setmetatable({}, { __mode = "k" })
@@ -27,12 +28,12 @@ end
 function Todo.Describe(item)
   if (item.Type == "Inventory") then
     local name = AutoBiographer_Api.GetItemInfo(item.ItemId)
-    if (not Readable(name) or not name) then name = "Item #" .. item.ItemId end
+    if (not Readable(name) or not name) then name = L["Item #"] .. item.ItemId end
     return name .. " " .. item.Operator .. " " .. item.Count
   elseif (item.Type == "Area") then
-    return "In " .. item.Area .. (item.Zone and " (" .. item.Zone .. ")" or "")
+    return L["In "] .. item.Area .. (item.Zone and " (" .. item.Zone .. ")" or "")
   end
-  return "Until manually completed"
+  return L["Until manually completed"]
 end
 
 function Todo.Evaluate(item, context)
@@ -84,25 +85,25 @@ end
 
 function Todo.Save(data, selected, draft)
   local title = Trim(draft.Title)
-  if (title == "") then return nil, "Enter a task name." end
-  if (#title > 240) then return nil, "The task name is too long." end
+  if (title == "") then return nil, L["Enter a task name."] end
+  if (#title > 240) then return nil, L["The task name is too long."] end
   local item = { Title = title, Type = draft.Type }
   if (item.Type ~= "Always") then item.Recurring = draft.Recurring == true end
   if (item.Type == "Inventory") then
     local text = Trim(draft.ItemText)
     local id = tonumber(string.match(text, "item:(%d+)")) or tonumber(text)
     local count = tonumber(draft.CountText)
-    if (not id or id <= 0 or id ~= math.floor(id)) then return nil, "Enter an item ID or paste an item link (or drag an item here)." end
-    if (not comparisons[draft.Operator]) then return nil, "Choose a comparison." end
-    if (not count or count < 0 or count ~= math.floor(count)) then return nil, "Enter a whole-number count of zero or more." end
+    if (not id or id <= 0 or id ~= math.floor(id)) then return nil, L["Enter an item ID or paste an item link (or drag an item here)."] end
+    if (not comparisons[draft.Operator]) then return nil, L["Choose a comparison."] end
+    if (not count or count < 0 or count ~= math.floor(count)) then return nil, L["Enter a whole-number count of zero or more."] end
     item.ItemId, item.Count, item.Operator = id, count, draft.Operator
   elseif (item.Type == "Area") then
     item.Area = Trim(draft.Area)
-    if (item.Area == "") then return nil, "Enter a city, zone, or subzone name." end
+    if (item.Area == "") then return nil, L["Enter a city, zone, or subzone name."] end
     item.Zone = draft.Zone
-  elseif (item.Type ~= "Always") then return nil, "Choose a condition." end
+  elseif (item.Type ~= "Always") then return nil, L["Choose a condition."] end
   if (selected) then
-    if (not Todo.Contains(data, selected)) then return nil, "This task no longer exists." end
+    if (not Todo.Contains(data, selected)) then return nil, L["This task no longer exists."] end
     -- Editing a completed task's rule starts a fresh reminder.
     local ruleChanged = selected.Type ~= item.Type or selected.ItemId ~= item.ItemId or selected.Count ~= item.Count or
       selected.Operator ~= item.Operator or selected.Area ~= item.Area or selected.Zone ~= item.Zone

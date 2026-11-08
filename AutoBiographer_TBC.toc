@@ -1,6 +1,7 @@
 ## Interface: 20506
 ## Title: AutoBiographer
 ## Notes: Automatically track statistics, events, and gear changes. Replay your adventures and revisit character snapshots. Save notes for creatures, items, players, and quests. Manage tasks.
+## Notes-deDE: Zeichnet automatisch Statistiken, Ereignisse und Ausrüstungswechsel auf. Erlebe deine Abenteuer erneut und sieh dir Charakter-Snapshots an. Speichere Notizen zu Kreaturen, Gegenständen, Spielern und Quests. Verwalte Aufgaben.
 ## Author: Tollski
 ## Version: 5.1.2
 ## IconTexture: Interface\Icons\inv_misc_note_05
@@ -12,6 +13,9 @@ embeds.xml
 Libs/HereBeDragons/HereBeDragons-2.0.lua
 Libs/HereBeDragons/HereBeDragons-Pins-2.0.lua
 Libs/HereBeDragons/HereBeDragons-Migrate.lua
+
+Locales/Locale.lua
+Locales/deDE.lua
 
 Api.lua
 Controller.lua

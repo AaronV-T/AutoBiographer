@@ -1,3 +1,4 @@
+local L = AutoBiographer_L
 -- Subject identity and game integration; the existing Notes panel owns editing.
 AutoBiographer_SubjectNotes = {}
 local SN = AutoBiographer_SubjectNotes
@@ -7,16 +8,16 @@ local HF = HelperFunctions
 local Rating = AutoBiographerEnum.PlayerRating
 local ratingThumbTexture = "Interface\\AddOns\\AutoBiographer\\Icons\\rating-thumb"
 local ratingOptions = {
-  { Value = Rating.NotApplicable, Name = "Not rated", Short = "N/A", Color = "ffffffff" },
-  { Value = Rating.TwoThumbsDown, Name = "Very poor", Short = "--", Color = "ffff4040" },
-  { Value = Rating.OneThumbDown, Name = "Poor", Short = "-", Color = "ffffa04a" },
-  { Value = Rating.OneThumbUp, Name = "Good", Short = "+", Color = "ff8bdd68" },
-  { Value = Rating.TwoThumbsUp, Name = "Excellent", Short = "++", Color = "ff35d45c" },
+  { Value = Rating.NotApplicable, Name = L["Not rated"], Short = L["N/A"], Color = "ffffffff" },
+  { Value = Rating.TwoThumbsDown, Name = L["Very poor"], Short = "--", Color = "ffff4040" },
+  { Value = Rating.OneThumbDown, Name = L["Poor"], Short = "-", Color = "ffffa04a" },
+  { Value = Rating.OneThumbUp, Name = L["Good"], Short = "+", Color = "ff8bdd68" },
+  { Value = Rating.TwoThumbsUp, Name = L["Excellent"], Short = "++", Color = "ff35d45c" },
 }
 local filters = {
-  { Type = "All", Name = "All notes" }, { Type = "General", Name = "General" },
-  { Type = "Player", Name = "Players" }, { Type = "Creature", Name = "Creatures" },
-  { Type = "Item", Name = "Items" }, { Type = "Quest", Name = "Quests" },
+  { Type = "All", Name = L["All notes"] }, { Type = "General", Name = L["General"] },
+  { Type = "Player", Name = L["Players"] }, { Type = "Creature", Name = L["Creatures"] },
+  { Type = "Item", Name = L["Items"] }, { Type = "Quest", Name = L["Quests"] },
 }
 
 local function IsSecret(value)
@@ -45,10 +46,10 @@ function SN:AddTooltip(tooltip, subject)
   local note = collection and collection[subject.Id]
   if (not note) then return end
   if (subject.Type == "Player") then
-    tooltip:AddLine("Behavior: " .. self:GetRatingText(note.BehaviorRating) .. " | Skill: " .. self:GetRatingText(note.SkillRating), 1, 1, 1, true)
+    tooltip:AddLine(L["Behavior: "] .. self:GetRatingText(note.BehaviorRating) .. L[" | Skill: "] .. self:GetRatingText(note.SkillRating), 1, 1, 1, true)
   end
   local preview = Notes.GetPreview(note, 12)
-  if (preview ~= "") then tooltip:AddLine("Note: " .. preview, 0.6, 0.85, 1, true) end
+  if (preview ~= "") then tooltip:AddLine(L["Note: "] .. preview, 0.6, 0.85, 1, true) end
   tooltip:Show()
 end
 
@@ -94,7 +95,7 @@ function SN:GetRatingLabel(value)
   for _, option in ipairs(ratingOptions) do
     if (option.Value == (value or 0)) then return "|c" .. option.Color .. option.Name .. "|r" end
   end
-  return "|cffffffffNot rated|r"
+  return "|cffffffff" .. L["Not rated"] .. "|r"
 end
 
 function SN:GetRatingText(value)
@@ -148,13 +149,13 @@ function SN:InitializeHooks()
     self.UnitMenuRegistered = Api.RegisterUnitNoteMenu(function(unit, addButton)
       local subject = self:GetUnitSubject(unit, true)
       if (not subject) then return end
-      addButton(subject.Type == "Player" and "Edit Note and Rating" or "Edit Note", function() self:Open(subject) end)
+      addButton(subject.Type == "Player" and L["Edit Note and Rating"] or L["Edit Note"], function() self:Open(subject) end)
     end)
   end
   if (not self.QuestMenuRegistered) then
     self.QuestMenuRegistered = Api.RegisterQuestNoteMenu(function(id, addButton)
       if (IsSecret(id) or type(id) ~= "number" or id < 1) then return end
-      addButton("Edit Note", function()
+      addButton(L["Edit Note"], function()
         self:Open(self:GetLinkedSubject(tostring(id), "Quest"))
       end)
     end)
@@ -210,7 +211,7 @@ end
 function SN:InitializePanel(panel)
   panel.SubjectFilter = "General"
   panel.SubjectDropdown = CreateFrame("Frame", nil, panel, "UIDropDownMenuTemplate")
-  UIDropDownMenu_SetText(panel.SubjectDropdown, "General")
+  UIDropDownMenu_SetText(panel.SubjectDropdown, L["General"])
   UIDropDownMenu_Initialize(panel.SubjectDropdown, function()
     for _, filter in ipairs(filters) do
       local info = UIDropDownMenu_CreateInfo()
@@ -223,9 +224,9 @@ function SN:InitializePanel(panel)
       UIDropDownMenu_AddButton(info)
     end
   end)
-  panel.NewItemButton = Button(panel, "New Item Note", 126, function() self:ShowPicker(panel, "Item") end)
-  panel.NewQuestButton = Button(panel, "New Quest Note", 126, function() self:ShowPicker(panel, "Quest") end)
-  panel.NewUnitButton = Button(panel, "New Unit Note", 126, function() self:ShowPicker(panel, "Unit") end)
+  panel.NewItemButton = Button(panel, L["New Item Note"], 126, function() self:ShowPicker(panel, "Item") end)
+  panel.NewQuestButton = Button(panel, L["New Quest Note"], 126, function() self:ShowPicker(panel, "Quest") end)
+  panel.NewUnitButton = Button(panel, L["New Unit Note"], 126, function() self:ShowPicker(panel, "Unit") end)
   panel.CreationButtons = { panel.NewButton, panel.NewItemButton, panel.NewQuestButton, panel.NewUnitButton }
   panel.ListPanel:SetPoint("TOPLEFT", 18, -86)
   panel.EditorPanel:SetPoint("TOPRIGHT", -18, -86)
@@ -238,7 +239,7 @@ function SN:InitializePanel(panel)
     panel[field .. "RatingLabel"] = label
     panel[field .. "Buttons"] = {}
     for position, option in ipairs(ratingOptions) do
-      local button = Button(panel.RatingsPanel, option.Value == Rating.NotApplicable and "N/A" or "", 34, function()
+      local button = Button(panel.RatingsPanel, option.Value == Rating.NotApplicable and L["N/A"] or "", 34, function()
         panel["Draft" .. field] = option.Value
         panel:UpdateEditorState()
       end)
@@ -279,7 +280,7 @@ function SN:InitializePanel(panel)
       button:SetScript("OnEnter", function(owner)
         GameTooltip:SetOwner(owner, "ANCHOR_RIGHT")
         GameTooltip:SetText(field .. ": " .. option.Name, 1, 1, 1)
-        GameTooltip:AddLine("Choose a rating, then Save to keep it.", 1, 1, 1, true)
+        GameTooltip:AddLine(L["Choose a rating, then Save to keep it."], 1, 1, 1, true)
         GameTooltip:Show()
       end)
       button:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -299,7 +300,7 @@ function SN:Open(subject)
   panel:RequestLeaveDraft(function()
     local note = Notes.GetCollection(Controller:GetNotes(), subject)[subject.Id]
     panel.SubjectFilter = "All"
-    UIDropDownMenu_SetText(panel.SubjectDropdown, "All notes")
+    UIDropDownMenu_SetText(panel.SubjectDropdown, L["All notes"])
     panel.SearchBox:SetText("")
     panel.ReturnNote, panel.ReturnSubject = panel.SelectedNote, panel.SelectedSubject
     panel:LoadNote(note, not note, subject)
@@ -325,19 +326,19 @@ function SN:ShowPicker(panel, kind)
     picker:EnableMouse(true)
     local title = picker:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     title:SetPoint("TOPLEFT", 14, -6)
-    title:SetText("New " .. kind .. " Note")
+    title:SetText(L["New " .. kind .. " Note"])
     picker.Error = picker:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     picker.Error:SetPoint("BOTTOMLEFT", 24, 50)
     picker.Error:SetSize(352, 36)
     picker.Error:SetJustifyH("LEFT")
     picker.Error:SetTextColor(1, 0.3, 0.3)
-    picker.CancelButton = Button(picker, "Cancel", 80, function() picker:Hide() end)
+    picker.CancelButton = Button(picker, L["Cancel"], 80, function() picker:Hide() end)
     picker.CancelButton:SetPoint("BOTTOMRIGHT", -20, 16)
 
     if (kind == "Item") then
       local help = picker:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
       help:SetPoint("TOPLEFT", 24, -40)
-      help:SetText("Paste or drag an item link below (or enter an item ID).")
+      help:SetText(L["Paste or drag an item link below (or enter an item ID)."])
       picker.Input = CreateFrame("EditBox", nil, picker, "InputBoxTemplate")
       picker.Input:SetPoint("TOPLEFT", 30, -76)
       picker.Input:SetSize(340, 24)
@@ -354,9 +355,9 @@ function SN:ShowPicker(panel, kind)
       local function useInput()
         local subject = self:GetLinkedSubject(picker.Input:GetText(), "Item")
         if (subject and subject.Type == "Item") then picker:Hide(); self:Open(subject)
-        else picker.Error:SetText("Enter a valid item link or a positive item ID.") end
+        else picker.Error:SetText(L["Enter a valid item link or a positive item ID."]) end
       end
-      picker.OkayButton = Button(picker, "Okay", 80, useInput)
+      picker.OkayButton = Button(picker, L["Okay"], 80, useInput)
       picker.OkayButton:SetPoint("RIGHT", picker.CancelButton, "LEFT", -8, 0)
       picker.Input:SetScript("OnEnterPressed", useInput)
       picker:SetScript("OnHide", function() picker.Input:ClearFocus() end)
@@ -371,7 +372,7 @@ function SN:ShowPicker(panel, kind)
           local quests = getQuests()
           for _, quest in ipairs(quests) do
             local info = UIDropDownMenu_CreateInfo()
-            info.text, info.notCheckable = quest.Name or "Quest #" .. quest.Id, true
+            info.text, info.notCheckable = quest.Name or L["Quest #"] .. quest.Id, true
             info.func = function()
               picker:Hide(); self:Open({ Type = "Quest", Id = quest.Id, Name = quest.Name })
             end
@@ -384,15 +385,15 @@ function SN:ShowPicker(panel, kind)
           end
         end)
       end
-      questDropdown("QuestDropdown", "Choose a quest from your quest log", -40,
-        function() return Api.GetQuestLogEntries() end, "No quests in your quest log")
-      questDropdown("RecentQuestDropdown", "Choose a recently completed quest", -84,
-        function() return self:GetRecentlyCompletedQuests() end, "No quest completions recorded yet")
+      questDropdown("QuestDropdown", L["Choose a quest from your quest log"], -40,
+        function() return Api.GetQuestLogEntries() end, L["No quests in your quest log"])
+      questDropdown("RecentQuestDropdown", L["Choose a recently completed quest"], -84,
+        function() return self:GetRecentlyCompletedQuests() end, L["No quest completions recorded yet"])
     else
-      picker.TargetButton = Button(picker, "Current target", 150, function()
+      picker.TargetButton = Button(picker, L["Current target"], 150, function()
         local subject = self:GetUnitSubject("target", true)
         if (subject) then picker:Hide(); self:Open(subject)
-        else picker.Error:SetText("Target a player or creature first.") end
+        else picker.Error:SetText(L["Target a player or creature first."]) end
       end)
       picker.TargetButton:SetPoint("TOPLEFT", 24, -40)
     end
@@ -407,7 +408,7 @@ end
 function SN:UpdateRatings(panel)
   for _, field in ipairs({ "Behavior", "Skill" }) do
     local value = panel["Draft" .. field] or Rating.NotApplicable
-    panel[field .. "RatingLabel"]:SetText(field .. ": " .. self:GetRatingLabel(value))
+    panel[field .. "RatingLabel"]:SetText(L[field] .. ": " .. self:GetRatingLabel(value))
     for _, button in ipairs(panel[field .. "Buttons"]) do
       local selected = button.Rating == value
       button.Selection:SetShown(selected)

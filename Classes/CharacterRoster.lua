@@ -1,3 +1,4 @@
+local L = AutoBiographer_L
 -- Compact account-wide summaries. Full journals and statistics remain per character.
 CharacterRoster = {}
 
@@ -6,7 +7,7 @@ function CharacterRoster.New()
 end
 
 function CharacterRoster.GetName(entry)
-  return (entry.Name or "Unknown character") .. (entry.LastName and entry.LastName ~= "" and (" " .. entry.LastName) or "")
+  return (entry.Name or L["Unknown character"]) .. (entry.LastName and entry.LastName ~= "" and (" " .. entry.LastName) or "")
 end
 
 function CharacterRoster.Update(data, id, snapshot, timestamp)

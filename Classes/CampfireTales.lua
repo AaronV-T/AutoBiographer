@@ -1,3 +1,4 @@
+local L = AutoBiographer_L
 -- Personal tales are saved per character. Event facts are copied into drafts;
 -- editing or pruning the journal never changes a saved story.
 CampfireTales = { MaxMessageBytes = 255, MaxTitleBytes = 60 }
@@ -20,17 +21,17 @@ end
 
 function Tales.Validate(title, text)
   title, text = Tales.PlainText(title), Tales.PlainText(text)
-  if (title == "") then return nil, "Give your tale a title." end
-  if (#title > Tales.MaxTitleBytes) then return nil, "The title must fit within 60 bytes." end
-  if (text == "") then return nil, "Write a story or use an opening from a recorded event." end
-  if (#text > Tales.MaxMessageBytes) then return nil, "Shorten your story to fit one chat message (255 bytes)." end
+  if (title == "") then return nil, L["Give your tale a title."] end
+  if (#title > Tales.MaxTitleBytes) then return nil, L["The title must fit within 60 bytes."] end
+  if (text == "") then return nil, L["Write a story or use an opening from a recorded event."] end
+  if (#text > Tales.MaxMessageBytes) then return nil, L["Shorten your story to fit one chat message (255 bytes)."] end
   return { Title = title, Text = text }
 end
 
 function Tales.Save(library, selected, title, text, sources)
   local values, message = Tales.Validate(title, text)
   if (not values) then return nil, message end
-  if (selected and not Tales.Contains(library, selected)) then return nil, "That tale is no longer in your library." end
+  if (selected and not Tales.Contains(library, selected)) then return nil, L["That tale is no longer in your library."] end
   if (not selected) then
     selected = { Id = library.NextId, CreatedTimestamp = time() }
     library.NextId = library.NextId + 1
@@ -59,7 +60,7 @@ function Tales.GetMemory(event, catalogs, databases)
     return entry and entry.Name or fallback
   end
   if (sub == types.BossKill) then
-    subject, title = event.BossName or ("boss #" .. tostring(event.BossId)), "A boss defeated"
+    subject, title = event.BossName or (L["boss #"] .. tostring(event.BossId)), "A boss defeated"
     templates = { "I was there when %s fell. That is a victory I will remember.",
       "I remember the day we defeated %s. It makes the quiet evenings feel well earned.",
       "The defeat of %s is part of my story. Tonight seems a good night to tell it." }
@@ -92,7 +93,7 @@ function Tales.GetMemory(event, catalogs, databases)
       "The first time I set foot in %s, I had no idea what awaited me.",
       "My first visit to %s deserves a tale of its own. Some places leave an impression." }
   elseif (sub == types.QuestTurnIn) then
-    subject, title = event.QuestTitle or ("quest #" .. tostring(event.QuestId)), "A quest remembered"
+    subject, title = event.QuestTitle or (L["quest #"] .. tostring(event.QuestId)), "A quest remembered"
     templates = { "I remember completing %s. There is always more to an errand than the reward.",
       "I saw %s through to the end. That adventure has stayed with me.",
       "The tale of %s is one I can tell from experience. I was there to finish it." }
@@ -143,10 +144,20 @@ function Tales.GetMemory(event, catalogs, databases)
     end
   elseif (event.Type == AutoBiographerEnum.EventType.Arena) then
     subject, title = (databases.ArenaDatabase or {})[event.ArenaId] or "the arena", "An arena memory"
-    local outcome = sub == types.ArenaWon and "a victory" or sub == types.ArenaLost and "a defeat" or "a match"
-    templates = { "I remember " .. outcome .. " in %s. Arena battles have a way of staying with you.",
-      "There was " .. outcome .. " in %s that deserves a telling by the fire.",
-      "My travels brought me " .. outcome .. " in %s. The arena is a world of its own." }
+    subject = L[subject]
+    if (sub == types.ArenaWon) then
+      templates = { "I remember a victory in %s. Arena battles have a way of staying with you.",
+        "There was a victory in %s that deserves a telling by the fire.",
+        "My travels brought me a victory in %s. The arena is a world of its own." }
+    elseif (sub == types.ArenaLost) then
+      templates = { "I remember a defeat in %s. Arena battles have a way of staying with you.",
+        "There was a defeat in %s that deserves a telling by the fire.",
+        "My travels brought me a defeat in %s. The arena is a world of its own." }
+    else
+      templates = { "I remember a match in %s. Arena battles have a way of staying with you.",
+        "There was a match in %s that deserves a telling by the fire.",
+        "My travels brought me a match in %s. The arena is a world of its own." }
+    end
   elseif (sub == types.SkillMilestone) then
     subject, detail, title = event.SkillName, tostring(event.SkillLevel), "Practice pays off"
     templates = { "I remember reaching %s skill in %s. Practice has its own rewards.",
@@ -170,7 +181,10 @@ function Tales.GetMemory(event, catalogs, databases)
   end
   if (not templates or not subject or subject == "") then return nil end
   local suggestions = {}
+  subject = L[subject]
+  if (sub == types.ReputationLevelChanged and detail) then detail = L[detail] end
   for _, template in ipairs(templates) do
+    template = L[template]
     suggestions[#suggestions + 1] = Tales.PlainText(detail and string.format(template, detail, subject) or string.format(template, subject))
   end
   local ok, description = pcall(Event.ToString, event, catalogs, true)
@@ -179,7 +193,7 @@ function Tales.GetMemory(event, catalogs, databases)
   for name, value in pairs(types) do
     if (value == sub) then category = name:gsub("(%l)(%u)", "%1 %2"); break end
   end
-  return { Title = title, Suggestions = suggestions, Timestamp = event.Timestamp,
+  return { Title = L[title], Suggestions = suggestions, Timestamp = event.Timestamp,
     Description = description, SubType = sub, Category = category }
 end
 

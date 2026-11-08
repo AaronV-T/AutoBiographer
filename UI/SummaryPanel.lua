@@ -1,3 +1,4 @@
+local L = AutoBiographer_L
 local Controller = AutoBiographer_Controller
 local EM = AutoBiographer_EventManager
 local HF = HelperFunctions
@@ -188,7 +189,7 @@ local dashboardTabs = {
 local function CreateDashboardButton(parent, text, width, onClick)
   local button = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
   button:SetSize(width, 24)
-  button:SetText(text)
+  button:SetText(L[text])
   button:SetNormalFontObject("GameFontNormalSmall")
   button:SetHighlightFontObject("GameFontHighlightSmall")
   button:SetScript("OnClick", onClick)
@@ -203,7 +204,7 @@ local function CreateDashboardRow(window, section, rowDefinition)
   row.Label:SetPoint("LEFT", rowDefinition.Indent or 0, 0)
   row.Label:SetJustifyH("LEFT")
   row.Label:SetWordWrap(false)
-  row.Label:SetText(rowDefinition[2])
+  row.Label:SetText(L[rowDefinition[2]])
   row.Values = {}
   for i = 1, definition.Columns and #definition.Columns or 1 do
     local value = row:CreateFontString(nil, "OVERLAY", rowDefinition.IsTotal and "GameFontHighlightSmall" or "GameFontHighlight")
@@ -223,12 +224,12 @@ local function CreateDashboardRow(window, section, rowDefinition)
   end
   row:SetScript("OnEnter", function(self)
     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-    GameTooltip:SetText(row.Definition[2])
+    GameTooltip:SetText(L[row.Definition[2]])
     for i, value in ipairs(self.Values) do
-      GameTooltip:AddDoubleLine(definition.Columns and definition.Columns[i] or "Recorded",
+      GameTooltip:AddDoubleLine(L[definition.Columns and definition.Columns[i] or "Recorded"],
         self.FullValues and self.FullValues[i] or value:GetText(), 1, 0.82, 0, 1, 1, 1)
     end
-    if (rowDefinition[4]) then GameTooltip:AddLine("Click to view details", 0.6, 0.6, 0.6) end
+    if (rowDefinition[4]) then GameTooltip:AddLine(L["Click to view details"], 0.6, 0.6, 0.6) end
     GameTooltip:Show()
   end)
   row:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -258,7 +259,7 @@ local function CreateDashboardSection(window, definition)
 
   section.Title = section:CreateFontString(nil, "OVERLAY", "GameFontNormal")
   section.Title:SetPoint("TOPLEFT", 12, -12)
-  section.Title:SetText(definition.Title)
+  section.Title:SetText(L[definition.Title])
   section.Title:SetJustifyH("CENTER")
   section.Title:SetWordWrap(false)
 
@@ -272,7 +273,7 @@ local function CreateDashboardSection(window, definition)
   section.ColumnHeaders = {}
   for _, heading in ipairs(definition.Columns or {}) do
     local header = section:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    header:SetText(heading)
+    header:SetText(L[heading])
     header:SetJustifyH("RIGHT")
     table.insert(section.ColumnHeaders, header)
   end
@@ -288,7 +289,7 @@ function AutoBiographer_SummaryPanel:Initialize()
   self.Title:SetText("AutoBiographer")
   self.DisplayMinLevel = self.DisplayMinLevel or 1
   self.DisplayMaxLevel = self.DisplayMaxLevel or 9999
-  self.DropdownText = self.DropdownText or "All Levels"
+  self.DropdownText = self.DropdownText or L["All Levels"]
   self.ActiveTab = AutoBiographer_Settings.MainWindowTab or "Overview"
   self.DashboardPages = {}
   self.TabButtons = {}
@@ -308,7 +309,7 @@ function AutoBiographer_SummaryPanel:Initialize()
   self.LevelRange:SetPoint("TOPLEFT", 210, -13)
   self:SetLevelRange(self.DisplayMinLevel, self.DisplayMaxLevel)
   for i, tab in ipairs(dashboardTabs) do
-    local button = AutioBiographer_WindowHelper:CreateTab(self, tab.Name, 100, function() self:SelectTab(tab.Name) end)
+    local button = AutioBiographer_WindowHelper:CreateTab(self, L[tab.Name], 100, function() self:SelectTab(tab.Name) end)
     button:SetPoint("TOPLEFT", 18 + (i - 1) * 106, -49)
     self.TabButtons[tab.Name] = button
     local sections = {}
@@ -458,9 +459,9 @@ function AutoBiographer_SummaryPanel:SetLevelRange(minLevel, maxLevel)
   minLevel, maxLevel = minLevel or 1, maxLevel or 9999
   self.DisplayMinLevel, self.DisplayMaxLevel = minLevel, maxLevel
   local allLevels = minLevel == 1 and maxLevel == 9999
-  self.DropdownText = allLevels and "All Levels" or
-    minLevel == maxLevel and ("Level " .. minLevel) or
-    maxLevel == 9999 and ("Levels " .. minLevel .. "+") or ("Levels " .. minLevel .. " - " .. maxLevel)
+  self.DropdownText = allLevels and L["All Levels"] or
+    minLevel == maxLevel and (L["Level "] .. minLevel) or
+    maxLevel == 9999 and (L["Levels "] .. minLevel .. "+") or (L["Levels "] .. minLevel .. " - " .. maxLevel)
   self.LevelRange:SetRange(not allLevels and minLevel or nil, maxLevel ~= 9999 and maxLevel or nil)
   UIDropDownMenu_SetText(self.Dropdown, self.DropdownText)
   if (self.PanelReady) then self:Update() end
@@ -617,12 +618,12 @@ function AutoBiographer_SummaryPanel:Update()
     end
   end
   if (self.ActiveTab == "Overview") then AutoBiographer_Overview:Update(self) end
-  self.Footer:SetText(self.ActiveTab == "Overview" and ("Your recorded story | " .. self.DropdownText .. " | Click a highlight to explore") or
-    self.ActiveTab == "Travel" and ("Horizontal distance in " .. select(2, HF.GetDistanceUnit()) .. "; areas without readable coordinates are not recorded.") or
-    self.ActiveTab == "Time" and "Time categories overlap; they do not add up to total play time." or
-    ("Recorded statistics | " .. self.DropdownText))
+  self.Footer:SetText(self.ActiveTab == "Overview" and L("Your recorded story | %s | Click a highlight to explore", self.DropdownText) or
+    self.ActiveTab == "Travel" and L("Horizontal distance in %s; areas without readable coordinates are not recorded.", select(2, HF.GetDistanceUnit())) or
+    self.ActiveTab == "Time" and L["Time categories overlap; they do not add up to total play time."] or
+    (L["Recorded statistics | "] .. self.DropdownText))
   if (level and level.TimePlayedThisLevel) then
-    self.Footer:SetText(self.Footer:GetText() .. " | Time at level " .. minLevel .. ": " .. HF.SecondsToTimeString(level.TimePlayedThisLevel, true))
+    self.Footer:SetText(self.Footer:GetText() .. L(" | Time at level %s: ", minLevel) .. HF.SecondsToTimeString(level.TimePlayedThisLevel, true))
   end
   self:LayoutDashboard()
 end
@@ -637,13 +638,13 @@ function AutoBiographer_SummaryPanel:UpdateClassTimeRows(minLevel, maxLevel)
       if (dynamic == "SpellTime") then
         for spellId, seconds in pairs(Controller:GetAggregatedSpellTime(minLevel, maxLevel)) do
           local spell = Controller.CharacterData.Catalogs.SpellCatalog[spellId]
-          local name = spell and spell.Name or ("Spell #" .. spellId)
+          local name = spell and spell.Name or (L["Spell #"] .. spellId)
           totals[name] = (totals[name] or 0) + seconds
         end
       else
         local catalog = Controller.CharacterData.Catalogs.CompanionFamilyCatalog or {}
         for familyId, seconds in pairs(Controller:GetAggregatedCompanionFamilyTime(minLevel, maxLevel)) do
-          local name = catalog[familyId] or ("Family #" .. familyId)
+          local name = catalog[familyId] or (L["Family #"] .. familyId)
           totals[name] = (totals[name] or 0) + seconds
         end
       end
@@ -669,7 +670,7 @@ function AutoBiographer_SummaryPanel:UpdateLevelFilter(level, menuList)
     self:SetLevelRange(minLevel, maxLevel)
   end
   if (not level or level == 1) then
-    info.text, info.arg1, info.arg2 = "All Levels", 1, 9999
+    info.text, info.arg1, info.arg2 = L["All Levels"], 1, 9999
     info.checked = self.DisplayMinLevel == 1 and self.DisplayMaxLevel == 9999
     UIDropDownMenu_AddButton(info, level)
     local highestRange = math.floor((Controller:GetCurrentLevelNum() - 1) / 10)
@@ -680,7 +681,7 @@ function AutoBiographer_SummaryPanel:UpdateLevelFilter(level, menuList)
       end
       if (includeRange) then
         info.arg1, info.arg2 = range * 10 + 1, range * 10 + 10
-        info.text = "Levels " .. info.arg1 .. " - " .. info.arg2
+        info.text = L["Levels "] .. info.arg1 .. " - " .. info.arg2
         info.menuList, info.hasArrow = range, true
         info.checked = self.DisplayMinLevel == info.arg1 and self.DisplayMaxLevel == info.arg2
         UIDropDownMenu_AddButton(info, level)
@@ -690,7 +691,7 @@ function AutoBiographer_SummaryPanel:UpdateLevelFilter(level, menuList)
     for i = 1, 10 do
       local levelNum = menuList * 10 + i
       if (Controller.CharacterData.Levels[levelNum]) then
-        info.text, info.arg1, info.arg2 = "Level " .. levelNum, levelNum, levelNum
+        info.text, info.arg1, info.arg2 = L["Level "] .. levelNum, levelNum, levelNum
         info.checked = self.DisplayMinLevel == levelNum and self.DisplayMaxLevel == levelNum
         UIDropDownMenu_AddButton(info, level)
       end

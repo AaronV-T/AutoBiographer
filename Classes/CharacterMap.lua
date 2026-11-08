@@ -1,3 +1,4 @@
+local L = AutoBiographer_L
 CharacterMap = {}
 
 local function Number(value)
@@ -30,7 +31,7 @@ function CharacterMap.GetMaps(entries, getInfo)
       local info = getInfo(mapId)
       -- The cosmic overview cannot represent accurate character positions.
       if (not info or info.mapType == 0) then break end
-      maps[#maps + 1] = { Id = mapId, Name = info.name or ("Map #" .. mapId), Type = info.mapType or 3 }
+      maps[#maps + 1] = { Id = mapId, Name = info.name or (L["Map #"] .. mapId), Type = info.mapType or 3 }
       mapId = info.parentMapID
     end
   end
