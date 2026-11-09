@@ -1,12 +1,13 @@
-Track addon feature usage
-Track time stunned, rooted, slowed
-Fix buff tracking (only tracking target)
-Indicate only-in-combat on relevant stats
-Periodic save warning
-Tasks that trigger on level up
 Track win/lose on item rolls
+Fix buff tracking (only tracking target)
+Track count and time of all positive and negative effects
+Indicate only-in-combat on relevant stats
+Periodic save warning, manual save button
+Tasks that trigger on level up
 Summary show /played vs time recorded, milestone not showing /played but time recorded.
 Does healing include shielding?
+Localization
+
 Add new dungeons and raids locations. Make snapshotting work for new raid bosses, or use dungeon clearing achievements to determine snapshots to take.
 Program to backup and sync data + 1 million features (rankings, see all your characters, share a link to your character, etc)
 Startup hints

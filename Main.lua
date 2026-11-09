@@ -1781,6 +1781,7 @@ Api.RegisterTooltipHandler("OnTooltipSetItem", "Item", function(self, data)
   self:Show()
 end)
 
+local unitTooltipStates = setmetatable({}, { __mode = "k" })
 Api.RegisterTooltipHandler("OnTooltipSetUnit", "Unit", function(self)
   if (not self.GetUnit) then return end
   local _, unitId = self:GetUnit()
@@ -1796,12 +1797,22 @@ Api.RegisterTooltipHandler("OnTooltipSetUnit", "Unit", function(self)
   local isPlayer = UnitIsPlayer(unitId)
   if (EM:IsSecretValue(canAttack) or EM:IsSecretValue(isPlayer)) then return end
 
+  local state = unitTooltipStates[self]
+  if (not state) then
+    state = {}
+    unitTooltipStates[self] = state
+    self:HookScript("OnTooltipCleared", function() state.UnitGuid = nil end)
+  end
+  if (state.UnitGuid == unitGuid) then return end
+  -- Mark before adding lines or showing the tooltip, which can trigger callbacks.
+  state.UnitGuid = unitGuid
+
 	if (AutoBiographer_Settings.Options["ShowKillCountOnUnitToolTips"] and canAttack) then
     local killStatistics = Controller:GetAggregatedKillStatisticsByCatalogUnitId(catalogUnitId, 1, 9999)
     if (isPlayer) then
-      GameTooltip:AddLine("Killed " .. tostring(KillStatistics.GetSum(killStatistics, { AutoBiographerEnum.KillTrackingType.TaggedKillingBlow, AutoBiographerEnum.KillTrackingType.UntaggedKillingBlow })) .. " times.")
+      self:AddLine("Killed " .. tostring(KillStatistics.GetSum(killStatistics, { AutoBiographerEnum.KillTrackingType.TaggedKillingBlow, AutoBiographerEnum.KillTrackingType.UntaggedKillingBlow })) .. " times.")
     else
-      GameTooltip:AddLine("Killed " .. tostring(KillStatistics.GetSum(killStatistics, { AutoBiographerEnum.KillTrackingType.TaggedAssist, AutoBiographerEnum.KillTrackingType.TaggedGroupAssistOrKillingBlow, AutoBiographerEnum.KillTrackingType.TaggedKillingBlow })) .. " times.")
+      self:AddLine("Killed " .. tostring(KillStatistics.GetSum(killStatistics, { AutoBiographerEnum.KillTrackingType.TaggedAssist, AutoBiographerEnum.KillTrackingType.TaggedGroupAssistOrKillingBlow, AutoBiographerEnum.KillTrackingType.TaggedKillingBlow })) .. " times.")
     end
   end
 
@@ -1827,13 +1838,13 @@ Api.RegisterTooltipHandler("OnTooltipSetUnit", "Unit", function(self)
     end
 
     if (tooltipString ~= "") then
-      GameTooltip:AddLine(tooltipString)
+      self:AddLine(tooltipString)
     end
 	end
 
   if (AutoBiographer_Settings.Options["ShowDiscoveryInfoOnToolTips"] and HelperFunctions.GetUnitTypeFromCatalogUnitId(catalogUnitId) == AutoBiographerEnum.UnitType.Creature and
       AutoBiographer_Databases.NpcDatabase and not AutoBiographer_Databases.NpcDatabase[catalogUnitId]) then
-    GameTooltip:AddLine("Added in Forever")
+    self:AddLine("Added in Forever")
   end
 
 	self:Show()
