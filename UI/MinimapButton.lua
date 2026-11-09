@@ -1,17 +1,27 @@
+local function GetMinimapRadii()
+  return Minimap:GetWidth() / 2 + 10, Minimap:GetHeight() / 2 + 10
+end
+
 function AutoBiographer_MinimapButton_Reposition()
-	AutoBiographer_MinimapButton:SetPoint("TOPLEFT","Minimap","TOPLEFT",52-(80*cos(AutoBiographer_Settings.MinimapPos)),(80*sin(AutoBiographer_Settings.MinimapPos))-52)
+  local radiusX, radiusY = GetMinimapRadii()
+  local angle = math.rad(AutoBiographer_Settings.MinimapPos)
+  AutoBiographer_MinimapButton:ClearAllPoints()
+  AutoBiographer_MinimapButton:SetPoint("CENTER", Minimap, "CENTER", -radiusX * math.cos(angle), radiusY * math.sin(angle))
 end
 
 function AutoBiographer_MinimapButton_DraggingFrame_OnUpdate()
-
-	local xpos,ypos = GetCursorPosition()
-	local xmin,ymin = Minimap:GetLeft(), Minimap:GetBottom()
-
-	xpos = xmin-xpos/UIParent:GetScale()+70 -- get coordinates as differences from the center of the minimap
-	ypos = ypos/UIParent:GetScale()-ymin-70
-
-	AutoBiographer_Settings.MinimapPos = math.deg(math.atan2(ypos,xpos)) -- save the degrees we are relative to the minimap center
-	AutoBiographer_MinimapButton_Reposition() -- move the button
+  local centerX, centerY = Minimap:GetCenter()
+  if (not centerX or not centerY) then return end
+  local cursorX, cursorY = GetCursorPosition()
+  local scale = Minimap:GetEffectiveScale()
+  local radiusX, radiusY = GetMinimapRadii()
+  -- Cursor coordinates are screen pixels; the minimap center uses its own scale.
+  -- Keep the saved angle convention: zero is left, positive angles move upward.
+  local x = (centerX - cursorX / scale) / radiusX
+  local y = (cursorY / scale - centerY) / radiusY
+  if (x == 0 and y == 0) then return end
+  AutoBiographer_Settings.MinimapPos = math.deg(math.atan2(y, x))
+  AutoBiographer_MinimapButton_Reposition()
 end
 
 function AutoBiographer_MinimapButton_OnClick(arg1)

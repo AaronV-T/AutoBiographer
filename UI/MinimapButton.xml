@@ -48,6 +48,9 @@
 			<OnLoad>
 				self:RegisterForClicks("LeftButtonUp","RightButtonUp")
 				self:RegisterForDrag("LeftButton","RightButton")
+        Minimap:HookScript("OnSizeChanged", function()
+          if (AutoBiographer_Settings) then AutoBiographer_MinimapButton_Reposition() end
+        end)
 			</OnLoad>
 			<OnDragStart>
 				self:LockHighlight()
