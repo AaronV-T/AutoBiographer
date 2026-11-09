@@ -36,6 +36,10 @@ local dashboardTabs = {
       { "SpellsStarted", "Started" },
       { "SpellsSucceeded", "Successful" },
     } },
+    { Title = "Loss of Control", Column = 1, Rows = {
+      { "LossOfControlApplications", "Effects applied" },
+      { "TimeLossOfControl", "Time affected", "time", "Time" },
+    } },
     { Title = "Battlegrounds", Column = 1, Availability = "Battlegrounds",
       Columns = { "Wins", "Losses", "Incomplete" }, Rows = {
       { "Battleground1", "Alterac Valley", "results" },
@@ -168,6 +172,7 @@ local dashboardTabs = {
     { Title = "Play time", Column = 1, Details = "Time", Rows = {
       { "TimeLoggedIn", "Total recorded", "time" },
       { "TimeInCombat", "In combat", "time" },
+      { "TimeLossOfControl", "Loss of control", "time" },
       { "TimeCasting", "Casting", "time" },
       { "TimeFishing", "Fishing", "time" },
       { "TimeGrouped", "Grouped", "time" },
@@ -534,7 +539,7 @@ function AutoBiographer_SummaryPanel:Update()
   values.QuestsRepeated = QuestStatistics.GetSum(questTotals, { Enum.QuestTrackingType.Completed }) - values.QuestsUnique
   values.SpellsStarted = Controller:GetSpellCountBySpellTrackingType(Enum.SpellTrackingType.StartedCasting, minLevel, maxLevel)
   values.SpellsSucceeded = Controller:GetSpellCountBySpellTrackingType(Enum.SpellTrackingType.SuccessfullyCast, minLevel, maxLevel)
-  for _, category in ipairs({ "Camped", "Jumps", "FishingCasts", "FishingCatches", "FishGotAway" }) do
+  for _, category in ipairs({ "Camped", "Jumps", "FishingCasts", "FishingCatches", "FishGotAway", "LossOfControlApplications" }) do
     values[category] = Controller:GetMiscellaneousStatByMiscellaneousTrackingType(Enum.MiscellaneousTrackingType[category], minLevel, maxLevel)
   end
   values.FishingPending = AutoBiographer_Fishing:GetPendingAttemptCount(minLevel, maxLevel)

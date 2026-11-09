@@ -946,6 +946,16 @@ if (Api.IsEventAvailable("LOOT_HISTORY_CLEAR_HISTORY", C_LootHistory ~= nil)) th
   end
 end
 
+function EM.EventHandlers.LOSS_OF_CONTROL_ADDED(self, unitTarget)
+  if (Api.IsWoWForever() and (self:IsSecretValue(unitTarget) or unitTarget ~= "player")) then return end
+  AutoBiographer_LossOfControl:Update(true)
+end
+
+function EM.EventHandlers.LOSS_OF_CONTROL_UPDATE(self, unitTarget)
+  if (Api.IsWoWForever() and (self:IsSecretValue(unitTarget) or unitTarget ~= "player")) then return end
+  AutoBiographer_LossOfControl:Update()
+end
+
 function EM.EventHandlers.MAIL_CLOSED(self, arg1, arg2)
   EM:MailboxClosed()
 end
@@ -1138,6 +1148,7 @@ function EM.EventHandlers.PLAYER_ENTERING_WORLD(self, isLogin, isReload)
   if (AutoBiographer_ClassActivity) then AutoBiographer_ClassActivity:Start() end
   AutoBiographer_UiActivity:Start()
   AutoBiographer_FeatureActivity:Start()
+  AutoBiographer_LossOfControl:Start()
   self.GearTrackingReady = true
   self:UpdatePlayerGear()
   AutoBiographer_SnapshotManager:Resume()
@@ -1179,6 +1190,7 @@ end
 function EM.EventHandlers.PLAYER_LEAVING_WORLD(self)
   AutoBiographer_UiActivity:Stop()
   AutoBiographer_FeatureActivity:Stop()
+  AutoBiographer_LossOfControl:Stop()
   AutoBiographer_Fishing:Stop()
   AutoBiographer_CampfireSharing:OnLeavingWorld()
   if (AutoBiographer_SnapshotManager) then AutoBiographer_SnapshotManager:Pause() end
@@ -1201,6 +1213,7 @@ end
 function EM.EventHandlers.PLAYER_LEVEL_UP(self, newLevel)
   AutoBiographer_UiActivity:SetLevel(newLevel)
   AutoBiographer_FeatureActivity:SetLevel(newLevel)
+  AutoBiographer_LossOfControl:SetLevel(newLevel)
   self:UpdateTimestamps(self.PersistentPlayerInfo.CurrentZone, self.PersistentPlayerInfo.CurrentSubZone)
   self.NewLevelToAddToHistory = newLevel
   
@@ -1221,6 +1234,7 @@ end
 function EM.EventHandlers.PLAYER_LOGOUT(self)
   AutoBiographer_UiActivity:Stop()
   AutoBiographer_FeatureActivity:Stop()
+  AutoBiographer_LossOfControl:Stop()
 end
 
 function EM.EventHandlers.PLAYER_MONEY(self)
@@ -2927,6 +2941,7 @@ function EM:UpdatePlayerZone()
 end
 
 function EM:UpdateTimestamps(zone, subZone)
+  AutoBiographer_LossOfControl:Flush(zone, subZone)
   AutoBiographer_Fishing:Flush(zone, subZone)
   if (AutoBiographer_ClassActivity) then AutoBiographer_ClassActivity:Flush(zone, subZone) end
   -- Afk
@@ -3068,6 +3083,8 @@ function EM:ClearCharacterData(doNotRequireConfirmation, doNotReloadUI)
     AutoBiographer_FeatureActivity:Stop()
     AutoBiographer_FeatureActivity.States = {}
     AutoBiographer_FeatureActivity.PendingStatistics = {}
+    AutoBiographer_LossOfControl:Stop()
+    AutoBiographer_LossOfControl.PendingStatistics = {}
     _G["AUTOBIOGRAPHER_CATALOGS_CHAR"] = nil
     _G["AUTOBIOGRAPHER_EVENTS_CHAR"] = nil
     _G["AUTOBIOGRAPHER_GEAR_CHAR"] = nil

@@ -14,6 +14,12 @@ local function ReadBoolean(func, ...)
   if (type(value) == "boolean") then return value end
 end
 
+function Api.GetPlayerLossOfControlCount()
+  if (not C_LossOfControl or not C_LossOfControl.GetActiveLossOfControlDataCount) then return nil end
+  local success, count = pcall(C_LossOfControl.GetActiveLossOfControlDataCount)
+  if (success and IsReadable(count, "number") and count >= 0) then return count end
+end
+
 function Api.FormatMoney(amount)
   if (GetCoinText) then
     return GetCoinText(amount)

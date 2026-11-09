@@ -59,6 +59,7 @@ local headerDescriptions = {
   Casting = "Recorded time spent casting.",
   Dead = "Recorded time spent dead or as a ghost.",
   Combat = "Recorded time spent in combat.",
+  ["Loss of Control"] = "Time affected by at least one loss-of-control effect. Overlapping effects count once; types cannot be distinguished when the game hides them.",
   Total = "Total recorded time. Activity columns overlap and should not be added together.",
   Taxi = "Recorded time spent on flight paths.",
   Grouped = "Recorded time spent in a party or raid.",
@@ -440,8 +441,8 @@ function AutoBiographer_StatisticsWindow:GetTableData(minLevel, maxLevel)
   elseif (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.Time) then
     local timeStatisticsByArea = Controller:GetAggregatedTimeStatisticsDictionary(minLevel, maxLevel)
     tableData = {
-      HeaderValues = { "Area", "AFK", "Casting", "Dead", "Combat", "Total", "Taxi", "Grouped", "Gamepad", "Fishing" },
-      RowOffsets = { 0, 225, 285, 345, 405, 465, 525, 585, 645, 705, 765 },
+      HeaderValues = { "Area", "AFK", "Casting", "Dead", "Combat", "Total", "Taxi", "Grouped", "Gamepad", "Fishing", "Loss of Control" },
+      RowOffsets = { 0, 225, 285, 345, 405, 465, 525, 585, 645, 705, 765, 865 },
       Rows = {},
     }
 
@@ -457,6 +458,7 @@ function AutoBiographer_StatisticsWindow:GetTableData(minLevel, maxLevel)
       local inParty = TimeStatistics.GetSum(timeStatistics, { AutoBiographerEnum.TimeTrackingType.InParty })
       local gamepadUI = TimeStatistics.GetSum(timeStatistics, { AutoBiographerEnum.TimeTrackingType.GamepadUI })
       local fishing = TimeStatistics.GetSum(timeStatistics, { AutoBiographerEnum.TimeTrackingType.Fishing })
+      local lossOfControl = TimeStatistics.GetSum(timeStatistics, { AutoBiographerEnum.TimeTrackingType.LossOfControl })
 
       if (not dictAggregatedByZone[zone]) then
         dictAggregatedByZone[zone] = {
@@ -470,6 +472,7 @@ function AutoBiographer_StatisticsWindow:GetTableData(minLevel, maxLevel)
           inParty,
           gamepadUI,
           fishing,
+          lossOfControl,
         }
       else
         dictAggregatedByZone[zone][2] = dictAggregatedByZone[zone][2] + afk
@@ -481,6 +484,7 @@ function AutoBiographer_StatisticsWindow:GetTableData(minLevel, maxLevel)
         dictAggregatedByZone[zone][8] = dictAggregatedByZone[zone][8] + inParty
         dictAggregatedByZone[zone][9] = dictAggregatedByZone[zone][9] + gamepadUI
         dictAggregatedByZone[zone][10] = dictAggregatedByZone[zone][10] + fishing
+        dictAggregatedByZone[zone][11] = dictAggregatedByZone[zone][11] + lossOfControl
       end
     end
 

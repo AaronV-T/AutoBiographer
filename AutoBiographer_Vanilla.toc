@@ -42,6 +42,7 @@ CharacterRosterManager.lua
 ClassActivity.lua
 UiActivity.lua
 FeatureActivity.lua
+LossOfControl.lua
 Fishing.lua
 Rolls.lua
 Milestones.lua

@@ -199,6 +199,7 @@ AutoBiographerEnum = {
     FishingCatches = 4,
     FishGotAway = 5,
     CampfireTalesShared = 6,
+    LossOfControlApplications = 7,
   },
   MoneyAcquisitionMethod = {
     AuctionHouseSale = 0,
@@ -278,6 +279,7 @@ AutoBiographerEnum = {
     DefensiveStance = 19,
     BerserkerStance = 20,
     Fishing = 21,
+    LossOfControl = 22,
   },
   -- Stored in level statistics; migrate existing data when changing these IDs.
   UiElement = {
