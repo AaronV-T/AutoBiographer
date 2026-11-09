@@ -14,6 +14,12 @@ local function ReadBoolean(func, ...)
   if (type(value) == "boolean") then return value end
 end
 
+function Api.GetPlayerLossOfControlCount()
+  if (not C_LossOfControl or not C_LossOfControl.GetActiveLossOfControlDataCount) then return nil end
+  local success, count = pcall(C_LossOfControl.GetActiveLossOfControlDataCount)
+  if (success and IsReadable(count, "number") and count >= 0) then return count end
+end
+
 function Api.FormatMoney(amount)
   if (GetCoinText) then
     return GetCoinText(amount)
@@ -386,6 +392,7 @@ function Api.GetPlayerSnapshotTalents(level, diagnostic)
   local stage = "talent snapshot"
   local function Value(value)
     if (issecretvalue and issecretvalue(value)) then return "<secret>" end
+    if (type(value) == "table") then return "<table>" end
     return tostring(value)
   end
   local function Trace(message)
@@ -696,17 +703,22 @@ function Api.GetRestedExperiencePool()
 end
 
 function Api.GetSpellInfo(spellId)
+  local spellInfo
   if (GetSpellInfo) then
-    return GetSpellInfo(spellId)
+    local name, rank, icon, castTime, minRange, maxRange, id, originalIcon = GetSpellInfo(spellId)
+    -- Compatibility shims can expose the modern table through the old global.
+    if (not IsReadable(name, "table")) then
+      return name, rank, icon, castTime, minRange, maxRange, id, originalIcon
+    end
+    spellInfo = name
+  elseif (C_Spell and C_Spell.GetSpellInfo) then
+    spellInfo = C_Spell.GetSpellInfo(spellId)
   end
 
-  if (C_Spell and C_Spell.GetSpellInfo) then
-    local spellInfo = C_Spell.GetSpellInfo(spellId)
-    if (spellInfo) then
-      return spellInfo.name, nil, spellInfo.iconID, spellInfo.castTime,
-        spellInfo.minRange, spellInfo.maxRange, spellInfo.spellID,
-        spellInfo.originalIconID
-    end
+  if (IsReadable(spellInfo, "table")) then
+    return spellInfo.name, nil, spellInfo.iconID, spellInfo.castTime,
+      spellInfo.minRange, spellInfo.maxRange, spellInfo.spellID,
+      spellInfo.originalIconID
   end
 end
 

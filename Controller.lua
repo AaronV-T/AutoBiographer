@@ -413,6 +413,7 @@ function Controller:GetAggregatedSpellTime(minLevel, maxLevel)
 end
 
 function Controller:GetAggregatedTimeStatisticsDictionary(minLevel, maxLevel)
+  AutoBiographer_LossOfControl:Flush()
   local timeStatisticsDictionary = {}
   for levelNum, levelStatistics in pairs(self.CharacterData.Levels) do
     if (levelNum >= minLevel and levelNum <= maxLevel) then
@@ -493,6 +494,32 @@ end
 
 function Controller:GetCurrentLevelStatistics()
   return self.CharacterData.Levels[self:GetCurrentLevelNum()]
+end
+
+function Controller:GetAggregatedUiStatistics(minLevel, maxLevel)
+  AutoBiographer_UiActivity:Update()
+  local totals = UiStatistics.New()
+  for levelNum, statistics in pairs(self.CharacterData.Levels) do
+    if (levelNum >= minLevel and levelNum <= maxLevel) then
+      for element, entry in pairs(statistics.UiStatistics or {}) do
+        UiStatistics.Add(totals, element, entry.OpenCount, entry.TimeSpent)
+      end
+    end
+  end
+  return totals
+end
+
+function Controller:GetAggregatedFeatureStatistics(minLevel, maxLevel)
+  AutoBiographer_FeatureActivity:Update()
+  local totals = UiStatistics.New()
+  for levelNum, statistics in pairs(self.CharacterData.Levels) do
+    if (levelNum >= minLevel and levelNum <= maxLevel) then
+      for feature, entry in pairs(statistics.FeatureStatistics or {}) do
+        UiStatistics.Add(totals, feature, entry.OpenCount, entry.TimeSpent)
+      end
+    end
+  end
+  return totals
 end
 
 function Controller:GetDamageOrHealing(damageOrHealingCategory, minLevel, maxLevel)
@@ -624,6 +651,7 @@ function Controller:GetLogs()
 end
 
 function Controller:GetMiscellaneousStatByMiscellaneousTrackingType(miscellaneousTrackingType, minLevel, maxLevel)
+  if (miscellaneousTrackingType == AutoBiographerEnum.MiscellaneousTrackingType.LossOfControlApplications) then AutoBiographer_LossOfControl:Flush() end
   local sum = 0
   for k,v in pairs(self.CharacterData.Levels) do
     if (k >= minLevel and k <= maxLevel) then
@@ -726,6 +754,7 @@ function Controller:GetTotalMoneyLost(minLevel, maxLevel)
 end
 
 function Controller:GetTimeForTimeTrackingType(timeTrackingType, minLevel, maxLevel)
+  if (timeTrackingType == AutoBiographerEnum.TimeTrackingType.LossOfControl) then AutoBiographer_LossOfControl:Flush() end
   local sum = 0
   for k,v in pairs(self.CharacterData.Levels) do
     if (k >= minLevel and k <= maxLevel) then
@@ -1070,6 +1099,9 @@ function Controller:OnLevelUp(timestamp, coordinates, levelNum, totalTimePlayedA
   if (AutoBiographer_Settings.Options["EnableDebugLogging"]) then Controller:AddLog("LevelUp: " .. tostring(levelNum) .. ", " .. HelperFunctions.SecondsToTimeString(totalTimePlayedAtDing) .. ".", AutoBiographerEnum.LogLevel.Debug) end
   
   self.CharacterData.Levels[levelNum] = LevelStatistics.New(levelNum, totalTimePlayedAtDing, nil)
+  AutoBiographer_UiActivity:FlushPending()
+  AutoBiographer_FeatureActivity:FlushPending()
+  AutoBiographer_LossOfControl:FlushPending()
   
   local currentLevel = self.CharacterData.Levels[levelNum]
   local previousLevel = self.CharacterData.Levels[levelNum - 1]

@@ -631,6 +631,28 @@ table.insert(MM.CharacterMigrations,
   )
 )
 
+table.insert(MM.CharacterMigrations,
+  AutoBiographer_Migration:New(
+    24,
+    function(eventManager, controller)
+      for _, statistics in pairs(controller.CharacterData.Levels) do
+        if (statistics.UiStatistics == nil) then statistics.UiStatistics = UiStatistics.New() end
+      end
+    end
+  )
+)
+
+table.insert(MM.CharacterMigrations,
+  AutoBiographer_Migration:New(
+    25,
+    function(eventManager, controller)
+      for _, statistics in pairs(controller.CharacterData.Levels) do
+        if (statistics.FeatureStatistics == nil) then statistics.FeatureStatistics = UiStatistics.New() end
+      end
+    end
+  )
+)
+
 -- *** Account Migrations ***
 -- Released account settings have no independent version; nil starts at 0.
 table.insert(MM.AccountMigrations,

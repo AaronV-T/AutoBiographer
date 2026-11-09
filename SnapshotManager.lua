@@ -69,14 +69,18 @@ function manager:CaptureDetails(snapshot, includeAttributes)
       end
       snapshot.TalentsCollectedAt = time()
       if (self.TalentDiagnosticMessages[snapshot]) then
-        print("[AutoBiographer Talents] Level " .. snapshot.Level .. ": captured " .. #talents .. " selected talents after retry.")
+        if (AutoBiographer_Settings.Options.EnableDebugLogging) then
+          print("[AutoBiographer Talents] Level " .. snapshot.Level .. ": captured " .. #talents .. " selected talents after retry.")
+        end
         self.TalentDiagnosticMessages[snapshot] = nil
       end
     else
       failure = failure or "Talent reader returned no data without a failure reason."
       if (self.TalentDiagnosticMessages[snapshot] ~= failure) then
         self.TalentDiagnosticMessages[snapshot] = failure
-        print("[AutoBiographer Talents] Level " .. snapshot.Level .. ", retry " .. (self.RetryAttempts or 0) .. ": " .. failure)
+        if (AutoBiographer_Settings.Options.EnableDebugLogging) then
+          print("[AutoBiographer Talents] Level " .. snapshot.Level .. ", retry " .. (self.RetryAttempts or 0) .. ": " .. failure)
+        end
       end
     end
   end
