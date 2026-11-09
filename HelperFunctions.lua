@@ -1,3 +1,4 @@
+local L = AutoBiographer_L
 HelperFunctions = {}
 local HF = HelperFunctions
 
@@ -39,8 +40,8 @@ end
 
 function HF.GetDistanceUnit()
   local options = AutoBiographer_Settings and AutoBiographer_Settings.Options
-  if (options and options.UseKilometers) then return "km", "kilometers", 0.0009144 end
-  return "mi", "miles", 1 / 1760
+  if (options and options.UseKilometers) then return L["km"], L["kilometers"], 0.0009144 end
+  return L["mi"], L["miles"], 1 / 1760
 end
 
 function HF.GetGameVersion()
@@ -248,10 +249,9 @@ function HF.SecondsToTimeString(totalSeconds, shorten)
   if (printDays) then
     returnString = returnString .. days
     if (shorten) then
-      returnString = returnString .. "d "
+      returnString = returnString .. L["d "]
     else
-      returnString = returnString .. " day"
-      if (days ~= 1) then returnString = returnString .. "s" end
+      returnString = returnString .. " " .. (days == 1 and L["day"] or L["days"])
       returnString = returnString .. ", "
     end
   end
@@ -261,8 +261,7 @@ function HF.SecondsToTimeString(totalSeconds, shorten)
     if (shorten) then
       returnString = returnString .. "h "
     else
-      returnString = returnString .. " hour"
-      if (hours ~= 1) then returnString = returnString .. "s" end
+      returnString = returnString .. " " .. (hours == 1 and L["hour"] or L["hours"])
       returnString = returnString .. ", "
     end
   end
@@ -272,8 +271,7 @@ function HF.SecondsToTimeString(totalSeconds, shorten)
     if (shorten) then
       returnString = returnString .. "m "
     else
-      returnString = returnString .. " minute"
-      if (minutes ~= 1) then returnString = returnString .. "s" end
+      returnString = returnString .. " " .. (minutes == 1 and L["minute"] or L["minutes"])
       returnString = returnString .. ", "
     end
   end
@@ -285,8 +283,7 @@ function HF.SecondsToTimeString(totalSeconds, shorten)
       returnString = seconds .. "s"
     end
   else
-    returnString = returnString .. seconds .. " second"
-    if (seconds ~= 1) then returnString = returnString .. "s" end
+    returnString = returnString .. seconds .. " " .. (seconds == 1 and L["second"] or L["seconds"])
   end
   
   return returnString
@@ -307,5 +304,5 @@ function HF.TimestampToDateString(timestamp, excludeHoursAndSeconds)
     return date("%y-%m-%d", timestamp)
   end
 
-  return date("%m/%d/%y %H:%M:%S", timestamp)
+  return date(L["%m/%d/%y %H:%M:%S"], timestamp)
 end

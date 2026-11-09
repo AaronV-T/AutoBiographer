@@ -1,3 +1,4 @@
+local L = AutoBiographer_L
 local Controller = AutoBiographer_Controller
 local Api = AutoBiographer_Api
 local panel = AutoBiographer_GearPanel
@@ -9,9 +10,9 @@ local slotNames = {
 }
 
 local function GetItemDisplay(itemId)
-  if (not itemId or itemId == 0) then return "Empty slot", nil end
+  if (not itemId or itemId == 0) then return L["Empty slot"], nil end
   local name, link = Api.GetItemInfo(itemId)
-  return name or ("Item ID: " .. itemId), link
+  return name or (L["Item ID: "] .. itemId), link
 end
 
 function panel:HasFocusedTextInput()
@@ -26,14 +27,14 @@ function panel:Initialize()
   self.Description:SetPoint("TOPLEFT", 18, -37)
   self.Description:SetJustifyH("LEFT")
   self.Description:SetWordWrap(false)
-  self.Description:SetText("Newest first. Hover for item details; click an item to open its link.")
+  self.Description:SetText(L["Newest first. Hover for item details; click an item to open its link."])
 
   self.SearchBox = CreateFrame("EditBox", nil, self, "InputBoxTemplate")
   self.SearchBox:SetAutoFocus(false)
   self.SearchBox:SetMaxLetters(200)
   self.SearchHint = self.SearchBox:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
   self.SearchHint:SetPoint("LEFT", 2, 0)
-  self.SearchHint:SetText("Search items or slots...")
+  self.SearchHint:SetText(L["Search items or slots..."])
   self.SearchBox:SetScript("OnEscapePressed", function(box) box:ClearFocus() end)
   self.SearchBox:SetScript("OnEnterPressed", function(box) box:ClearFocus(); self:Update(true) end)
   self.SearchBox:SetScript("OnTextChanged", function(box)
@@ -53,7 +54,7 @@ function panel:Initialize()
   local background = self.Header:CreateTexture(nil, "BACKGROUND")
   background:SetAllPoints(self.Header)
   background:SetColorTexture(1, 1, 1, 0.06)
-  for i, label in ipairs({ "Date / time", "Equipment slot", "Change", "Item" }) do
+  for i, label in ipairs({ L["Date / time"], L["Equipment slot"], L["Change"], L["Item"] }) do
     local header = self.Header:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     header:SetText(label)
     header:SetJustifyH("LEFT")
@@ -79,11 +80,11 @@ function panel:Initialize()
   self.Footer:SetPoint("BOTTOMLEFT", 18, 16)
   self.Footer:SetJustifyH("LEFT")
   self.Footer:SetWordWrap(false)
-  self.Footer:SetText("Offline changes are dated when next observed. Transmog is not recorded.")
+  self.Footer:SetText(L["Offline changes are dated when next observed. Transmog is not recorded."])
   self.RefreshButton = CreateFrame("Button", nil, self, "UIPanelButtonTemplate")
   self.RefreshButton:SetSize(80, 24)
   self.RefreshButton:SetPoint("BOTTOMRIGHT", -22, 14)
-  self.RefreshButton:SetText("Refresh")
+  self.RefreshButton:SetText(L["Refresh"])
   self.RefreshButton:SetNormalFontObject("GameFontNormalSmall")
   self.RefreshButton:SetHighlightFontObject("GameFontHighlightSmall")
   self.RefreshButton:SetScript("OnClick", function() self:Update() end)
@@ -223,9 +224,9 @@ function panel:Update(resetScroll)
     end
     if (itemId and itemId > 0) then self.DisplayedItemIds[itemId] = true end
     local display = itemDisplay[itemId or 0]
-    local entry = { Date = date("%Y-%m-%d %H:%M:%S", change.Timestamp),
-      Slot = slotNames[change.SlotId] or ("Slot " .. change.SlotId),
-      Action = removed and "Unequipped" or "Equipped", DisplayItemId = itemId,
+    local entry = { Date = date(L["%Y-%m-%d %H:%M:%S"], change.Timestamp),
+      Slot = L[slotNames[change.SlotId] or ("Slot " .. change.SlotId)],
+      Action = removed and L["Unequipped"] or L["Equipped"], DisplayItemId = itemId,
       Name = display.Name, Link = display.Link }
     if (query == "" or string.find(string.lower(entry.Date .. " " .. entry.Slot .. " " .. entry.Action .. " " .. entry.Name .. " " .. (itemId or 0)), query, 1, true)) then
       entries[#entries + 1] = entry
@@ -234,9 +235,9 @@ function panel:Update(resetScroll)
   self.Rows = {}
   for i = #entries, 1, -1 do self.Rows[#self.Rows + 1] = entries[i] end
   if (resetScroll) then self.ScrollFrame.Scrollbar:SetValue(0) end
-  self.EmptyMessage:SetText(#changes == 0 and "No gear history recorded yet.\nEquipped items and future changes will appear here." or "No gear changes match your search.")
+  self.EmptyMessage:SetText(#changes == 0 and L["No gear history recorded yet.\nEquipped items and future changes will appear here."] or L["No gear changes match your search."])
   self.EmptyMessage:SetShown(#self.Rows == 0)
-  self.Count:SetText(#self.Rows .. " of " .. #changes .. " changes")
+  self.Count:SetText(L("%s of %s changes", #self.Rows, #changes))
   self:UpdateScrollRange()
 end
 

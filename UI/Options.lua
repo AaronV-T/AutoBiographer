@@ -1,33 +1,34 @@
+local L = AutoBiographer_L
 AutoBiographer_OptionWindow = CreateFrame("Frame", "AutoBiographer Options", UIParent)
 local Api = AutoBiographer_Api
 
 local optionGroups = {
-  { Title = "Display & Tooltips", Controls = {
-    { Name = "ShowMinimapButton", Text = "Show button on the minimap." },
-    { Name = "ShowWorldMapEventButton", Text = "Show the Event Window button on the world map." },
-    { Name = "UseKilometers", Text = "Show distances in kilometers instead of miles." },
-    { Name = "FriendlyPlayerTooltip", Text = "Show duel and grouped time info on friendly player tooltips." },
-    { Name = "KillCountTooltip", Text = "Show kill count on enemy tooltips." },
-    { Name = "DiscoveryTooltip", Text = "Show 'Added in Forever' on tooltips for Forever-specific items and creatures.", Availability = "Forever" },
+  { Title = L["Display & Tooltips"], Controls = {
+    { Name = "ShowMinimapButton", Text = L["Show button on the minimap."] },
+    { Name = "ShowWorldMapEventButton", Text = L["Show the Event Window button on the world map."] },
+    { Name = "UseKilometers", Text = L["Show distances in kilometers instead of miles."] },
+    { Name = "FriendlyPlayerTooltip", Text = L["Show duel and grouped time info on friendly player tooltips."] },
+    { Name = "KillCountTooltip", Text = L["Show kill count on enemy tooltips."] },
+    { Name = "DiscoveryTooltip", Text = L["Show 'Added in Forever' on tooltips for Forever-specific items and creatures."], Availability = "Forever" },
   } },
-  { Title = "Personal Messages", Controls = {
-    { Name = "ShowTimePlayedOnLevelUp", Text = "Show time played upon leveling up." },
-    { Name = "EnableMilestoneMessages", Text = "Show personal milestone messages (minor and major)." },
+  { Title = L["Personal Messages"], Controls = {
+    { Name = "ShowTimePlayedOnLevelUp", Text = L["Show time played upon leveling up."] },
+    { Name = "EnableMilestoneMessages", Text = L["Show personal milestone messages (minor and major)."] },
   } },
-  { Title = "Sharing", Controls = {
-    { Name = "ShareMilestonesInGuild", Text = "Automatically share major milestones in guild chat." },
-    { Name = "ShareMilestonesAsEmotes", Text = "Offer major milestones as emotes (click to send)." },
-    { Name = "RecommendCampfireMessages", Text = "Automatically open Campfire Tales when sitting at a campfire." },
-    { Name = "EnableCustomEventSharing", Text = "Allow guild members to share custom events with you." },
+  { Title = L["Sharing"], Controls = {
+    { Name = "ShareMilestonesInGuild", Text = L["Automatically share major milestones in guild chat."] },
+    { Name = "ShareMilestonesAsEmotes", Text = L["Offer major milestones as emotes (click to send)."] },
+    { Name = "RecommendCampfireMessages", Text = L["Automatically open Campfire Tales when sitting at a campfire."] },
+    { Name = "EnableCustomEventSharing", Text = L["Allow guild members to share custom events with you."] },
   } },
-  { Title = "Screenshots", Controls = {
-    { Name = "ScreenshotOnLevelUp", Text = "Take a screenshot on level up." },
-    { Name = "ScreenshotOnBossKill", Text = "Take a screenshot on boss kills." },
-    { Name = "ScreenshotOnlyOnFirstBossKill", Text = "Only the first time killing a particular boss.", Parent = "ScreenshotOnBossKill" },
-    { Name = "ScreenshotOnAchievementEarned", Text = "Take a screenshot on achievements earned.", Availability = "Achievements" },
+  { Title = L["Screenshots"], Controls = {
+    { Name = "ScreenshotOnLevelUp", Text = L["Take a screenshot on level up."] },
+    { Name = "ScreenshotOnBossKill", Text = L["Take a screenshot on boss kills."] },
+    { Name = "ScreenshotOnlyOnFirstBossKill", Text = L["Only the first time killing a particular boss."], Parent = "ScreenshotOnBossKill" },
+    { Name = "ScreenshotOnAchievementEarned", Text = L["Take a screenshot on achievements earned."], Availability = "Achievements" },
   } },
-  { Title = "Advanced & Debug", Controls = {
-    { Name = "EnableDebugLogging", Text = "Enable debug logging (this can negatively affect performance)." },
+  { Title = L["Advanced & Debug"], Controls = {
+    { Name = "EnableDebugLogging", Text = L["Enable debug logging (this can negatively affect performance)."] },
   }, DebugButton = true },
 }
 
@@ -42,7 +43,7 @@ end
 function AutoBiographer_OptionWindow:Initialize()
   self.Header = self:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
   self.Header:SetPoint("TOPLEFT", 16, -14)
-  self.Header:SetText("AutoBiographer Options")
+  self.Header:SetText(L["AutoBiographer Options"])
 
   self.ScrollFrame = CreateFrame("ScrollFrame", nil, self)
   self.ScrollFrame:SetPoint("TOPLEFT", 16, -46)
@@ -89,7 +90,7 @@ function AutoBiographer_OptionWindow:Initialize()
     if (definition.DebugButton) then
       self.DebugButton = CreateFrame("Button", nil, group, "UIPanelButtonTemplate")
       self.DebugButton:SetSize(100, 24)
-      self.DebugButton:SetText("Debug")
+      self.DebugButton:SetText(L["Debug"])
       self.DebugButton:SetNormalFontObject("GameFontNormalSmall")
       self.DebugButton:SetHighlightFontObject("GameFontHighlightSmall")
       self.DebugButton:SetScript("OnClick", function() AutoBiographer_DebugWindow:Toggle() end)

@@ -1,11 +1,12 @@
+local L = AutoBiographer_L
 local Controller = AutoBiographer_Controller
 local HF = HelperFunctions
 local noteLimit = Notes.MaxContentLength
 local rowHeight = 76
 local sortOrders = {
-  { Name = "Recently updated", Key = "Updated" },
-  { Name = "Recently created", Key = "Created" },
-  { Name = "Alphabetical", Key = "Alphabetical" },
+  { Name = L["Recently updated"], Key = "Updated" },
+  { Name = L["Recently created"], Key = "Created" },
+  { Name = L["Alphabetical"], Key = "Alphabetical" },
 }
 
 local function CountCharacters(text)
@@ -29,7 +30,7 @@ local function GetNoteTitle(content)
     local title = string.match(line, "^%s*(.-)%s*$")
     if (title ~= "") then return title end
   end
-  return "Untitled note"
+  return L["Untitled note"]
 end
 
 local function GetNotePreview(content)
@@ -73,8 +74,9 @@ function AutoBiographer_NotesWindow:DeleteNote()
   local target = self.SelectedNote
   if (not target) then return end
   local message = self.SelectedSubject and self.SelectedSubject.Type == "Player" and
-    "Delete this note and its ratings? This cannot be undone." or "Delete this note? This cannot be undone."
-  if (self:IsDirty()) then message = message .. " Unsaved edits will also be discarded." end
+    L["Delete this note and its ratings? This cannot be undone."] or L["Delete this note? This cannot be undone."]
+  message = L[message]
+  if (self:IsDirty()) then message = message .. L[" Unsaved edits will also be discarded."] end
   self:ShowPrompt("Delete", message .. "\n\n" .. GetNoteTitle(target.Content), function()
     Notes.Delete(Controller:GetNotes(), target)
     self.ReturnNote, self.ReturnSubject = nil, nil
@@ -115,7 +117,7 @@ function AutoBiographer_NotesWindow:Initialize()
   self.SearchBox:SetMaxLetters(200)
   self.SearchHint = self.SearchBox:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
   self.SearchHint:SetPoint("LEFT", 2, 0)
-  self.SearchHint:SetText("Search notes...")
+  self.SearchHint:SetText(L["Search notes..."])
   self.SearchBox:SetScript("OnEscapePressed", function(box) box:ClearFocus() end)
   self.SearchBox:SetScript("OnEnterPressed", function(box) box:ClearFocus(); self:Update(true) end)
   self.SearchBox:SetScript("OnTextChanged", function(box)
@@ -141,7 +143,7 @@ function AutoBiographer_NotesWindow:Initialize()
       UIDropDownMenu_AddButton(info)
     end
   end)
-  self.NewButton = CreateButton(self, "New Generic Note", 140, function() self:NewNote() end)
+  self.NewButton = CreateButton(self, L["New Generic Note"], 140, function() self:NewNote() end)
 
   self.ListPanel = CreateFrame("Frame", nil, self)
   self.ListPanel:SetPoint("TOPLEFT", 18, -60)
@@ -205,21 +207,21 @@ function AutoBiographer_NotesWindow:Initialize()
   self.EditorPlaceholder:SetPoint("CENTER")
   self.EditorPlaceholder:SetJustifyH("CENTER")
   self.EditorPlaceholder:SetWordWrap(true)
-  self.EditorPlaceholder:SetText("Select a note to read or edit it.\n\nUse the New Note buttons to start writing.")
+  self.EditorPlaceholder:SetText(L["Select a note to read or edit it.\n\nUse the New Note buttons to start writing."])
   self.DraftStatus = self.EditorPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
   self.DraftStatus:SetPoint("BOTTOMLEFT", 14, 50)
   self.CharacterCount = self.EditorPanel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
   self.CharacterCount:SetPoint("BOTTOMRIGHT", -14, 50)
-  self.SaveButton = CreateButton(self.EditorPanel, "Save", 80, function() self:SaveDraft() end)
+  self.SaveButton = CreateButton(self.EditorPanel, L["Save"], 80, function() self:SaveDraft() end)
   self.SaveButton:SetPoint("BOTTOMLEFT", 14, 14)
-  self.CancelButton = CreateButton(self.EditorPanel, "Cancel", 80, function() self:CancelEdit() end)
+  self.CancelButton = CreateButton(self.EditorPanel, L["Cancel"], 80, function() self:CancelEdit() end)
   self.CancelButton:SetPoint("LEFT", self.SaveButton, "RIGHT", 8, 0)
-  self.DeleteButton = CreateButton(self.EditorPanel, "Delete", 80, function() self:DeleteNote() end)
+  self.DeleteButton = CreateButton(self.EditorPanel, L["Delete"], 80, function() self:DeleteNote() end)
   self.DeleteButton:SetPoint("BOTTOMRIGHT", -14, 14)
   self.SaveButton:SetScript("OnEnter", function(button)
     GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
-    GameTooltip:SetText("Save note", 1, 0.82, 0)
-    GameTooltip:AddLine("Drafts survive closing this window, but not a reload or logout. Save to keep your changes.", 1, 1, 1, true)
+    GameTooltip:SetText(L["Save note"], 1, 0.82, 0)
+    GameTooltip:AddLine(L["Drafts survive closing this window, but not a reload or logout. Save to keep your changes."], 1, 1, 1, true)
     GameTooltip:Show()
   end)
   self.SaveButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -227,7 +229,7 @@ function AutoBiographer_NotesWindow:Initialize()
   self.Footer = self:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
   self.Footer:SetPoint("BOTTOMLEFT", 18, 20)
   self.Footer:SetJustifyH("LEFT")
-  self.ClearSearchButton = CreateButton(self, "Clear search", 96, function() self.SearchBox:SetText(""); self:Update(true) end)
+  self.ClearSearchButton = CreateButton(self, L["Clear search"], 96, function() self.SearchBox:SetText(""); self:Update(true) end)
   self.ClearSearchButton:SetPoint("BOTTOMRIGHT", -22, 14)
 
   self.DecisionPrompt = CreateFrame("Frame", nil, self, "BasicFrameTemplate")
@@ -237,27 +239,27 @@ function AutoBiographer_NotesWindow:Initialize()
   self.DecisionPrompt:EnableMouse(true)
   self.DecisionPrompt.Title = self.DecisionPrompt:CreateFontString(nil, "OVERLAY", "GameFontNormal")
   self.DecisionPrompt.Title:SetPoint("LEFT", self.DecisionPrompt.TitleBg, "LEFT", 8, 0)
-  self.DecisionPrompt.Title:SetText("AutoBiographer Notes")
+  self.DecisionPrompt.Title:SetText(L["AutoBiographer Notes"])
   self.DecisionPrompt.Message = self.DecisionPrompt:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   self.DecisionPrompt.Message:SetPoint("TOPLEFT", 24, -50)
   self.DecisionPrompt.Message:SetSize(382, 100)
   self.DecisionPrompt.Message:SetJustifyH("LEFT")
   self.DecisionPrompt.Message:SetJustifyV("TOP")
   self.DecisionPrompt.Message:SetWordWrap(true)
-  self.DecisionPrompt.Primary = CreateButton(self.DecisionPrompt, "Save", 110, function()
+  self.DecisionPrompt.Primary = CreateButton(self.DecisionPrompt, L["Save"], 110, function()
     local action = self.PendingAction
     if (self.PromptMode == "Unsaved" and not self:SaveDraft()) then return end
     self:ClosePrompt()
     if (action) then action() end
   end)
   self.DecisionPrompt.Primary:SetPoint("BOTTOMLEFT", 24, 22)
-  self.DecisionPrompt.Discard = CreateButton(self.DecisionPrompt, "Discard", 110, function()
+  self.DecisionPrompt.Discard = CreateButton(self.DecisionPrompt, L["Discard"], 110, function()
     local action = self.PendingAction
     self:ClosePrompt()
     if (action) then action() end
   end)
   self.DecisionPrompt.Discard:SetPoint("BOTTOM", 0, 22)
-  self.DecisionPrompt.Cancel = CreateButton(self.DecisionPrompt, "Cancel", 110, function() self:ClosePrompt() end)
+  self.DecisionPrompt.Cancel = CreateButton(self.DecisionPrompt, L["Cancel"], 110, function() self:ClosePrompt() end)
   self.DecisionPrompt.Cancel:SetPoint("BOTTOMRIGHT", -24, 22)
   self.DecisionPrompt:SetScript("OnHide", function() self.PendingAction, self.PromptMode = nil, nil end)
   self.DecisionPrompt:Hide()
@@ -334,7 +336,7 @@ function AutoBiographer_NotesWindow:NewNote()
     if (self.SubjectPicker) then self.SubjectPicker:Hide() end
     if (self.SelectedNote) then self.ReturnNote, self.ReturnSubject = self.SelectedNote, self.SelectedSubject end
     self.SubjectFilter = "General"
-    UIDropDownMenu_SetText(self.SubjectDropdown, "General")
+    UIDropDownMenu_SetText(self.SubjectDropdown, L["General"])
     self.SearchBox:SetText("")
     self:LoadNote(nil, true)
     self:Update(true)
@@ -394,7 +396,7 @@ end
 
 function AutoBiographer_NotesWindow:RequestLeaveDraft(action)
   if (self.DecisionPrompt:IsShown()) then return end
-  if (self:IsDirty()) then self:ShowPrompt("Unsaved", "Save your changes before continuing?", action)
+  if (self:IsDirty()) then self:ShowPrompt("Unsaved", L["Save your changes before continuing?"], action)
   else action() end
 end
 
@@ -447,7 +449,7 @@ function AutoBiographer_NotesWindow:ShowPrompt(mode, message, action)
   if (self.DecisionPrompt:IsShown()) then return end
   self.PromptMode, self.PendingAction = mode, action
   self.DecisionPrompt.Message:SetText(message)
-  self.DecisionPrompt.Primary:SetText(mode == "Unsaved" and "Save" or "Delete")
+  self.DecisionPrompt.Primary:SetText(mode == "Unsaved" and L["Save"] or L["Delete"])
   self.DecisionPrompt.Primary:SetEnabled(mode ~= "Unsaved" or self:CanSaveDraft())
   self.DecisionPrompt.Discard:SetShown(mode == "Unsaved")
   self.EditorScroll.EditBox:ClearFocus()
@@ -465,11 +467,11 @@ function AutoBiographer_NotesWindow:Update(resetScroll)
     local title = entry.Subject and AutoBiographer_SubjectNotes:GetSubjectTitle(entry.Subject) or GetNoteTitle(content)
     if ((self.SubjectFilter == "All" or self.SubjectFilter == entry.Type) and
       (search == "" or string.find(string.lower(title .. " " .. content), search, 1, true))) then
-      entry.Title = entry.Subject and (entry.Type .. ": " .. title) or title
+      entry.Title = entry.Subject and (L[entry.Type] .. ": " .. title) or title
       entry.Preview = entry.Subject and Notes.GetPreview(note, 20) or GetNotePreview(content)
       if (entry.Type == "Player" and (note.BehaviorRating or note.SkillRating)) then
-        entry.Preview = "Behavior: " .. AutoBiographer_SubjectNotes:GetRatingText(note.BehaviorRating) ..
-          " | Skill: " .. AutoBiographer_SubjectNotes:GetRatingText(note.SkillRating) .. "\n" .. entry.Preview
+        entry.Preview = L["Behavior: "] .. AutoBiographer_SubjectNotes:GetRatingText(note.BehaviorRating) ..
+          L[" | Skill: "] .. AutoBiographer_SubjectNotes:GetRatingText(note.SkillRating) .. "\n" .. entry.Preview
       end
       table.insert(entries, entry)
     end
@@ -497,8 +499,8 @@ function AutoBiographer_NotesWindow:Update(resetScroll)
   self:RenderNoteRows()
   self:UpdateEditorState()
   self.EmptyListMessage:SetShown(#entries == 0)
-  self.EmptyListMessage:SetText(#notes == 0 and "Create your first note\nwith the New Note buttons." or "No notes match\nyour search.")
-  self.Footer:SetText(HF.CommaValue(#entries) .. " of " .. HF.CommaValue(#notes) .. " notes")
+  self.EmptyListMessage:SetText(#notes == 0 and L["Create your first note\nwith the New Note buttons."] or L["No notes match\nyour search."])
+  self.Footer:SetText(L(L["%s of %s notes"], HF.CommaValue(#entries), HF.CommaValue(#notes)))
   for _, order in ipairs(sortOrders) do
     if (order.Key == self.SortOrder) then UIDropDownMenu_SetText(self.SortDropdown, order.Name); break end
   end
@@ -510,18 +512,18 @@ function AutoBiographer_NotesWindow:UpdateEditorState()
   self.EditorScroll:SetShown(active)
   self.EditorPlaceholder:SetShown(not active)
   local subject = self.SelectedSubject
-  self.NoteTitle:SetText(active and (subject and (subject.Type .. ": " .. AutoBiographer_SubjectNotes:GetSubjectTitle(subject)) or
-    (self.IsNewDraft and self.DraftText == "" and "New note" or GetNoteTitle(self.DraftText))) or "Notes")
+  self.NoteTitle:SetText(active and (subject and (L[subject.Type] .. ": " .. AutoBiographer_SubjectNotes:GetSubjectTitle(subject)) or
+    (self.IsNewDraft and self.DraftText == "" and L["New note"] or GetNoteTitle(self.DraftText))) or L["Notes"])
   local isPlayer = active and subject ~= nil and subject.Type == "Player"
   self.RatingsPanel:SetShown(isPlayer)
   AutoBiographer_SubjectNotes:UpdateRatings(self)
   self.EditorScroll:SetPoint("TOPLEFT", 14, isPlayer and -154 or -94)
-  self.CreatedLabel:SetText(self.SelectedNote and "Created: " .. HF.TimestampToDateString(self.SelectedNote.CreatedTimestamp) or active and "New note — not saved" or "")
-  self.UpdatedLabel:SetText(self.SelectedNote and "Updated: " .. HF.TimestampToDateString(self.SelectedNote.LastUpdatedTimestamp) or "")
+  self.CreatedLabel:SetText(self.SelectedNote and L["Created: "] .. HF.TimestampToDateString(self.SelectedNote.CreatedTimestamp) or active and L["New note — not saved"] or "")
+  self.UpdatedLabel:SetText(self.SelectedNote and L["Updated: "] .. HF.TimestampToDateString(self.SelectedNote.LastUpdatedTimestamp) or "")
   local count = CountCharacters(self.DraftText)
   self.CharacterCount:SetText(active and count .. " / " .. noteLimit or "")
   self.CharacterCount:SetTextColor(count > noteLimit and 1 or 0.8, count > noteLimit and 0.2 or 0.8, count > noteLimit and 0.2 or 0.8)
-  self.DraftStatus:SetText(not active and "" or count > noteLimit and "Over character limit" or dirty and "Unsaved changes" or self.IsNewDraft and "New draft" or "Saved")
+  self.DraftStatus:SetText(not active and "" or count > noteLimit and L["Over character limit"] or dirty and L["Unsaved changes"] or self.IsNewDraft and L["New draft"] or L["Saved"])
   self.SaveButton:SetEnabled(self:CanSaveDraft())
   self.CancelButton:SetEnabled(active and (dirty or self.IsNewDraft))
   self.DeleteButton:SetEnabled(self.SelectedNote ~= nil)

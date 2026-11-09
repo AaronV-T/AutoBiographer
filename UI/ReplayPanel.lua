@@ -1,3 +1,4 @@
+local L = AutoBiographer_L
 local Controller = AutoBiographer_Controller
 local Api = AutoBiographer_Api
 local panel = AutoBiographer_ReplayPanel
@@ -29,9 +30,9 @@ end
 function panel:Initialize()
   self.Index, self.Speed, self.MapMode, self.Elapsed = 0, 2, "Event zone", 0
   self.Tiles, self.ExplorationTiles, self.Pins, self.VisiblePins, self.AnimatingPins = {}, {}, {}, {}, {}
-  self.PlayButton = Button(self, "Play", 70, function() self:SetPlaying(not self.Playing) end)
+  self.PlayButton = Button(self, L["Play"], 70, function() self:SetPlaying(not self.Playing) end)
   self.PlayButton:SetPoint("TOPLEFT", 18, -5)
-  self.RestartButton = Button(self, "Restart", 70, function()
+  self.RestartButton = Button(self, L["Restart"], 70, function()
     self:SetPlaying(false)
     self:Seek(self:GetStartingEventIndex(), true)
   end)
@@ -44,11 +45,11 @@ function panel:Initialize()
   self.SpeedDropdown = CreateFrame("Frame", nil, self, "UIDropDownMenuTemplate")
   self.SpeedDropdown:SetPoint("TOPLEFT", 214, -4)
   UIDropDownMenu_SetWidth(self.SpeedDropdown, 120)
-  UIDropDownMenu_SetText(self.SpeedDropdown, "2 events / second")
+  UIDropDownMenu_SetText(self.SpeedDropdown, L("%s events / second", 2))
   UIDropDownMenu_Initialize(self.SpeedDropdown, function()
     for _, speed in ipairs(speeds) do
       local info = UIDropDownMenu_CreateInfo()
-      info.text, info.checked = speed .. " events / second", self.Speed == speed
+      info.text, info.checked = L("%s events / second", speed), self.Speed == speed
       info.func = function() self.Speed = speed; UIDropDownMenu_SetText(self.SpeedDropdown, info.text) end
       UIDropDownMenu_AddButton(info)
     end
@@ -56,13 +57,13 @@ function panel:Initialize()
   self.MapDropdown = CreateFrame("Frame", nil, self, "UIDropDownMenuTemplate")
   self.MapDropdown:SetPoint("TOPLEFT", 360, -4)
   UIDropDownMenu_SetWidth(self.MapDropdown, 120)
-  UIDropDownMenu_SetText(self.MapDropdown, self.MapMode)
+  UIDropDownMenu_SetText(self.MapDropdown, L[self.MapMode])
   UIDropDownMenu_Initialize(self.MapDropdown, function()
     for _, mode in ipairs(mapModes) do
       local info = UIDropDownMenu_CreateInfo()
-      info.text, info.checked = mode, self.MapMode == mode
+      info.text, info.checked = L[mode], self.MapMode == mode
       info.func = function()
-        self.MapMode = mode; UIDropDownMenu_SetText(self.MapDropdown, mode)
+        self.MapMode = mode; UIDropDownMenu_SetText(self.MapDropdown, L[mode])
         self:Seek(self.Index, true)
       end
       UIDropDownMenu_AddButton(info)
@@ -72,7 +73,7 @@ function panel:Initialize()
   self.FilterDropdown:SetPoint("TOPLEFT", 506, -4)
   UIDropDownMenu_SetWidth(self.FilterDropdown, AutioBiographer_WindowHelper.FilterDropdownWidth)
   AutoBiographer_EventFilters:InitializeDropdown(self.FilterDropdown, function() self:Update() end)
-  self.RefreshButton = Button(self, "Refresh", 80, function() self:Update() end)
+  self.RefreshButton = Button(self, L["Refresh"], 80, function() self:Update() end)
   self.RefreshButton:SetPoint("TOPRIGHT", -22, -5)
 
   self.MapTitle = Label(self, "GameFontNormal")
@@ -85,9 +86,9 @@ function panel:Initialize()
   self.MapBackground:SetColorTexture(0.08, 0.07, 0.06, 0.7)
   self.MapMessage = Label(self.MapArea)
   self.MapMessage:SetPoint("CENTER")
-  self.MapMessage:SetText("Play your recorded events to begin.")
+  self.MapMessage:SetText(L["Play your recorded events to begin."])
   self.MapHint = Label(self)
-  self.MapHint:SetText("Hover over a pin for its event.")
+  self.MapHint:SetText(L["Hover over a pin for its event."])
   self.MapHint:SetTextColor(0.6, 0.6, 0.6)
 
   self.PreviewHost = CreateFrame("Frame", nil, self)
@@ -193,7 +194,7 @@ function panel:ApplyEquipment()
     Api.ApplyCharacterPreviewWeapons(model, self.Equipment, self.Enchants)
   end)
   self.ApplyingEquipment = false
-  if (not success) then self.PreviewMessage:SetText("Equipment preview unavailable on this client.") end
+  if (not success) then self.PreviewMessage:SetText(L["Equipment preview unavailable on this client."]) end
 end
 
 function panel:GetDisplayMap(coordinates)
@@ -318,25 +319,25 @@ function panel:Seek(index, rebuild)
     incremental = false
   end
   local mapInfo = mapId and C_Map and C_Map.GetMapInfo and C_Map.GetMapInfo(mapId)
-  self.MapTitle:SetText(mapInfo and mapInfo.name or "Your journey")
+  self.MapTitle:SetText(mapInfo and mapInfo.name or L["Your journey"])
   self:LayoutMapHeading()
   local name, lastName = AutoBiographer_Api.GetUnitName("player")
-  name = (name or AutoBiographer_EventManager.PlayerName or "Adventurer") .. (lastName and (" " .. lastName) or "")
-  self.PreviewTitle:SetText(name .. (entry and (" | Level " .. (entry.Level or "unknown")) or ""))
+  name = (name or AutoBiographer_EventManager.PlayerName or L["Adventurer"]) .. (lastName and (" " .. lastName) or "")
+  self.PreviewTitle:SetText(name .. (entry and (L[" | Level "] .. (entry.Level or L["unknown"])) or ""))
   if (incremental) then self:AddPin(entry, true) else self:RebuildPins() end
-  self.Progress:SetText("Event " .. index .. " / " .. #self.Replay.Events ..
-    (entry and "  |  " .. date("%Y-%m-%d %H:%M:%S", entry.Event.Timestamp) or ""))
+  self.Progress:SetText(L["Event "] .. index .. " / " .. #self.Replay.Events ..
+    (entry and "  |  " .. date(L["%Y-%m-%d %H:%M:%S"], entry.Event.Timestamp) or ""))
   self.Description:SetText(entry and Controller:GetEventString(entry.Event, true) ..
-    (not entry.Coordinates and "\n|cff888888Location not recorded.|r" or "") or
-    (#self.Replay.Events == 0 and (#Controller:GetEvents() == 0 and "No events have been recorded yet." or "No events match the selected filters.") or
-    "Press Play to relive your journey, or drag the timeline to an event."))
+    (not entry.Coordinates and L["\n|cff888888Location not recorded.|r"] or "") or
+    (#self.Replay.Events == 0 and (#Controller:GetEvents() == 0 and L["No events have been recorded yet."] or L["No events match the selected filters."]) or
+    L["Press Play to relive your journey, or drag the timeline to an event."]))
   self.PreviousButton:SetEnabled(index > 0)
   self.NextButton:SetEnabled(index < #self.Replay.Events)
   self.PlayButton:SetEnabled(#self.Replay.Events > 0)
   if (entry) then self:UpdateEquipment(entry.Event.Timestamp) else
     self.Equipment = nil
     if (self.Preview) then self.Preview:Hide() end
-    self.PreviewMessage:SetText("Gear will follow the event timeline.")
+    self.PreviewMessage:SetText(L["Gear will follow the event timeline."])
   end
   if (self.Playing and index >= #self.Replay.Events) then self:SetPlaying(false) end
 end
@@ -344,7 +345,7 @@ end
 function panel:SetPlaying(playing)
   self.Playing = playing and self.Replay ~= nil and #self.Replay.Events > 0
   self.Elapsed = 0
-  self.PlayButton:SetText(self.Playing and "Pause" or "Play")
+  self.PlayButton:SetText(self.Playing and L["Pause"] or L["Play"])
   if (self.Playing and self.Index >= #self.Replay.Events) then self:Seek(0) end
 end
 
@@ -395,11 +396,11 @@ function panel:UpdateEquipment(timestamp)
   local complete, changed
   self.Equipment, self.Enchants, complete, changed = self.Replay:GetEquipmentAt(timestamp)
   local hasGear = next(self.Equipment) ~= nil
-  self.PreviewMessage:SetText(not hasGear and "No equipment was recorded at this time." or
-    (complete and "Recorded gear on your current appearance.\nTransmog is not recorded." or
-    "Gear log only; unrecorded slots are unknown.\nTransmog is not recorded."))
+  self.PreviewMessage:SetText(not hasGear and L["No equipment was recorded at this time."] or
+    (complete and L["Recorded gear on your current appearance.\nTransmog is not recorded."] or
+    L["Gear log only; unrecorded slots are unknown.\nTransmog is not recorded."]))
   local model = self.Preview
-  if (not model) then self.PreviewMessage:SetText("Character preview unavailable on this client."); return end
+  if (not model) then self.PreviewMessage:SetText(L["Character preview unavailable on this client."]); return end
   if (not hasGear) then model:Hide(); return end
   if (not self.ModelReady) then
     ConfigureModel(model, "SetAutoDress", false)
@@ -410,7 +411,7 @@ function panel:UpdateEquipment(timestamp)
     ConfigureModel(model, "RefreshCamera")
     ConfigureModel(model, "SetFacing", 0.35)
   end
-  if (not self.ModelReady) then model:Hide(); self.PreviewMessage:SetText("Character preview unavailable on this client."); return end
+  if (not self.ModelReady) then model:Hide(); self.PreviewMessage:SetText(L["Character preview unavailable on this client."]); return end
   model:Show()
   if (changed or wasEmpty) then self:ApplyEquipment() end
 end

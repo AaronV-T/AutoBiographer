@@ -1,3 +1,4 @@
+local L = AutoBiographer_L
 local Hbd = LibStub("HereBeDragons-2.0")
 local HbdPins = LibStub("HereBeDragons-Pins-2.0")
 local Api = AutoBiographer_Api
@@ -51,7 +52,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
 
   frame.Title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight");
   frame.Title:SetPoint("LEFT", frame.TitleBg, "LEFT", 5, 0);
-  frame.Title:SetText("AutoBiographer Map Events")
+  frame.Title:SetText(L["AutoBiographer Map Events"])
 
   frame.Toggle = function(self)
     if (self:IsVisible()) then
@@ -71,7 +72,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
     GameTooltip_SetDefaultAnchor(GameTooltip, UIParent)
     GameTooltip:ClearAllPoints();
     GameTooltip:SetPoint("TOPRIGHT", frame.BossKillIcon, "BOTTOMRIGHT", 0, 0)
-    GameTooltip:SetText("Boss Kill")
+    GameTooltip:SetText(L["Boss Kill"])
     GameTooltip:Show()
   end)
   frame.BossKillIcon:SetScript("OnLeave", function(self, button)
@@ -93,7 +94,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
     GameTooltip_SetDefaultAnchor(GameTooltip, UIParent)
     GameTooltip:ClearAllPoints();
     GameTooltip:SetPoint("TOPRIGHT", frame.CustomIcon, "BOTTOMRIGHT", 0, 0)
-    GameTooltip:SetText("Custom")
+    GameTooltip:SetText(L["Custom"])
     GameTooltip:Show()
   end)
   frame.CustomIcon:SetScript("OnLeave", function(self, button)
@@ -115,7 +116,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
     GameTooltip_SetDefaultAnchor(GameTooltip, UIParent)
     GameTooltip:ClearAllPoints();
     GameTooltip:SetPoint("TOPRIGHT", frame.FirstAcquiredItemIcon, "BOTTOMRIGHT", 0, 0)
-    GameTooltip:SetText("First Acquired Item")
+    GameTooltip:SetText(L["First Acquired Item"])
     GameTooltip:Show()
   end)
   frame.FirstAcquiredItemIcon:SetScript("OnLeave", function(self, button)
@@ -137,7 +138,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
     GameTooltip_SetDefaultAnchor(GameTooltip, UIParent)
     GameTooltip:ClearAllPoints()
     GameTooltip:SetPoint("TOPRIGHT", frame.FirstEquippedItemIcon, "BOTTOMRIGHT", 0, 0)
-    GameTooltip:SetText("First Equipped Item")
+    GameTooltip:SetText(L["First Equipped Item"])
     GameTooltip:Show()
   end)
   frame.FirstEquippedItemIcon:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -157,7 +158,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
     GameTooltip_SetDefaultAnchor(GameTooltip, UIParent)
     GameTooltip:ClearAllPoints();
     GameTooltip:SetPoint("TOPRIGHT", frame.FirstKillIcon, "BOTTOMRIGHT", 0, 0)
-    GameTooltip:SetText("First Kill")
+    GameTooltip:SetText(L["First Kill"])
     GameTooltip:Show()
   end)
   frame.FirstKillIcon:SetScript("OnLeave", function(self, button)
@@ -179,7 +180,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
     GameTooltip_SetDefaultAnchor(GameTooltip, UIParent)
     GameTooltip:ClearAllPoints();
     GameTooltip:SetPoint("TOPRIGHT", frame.LevelUpIcon, "BOTTOMRIGHT", 0, 0)
-    GameTooltip:SetText("Level Up")
+    GameTooltip:SetText(L["Level Up"])
     GameTooltip:Show()
   end)
   frame.LevelUpIcon:SetScript("OnLeave", function(self, button)
@@ -201,7 +202,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
     GameTooltip_SetDefaultAnchor(GameTooltip, UIParent)
     GameTooltip:ClearAllPoints();
     GameTooltip:SetPoint("TOPRIGHT", frame.PlayerDeathIcon, "BOTTOMRIGHT", 0, 0)
-    GameTooltip:SetText("Player Death")
+    GameTooltip:SetText(L["Player Death"])
     GameTooltip:Show()
   end)
   frame.PlayerDeathIcon:SetScript("OnLeave", function(self, button)
@@ -223,7 +224,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
     GameTooltip_SetDefaultAnchor(GameTooltip, UIParent)
     GameTooltip:ClearAllPoints();
     GameTooltip:SetPoint("TOPRIGHT", frame.QuestTurnInIcon, "BOTTOMRIGHT", 0, 0)
-    GameTooltip:SetText("Quest Turn In")
+    GameTooltip:SetText(L["Quest Turn In"])
     GameTooltip:Show()
   end)
   frame.QuestTurnInIcon:SetScript("OnLeave", function(self, button)
@@ -245,7 +246,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
     GameTooltip_SetDefaultAnchor(GameTooltip, UIParent)
     GameTooltip:ClearAllPoints();
     GameTooltip:SetPoint("TOPRIGHT", frame.ReputationLevelChangedIcon, "BOTTOMRIGHT", 0, 0)
-    GameTooltip:SetText("Reputation Level Changed")
+    GameTooltip:SetText(L["Reputation Level Changed"])
     GameTooltip:Show()
   end)
   frame.ReputationLevelChangedIcon:SetScript("OnLeave", function(self, button)
@@ -267,7 +268,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
     GameTooltip_SetDefaultAnchor(GameTooltip, UIParent)
     GameTooltip:ClearAllPoints();
     GameTooltip:SetPoint("TOPRIGHT", frame.SkillMilestoneIcon, "BOTTOMRIGHT", 0, 0)
-    GameTooltip:SetText("Skill Milestone")
+    GameTooltip:SetText(L["Skill Milestone"])
     GameTooltip:Show()
   end)
   frame.SkillMilestoneIcon:SetScript("OnLeave", function(self, button)
@@ -289,7 +290,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
     GameTooltip_SetDefaultAnchor(GameTooltip, UIParent)
     GameTooltip:ClearAllPoints();
     GameTooltip:SetPoint("TOPRIGHT", frame.SpellLearnedIcon, "BOTTOMRIGHT", 0, 0)
-    GameTooltip:SetText("Spell Learned")
+    GameTooltip:SetText(L["Spell Learned"])
     GameTooltip:Show()
   end)
   frame.SpellLearnedIcon:SetScript("OnLeave", function(self, button)
@@ -311,7 +312,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
     GameTooltip_SetDefaultAnchor(GameTooltip, UIParent)
     GameTooltip:ClearAllPoints();
     GameTooltip:SetPoint("TOPRIGHT", frame.ZoneFirstVisitIcon, "BOTTOMRIGHT", 0, 0)
-    GameTooltip:SetText("Zone or Subzone First Visited")
+    GameTooltip:SetText(L["Zone or Subzone First Visited"])
     GameTooltip:Show()
   end)
   frame.ZoneFirstVisitIcon:SetScript("OnLeave", function(self, button)
@@ -334,7 +335,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
     GameTooltip_SetDefaultAnchor(GameTooltip, UIParent)
     GameTooltip:ClearAllPoints()
     GameTooltip:SetPoint("TOPRIGHT", frame.StatisticMilestoneIcon, "BOTTOMRIGHT", 0, 0)
-    GameTooltip:SetText("Statistic Milestone")
+    GameTooltip:SetText(L["Statistic Milestone"])
     GameTooltip:Show()
   end)
   frame.StatisticMilestoneIcon:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -359,7 +360,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
 
   frame.ShowAnimationFs = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
   frame.ShowAnimationFs:SetPoint("LEFT", frame.ShowAnimationCb, "RIGHT", 2, 0)
-  frame.ShowAnimationFs:SetText("Animation")
+  frame.ShowAnimationFs:SetText(L["Animation"])
 
 	frame.ShowCircleCb = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
   frame.ShowCircleCb:SetPoint("BOTTOM", frame.ShowAnimationCb, "TOP", 0, -10)
@@ -374,7 +375,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
 
   frame.ShowCircleFs = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
   frame.ShowCircleFs:SetPoint("LEFT", frame.ShowCircleCb, "RIGHT", 2, 0)
-  frame.ShowCircleFs:SetText("Circle")
+  frame.ShowCircleFs:SetText(L["Circle"])
 
 	frame.FollowExpansionsCb = CreateFrame("CheckButton", nil, frame, "UICheckButtonTemplate")
   frame.FollowExpansionsCb:SetPoint("LEFT", frame.ShowCircleCb, 90, 0)
@@ -385,7 +386,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
 
   frame.FollowExpansionsFs = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
   frame.FollowExpansionsFs:SetPoint("LEFT", frame.FollowExpansionsCb, "RIGHT", 2, 0)
-  frame.FollowExpansionsFs:SetText("Follow")
+  frame.FollowExpansionsFs:SetText(L["Follow"])
 
   frame.EventsPerSecondEb = CreateFrame("EditBox", nil, frame, BackdropTemplateMixin and "BackdropTemplate");
   frame.EventsPerSecondEb:SetSize(30, 20)
@@ -406,7 +407,7 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
 
   frame.EventsPerSecondFs = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
   frame.EventsPerSecondFs:SetPoint("LEFT", frame.EventsPerSecondEb, "RIGHT", 2, 0)
-  frame.EventsPerSecondFs:SetText("Events/Sec")
+  frame.EventsPerSecondFs:SetText(L["Events/Sec"])
 
   frame.StartingLevelEb = CreateFrame("EditBox", nil, frame, BackdropTemplateMixin and "BackdropTemplate");
   frame.StartingLevelEb:SetSize(30, 20)
@@ -427,20 +428,20 @@ function AutoBiographer_WorldMapOverlayWindow_Initialize()
 
   frame.StartingLevelFs = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
   frame.StartingLevelFs:SetPoint("LEFT", frame.StartingLevelEb, "RIGHT", 2, 0)
-  frame.StartingLevelFs:SetText("Start Level")
+  frame.StartingLevelFs:SetText(L["Start Level"])
 
   frame.LevelFs = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   frame.LevelFs:SetPoint("TOPRIGHT", -5, -40)
-  frame.LevelFs:SetText("Level: N/A")
+  frame.LevelFs:SetText(L["Level: N/A"])
 
   frame.ProgressFs = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   frame.ProgressFs:SetPoint("TOPRIGHT", frame.LevelFs, "BOTTOMRIGHT", 0, 0)
-  frame.ProgressFs:SetText("N/A")
+  frame.ProgressFs:SetText(L["N/A"])
 
   frame.EventsBtn = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate");
   frame.EventsBtn:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -5, 5);
   frame.EventsBtn:SetSize(140, 40);
-  frame.EventsBtn:SetText("Show Events");
+  frame.EventsBtn:SetText(L["Show Events"]);
   frame.EventsBtn:SetNormalFontObject("GameFontNormalLarge");
   frame.EventsBtn:SetHighlightFontObject("GameFontHighlightLarge");
   frame.EventsBtn:SetScript("OnClick", 
@@ -464,9 +465,9 @@ function AutoBiographer_WorldMapOverlayWindow_HideEvents()
   end
 
   AutoBiographer_WorldMapOverlayWindow.EventsAreShown = false
-  AutoBiographer_WorldMapOverlayWindow.EventsBtn:SetText("Show Events")
-  AutoBiographer_WorldMapOverlayWindow.LevelFs:SetText("Level: N/A")
-  AutoBiographer_WorldMapOverlayWindow.ProgressFs:SetText("N/A")
+  AutoBiographer_WorldMapOverlayWindow.EventsBtn:SetText(L["Show Events"])
+  AutoBiographer_WorldMapOverlayWindow.LevelFs:SetText(L["Level: N/A"])
+  AutoBiographer_WorldMapOverlayWindow.ProgressFs:SetText(L["N/A"])
   AutoBiographer_WorldMapOverlayWindow_SetOptionsEnabled(true)
 
   HbdPins:RemoveAllWorldMapIcons(AutoBiographer_WorldMapOverlayWindow)
@@ -492,8 +493,8 @@ function AutoBiographer_WorldMapOverlayWindow_ShowEvents()
   end
 
   AutoBiographer_WorldMapOverlayWindow.EventsAreShown = true
-  AutoBiographer_WorldMapOverlayWindow.EventsBtn:SetText("Hide Events")
-  AutoBiographer_WorldMapOverlayWindow.LevelFs:SetText("Level: ?")
+  AutoBiographer_WorldMapOverlayWindow.EventsBtn:SetText(L["Hide Events"])
+  AutoBiographer_WorldMapOverlayWindow.LevelFs:SetText(L["Level: ?"])
   AutoBiographer_WorldMapOverlayWindow_SetOptionsEnabled(false)
 
   local maxEventsPerSecond = 300
@@ -574,7 +575,7 @@ function AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex, firstIndex, 
     extraSpaces = ""
     if (event.LevelNum < 10) then extraSpaces = "  " end
 		currentEventsLevel = event.LevelNum
-    AutoBiographer_WorldMapOverlayWindow.LevelFs:SetText("Level: " .. extraSpaces .. event.LevelNum)
+    AutoBiographer_WorldMapOverlayWindow.LevelFs:SetText(L["Level: "] .. extraSpaces .. event.LevelNum)
   end
 
   local mapCoordinates = Event.GetMapCoordinates(event)
@@ -684,7 +685,7 @@ function AutoBiographer_WorldMapOverlayWindow_ShowEvent(eventIndex, firstIndex, 
     GameTooltip:SetPoint("TOPRIGHT", icon, "BOTTOMRIGHT", 0, 0)
 
     if (#tooltipLines == 1) then
-      GameTooltip:SetText("1 Event")
+      GameTooltip:SetText(L["1 Event"])
     else
       GameTooltip:SetText(#tooltipLines .. " Events")
     end
@@ -805,7 +806,7 @@ function AutoBiographer_WorldMapOverlayWindowToggleButton_Initialize()
   local frame = AutoBiographer_WorldMapOverlayWindowToggleButton
   frame:SetPoint("TOPRIGHT", WorldMapFrame.ScrollContainer, "TOPRIGHT", 0, 2);
   frame:SetSize(120, 20);
-  frame:SetText("Event Window");
+  frame:SetText(L["Event Window"]);
   frame:SetNormalFontObject("GameFontNormal");
   frame:SetHighlightFontObject("GameFontHighlight");
   frame:SetFrameLevel(10)

@@ -1,3 +1,4 @@
+local L = AutoBiographer_L
 -- Thresholds and announcements live here; statistics remain the source of truth.
 AutoBiographer_Milestones = { Started = false }
 local Milestones = AutoBiographer_Milestones
@@ -102,7 +103,7 @@ end
 
 function Milestones:AddTimedDefinition(key, group, label, getTotal, ruleKey)
   self:AddDefinition(key, group, function(amount)
-    return "spent " .. Count(amount / 3600) .. " hours " .. label
+    return L("spent %s hours %s", Count(amount / 3600), L[label])
   end, getTotal, ruleKey)
 end
 
@@ -134,7 +135,7 @@ function Milestones:Check(key)
   local options = AutoBiographer_Settings.Options
   if (options.EnableMilestoneMessages and (major or minor)) then
     local amount = math.max(major or 0, minor or 0)
-    print("\124cFFFFD700[AutoBiographer] You have " .. definition.Phrase(amount) .. "!\124r")
+    print("\124cFFFFD700[AutoBiographer] " .. L("You have %s!", definition.Phrase(amount)) .. "\124r")
   end
   if (major and rule.Shareable) then
     if (options.ShareMilestonesInGuild or options.ShareMilestonesAsEmotes or not options.MilestoneSharingPrompted) then
@@ -147,11 +148,11 @@ function Milestones:CreateDefinitions()
   local controller, enum = AutoBiographer_Controller, AutoBiographerEnum
   local function MaxLevel() return controller:GetCurrentLevelNum() end
   local function Add(key, group, template, getter)
-    self:AddDefinition(key, group, function(amount) return string.format(template, Count(amount)) end, getter)
+    self:AddDefinition(key, group, function(amount) return string.format(L[template], Count(amount)) end, getter)
   end
   local function AddDistance(key, template, getter)
     self:AddDefinition(key, "Distance", function(amount)
-      return string.format(template, HelperFunctions.FormatDistance(amount, true))
+      return string.format(L[template], HelperFunctions.FormatDistance(amount, true))
     end, getter)
   end
   Add("BattlegroundsWon", "Battlegrounds", "won %s battlegrounds", function()
@@ -236,7 +237,7 @@ function Milestones:CreateDefinitions()
     return Sum(controller:GetAggregatedMessageStatistics(1, MaxLevel()))
   end)
   self:AddDefinition("MoneyGained", "Money", function(amount)
-    return "gained " .. Count(amount / 10000) .. " gold"
+    return L("gained %s gold", Count(amount / 10000))
   end, function() return controller:GetTotalMoneyGained(1, MaxLevel()) end)
   Add("Quests", "Quests", "completed %s quests", function()
     local dictionary = controller:GetAggregatedQuestStatisticsDictionary(1, MaxLevel())
@@ -300,7 +301,7 @@ function Milestones:CreateDefinitions()
   end)
   for _, state in ipairs(AutoBiographer_ClassActivity.StateDefinitions) do
     local key, label = state[1], state[2]
-    self:AddTimedDefinition("Time" .. key, "Time", "in " .. label, function()
+    self:AddTimedDefinition("Time" .. key, "Time", L("in %s", L[label]), function()
       return controller:GetTimeForTimeTrackingType(enum.TimeTrackingType[key], 1, MaxLevel())
     end)
   end
@@ -311,7 +312,7 @@ function Milestones:FinishEmote(key, share)
   local entry = self.SharingQueue[key]
   if (entry and not entry.EmoteHandled) then
     if (share) then
-      AutoBiographer_Api.SendMilestoneMessage("has " .. entry.Phrase:gsub("your group", "their group") .. "!", "EMOTE")
+      AutoBiographer_Api.SendMilestoneMessage(L("has %s!", (entry.Phrase:gsub("your group", "their group"):gsub(L["your group"], L["their group"]))), "EMOTE")
     end
     entry.EmoteHandled = true
   end
@@ -342,7 +343,7 @@ function Milestones:OnAcquiredItem(itemId, acquisitionMethod, quantity)
       if (not self.Definitions[key]) then
         self:AddDefinition(key, key, function(amount)
           local item = controller.CharacterData.Catalogs.ItemCatalog[itemId]
-          return (crafted and "crafted " or "acquired ") .. Count(amount) .. " of " .. (item and item.Name or "item #" .. itemId)
+          return L(crafted and "crafted %s of %s" or "acquired %s of %s", Count(amount), (item and item.Name or L["item #"] .. itemId))
         end, function()
           local total = 0
           for _, level in pairs(controller.CharacterData.Levels) do
@@ -368,7 +369,7 @@ function Milestones:OnCompanionFamilyTime(familyId, familyName, seconds)
   if (not self.Started) then return end
   local key = "CompanionTime" .. familyId
   if (not self.Definitions[key]) then
-    self:AddTimedDefinition(key, "CompanionTime", "with " .. (familyName or "companion family #" .. familyId), function()
+    self:AddTimedDefinition(key, "CompanionTime", L("with %s", familyName or (L["companion family #"] .. familyId)), function()
       return AutoBiographer_Controller:GetAggregatedCompanionFamilyTime(1, AutoBiographer_Controller:GetCurrentLevelNum())[familyId] or 0
     end, "CompanionTime")
     self.Totals[key] = self.Totals[key] - seconds
@@ -385,7 +386,7 @@ function Milestones:OnKill(kill)
   if (not self.Definitions[key]) then
     self:AddDefinition(key, key, function(amount)
       local unit = controller.CharacterData.Catalogs.UnitCatalog[unitId]
-      return "landed " .. Count(amount) .. " killing blows against " .. (unit and unit.Name or "creature #" .. unitId)
+      return L("landed %s killing blows against %s", Count(amount), (unit and unit.Name or L["creature #"] .. unitId))
     end, function()
       return KillStatistics.GetSum(controller:GetAggregatedKillStatisticsByCatalogUnitId(unitId, 1, controller:GetCurrentLevelNum()), {
         enum.KillTrackingType.TaggedKillingBlow, enum.KillTrackingType.UntaggedKillingBlow,
@@ -404,7 +405,7 @@ function Milestones:OnSpellTime(spellId, seconds)
   if (not spell or not spell.Name) then return end
   local name, key = spell.Name, "SpellTime" .. spell.Name
   if (not self.Definitions[key]) then
-    self:AddTimedDefinition(key, "SpellTime", "with " .. name, function()
+    self:AddTimedDefinition(key, "SpellTime", L("with %s", name), function()
       local total = 0
       for id, duration in pairs(AutoBiographer_Controller:GetAggregatedSpellTime(1, AutoBiographer_Controller:GetCurrentLevelNum())) do
         if (catalog[id] and catalog[id].Name == name) then total = total + duration end
@@ -455,7 +456,7 @@ function Milestones:ResumeSharing()
         C_Timer.After(delay, function() self.SharingPending = false; self:ResumeSharing() end)
       else
         entry.GuildHandled = true
-        if (AutoBiographer_Api.SendMilestoneMessage("[AutoBiographer] I have " .. entry.Phrase:gsub("your group", "my group") .. "!", "GUILD")) then
+        if (AutoBiographer_Api.SendMilestoneMessage("[AutoBiographer] " .. L("I have %s!", (entry.Phrase:gsub("your group", "my group"):gsub(L["your group"], L["my group"]))), "GUILD")) then
           self.LastSharedAt = GetTime()
         end
       end
@@ -491,7 +492,7 @@ function Milestones:ShowSharingPrompt(firstTime)
     window:SetPoint("TOP", UIParent, "TOP", 0, -4)
     window:SetFrameStrata("DIALOG")
     window:Hide()
-    window.TitleText:SetText("AutoBiographer milestones")
+    window.TitleText:SetText(L["AutoBiographer milestones"])
     window.Message = window:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     window.Message:SetPoint("TOPLEFT", 12, -32)
     window.Message:SetWidth(296)
@@ -500,12 +501,12 @@ function Milestones:ShowSharingPrompt(firstTime)
     window.Guild:SetPoint("TOPLEFT", 12, -91)
     window.GuildLabel = window:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     window.GuildLabel:SetPoint("LEFT", window.Guild, "RIGHT", 2, 0)
-    window.GuildLabel:SetText("Automatically share in guild chat")
+    window.GuildLabel:SetText(L["Automatically share in guild chat"])
     window.Emote = CreateFrame("CheckButton", nil, window, "UICheckButtonTemplate")
     window.Emote:SetPoint("TOPLEFT", 12, -117)
     window.EmoteLabel = window:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     window.EmoteLabel:SetPoint("LEFT", window.Emote, "RIGHT", 2, 0)
-    window.EmoteLabel:SetText("Offer emotes (click to send)")
+    window.EmoteLabel:SetText(L["Offer emotes (click to send)"])
     window.Buttons = {}
     for index = 1, 2 do
       local button = CreateFrame("Button", nil, window, "UIPanelButtonTemplate")
@@ -544,8 +545,8 @@ function Milestones:ShowSharingPrompt(firstTime)
   window.FirstTime = firstTime
   window.MilestoneKey = key
   window:SetSize(320, firstTime and 190 or 140)
-  window.Message:SetText("You have " .. entry.Phrase .. "!\n" .. (firstTime and
-    "Choose either or both sharing options." or "Share this milestone as an emote?"))
+  window.Message:SetText(L("You have %s!", entry.Phrase) .. "\n" .. (firstTime and
+    L["Choose either or both sharing options."] or L["Share this milestone as an emote?"]))
   window.Guild:SetShown(firstTime)
   window.GuildLabel:SetShown(firstTime)
   window.Emote:SetShown(firstTime)
@@ -554,8 +555,8 @@ function Milestones:ShowSharingPrompt(firstTime)
     window.Guild:SetChecked(true)
     window.Emote:SetChecked(true)
   end
-  window.Buttons[1]:SetText(firstTime and "Save" or "Share")
-  window.Buttons[2]:SetText(firstTime and "Keep private" or "Skip")
+  window.Buttons[1]:SetText(firstTime and L["Save"] or L["Share"])
+  window.Buttons[2]:SetText(firstTime and L["Keep private"] or L["Skip"])
   window:Show()
 end
 

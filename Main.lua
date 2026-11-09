@@ -1,3 +1,4 @@
+local L = AutoBiographer_L
 AutoBiographer_Settings = nil
 
 AutoBiographer_EventManager = {
@@ -113,14 +114,14 @@ function SlashCmdList.AUTOBIOGRAPHERNOTE(text)
       local combined = appended and (existing.Content .. "\n" .. content) or content
       local _, length = string.gsub(combined, "[^\128-\191]", "")
       if (length > Notes.MaxContentLength) then
-        print("|cffff0000[AutoBiographer]|r Note would exceed the " .. Notes.MaxContentLength .. "-character limit.")
+        print("|cffff0000[AutoBiographer]|r " .. L("Note would exceed the %s-character limit.", Notes.MaxContentLength))
         return
       end
       local saved = Notes.Save(notes, subject, existing, combined, existing and existing.BehaviorRating or 0, existing and existing.SkillRating or 0)
       if (not saved) then return end
       if (editingSubject) then panel:LoadNote(saved, false, subject) end
       panel:Update()
-      local message = subject and ((appended and "Appended to" or "Saved") .. " note for " .. SN:GetSubjectTitle(subject) .. ".") or "Saved generic note."
+      local message = subject and L(appended and "Appended to note for %s." or "Saved note for %s.", SN:GetSubjectTitle(subject)) or L["Saved generic note."]
       print("|cffffd700[AutoBiographer]|r " .. message)
     end
     -- Saving to another subject leaves an unrelated editor draft untouched.
@@ -151,7 +152,7 @@ function SlashCmdList.AUTOBIOGRAPHERTASK(text)
   if (not saved) then print("|cffff0000[AutoBiographer]|r " .. message); return end
   -- Quick creation leaves an open task draft and its filters untouched.
   panel:QueueRefresh()
-  print("|cffffd700[AutoBiographer]|r Task added: " .. saved.Title)
+  print("|cffffd700[AutoBiographer]|r " .. L("Task added: %s", saved.Title))
 end
 
 SLASH_AUTOBIOGRAPHERVERIFY1, SLASH_AUTOBIOGRAPHERVERIFY2 = "/autobiographerverify", "/abverify"
@@ -463,6 +464,20 @@ function EM.EventHandlers.CHAT_MSG_COMBAT_XP_GAIN(self, text)
   local xpGainedFromGroupBonus = string.match(text, "+(%d+) group bonus")
   local xpGainedFromRestedBonus = string.match(text, "+(%d+) exp Rested bonus")
   local xpLostToRaidPenalty = string.match(text, "-(%d+) raid penalty")
+  if (not xpGainedFromKill) then
+    -- Non-English clients: read the message with the game's own (localized) format strings.
+    local _, extra
+    _, xpGainedFromKill, extra = L.MatchFormat(text, COMBATLOG_XPGAIN_FIRSTPERSON_GROUP)
+    if (xpGainedFromKill) then xpGainedFromGroupBonus = extra end
+    if (not xpGainedFromKill) then
+      _, xpGainedFromKill, extra = L.MatchFormat(text, COMBATLOG_XPGAIN_FIRSTPERSON_RAID)
+      if (xpGainedFromKill) then xpLostToRaidPenalty = extra end
+    end
+    for _, formatName in ipairs({ "COMBATLOG_XPGAIN_FIRSTPERSON", "COMBATLOG_XPGAIN_EXHAUSTION1", "COMBATLOG_XPGAIN_EXHAUSTION2", "COMBATLOG_XPGAIN_EXHAUSTION4", "COMBATLOG_XPGAIN_EXHAUSTION5" }) do
+      if (xpGainedFromKill) then break end
+      _, xpGainedFromKill = L.MatchFormat(text, _G[formatName])
+    end
+  end
   
   if (xpGainedFromKill) then Controller:OnGainedExperience(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.ExperienceTrackingType.Kill, tonumber(xpGainedFromKill)) end
   if (xpGainedFromGroupBonus) then Controller:OnGainedExperience(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.ExperienceTrackingType.GroupBonus, tonumber(xpGainedFromGroupBonus)) end
@@ -499,7 +514,10 @@ if (Api.IsEventAvailable("CHAT_MSG_INSTANCE_CHAT_LEADER", C_ChatInfo ~= nil)) th
 end
 
 function EM.EventHandlers.CHAT_MSG_LOOT(self, text, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, arg17, arg18, arg19, arg20, arg21)
-  if (string.find(text, "You") ~= 1) then return end
+  local isCreate = string.find(text, "You create") == 1 or L.StartsWithFormat(text, LOOT_ITEM_CREATED_SELF)
+  local isLoot = string.find(text, "You receive loot") == 1 or L.StartsWithFormat(text, LOOT_ITEM_SELF)
+  local isPushed = string.find(text, "You receive item") == 1 or L.StartsWithFormat(text, LOOT_ITEM_PUSHED_SELF)
+  if (string.find(text, "You") ~= 1 and not isCreate and not isLoot and not isPushed) then return end
   
   local id = HelperFunctions.GetItemIdFromTextWithChatItemLink(text)
   if (not id) then
@@ -527,12 +545,12 @@ function EM.EventHandlers.CHAT_MSG_LOOT(self, text, arg2, arg3, arg4, arg5, arg6
   end
 
   local itemAcquisitionMethod = nil
-  if (string.find(text, "You create") == 1) then
+  if (isCreate) then
     itemAcquisitionMethod = AutoBiographerEnum.ItemAcquisitionMethod.Create
-  elseif (string.find(text, "You receive loot") == 1) then
+  elseif (isLoot) then
     itemAcquisitionMethod = AutoBiographer_Fishing:ConsumeLoot(id, quantity) and
       AutoBiographerEnum.ItemAcquisitionMethod.Fishing or AutoBiographerEnum.ItemAcquisitionMethod.Loot
-  elseif (string.find(text, "You receive item") == 1) then
+  elseif (isPushed) then
     if (self:WasTradeRecentlyMade() and self.TradeInfo.OtherPlayerTradeItems) then
       local matchingTradeItem = self:GetItemWithIdAndQuantity(self.TradeInfo.OtherPlayerTradeItems, id, quantity)
       if (matchingTradeItem) then
@@ -584,10 +602,14 @@ function EM.EventHandlers.CHAT_MSG_LOOT(self, text, arg2, arg3, arg4, arg5, arg6
 end
 
 function EM.EventHandlers.CHAT_MSG_MONEY(self, text, arg2, arg3, arg4, arg5)
-  if (string.find(text, "You") ~= 1) then return end
+  if (string.find(text, "You") ~= 1 and not L.StartsWithFormat(text, YOU_LOOT_MONEY) and not L.StartsWithFormat(text, LOOT_MONEY_SPLIT)) then return end
   local moneySum = 0
+  local copperWord, silverWord, goldWord = "Copper", "Silver", "Gold"
+  if (not string.find(text, "Copper", 1, true) and not string.find(text, "Silver", 1, true)) then
+    copperWord, silverWord, goldWord = COPPER or copperWord, SILVER or silverWord, GOLD or goldWord
+  end
 
-  for copperText in string.gmatch(text, "%d+%sCopper") do
+  for copperText in string.gmatch(text, "%d+%s" .. copperWord) do
     local i = 1
     for word in string.gmatch(copperText, "%S+") do
       if (i == 1) then moneySum = tonumber(word) end
@@ -595,7 +617,7 @@ function EM.EventHandlers.CHAT_MSG_MONEY(self, text, arg2, arg3, arg4, arg5)
     end
   end
   
-  for silverText in string.gmatch(text, "%d+%sSilver") do
+  for silverText in string.gmatch(text, "%d+%s" .. silverWord) do
     local i = 1
     for word in string.gmatch(silverText, "%S+") do
       if (i == 1) then moneySum = moneySum + tonumber(word) * 100 end
@@ -603,7 +625,7 @@ function EM.EventHandlers.CHAT_MSG_MONEY(self, text, arg2, arg3, arg4, arg5)
     end
   end
   
-  for goldText in string.gmatch(text, "%d+%sGold") do
+  for goldText in string.gmatch(text, "%d+%s" .. goldWord) do
     local i = 1
     for word in string.gmatch(goldText, "%S+") do
       if (i == 1) then moneySum = moneySum + tonumber(word) * 10000 end
@@ -644,9 +666,8 @@ end
 
 function EM.EventHandlers.CHAT_MSG_SKILL(self, text)
   if (self:IsSecretValue(text) or type(text) ~= "string") then return end
-  if (string.find(text, "Your skill in") ~= 1) then return end
-  
-  local skillName, skillLevel = string.match(text, "Your skill in (.+) has increased to (%d+).")
+  local skillName, skillLevel = string.match(text, "^Your skill in (.+) has increased to (%d+).")
+  if (not skillName) then skillName, skillLevel = L.MatchFormat(text, ERR_SKILL_UP_SI) end
   if (skillName and skillLevel) then
     Controller:OnSkillLevelIncreased(time(), HelperFunctions.GetCoordinatesByUnitId("player"), skillName, skillLevel)
   end
@@ -663,6 +684,11 @@ function EM.EventHandlers.CHAT_MSG_SYSTEM(self, text, ...)
   if (not winnerFullName) then
     loserFullName, winnerFullName = string.match(text, "^(.+) has fled from (.+) in a duel%.?$")
   end
+  -- Non-English clients: use the game's own (localized) format strings.
+  if (not winnerFullName) then winnerFullName, loserFullName = L.MatchFormat(text, DUEL_WINNER_KNOCKOUT) end
+  if (not winnerFullName) then winnerFullName, loserFullName = L.MatchFormat(text, DUEL_WINNER_RETREAT) end
+  local discoveredArea, discoveredXp = L.MatchFormat(text, ERR_ZONE_EXPLORED_XP)
+  local newReputationLevel, newReputationFaction = L.MatchFormat(text, FACTION_STANDING_CHANGED)
   if (winnerFullName and loserFullName) then
     local playerFullName, playerLastName = Api.GetUnitName("player")
     if (playerFullName and playerLastName) then playerFullName = playerFullName .. " " .. playerLastName end
@@ -689,6 +715,10 @@ function EM.EventHandlers.CHAT_MSG_SYSTEM(self, text, ...)
     else
       Controller:OnDuelLost(time(), HelperFunctions.GetCoordinatesByUnitId("player"), opponentCatalogUnitId, opponentFullName)
     end
+  elseif (discoveredXp and string.find(text, "Discovered .+") ~= 1) then
+    Controller:OnGainedExperience(time(), HelperFunctions.GetCoordinatesByUnitId("player"), AutoBiographerEnum.ExperienceTrackingType.Discovery, tonumber(discoveredXp))
+  elseif (newReputationFaction and string.find(text, "You are now .+ with .+") ~= 1) then
+    Controller:OnReputationLevelChanged(time(), HelperFunctions.GetCoordinatesByUnitId("player"), newReputationFaction, newReputationLevel)
   elseif (string.find(text, "Discovered .+") == 1) then
     -- Player discovered a new area.
     local area, xpGainedFromDiscovery = string.match(text, "Discovered (.+): (%d+) experience gained")
@@ -1091,7 +1121,7 @@ function EM.EventHandlers.PLAYER_ENTERING_WORLD(self, isLogin, isReload)
     local showAnnouncement = not self.PersistentPlayerInfo.ForeverBetaAnnouncementShownLastLogin
     self.PersistentPlayerInfo.ForeverBetaAnnouncementShownLastLogin = showAnnouncement
     if (showAnnouncement) then
-      print("\124cFFFFD700AutoBiographer supports WoW Forever! You can preinstall the addon now so it's ready to record your adventures when WoW Forever launches on November 4.\124r")
+      print("\124cFFFFD700" .. L["AutoBiographer supports WoW Forever! You can preinstall the addon now so it's ready to record your adventures when WoW Forever launches on November 4."] .. "\124r")
     end
   end
   AutoBiographer_TodoPanel:QueueRefresh()
@@ -1107,19 +1137,19 @@ function EM.EventHandlers.PLAYER_ENTERING_WORLD(self, isLogin, isReload)
     self.PersistentPlayerInfo.PlayerGuid = playerGuid
     
     if (UnitLevel("player") == 1 and UnitXP("player") == 0) then
-      print("\124cFFFFD700[AutoBiographer] Events and statistics are being tracked.")
+      print("\124cFFFFD700[AutoBiographer] " .. L["Events and statistics are being tracked."])
     else
-      print("\124cFFFFD700[AutoBiographer] Events and statistics are being tracked. Any events and statistics that occurred previously on this character are not tracked.")
+      print("\124cFFFFD700[AutoBiographer] " .. L["Events and statistics are being tracked. Any events and statistics that occurred previously on this character are not tracked."])
     end
   elseif (playerGuid and self.PersistentPlayerInfo.PlayerGuid ~= playerGuid) then
     -- The character was probably deleted and a new character was made with the same name.
-    AutoBiographer_ConfirmWindow.New("If you have deleted and remade a\ncharacter with the same name, click accept\nand AutoBiographer will\ndelete its stored data for " .. UnitName("player") .. ".", 
+    AutoBiographer_ConfirmWindow.New(L("If you have deleted and remade a\ncharacter with the same name, click accept\nand AutoBiographer will\ndelete its stored data for %s.", UnitName("player")), 
       function(deleteConfirmed)
         if (deleteConfirmed) then
           self:ClearCharacterData(true, false)
           self:UpdatePlayerZone()
         else
-          AutoBiographer_ConfirmWindow.New("If you have transferred your character\nto a new realm, click accept\nand AutoBiographer will\nkeep its stored data for " .. UnitName("player") .. ".", 
+          AutoBiographer_ConfirmWindow.New(L("If you have transferred your character\nto a new realm, click accept\nand AutoBiographer will\nkeep its stored data for %s.", UnitName("player")), 
             function(transferConfirmed)
               if (transferConfirmed) then
                 self.PersistentPlayerInfo.PlayerGuid = playerGuid
@@ -1314,7 +1344,7 @@ function EM.EventHandlers.PLAYER_UNGHOST(self) -- Fired when the player is alive
 end
 
 function EM.EventHandlers.QUEST_TURNED_IN(self, questId, xpGained, moneyGained)
-  local questTitle = Api.GetQuestTitle(questId) or ("Quest " .. tostring(questId))
+  local questTitle = Api.GetQuestTitle(questId) or (L["Quest "] .. tostring(questId))
   Controller:OnQuestTurnedIn(time(), HelperFunctions.GetCoordinatesByUnitId("player"), questId, questTitle, xpGained, moneyGained)
   
   if (moneyGained and moneyGained > 0) then
@@ -1340,13 +1370,13 @@ function EM.EventHandlers.UPDATE_BATTLEFIELD_STATUS(self, battleFieldIndex)
   local battlegroundId = nil
   if (isBattleground) then
     for bgId, bgName in pairs(AutoBiographer_Databases.BattlegroundDatabase) do
-      if (bgName == mapName) then
+      if (bgName == mapName or L[bgName] == mapName) then
         battlegroundId = bgId
       end
     end
 
     if (battlegroundId == nil) then
-      if (mapName == "Random Battleground") then
+      if (mapName == "Random Battleground" or mapName == L["Random Battleground"] or mapName == RANDOM_BATTLEGROUND) then
         for i = 1, #AutoBiographer_Databases.BattlegroundDatabase do
           self.PersistentPlayerInfo.BattlegroundStatuses[i] = status
         end
@@ -1370,7 +1400,7 @@ function EM.EventHandlers.UPDATE_BATTLEFIELD_STATUS(self, battleFieldIndex)
   local arenaId
   if (not isBattleground) then
     for aId, aName in pairs(AutoBiographer_Databases.ArenaDatabase) do
-      if (aName == mapName) then
+      if (aName == mapName or L[aName] == mapName) then
         arenaId = aId
       end
     end
@@ -1466,8 +1496,8 @@ function EM.EventHandlers.TIME_PLAYED_MSG(self, totalTimePlayed, levelTimePlayed
 
       local previousLevel = Controller.CharacterData.Levels[newLevel - 1]
       local lastLevelTimePlayed = previousLevel and previousLevel.TimePlayedThisLevel
-      printSystemMessage("Total time played: " .. HelperFunctions.SecondsToTimeString(totalTimePlayed))
-      printSystemMessage("Time played last level: " .. (lastLevelTimePlayed and HelperFunctions.SecondsToTimeString(lastLevelTimePlayed) or "unavailable (not recorded)"))
+      printSystemMessage(L["Total time played: "] .. HelperFunctions.SecondsToTimeString(totalTimePlayed))
+      printSystemMessage(L["Time played last level: "] .. (lastLevelTimePlayed and HelperFunctions.SecondsToTimeString(lastLevelTimePlayed) or L["unavailable (not recorded)"]))
     end
   end
 
@@ -1479,7 +1509,7 @@ function EM.EventHandlers.TIME_PLAYED_MSG(self, totalTimePlayed, levelTimePlayed
   local timeSinceLastTotalTimePlayed = totalTimePlayed - self.PersistentPlayerInfo.LastTotalTimePlayed
   self.PersistentPlayerInfo.LastTotalTimePlayed = totalTimePlayed
   if (timeSinceLastTotalTimePlayed > 120) then
-    print ("\124cFFFF0000[AutoBiographer] There are approximately " .. HelperFunctions.Round(timeSinceLastTotalTimePlayed / 60) .. " minutes of play time on this character unaccounted for by AutoBiographer. Some events or statistics may not have been tracked.")
+    print ("\124cFFFF0000[AutoBiographer] " .. L("There are approximately %s minutes of play time on this character unaccounted for by AutoBiographer. Some events or statistics may not have been tracked.", HelperFunctions.Round(timeSinceLastTotalTimePlayed / 60)))
     -- TODO: Add debug event here.
     -- TODO: Scan money and items to check for changes.
   end
@@ -1775,7 +1805,7 @@ Api.RegisterTooltipHandler("OnTooltipSetItem", "Item", function(self, data)
   itemId = tonumber(itemId)
 
   if (AutoBiographer_Settings.Options["ShowDiscoveryInfoOnToolTips"] and AutoBiographer_Databases.ItemDatabase and not AutoBiographer_Databases.ItemDatabase[itemId]) then
-    self:AddLine("Added in Forever")
+    self:AddLine(L["Added in Forever"])
   end
   
   self:Show()
@@ -1810,9 +1840,9 @@ Api.RegisterTooltipHandler("OnTooltipSetUnit", "Unit", function(self)
 	if (AutoBiographer_Settings.Options["ShowKillCountOnUnitToolTips"] and canAttack) then
     local killStatistics = Controller:GetAggregatedKillStatisticsByCatalogUnitId(catalogUnitId, 1, 9999)
     if (isPlayer) then
-      self:AddLine("Killed " .. tostring(KillStatistics.GetSum(killStatistics, { AutoBiographerEnum.KillTrackingType.TaggedKillingBlow, AutoBiographerEnum.KillTrackingType.UntaggedKillingBlow })) .. " times.")
+      self:AddLine(L("Killed %s times.", tostring(KillStatistics.GetSum(killStatistics, { AutoBiographerEnum.KillTrackingType.TaggedKillingBlow, AutoBiographerEnum.KillTrackingType.UntaggedKillingBlow }))))
     else
-      self:AddLine("Killed " .. tostring(KillStatistics.GetSum(killStatistics, { AutoBiographerEnum.KillTrackingType.TaggedAssist, AutoBiographerEnum.KillTrackingType.TaggedGroupAssistOrKillingBlow, AutoBiographerEnum.KillTrackingType.TaggedKillingBlow })) .. " times.")
+      self:AddLine(L("Killed %s times.", tostring(KillStatistics.GetSum(killStatistics, { AutoBiographerEnum.KillTrackingType.TaggedAssist, AutoBiographerEnum.KillTrackingType.TaggedGroupAssistOrKillingBlow, AutoBiographerEnum.KillTrackingType.TaggedKillingBlow }))))
     end
   end
 
@@ -1823,18 +1853,18 @@ Api.RegisterTooltipHandler("OnTooltipSetUnit", "Unit", function(self)
     local duelsWon = OtherPlayerStatistics.GetSum(otherPlayerStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.DuelsLostToPlayer })
     local duelsLost = OtherPlayerStatistics.GetSum(otherPlayerStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.DuelsWonAgainstPlayer })
     if (duelsWon > 0 or duelsLost > 0) then
-      tooltipString = tooltipString .. "Duels (W/L): " .. tostring(duelsWon) .. "/" .. tostring(duelsLost) .. ". "
+      tooltipString = tooltipString .. L["Duels (W/L): "] .. tostring(duelsWon) .. "/" .. tostring(duelsLost) .. ". "
     end
 
     local buffsGivenNotGrouped = OtherPlayerStatistics.GetSum(otherPlayerStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.BuffsGivenToPlayerNotGrouped })
     local buffsGivenWhileGrouped = OtherPlayerStatistics.GetSum(otherPlayerStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.BuffsGivenToPlayerWhileGrouped })
     if (buffsGivenNotGrouped > 0 or buffsGivenWhileGrouped > 0) then
-      tooltipString = tooltipString .. "Buffs Given (Outside/In Group): " .. tostring(buffsGivenNotGrouped) .. "/" .. tostring(buffsGivenWhileGrouped) .. ". "
+      tooltipString = tooltipString .. L["Buffs Given (Outside/In Group): "] .. tostring(buffsGivenNotGrouped) .. "/" .. tostring(buffsGivenWhileGrouped) .. ". "
     end
 
     local timeGrouped = OtherPlayerStatistics.GetSum(otherPlayerStatistics, { AutoBiographerEnum.OtherPlayerTrackingType.TimeSpentGroupedWithPlayer })
     if (timeGrouped > 0) then
-      tooltipString = tooltipString .. "Time Grouped: " .. HelperFunctions.SecondsToTimeString(timeGrouped, true) .. ". "
+      tooltipString = tooltipString .. L["Time Grouped: "] .. HelperFunctions.SecondsToTimeString(timeGrouped, true) .. ". "
     end
 
     if (tooltipString ~= "") then
@@ -1844,7 +1874,7 @@ Api.RegisterTooltipHandler("OnTooltipSetUnit", "Unit", function(self)
 
   if (AutoBiographer_Settings.Options["ShowDiscoveryInfoOnToolTips"] and HelperFunctions.GetUnitTypeFromCatalogUnitId(catalogUnitId) == AutoBiographerEnum.UnitType.Creature and
       AutoBiographer_Databases.NpcDatabase and not AutoBiographer_Databases.NpcDatabase[catalogUnitId]) then
-    self:AddLine("Added in Forever")
+    self:AddLine(L["Added in Forever"])
   end
 
 	self:Show()
@@ -2390,17 +2420,17 @@ function EM:UpdateMailboxMessages()
       message.isCod = true
     end
  
-    if (sender and string.find(sender, "Auction House")) then
+    if (sender and (string.find(sender, "Auction House") or string.find(sender, L["Auction House"], 1, true))) then
       message.isFromAuctionHouse = true
 
       invoiceType, itemName, playerName, bid, buyout, deposit, consignment = GetInboxInvoiceInfo(i)
 
       if (invoiceType == nil) then
-        if (string.find(subject, "Auction cancelled") ~= nil) then
+        if (string.find(subject, "Auction cancelled") ~= nil or L.StartsWithFormat(subject, AUCTION_REMOVED_MAIL_SUBJECT)) then
           message.auctionHouseMessageType = AutoBiographerEnum.AuctionHouseMessageType.Canceled
-        elseif (string.find(subject, "Auction expired") ~= nil) then
+        elseif (string.find(subject, "Auction expired") ~= nil or L.StartsWithFormat(subject, AUCTION_EXPIRED_MAIL_SUBJECT)) then
           message.auctionHouseMessageType = AutoBiographerEnum.AuctionHouseMessageType.Expired
-        elseif (string.find(subject, "Outbid on") ~= nil) then
+        elseif (string.find(subject, "Outbid on") ~= nil or L.StartsWithFormat(subject, AUCTION_OUTBID_MAIL_SUBJECT)) then
           message.auctionHouseMessageType = AutoBiographerEnum.AuctionHouseMessageType.Outbid
         end
       else
@@ -2413,7 +2443,7 @@ function EM:UpdateMailboxMessages()
         message.auctionSalePrice = math.max(tonumber(bid), tonumber(buyout))
         message.auctionDeposit = tonumber(deposit)
       end
-    elseif (subject and string.find(subject, "COD Payment:")) then
+    elseif (subject and (string.find(subject, "COD Payment:") or L.StartsWithFormat(subject, COD_PAYMENT))) then
       message.isCodPayment = true
     end
     
@@ -3081,7 +3111,7 @@ function EM:ClearAllData(doNotRequireConfirmation, doNotReloadUI)
   if (doNotRequireConfirmation) then
     func(true)
   else
-    AutoBiographer_ConfirmWindow.New("Clear character and global data?", func)
+    AutoBiographer_ConfirmWindow.New(L["Clear character and global data?"], func)
   end
 end
 
@@ -3112,7 +3142,7 @@ function EM:ClearCharacterData(doNotRequireConfirmation, doNotReloadUI)
   if (doNotRequireConfirmation) then
     clearFunc(true)
   else
-    AutoBiographer_ConfirmWindow.New("Clear character data?", clearFunc)
+    AutoBiographer_ConfirmWindow.New(L["Clear character data?"], clearFunc)
   end
 end
 
@@ -3136,6 +3166,6 @@ function EM:Test()
   sharing:Reset()
   sharing.TestMode, sharing.Pending = true, true
   if (AutoBiographer_CampfireTalesPanel:IsVisible()) then AutoBiographer_MainWindow:Hide() end
-  if (InCombatLockdown()) then print("[AutoBiographer] Campfire tales will open when combat ends.") end
+  if (InCombatLockdown()) then print("[AutoBiographer] " .. L["Campfire tales will open when combat ends."]) end
   sharing:Resume()
 end

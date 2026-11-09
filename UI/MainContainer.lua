@@ -1,3 +1,4 @@
+local L = AutoBiographer_L
 local Api = AutoBiographer_Api
 local navigationGroups = {
   { Title = "Character", Sections = { "Summary", "Statistics", "Snapshots", "GearHistory" } },
@@ -89,10 +90,10 @@ function AutoBiographer_MainWindow:InitializeSidebar()
   self.SectionButtons, self.SidebarGroups = {}, {}
   for _, definition in ipairs(navigationGroups) do
     local group = { Heading = self.SidebarContent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall"), Buttons = {} }
-    group.Heading:SetText(definition.Title)
+    group.Heading:SetText(L[definition.Title])
     group.Heading:SetJustifyH("LEFT")
     for _, name in ipairs(definition.Sections) do
-      local button = CreateSidebarButton(self.SidebarContent, sectionLabels[name] or name, function() self:ShowSection(name) end)
+      local button = CreateSidebarButton(self.SidebarContent, L[sectionLabels[name] or name], function() self:ShowSection(name) end)
       button:EnableMouseWheel(true)
       button:SetScript("OnMouseWheel", Scroll)
       group.Buttons[#group.Buttons + 1] = button
@@ -201,7 +202,7 @@ function AutoBiographer_MainWindow:Initialize()
   self.PageEdge:SetPoint("TOPRIGHT", self.PanelHost, "TOPRIGHT", -22, 5)
   self.PageEdge:SetHeight(1)
   self.PageEdge:SetColorTexture(0.45, 0.42, 0.36, 0.7)
-  self.OptionsButton = CreateNavigationButton(self, "Options", 80, function()
+  self.OptionsButton = CreateNavigationButton(self, L["Options"], 80, function()
     Settings.OpenToCategory(AutoBiographer_OptionWindow.categoryID)
     self:Hide()
   end)
@@ -306,7 +307,7 @@ function AutoBiographer_MainWindow:ShowSection(name)
   if (not self.Panels[name]) then name = "Summary" end
   self.ActiveSection = name
   AutoBiographer_Settings.MainWindowSection = name
-  self.SectionTitle:SetText(sectionLabels[name] or name)
+  self.SectionTitle:SetText(L[sectionLabels[name] or name])
   for section, panel in pairs(self.Panels) do
     if (section == name) then
       local wasVisible = panel:IsVisible()

@@ -1,3 +1,4 @@
+local L = AutoBiographer_L
 Event = {}
 function Event.New(timestamp, type, subType)
   return {
@@ -84,24 +85,24 @@ function Event.ToString(e, catalogs, excludeTimestamp)
 
   if (e.Type == AutoBiographerEnum.EventType.Arena) then    
     local arenaTypeString
-    if (e.Registered) then arenaTypeString = "rated arena"
-    else arenaTypeString = "arena skirmish"
+    if (e.Registered) then arenaTypeString = L["rated arena"]
+    else arenaTypeString = L["arena skirmish"]
     end
 
     if (e.SubType == AutoBiographerEnum.EventSubType.ArenaJoined) then
-      return timestampString .. "You joined a " .. e.TeamSize .. "v" .. e.TeamSize .. " " .. arenaTypeString .. " (" .. AutoBiographer_Databases.ArenaDatabase[e.ArenaId] .. ")."
+      return timestampString .. L("You joined a %sv%s %s (%s).", e.TeamSize, e.TeamSize, arenaTypeString, L[AutoBiographer_Databases.ArenaDatabase[e.ArenaId]])
     elseif (e.SubType == AutoBiographerEnum.EventSubType.ArenaLost) then
-      return timestampString .. "You lost a " .. e.TeamSize .. "v" .. e.TeamSize .. " " .. arenaTypeString .. " (" .. AutoBiographer_Databases.ArenaDatabase[e.ArenaId] .. ")."
+      return timestampString .. L("You lost a %sv%s %s (%s).", e.TeamSize, e.TeamSize, arenaTypeString, L[AutoBiographer_Databases.ArenaDatabase[e.ArenaId]])
     elseif (e.SubType == AutoBiographerEnum.EventSubType.ArenaWon) then
-      return timestampString .. "You won a " .. e.TeamSize .. "v" .. e.TeamSize .. " " .. arenaTypeString .. " (" .. AutoBiographer_Databases.ArenaDatabase[e.ArenaId] .. ")."
+      return timestampString .. L("You won a %sv%s %s (%s).", e.TeamSize, e.TeamSize, arenaTypeString, L[AutoBiographer_Databases.ArenaDatabase[e.ArenaId]])
     end
   elseif (e.Type == AutoBiographerEnum.EventType.Battleground) then
     if (e.SubType == AutoBiographerEnum.EventSubType.BattlegroundJoined) then
-      return timestampString .. "You joined " .. AutoBiographer_Databases.BattlegroundDatabase[e.BattlegroundId] .. "."
+      return timestampString .. L("You joined %s.", L[AutoBiographer_Databases.BattlegroundDatabase[e.BattlegroundId]])
     elseif (e.SubType == AutoBiographerEnum.EventSubType.BattlegroundLost) then
-      return timestampString .. "You lost " .. AutoBiographer_Databases.BattlegroundDatabase[e.BattlegroundId] .. "."
+      return timestampString .. L("You lost %s.", L[AutoBiographer_Databases.BattlegroundDatabase[e.BattlegroundId]])
     elseif (e.SubType == AutoBiographerEnum.EventSubType.BattlegroundWon) then
-      return timestampString .. "You won " .. AutoBiographer_Databases.BattlegroundDatabase[e.BattlegroundId] .. "."
+      return timestampString .. L("You won %s.", L[AutoBiographer_Databases.BattlegroundDatabase[e.BattlegroundId]])
     end
   elseif (e.Type == AutoBiographerEnum.EventType.Custom) then
     return timestampString .. "\"" .. e.Text .. "\""
@@ -109,14 +110,14 @@ function Event.ToString(e, catalogs, excludeTimestamp)
     if (e.SubType == AutoBiographerEnum.EventSubType.PlayerDeath) then
       if (e.KillerCuid == nil) then
         if (e.EnvironmentalType == "Drowning" or e.EnvironmentalType == "Falling") then
-          return timestampString .. "You died to " .. string.lower(e.EnvironmentalType) .. "."
+          return timestampString .. (e.EnvironmentalType == "Drowning" and L["You drowned."] or L["You died from a fall."])
         end
-        return timestampString .. "You died."
+        return timestampString .. L["You died."]
       else
         local unitName = "#" .. e.KillerCuid
         if (catalogs ~= nil and catalogs.UnitCatalog ~= nil and catalogs.UnitCatalog[e.KillerCuid] ~= nil) then
           if (catalogs.UnitCatalog[e.KillerCuid].UType ~= nil and catalogs.UnitCatalog[e.KillerCuid].UType == AutoBiographerEnum.UnitType.Pet) then
-            unitName = "a pet"
+            unitName = L["a pet"]
           elseif (catalogs.UnitCatalog[e.KillerCuid].Name ~= nil) then
             unitName = catalogs.UnitCatalog[e.KillerCuid].Name
           end  
@@ -126,75 +127,75 @@ function Event.ToString(e, catalogs, excludeTimestamp)
         if (e.KillerLevel ~= nil) then 
           local killerLevel = e.KillerLevel
           if (killerLevel == -1) then killerLevel = "?" end
-          killerLevelText = " (level " .. tostring(killerLevel) .. ")"
+          killerLevelText = L(" (level %s)", tostring(killerLevel))
         end
-        return timestampString .. "You were killed by " .. unitName .. killerLevelText .. "."
+        return timestampString .. L("You were killed by %s%s.", unitName, killerLevelText)
       end
     end
   elseif (e.Type == AutoBiographerEnum.EventType.Guild) then
     if (e.SubType == AutoBiographerEnum.EventSubType.GuildJoined) then
-      return timestampString .. "You joined " .. e.GuildName.. "."
+      return timestampString .. L("You joined the guild %s.", e.GuildName)
     elseif (e.SubType == AutoBiographerEnum.EventSubType.GuildLeft) then
-      return timestampString .. "You left " .. e.GuildName.. "."
+      return timestampString .. L("You left the guild %s.", e.GuildName)
     elseif (e.SubType == AutoBiographerEnum.EventSubType.GuildRankChanged) then
-      return timestampString .. "Your guild rank was changed to " .. e.GuildRankName.. " (" .. e.GuildRankIndex .. ")."
+      return timestampString .. L("Your guild rank was changed to %s (%s).", e.GuildRankName, e.GuildRankIndex)
     end
   elseif (e.Type == AutoBiographerEnum.EventType.Item) then
     if (e.SubType == AutoBiographerEnum.EventSubType.FirstAcquiredItem) then
       local itemName = "#" .. e.CatalogItemId
       if (catalogs and catalogs.ItemCatalog and catalogs.ItemCatalog[e.CatalogItemId] and catalogs.ItemCatalog[e.CatalogItemId].Name) then itemName = catalogs.ItemCatalog[e.CatalogItemId].Name end
-      return timestampString .. "You acquired " .. itemName .. " for the first time."
+      return timestampString .. L("You acquired %s for the first time.", itemName)
     elseif (e.SubType == AutoBiographerEnum.EventSubType.FirstEquippedItem) then
       local itemName = "#" .. e.CatalogItemId
       if (catalogs and catalogs.ItemCatalog and catalogs.ItemCatalog[e.CatalogItemId] and catalogs.ItemCatalog[e.CatalogItemId].Name) then itemName = catalogs.ItemCatalog[e.CatalogItemId].Name end
-      return timestampString .. "You equipped " .. itemName .. " for the first time."
+      return timestampString .. L("You equipped %s for the first time.", itemName)
     end
   elseif (e.Type == AutoBiographerEnum.EventType.Kill) then
     if (e.SubType == AutoBiographerEnum.EventSubType.BossKill) then
-      local bossName = "boss #" .. e.BossId
+      local bossName = L["boss #"] .. e.BossId
       if (e.BossName ~= nil) then bossName = e.BossName end
-      return timestampString .. "You defeated " .. bossName .. "."
+      return timestampString .. L("You defeated %s.", bossName)
     elseif (e.SubType == AutoBiographerEnum.EventSubType.FirstKill) then
       local unitName = "#" .. e.CatalogUnitId
       if (catalogs ~= nil and catalogs.UnitCatalog ~= nil and catalogs.UnitCatalog[e.CatalogUnitId] ~= nil and catalogs.UnitCatalog[e.CatalogUnitId].Name ~= nil) then unitName = catalogs.UnitCatalog[e.CatalogUnitId].Name end
-      return timestampString .. "You killed " .. unitName .. " for the first time."
+      return timestampString .. L("You killed %s for the first time.", unitName)
     end
   elseif (e.Type == AutoBiographerEnum.EventType.Level) then
     if (e.SubType == AutoBiographerEnum.EventSubType.LevelUp) then
-      return timestampString .. "You hit level " .. e.LevelNum .. "."
+      return timestampString .. L("You hit level %s.", e.LevelNum)
     end
   elseif (e.Type == AutoBiographerEnum.EventType.Map) then
     if (e.SubType == AutoBiographerEnum.EventSubType.SubZoneFirstVisit) then
       local zoneName = "?"
       if (catalogs ~= nil and catalogs.SubZoneCatalog ~= nil and catalogs.SubZoneCatalog[e.SubZoneName] ~= nil and catalogs.SubZoneCatalog[e.SubZoneName].ZoneName ~= nil) then zoneName = catalogs.SubZoneCatalog[e.SubZoneName].ZoneName end
-      return timestampString .. "You entered " .. e.SubZoneName .. " (" .. zoneName .. ") for the first time."
+      return timestampString .. L("You entered %s (%s) for the first time.", e.SubZoneName, zoneName)
     elseif (e.SubType == AutoBiographerEnum.EventSubType.ZoneFirstVisit) then
-      return timestampString .. "You entered " .. e.ZoneName .. " for the first time."
+      return timestampString .. L("You entered %s for the first time.", e.ZoneName)
     end
   elseif (e.Type == AutoBiographerEnum.EventType.Reputation) then
     if (e.SubType == AutoBiographerEnum.EventSubType.ReputationLevelChanged) then
-      return timestampString .. "You became " .. e.ReputationLevel .. " with " .. e.Faction .. "."
+      return timestampString .. L("You became %s with %s.", L[e.ReputationLevel], e.Faction)
     end
   elseif (e.Type == AutoBiographerEnum.EventType.Skill) then
     if (e.SubType == AutoBiographerEnum.EventSubType.SkillMilestone) then
-      return timestampString .. "Your skill in " .. e.SkillName .. " increased to " .. e.SkillLevel .. "."
+      return timestampString .. L("Your skill in %s increased to %s.", e.SkillName, e.SkillLevel)
     end
   elseif (e.Type == AutoBiographerEnum.EventType.Spell) then
     if (e.SubType == AutoBiographerEnum.EventSubType.SpellLearned) then
-      local spellText = "spell #" .. e.SpellId
+      local spellText = L["spell #"] .. e.SpellId
       if (catalogs and catalogs.SpellCatalog and catalogs.SpellCatalog[e.SpellId] and catalogs.SpellCatalog[e.SpellId].Name) then 
         spellText = catalogs.SpellCatalog[e.SpellId].Name 
-        if (catalogs.SpellCatalog[e.SpellId].Rank) then spellText = spellText .. " (Rank " .. catalogs.SpellCatalog[e.SpellId].Rank .. ")" end
+        if (catalogs.SpellCatalog[e.SpellId].Rank) then spellText = spellText .. L(" (Rank %s)", catalogs.SpellCatalog[e.SpellId].Rank) end
       end
-      return timestampString .. "You learned " .. spellText .. "."
+      return timestampString .. L("You learned %s.", spellText)
     end
   elseif (e.Type == AutoBiographerEnum.EventType.Statistic) then
     if (e.SubType == AutoBiographerEnum.EventSubType.StatisticMilestone) then
-      return timestampString .. "You have " .. e.Text .. "!"
+      return timestampString .. L("You have %s!", L[e.Text])
     end
   elseif (e.Type == AutoBiographerEnum.EventType.Quest) then
     if (e.SubType == AutoBiographerEnum.EventSubType.QuestTurnIn) then
-      return timestampString .. "You turned in " .. e.QuestTitle .. "."
+      return timestampString .. L("You turned in %s.", e.QuestTitle)
     end
   end
   

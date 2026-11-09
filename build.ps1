@@ -34,6 +34,7 @@ Copy-Item ".\Classes" -Destination "$tempSubDirectoryPath" -Recurse
 Copy-Item ".\Data" -Destination "$tempSubDirectoryPath" -Recurse
 Copy-Item ".\Icons" -Destination "$tempSubDirectoryPath" -Recurse
 Copy-Item ".\Libs" -Destination "$tempSubDirectoryPath" -Recurse
+Copy-Item ".\Locales" -Destination "$tempSubDirectoryPath" -Recurse
 Copy-Item ".\UI" -Destination "$tempSubDirectoryPath" -Recurse
 
 $7zipPath = "$env:ProgramFiles\7-Zip\7z.exe"

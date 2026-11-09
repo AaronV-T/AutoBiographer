@@ -1,3 +1,4 @@
+local L = AutoBiographer_L
 -- Shared tiled map art for the adventure replay and character locations.
 AutoBiographer_MapCanvas = {}
 
@@ -54,7 +55,7 @@ function AutoBiographer_MapCanvas.Render(self)
   if (not layer or not textures or #textures == 0 or not layer.layerWidth or layer.layerWidth <= 0 or
     not layer.layerHeight or layer.layerHeight <= 0 or not layer.tileWidth or layer.tileWidth <= 0 or
     not layer.tileHeight or layer.tileHeight <= 0) then
-    self.MapMessage:SetText(self.MapId and "Map art unavailable for this location." or "No recorded map location yet.")
+    self.MapMessage:SetText(self.MapId and L["Map art unavailable for this location."] or L["No recorded map location yet."])
     self.MapMessage:Show()
     return
   end

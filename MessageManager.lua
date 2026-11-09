@@ -1,3 +1,4 @@
+local L = AutoBiographer_L
 AutoBiographer_MessageManager = {
   AddonMessagePrefix = "AutoBiographer",
   SentMessageTimestamps = {},
@@ -27,10 +28,10 @@ function MM.OnAddonMessageReceived(prefix, text, channel, sender, target, zoneCh
   if (addonMessageType == AutoBiographerEnum.AddonMessageType.CustomEvent) then
     if (AutoBiographer_Settings.Options["EnableCustomEventSharing"]) then
       local playerName = sender
-      if (UnitName("player") == sender) then playerName = "You" end
-      print("\124cFFFFD700[AutoBiographer] " .. tostring(playerName) .. " shared the following event: \"" .. HelperFunctions.ShortenString(arg1, 500) .. "\"")
+      if (UnitName("player") == sender) then playerName = L["You"] end
+      print("\124cFFFFD700[AutoBiographer] " .. L("%s shared the following event: \"%s\"", tostring(playerName), HelperFunctions.ShortenString(arg1, 500)))
     elseif (UnitName("player") == sender) then
-      print("\124cFFFF0000[AutoBiographer] You shared a custom event, but you haven't enabled the option for guild members to share custom events with you.")
+      print("\124cFFFF0000[AutoBiographer] " .. L["You shared a custom event, but you haven't enabled the option for guild members to share custom events with you."])
     end
   end
 end
@@ -38,7 +39,7 @@ end
 function MM.SendAddonMessage(addonMessageType, arg1)
   local nowTimestamp = GetTime()
   if (MM.SentMessageTimestamps[addonMessageType] and nowTimestamp - MM.SentMessageTimestamps[addonMessageType] < 10) then 
-    print("\124cFFFF0000[AutoBiographer] Message not sent, you are sending messages too quickly.")
+    print("\124cFFFF0000[AutoBiographer] " .. L["Message not sent, you are sending messages too quickly."])
     return
   end
   MM.SentMessageTimestamps[addonMessageType] = nowTimestamp

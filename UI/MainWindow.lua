@@ -1,3 +1,4 @@
+local L = AutoBiographer_L
 local Controller = AutoBiographer_Controller
 local EM = AutoBiographer_EventManager
 local HF = HelperFunctions
@@ -70,7 +71,7 @@ function AutioBiographer_WindowHelper:CreateLevelRange(parent, onChanged)
   local previous
   for index, name in ipairs({ "Minimum", "Maximum" }) do
     local label = range:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    label:SetText(index == 1 and "Levels" or "to")
+    label:SetText(index == 1 and L["Levels"] or L["to"])
     label:SetWidth(index == 1 and 34 or 12)
     label:SetWordWrap(false)
     if (previous) then label:SetPoint("LEFT", previous, "RIGHT", 8, 0)
@@ -93,7 +94,7 @@ function AutioBiographer_WindowHelper:CreateLevelRange(parent, onChanged)
     box:SetScript("OnEnter", function(editBox)
       GameTooltip:SetOwner(editBox, "ANCHOR_RIGHT")
       GameTooltip:SetText(name .. " level")
-      GameTooltip:AddLine("Includes both end levels. Leave blank for no limit. Press Enter or leave the field to apply.", 1, 1, 1, true)
+      GameTooltip:AddLine(L["Includes both end levels. Leave blank for no limit. Press Enter or leave the field to apply."], 1, 1, 1, true)
       GameTooltip:Show()
     end)
     box:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -306,7 +307,7 @@ function AutioBiographer_WindowHelper:InitialzationHelper(window, width, height,
   else
     frame.Title:SetPoint("LEFT", frame.TitleBg, "LEFT", 5, 0)
   end
-  frame.Title:SetText("AutoBiographer " .. windowTitle .. " Window")
+  frame.Title:SetText(L("AutoBiographer %s Window", L[windowTitle]))
   
   --scrollframe 
   frame.ScrollFrame = CreateFrame("ScrollFrame", nil, frame) 
@@ -359,12 +360,12 @@ function AutoBiographer_CustomEventDetailsWindow:Initialize()
   frame.ScrollFrame.Content.cbShareEvent:SetPoint("LEFT", frame.ScrollFrame.Content, "BOTTOM", -50, 95)
   frame.ScrollFrame.Content.fsShareEvent = frame.ScrollFrame.Content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
   frame.ScrollFrame.Content.fsShareEvent:SetPoint("LEFT", frame.ScrollFrame.Content, "BOTTOM", -20, 95)
-  frame.ScrollFrame.Content.fsShareEvent:SetText("Share with guild.")
+  frame.ScrollFrame.Content.fsShareEvent:SetText(L["Share with guild."])
 
   frame.ScrollFrame.Content.CreateEventBtn = CreateFrame("Button", nil, frame.ScrollFrame.Content, "UIPanelButtonTemplate");
   frame.ScrollFrame.Content.CreateEventBtn:SetPoint("BOTTOM", frame.ScrollFrame.Content, "BOTTOM", 0, 50);
   frame.ScrollFrame.Content.CreateEventBtn:SetSize(250, 35);
-  frame.ScrollFrame.Content.CreateEventBtn:SetText("Save Event and Close Window");
+  frame.ScrollFrame.Content.CreateEventBtn:SetText(L["Save Event and Close Window"]);
   frame.ScrollFrame.Content.CreateEventBtn:SetNormalFontObject("GameFontNormalLarge");
   frame.ScrollFrame.Content.CreateEventBtn:SetHighlightFontObject("GameFontHighlightLarge");
   frame.ScrollFrame.Content.CreateEventBtn:SetScript("OnClick", 
@@ -492,12 +493,12 @@ end
 function AutoBiographer_VerificationWindow:Update()
   local timeTrackedLoggedIn = Controller:GetTimeForTimeTrackingType(AutoBiographerEnum.TimeTrackingType.LoggedIn, 1, 100)
   local percentageTimeTracked = HF.Round(100 * (timeTrackedLoggedIn / EM.PersistentPlayerInfo.LastTotalTimePlayed), 0)
-  self.ScrollFrame.Content.PercentageTimeTrackedFs:SetText("Percentage of time played that AutoBiographer has tracked: " .. percentageTimeTracked .. "%.")
+  self.ScrollFrame.Content.PercentageTimeTrackedFs:SetText(L("Percentage of time played that AutoBiographer has tracked: %s%%.", percentageTimeTracked))
 
   local totalsKillStatistics = Controller:GetAggregatedKillStatisticsTotals(1, 100)
   local totalTaggedKills = KillStatistics.GetSum(totalsKillStatistics, { AutoBiographerEnum.KillTrackingType.TaggedAssist, AutoBiographerEnum.KillTrackingType.TaggedGroupAssistOrKillingBlow, AutoBiographerEnum.KillTrackingType.TaggedKillingBlow })
   local taggedKillsWithGroupMinorityDamage = KillStatistics.GetSum(totalsKillStatistics, { AutoBiographerEnum.KillTrackingType.TaggedKillWithGroupMinorityDamage })
-  self.ScrollFrame.Content.TaggedKillsFs:SetText("Tagged Kills: " .. HF.CommaValue(totalTaggedKills) .. ". Tagged Kills With Majority Damage From Outside Group: " .. HF.CommaValue(taggedKillsWithGroupMinorityDamage) .. ".")
+  self.ScrollFrame.Content.TaggedKillsFs:SetText(L("Tagged Kills: %s. Tagged Kills With Majority Damage From Outside Group: %s.", HF.CommaValue(totalTaggedKills), HF.CommaValue(taggedKillsWithGroupMinorityDamage)))
 
   if (self.ScrollFrame.Content.ExpectedlevelFs) then
     local experienceFromKills = Controller:GetExperienceByExperienceTrackingType(AutoBiographerEnum.ExperienceTrackingType.Kill, 1, 100)
@@ -513,6 +514,6 @@ function AutoBiographer_VerificationWindow:Update()
       end
       xpToLevel = xpToLevel + AutoBiographer_Databases.XpPerLevelDatabase[i]
     end
-    self.ScrollFrame.Content.ExpectedlevelFs:SetText("Expected  Level: " .. HF.Round(expectedLevel, 2) .. ".")
+    self.ScrollFrame.Content.ExpectedlevelFs:SetText(L("Expected  Level: %s.", HF.Round(expectedLevel, 2)))
   end
 end

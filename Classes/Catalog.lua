@@ -1,3 +1,4 @@
+local L = AutoBiographer_L
 -- *** Catalogs ***
 
 Catalogs = {}
@@ -133,7 +134,7 @@ end
 
 CatalogSpell = {}
 function CatalogSpell.GetDamageMeterDisplayName(catalogSpell, spellId)
-  local name = catalogSpell and catalogSpell.Name or ("Spell ID: " .. tostring(spellId))
+  local name = catalogSpell and catalogSpell.Name or (L["Spell ID: "] .. tostring(spellId))
   if (catalogSpell and catalogSpell.CreatureName and catalogSpell.CreatureName ~= "") then
     return name .. " (" .. catalogSpell.CreatureName .. ")"
   end

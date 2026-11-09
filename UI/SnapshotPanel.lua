@@ -1,10 +1,11 @@
+local L = AutoBiographer_L
 local Controller = AutoBiographer_Controller
 local Api = AutoBiographer_Api
 local panel = AutoBiographer_SnapshotPanel
 local statNames = { "Strength", "Agility", "Stamina", "Intellect", "Spirit" }
 local slotNames = { [0] = "Ammo", "Head", "Neck", "Shoulders", "Shirt", "Chest", "Waist",
-  "Legs", "Feet", "Wrists", "Hands", "Finger 1", "Finger 2", "Trinket 1", "Trinket 2",
-  "Back", "Main Hand", "Off Hand", "Ranged", "Tabard" }
+  "Legs", "Feet", "Wrists", "Hands", L["Finger 1"], L["Finger 2"], L["Trinket 1"], L["Trinket 2"],
+  "Back", L["Main Hand"], L["Off Hand"], "Ranged", "Tabard" }
 local gold = "|cffffd100"
 local visibleSlots = { 1, 3, 4, 5, 6, 7, 8, 9, 10, 15, 16, 17, 18, 19 }
 
@@ -13,19 +14,19 @@ local function ConfigureModel(model, method, ...)
 end
 
 local function AddCatalogLines(lines, entries, catalog, formatValue)
-  if (not entries) then lines[#lines + 1] = "Not captured"; return end
+  if (not entries) then lines[#lines + 1] = L["Not captured"]; return end
   local sorted = {}
   for id, value in pairs(entries) do
     sorted[#sorted + 1] = { Name = catalog[id] and catalog[id].Name or ("ID: " .. id), Value = value }
   end
   table.sort(sorted, function(a, b) return a.Name < b.Name end)
   for _, entry in ipairs(sorted) do lines[#lines + 1] = entry.Name .. ": " .. formatValue(entry.Value) end
-  if (#sorted == 0) then lines[#lines + 1] = "None" end
+  if (#sorted == 0) then lines[#lines + 1] = L["None"] end
 end
 
 local function CollectionTime(lines, timestamp, milestone)
   if (timestamp and timestamp ~= milestone) then
-    lines[#lines + 1] = "|cff888888Collected " .. date("%Y-%m-%d %H:%M:%S", timestamp) .. "|r"
+    lines[#lines + 1] = "|cff888888" .. L["Collected "] .. date(L["%Y-%m-%d %H:%M:%S"], timestamp) .. "|r"
   end
 end
 
@@ -48,61 +49,61 @@ function panel:ApplyPreviewEquipment()
     Api.ApplyCharacterPreviewWeapons(model, model.Snapshot.Equipment, model.Snapshot.Enchants)
   end)
   self.ApplyingPreview = false
-  self.PreviewMessage:SetText(success and "Recorded gear on your current appearance.\nTransmog is not recorded." or "Equipment preview unavailable on this client.")
+  self.PreviewMessage:SetText(success and L["Recorded gear on your current appearance.\nTransmog is not recorded."] or L["Equipment preview unavailable on this client."])
 end
 
 function panel:GetDetailText(entry)
   local snapshot, catalogs = entry.Snapshot, Controller.CharacterData.Catalogs
-  local lines = { gold .. entry.Label .. "|r", date("%Y-%m-%d %H:%M:%S", snapshot.Timestamp),
-    "Level: " .. snapshot.Level,
-    "Money: " .. (snapshot.Money ~= nil and Api.FormatMoney(snapshot.Money) or "Not captured"),
-    "Total time played: " .. (snapshot.TotalTimePlayed and HelperFunctions.SecondsToTimeString(snapshot.TotalTimePlayed) or "Not captured") }
+  local lines = { gold .. entry.Label .. "|r", date(L["%Y-%m-%d %H:%M:%S"], snapshot.Timestamp),
+    L["Level: "] .. snapshot.Level,
+    L["Money: "] .. (snapshot.Money ~= nil and Api.FormatMoney(snapshot.Money) or L["Not captured"]),
+    L["Total time played: "] .. (snapshot.TotalTimePlayed and HelperFunctions.SecondsToTimeString(snapshot.TotalTimePlayed) or L["Not captured"]) }
   if (snapshot.Pending) then
     local missing = {}
     for _, section in ipairs({ { "Attributes", "attributes" }, { "Equipment", "equipment" },
-      { "Talents", "talents" }, { "Skills", "skills / professions" } }) do
-      if (not snapshot[section[1]]) then missing[#missing + 1] = section[2] end
+      { "Talents", "talents" }, { "Skills", L["skills / professions"] } }) do
+      if (not snapshot[section[1]]) then missing[#missing + 1] = L[section[2]] end
     end
-    lines[#lines + 1] = "|cffaaaaaaWaiting to capture: " .. table.concat(missing, ", ") .. ".|r"
+    lines[#lines + 1] = "|cffaaaaaa" .. L["Waiting to capture: "] .. table.concat(missing, ", ") .. ".|r"
   end
-  if (snapshot.Incomplete) then lines[#lines + 1] = "|cffaaaaaaIncomplete: character leveled before missing data could be captured.|r" end
-  if (snapshot.DifficultyId) then lines[#lines + 1] = "Raid difficulty ID: " .. snapshot.DifficultyId end
+  if (snapshot.Incomplete) then lines[#lines + 1] = "|cffaaaaaa" .. L["Incomplete: character leveled before missing data could be captured."] .. "|r" end
+  if (snapshot.DifficultyId) then lines[#lines + 1] = L["Raid difficulty ID: "] .. snapshot.DifficultyId end
 
-  lines[#lines + 1] = "\n" .. gold .. "Attributes (base / effective)|r"
+  lines[#lines + 1] = "\n" .. gold .. L["Attributes (base / effective)"] .. "|r"
   if (snapshot.Attributes) then
     for index, name in ipairs(statNames) do
-      lines[#lines + 1] = name .. ": " .. snapshot.Attributes.Base[index] .. " / " .. snapshot.Attributes.Effective[index]
+      lines[#lines + 1] = L[name] .. ": " .. snapshot.Attributes.Base[index] .. " / " .. snapshot.Attributes.Effective[index]
     end
-    lines[#lines + 1] = "Max health: " .. snapshot.MaxHealth
-    lines[#lines + 1] = "Max mana: " .. snapshot.MaxMana
+    lines[#lines + 1] = L["Max health: "] .. snapshot.MaxHealth
+    lines[#lines + 1] = L["Max mana: "] .. snapshot.MaxMana
     CollectionTime(lines, snapshot.StatsCollectedAt, snapshot.Timestamp)
   else
-    lines[#lines + 1] = "Not captured"
+    lines[#lines + 1] = L["Not captured"]
   end
 
-  lines[#lines + 1] = "\n" .. gold .. "Equipment|r"
+  lines[#lines + 1] = "\n" .. gold .. L["Equipment"] .. "|r"
   if (snapshot.Equipment) then
     for slot = 0, 19 do
       local itemId = snapshot.Equipment[slot]
       if (itemId and itemId > 0) then
         local name, link = Api.GetItemInfo(itemId)
-        local text = slotNames[slot] .. ": " .. (link or name or ("Item ID: " .. itemId))
+        local text = L[slotNames[slot]] .. ": " .. (link or name or (L["Item ID: "] .. itemId))
         local enchant = snapshot.Enchants and snapshot.Enchants[slot]
-        if (enchant) then text = text .. " (enchant ID: " .. enchant .. ")" end
+        if (enchant) then text = text .. L(" (enchant ID: %s)", enchant) end
         lines[#lines + 1] = text
       end
     end
     CollectionTime(lines, snapshot.EquipmentCollectedAt, snapshot.Timestamp)
   else
-    lines[#lines + 1] = "Not captured"
+    lines[#lines + 1] = L["Not captured"]
   end
 
-  lines[#lines + 1] = "\n" .. gold .. "Talents|r"
-  AddCatalogLines(lines, snapshot.Talents, catalogs.TalentCatalog or {}, function(rank) return "rank " .. rank end)
-  lines[#lines + 1] = "Unspent points: " .. (snapshot.UnspentTalentPoints or "Not captured")
+  lines[#lines + 1] = "\n" .. gold .. L["Talents"] .. "|r"
+  AddCatalogLines(lines, snapshot.Talents, catalogs.TalentCatalog or {}, function(rank) return L["rank "] .. rank end)
+  lines[#lines + 1] = L["Unspent points: "] .. (snapshot.UnspentTalentPoints or L["Not captured"])
   CollectionTime(lines, snapshot.TalentsCollectedAt, snapshot.Timestamp)
 
-  lines[#lines + 1] = "\n" .. gold .. "Skills / professions|r"
+  lines[#lines + 1] = "\n" .. gold .. L["Skills / professions"] .. "|r"
   AddCatalogLines(lines, snapshot.Skills, catalogs.SkillCatalog or {}, function(skill) return skill.Rank .. " / " .. skill.MaxRank end)
   CollectionTime(lines, snapshot.SkillsCollectedAt, snapshot.Timestamp)
   return table.concat(lines, "\n")
@@ -114,7 +115,7 @@ function panel:Initialize()
   self.Description = self:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
   self.Description:SetPoint("TOPLEFT", 18, -14)
   self.Description:SetJustifyH("LEFT")
-  self.Description:SetText("Level-ups and first final-boss kills. Deferred values show their collection time; transmog is not recorded.")
+  self.Description:SetText(L["Level-ups and first final-boss kills. Deferred values show their collection time; transmog is not recorded."])
   self.List = CreateFrame("ScrollFrame", nil, self)
   self.List.Content = CreateFrame("Frame", nil, self.List)
   self.List:SetScrollChild(self.List.Content)
@@ -260,7 +261,7 @@ function panel:RenderList()
     if (button.Entry) then
       local text = button.Entry.Label
       if (button.Entry.Snapshot == self.SelectedSnapshot) then text = gold .. text .. "|r" end
-      button.Label:SetText(text .. "\n|cff888888" .. date("%Y-%m-%d %H:%M", button.Entry.Snapshot.Timestamp) .. "|r")
+      button.Label:SetText(text .. "\n|cff888888" .. date(L["%Y-%m-%d %H:%M"], button.Entry.Snapshot.Timestamp) .. "|r")
       button:Show()
     else
       button:Hide()
@@ -279,7 +280,7 @@ end
 function panel:ShowDetails(resetScroll)
   local entry
   for _, row in ipairs(self.Rows) do if (row.Snapshot == self.SelectedSnapshot) then entry = row; break end end
-  local text = entry and self:GetDetailText(entry) or "No snapshots recorded yet. Level up or clear a supported raid to record one."
+  local text = entry and self:GetDetailText(entry) or L["No snapshots recorded yet. Level up or clear a supported raid to record one."]
   -- Escape HTML while retaining WoW color codes and item hyperlinks.
   text = text:gsub("&", "&amp;"):gsub("<", "&lt;"):gsub(">", "&gt;"):gsub("\n", "<br/>")
   text = text:gsub("|H([^|]+)|h([^|]+)|h", '<a href="%1">%2</a>')
@@ -297,10 +298,10 @@ function panel:Update()
   local data, catalogs = Controller:GetCharacterSnapshots(), Controller.CharacterData.Catalogs
   self.Rows = {}
   for level, snapshot in pairs(data.Levels) do
-    self.Rows[#self.Rows + 1] = { Label = "Level " .. level, Snapshot = snapshot }
+    self.Rows[#self.Rows + 1] = { Label = L["Level "] .. level, Snapshot = snapshot }
   end
   for id, snapshot in pairs(data.Raids) do
-    self.Rows[#self.Rows + 1] = { Label = catalogs.RaidCatalog and catalogs.RaidCatalog[id] and catalogs.RaidCatalog[id].Name or ("Raid ID: " .. id), Snapshot = snapshot }
+    self.Rows[#self.Rows + 1] = { Label = catalogs.RaidCatalog and catalogs.RaidCatalog[id] and L[catalogs.RaidCatalog[id].Name] or (L["Raid ID: "] .. id), Snapshot = snapshot }
   end
   table.sort(self.Rows, function(a, b)
     if (a.Snapshot.Timestamp == b.Snapshot.Timestamp) then return a.Label < b.Label end
@@ -324,9 +325,9 @@ function panel:UpdatePreview()
   end
   if (not model or not available) then
     if (model) then model.Snapshot = nil; model:Hide() end
-    self.PreviewMessage:SetText(not snapshot and "Select a snapshot to preview its gear."
-      or not available and "Equipment not captured."
-      or "Equipment preview unavailable on this client.")
+    self.PreviewMessage:SetText(not snapshot and L["Select a snapshot to preview its gear."]
+      or not available and L["Equipment not captured."]
+      or L["Equipment preview unavailable on this client."])
     return
   end
   model:Show()
@@ -339,7 +340,7 @@ function panel:UpdatePreview()
     local success = pcall(model.SetUnit, model, "player", false, true)
     if (not success) then
       model.Snapshot = nil; model:Hide()
-      self.PreviewMessage:SetText("Character preview unavailable on this client.")
+      self.PreviewMessage:SetText(L["Character preview unavailable on this client."])
       return
     end
     self.PreviewFacing = 0.35

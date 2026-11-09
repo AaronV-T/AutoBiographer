@@ -1,10 +1,11 @@
+local L = AutoBiographer_L
 local panel = AutoBiographer_CharactersPanel
 local Controller, Api, HF = AutoBiographer_Controller, AutoBiographer_Api, HelperFunctions
 local manager = AutoBiographer_CharacterRosterManager
 local rowHeight = 82
-local sorts = { { "Last played", "Recent" }, { "Name", "Name" }, { "Level", "Level" } }
-local slotNames = { [0] = "Ammo", "Head", "Neck", "Shoulders", "Shirt", "Chest", "Waist", "Legs", "Feet",
-  "Wrists", "Hands", "Finger 1", "Finger 2", "Trinket 1", "Trinket 2", "Back", "Main Hand", "Off Hand", "Ranged", "Tabard" }
+local sorts = { { L["Last played"], "Recent" }, { L["Name"], "Name" }, { L["Level"], "Level" } }
+local slotNames = { [0] = L["Ammo"], L["Head"], L["Neck"], L["Shoulders"], L["Shirt"], L["Chest"], L["Waist"], L["Legs"], L["Feet"],
+  L["Wrists"], L["Hands"], L["Finger 1"], L["Finger 2"], L["Trinket 1"], L["Trinket 2"], L["Back"], L["Main Hand"], L["Off Hand"], L["Ranged"], L["Tabard"] }
 
 local function Label(parent, font)
   local label = parent:CreateFontString(nil, "OVERLAY", font or "GameFontHighlightSmall")
@@ -54,15 +55,15 @@ local function SetScrollRange(frame, height)
 end
 
 local function Seen(entry)
-  return entry.LastSeen and date("%b %d, %Y %H:%M", entry.LastSeen) or "Not recorded"
+  return entry.LastSeen and date(L["%b %d, %Y %H:%M"], entry.LastSeen) or L["Not recorded"]
 end
 
 local function Money(entry)
-  return entry.Money and Api.FormatMoney(entry.Money) or "Not recorded"
+  return entry.Money and Api.FormatMoney(entry.Money) or L["Not recorded"]
 end
 
 local function Played(entry)
-  return entry.TotalTimePlayed and HF.SecondsToTimeString(entry.TotalTimePlayed, true) or "Not recorded"
+  return entry.TotalTimePlayed and HF.SecondsToTimeString(entry.TotalTimePlayed, true) or L["Not recorded"]
 end
 
 function panel:HasFocusedTextInput()
@@ -89,7 +90,7 @@ function panel:Initialize()
   self.SearchBox:SetText("")
   self.SearchHint = Label(self.SearchBox, "GameFontDisableSmall")
   self.SearchHint:SetPoint("LEFT", 2, 0)
-  self.SearchHint:SetText("Search characters...")
+  self.SearchHint:SetText(L["Search characters..."])
   self.SearchBox:SetScript("OnTextChanged", function(box)
     self.SearchHint:SetShown(box:GetText() == "")
     if (self.PanelReady) then self.List.Scrollbar:SetValue(0); self:Update() end
@@ -101,7 +102,7 @@ function panel:Initialize()
   self.RealmDropdown:SetPoint("TOPLEFT", 214, -4)
   UIDropDownMenu_SetWidth(self.RealmDropdown, 130)
   UIDropDownMenu_Initialize(self.RealmDropdown, function()
-    local realms = { "All realms" }
+    local realms = { L["All realms"] }
     for _, realm in ipairs(CharacterRoster.GetRealms(Controller.AccountData.Characters)) do realms[#realms + 1] = realm end
     for index, realm in ipairs(realms) do
       local key = index > 1 and realm or nil
@@ -115,7 +116,7 @@ function panel:Initialize()
   self.FactionDropdown:SetPoint("TOPLEFT", 376, -4)
   UIDropDownMenu_SetWidth(self.FactionDropdown, 100)
   UIDropDownMenu_Initialize(self.FactionDropdown, function()
-    for _, choice in ipairs({ { "All factions" }, { FACTION_ALLIANCE or "Alliance", "Alliance" },
+    for _, choice in ipairs({ { L["All factions"] }, { FACTION_ALLIANCE or "Alliance", "Alliance" },
       { FACTION_HORDE or "Horde", "Horde" } }) do
       local info = UIDropDownMenu_CreateInfo()
       info.text, info.checked = choice[1], self.View.Faction == choice[2]
@@ -134,16 +135,16 @@ function panel:Initialize()
       UIDropDownMenu_AddButton(info)
     end
   end)
-  self.RefreshButton = Button(self, "Refresh", 80, function() manager:Capture(); self:Update() end)
+  self.RefreshButton = Button(self, L["Refresh"], 80, function() manager:Capture(); self:Update() end)
   self.RefreshButton:SetPoint("BOTTOMRIGHT", -22, 14)
   self.ShowHidden = CreateFrame("CheckButton", nil, self, "UICheckButtonTemplate")
   self.ShowHidden:SetPoint("TOPLEFT", 18, -35)
   self.ShowHidden:SetSize(26, 26)
   self.ShowHiddenLabel = Label(self)
   self.ShowHiddenLabel:SetPoint("LEFT", self.ShowHidden, "RIGHT", 2, 0)
-  self.ShowHiddenLabel:SetText("Show hidden characters")
+  self.ShowHiddenLabel:SetText(L["Show hidden characters"])
   self.ShowHidden:SetScript("OnClick", function() self.View.ShowHidden = not not self.ShowHidden:GetChecked(); self:Update(true) end)
-  self.ClearButton = Button(self, "Clear filters", 96, function()
+  self.ClearButton = Button(self, L["Clear filters"], 96, function()
     self.View.Realm, self.View.Faction, self.View.ShowHidden = nil, nil, nil
     self.SearchBox:SetText(""); self:Update(true)
   end)
@@ -161,7 +162,7 @@ function panel:Initialize()
   self.Empty = Label(self.List, "GameFontHighlight")
   self.Empty:SetPoint("TOPLEFT", 10, -20)
   self.Empty:SetWordWrap(true)
-  self.Empty:SetText("No characters match your filters.\n\nClear the filters or log into another character with AutoBiographer enabled.")
+  self.Empty:SetText(L["No characters match your filters.\n\nClear the filters or log into another character with AutoBiographer enabled."])
 
   local content = self.Detail.Content
   self.Name = Label(content, "GameFontNormalLarge")
@@ -170,7 +171,7 @@ function panel:Initialize()
   self.Identity:SetPoint("TOPLEFT", 12, -30)
   self.Updated = Label(content, "GameFontDisableSmall")
   self.Updated:SetPoint("TOPLEFT", 12, -48)
-  self.HideButton = Button(content, "Hide", 70, function()
+  self.HideButton = Button(content, L["Hide"], 70, function()
     local entry = self.SelectedId and Controller.AccountData.Characters.Entries[self.SelectedId]
     if (entry) then entry.Hidden = not entry.Hidden or nil; self:Update() end
   end)
@@ -178,18 +179,18 @@ function panel:Initialize()
   self.Values, self.Captions = {}, {}
   for _, name in ipairs({ "Realm", "Faction", "Location", "Guild", "Money", "Played" }) do
     local caption, value = Label(content, "GameFontDisableSmall"), Label(content)
-    caption:SetText(name)
+    caption:SetText(L[name])
     value:SetWordWrap(true)
     self.Captions[name] = caption
     self.Values[name] = value
   end
   self.ProfessionLabel = Label(content, "GameFontDisableSmall")
-  self.ProfessionLabel:SetText("Professions")
+  self.ProfessionLabel:SetText(L["Professions"])
   self.Professions = Label(content)
   self.Professions:SetWordWrap(true)
   self.GearHeading = Label(content, "GameFontNormal")
   self.NoteHeading = Label(content, "GameFontNormal")
-  self.NoteHeading:SetText("Personal note")
+  self.NoteHeading:SetText(L["Personal note"])
   self.NoteEditor = CreateFrame("ScrollFrame", nil, content, "InputScrollFrameTemplate")
   self.NoteEditor.EditBox:SetFontObject("ChatFontNormal")
   self.NoteEditor.EditBox:SetAutoFocus(false)
@@ -202,7 +203,7 @@ function panel:Initialize()
   end)
   self.NoteEditor.EditBox:SetScript("OnEscapePressed", function(box) box:ClearFocus() end)
   self.NoteStatus = Label(content, "GameFontDisableSmall")
-  self.NoteStatus:SetText("Saved automatically. Up to 1,000 characters.")
+  self.NoteStatus:SetText(L["Saved automatically. Up to 1,000 characters."])
   self.Footer = Label(self, "GameFontDisableSmall")
   self.Footer:SetPoint("BOTTOMLEFT", 18, 20)
   self.PanelReady = true
@@ -240,17 +241,17 @@ function panel:Update(resetScroll)
   self.SelectedId = selected and selected.Id
   if (resetScroll) then self.List.Scrollbar:SetValue(0) end
   if (changed) then self.NoteEditor.EditBox:ClearFocus() end
-  UIDropDownMenu_SetText(self.RealmDropdown, self.View.Realm or "All realms")
+  UIDropDownMenu_SetText(self.RealmDropdown, self.View.Realm or L["All realms"])
   local factionText = self.View.Faction == "Alliance" and (FACTION_ALLIANCE or "Alliance") or
     self.View.Faction == "Horde" and (FACTION_HORDE or "Horde") or self.View.Faction
-  UIDropDownMenu_SetText(self.FactionDropdown, factionText or "All factions")
-  local sortText = "Last played"
+  UIDropDownMenu_SetText(self.FactionDropdown, factionText or L["All factions"])
+  local sortText = L["Last played"]
   for _, choice in ipairs(sorts) do if (choice[2] == self.View.Sort) then sortText = choice[1] end end
   UIDropDownMenu_SetText(self.SortDropdown, sortText)
   self.ShowHidden:SetChecked(self.View.ShowHidden)
   local total = 0
   for _ in pairs(data.Entries) do total = total + 1 end
-  self.Footer:SetText(#self.Entries .. " of " .. total .. " characters | Log into each character once to add it to your roster.")
+  self.Footer:SetText(L("%s of %s characters | Log into each character once to add it to your roster.", #self.Entries, total))
   self.Empty:SetShown(#self.Entries == 0)
   self.Detail:SetShown(selected ~= nil)
   SetScrollRange(self.List, #self.Entries * rowHeight)
@@ -290,8 +291,8 @@ function panel:RenderRows()
     local color = RAID_CLASS_COLORS and RAID_CLASS_COLORS[entry.Class]
     row.Name:SetTextColor(color and color.r or 1, color and color.g or 0.82, color and color.b or 0)
     row.Level:SetText(entry.Level or "?")
-    row.Class:SetWidth(width - 16); row.Class:SetText((entry.ClassName or entry.Class or "Unknown class") .. " | " .. (entry.FactionName or entry.Faction or "Unknown faction"))
-    row.Realm:SetWidth(width - 16); row.Realm:SetText((entry.Realm or "Unknown realm") .. (entry.Id == manager.CurrentId and " | You" or entry.Hidden and " | Hidden" or ""))
+    row.Class:SetWidth(width - 16); row.Class:SetText((entry.ClassName or entry.Class or L["Unknown class"]) .. " | " .. (entry.FactionName or entry.Faction or L["Unknown faction"]))
+    row.Realm:SetWidth(width - 16); row.Realm:SetText((entry.Realm or L["Unknown realm"]) .. (entry.Id == manager.CurrentId and L[" | You"] or entry.Hidden and L[" | Hidden"] or ""))
     row.Seen:SetWidth(width - 16); row.Seen:SetText(Seen(entry))
     row:Show()
   end
@@ -302,14 +303,14 @@ function panel:ShowDetails(entry)
   local content, width, height = self.Detail.Content, self.Detail:GetWidth(), self.Detail:GetHeight()
   self.Name:SetWidth(math.max(1, width - 100)); self.Name:SetText(CharacterRoster.GetName(entry))
   self.Identity:SetWidth(width - 24)
-  self.Identity:SetText("Level " .. (entry.Level or "?") .. " " .. (entry.Race or "") .. " " .. (entry.ClassName or entry.Class or ""))
+  self.Identity:SetText(L["Level "] .. (entry.Level or "?") .. " " .. (entry.Race or "") .. " " .. (entry.ClassName or entry.Class or ""))
   self.Updated:SetWidth(width - 24)
-  self.Updated:SetText("Last updated: " .. Seen(entry) .. (entry.Id == manager.CurrentId and " | Current character" or " | Saved snapshot"))
-  self.HideButton:SetText(entry.Hidden and "Unhide" or "Hide")
-  local location = entry.Zone or "Not recorded"
+  self.Updated:SetText(L["Last updated: "] .. Seen(entry) .. (entry.Id == manager.CurrentId and L[" | Current character"] or L[" | Saved snapshot"]))
+  self.HideButton:SetText(entry.Hidden and L["Unhide"] or L["Hide"])
+  local location = entry.Zone or L["Not recorded"]
   if (entry.SubZone and entry.SubZone ~= "" and entry.SubZone ~= entry.Zone) then location = entry.SubZone .. " (" .. location .. ")" end
-  local values = { Realm = entry.Realm or "Not recorded", Faction = entry.FactionName or entry.Faction or "Not recorded",
-    Location = location, Guild = entry.Guild and (entry.Guild ~= "" and entry.Guild or "None") or "Not recorded", Money = Money(entry), Played = Played(entry) }
+  local values = { Realm = entry.Realm or L["Not recorded"], Faction = entry.FactionName or entry.Faction or L["Not recorded"],
+    Location = location, Guild = entry.Guild and (entry.Guild ~= "" and entry.Guild or L["None"]) or L["Not recorded"], Money = Money(entry), Played = Played(entry) }
   local top, columnWidth = 72, (width - 24) / 2
   local fields = { { "Realm", "Faction" }, { "Location", "Guild" }, { "Money", "Played" } }
   for _, fieldsInRow in ipairs(fields) do
@@ -332,10 +333,10 @@ function panel:ShowDetails(entry)
   self.Professions:SetWidth(math.max(1, width - 96))
   self.ProfessionLabel:ClearAllPoints(); self.ProfessionLabel:SetPoint("TOPLEFT", 12, -top)
   self.Professions:ClearAllPoints(); self.Professions:SetPoint("TOPLEFT", 84, -top)
-  self.Professions:SetText(entry.Professions and (#professions > 0 and table.concat(professions, " | ") or "None") or "Not recorded")
+  self.Professions:SetText(entry.Professions and (#professions > 0 and table.concat(professions, " | ") or L["None"]) or L["Not recorded"])
   top = top + math.max(18, self.Professions:GetStringHeight()) + 12
   self.GearHeading:ClearAllPoints(); self.GearHeading:SetPoint("TOPLEFT", 12, -top); self.GearHeading:SetWidth(width - 24)
-  self.GearHeading:SetText("Last recorded gear" .. (entry.GearCollectedAt and (" | " .. date("%b %d %H:%M", entry.GearCollectedAt)) or ""))
+  self.GearHeading:SetText(L["Last recorded gear"] .. (entry.GearCollectedAt and (" | " .. date(L["%b %d %H:%M"], entry.GearCollectedAt)) or ""))
   top = top + 24
   local count = 19
   if (entry.Equipment and (entry.Equipment[0] or 0) > 0) then count = 20 end
@@ -368,9 +369,9 @@ function panel:ShowDetails(entry)
     row:ClearAllPoints(); row:SetPoint("TOPLEFT", 12 + ((index - 1) % gearColumns) * columnWidth, -top - math.floor((index - 1) / gearColumns) * gearRowHeight)
     row:SetSize(columnWidth - 8, gearRowHeight - 2)
     row.Item:SetWidth(math.max(1, columnWidth - 36)); row.Slot:SetWidth(math.max(1, columnWidth - 36))
-    row.Slot:SetText(slotNames[slot])
+    row.Slot:SetText(L[slotNames[slot]])
     row.Icon:SetShown(id ~= nil and id > 0); row.Icon:SetTexture(item.Icon or "Interface\\Icons\\inv_misc_questionmark")
-    row.Item:SetText(id == nil and "Not recorded" or id == 0 and "Empty" or item.Name or ("Item #" .. id))
+    row.Item:SetText(id == nil and L["Not recorded"] or id == 0 and L["Empty"] or item.Name or (L["Item #"] .. id))
     local color = ITEM_QUALITY_COLORS and item.Quality and ITEM_QUALITY_COLORS[item.Quality]
     row.Item:SetTextColor(color and color.r or 0.85, color and color.g or 0.85, color and color.b or 0.85)
     row:Show()

@@ -1,3 +1,4 @@
+local L = AutoBiographer_L
 local Controller = AutoBiographer_Controller
 local EM = AutoBiographer_EventManager
 local HF = HelperFunctions
@@ -79,10 +80,18 @@ local headerDescriptions = {
   Deaths = "Recorded deaths in the selected level range. Deaths by Unit counts only deaths attributed to that unit.",
 }
 
+-- Usage names such as "Statistics / Damage Dealt" are translated part by part.
+local function TranslateUsageName(name)
+  if (type(name) ~= "string" or rawget(L, name)) then return L[name] end
+  local parts = {}
+  for part in (name .. " / "):gmatch("(.-) / ") do parts[#parts + 1] = L[part] end
+  return table.concat(parts, " / ")
+end
+
 local function CreateButton(parent, text, width, onClick)
   local button = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
   button:SetSize(width, 24)
-  button:SetText(text)
+  button:SetText(L[text])
   button:SetNormalFontObject("GameFontNormalSmall")
   button:SetHighlightFontObject("GameFontHighlightSmall")
   button:SetScript("OnClick", onClick)
@@ -125,11 +134,11 @@ end
 
 local function ShowHeaderTooltip(header)
   GameTooltip:SetOwner(header, "ANCHOR_RIGHT")
-  GameTooltip:SetText(header.Label, 1, 0.82, 0)
+  GameTooltip:SetText(L[header.Label], 1, 0.82, 0)
   if (headerDescriptions[header.Label]) then
-    GameTooltip:AddLine(headerDescriptions[header.Label], 1, 1, 1, true)
+    GameTooltip:AddLine(L[headerDescriptions[header.Label]], 1, 1, 1, true)
   end
-  GameTooltip:AddLine("Click to sort; click again to reverse.", 0.7, 0.7, 0.7)
+  GameTooltip:AddLine(L["Click to sort; click again to reverse."], 0.7, 0.7, 0.7)
   GameTooltip:Show()
 end
 
@@ -176,7 +185,7 @@ function AutoBiographer_StatisticsWindow:GetTableData(minLevel, maxLevel)
     }
     for _, definition in ipairs(features and AutoBiographer_FeatureActivity.Definitions or AutoBiographer_UiActivity.Definitions) do
       local entry = totals[definition.Id]
-      table.insert(tableData.Rows, { definition.Name, entry and entry.OpenCount or 0, entry and entry.TimeSpent or 0 })
+      table.insert(tableData.Rows, { TranslateUsageName(definition.Name), entry and entry.OpenCount or 0, entry and entry.TimeSpent or 0 })
     end
   elseif (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.DamageDealt) then
     local abilitiesBySpellName = Controller:GetAggregatedDamageMeterAbilities({ AutoBiographerEnum.DamageOrHealingCategory.DamageDealt }, minLevel, maxLevel, true)
@@ -213,7 +222,7 @@ function AutoBiographer_StatisticsWindow:GetTableData(minLevel, maxLevel)
     for unitName, spells in pairs(breakdownsByUnitAndSpell) do
       for spellId, breakdown in pairs(spells) do
         local catalogSpell = Controller.CharacterData.Catalogs.SpellCatalog[spellId]
-        local spellName = catalogSpell and catalogSpell.Name or ("Spell ID: " .. tostring(spellId))
+        local spellName = catalogSpell and catalogSpell.Name or (L["Spell ID: "] .. tostring(spellId))
         table.insert(tableData.Rows, { spellName, unitName, breakdown.Amount - breakdown.Over, breakdown.Over, SpellId = spellId })
       end
     end
@@ -231,7 +240,7 @@ function AutoBiographer_StatisticsWindow:GetTableData(minLevel, maxLevel)
     tableData = { HeaderValues = { "Unit Name", "Deaths" }, RowOffsets = { 0, 450, 650 }, Rows = {} }
     for catalogUnitId, count in pairs(Controller:GetAggregatedDeathStatisticsDictionary(minLevel, maxLevel)) do
       local unit = Controller.CharacterData.Catalogs.UnitCatalog[catalogUnitId]
-      local name = unit and unit.Name or ("Unit ID: " .. tostring(catalogUnitId))
+      local name = unit and unit.Name or (L["Unit ID: "] .. tostring(catalogUnitId))
       if (unit and unit.Name and unit.LastName and unit.LastName ~= "") then name = name .. " " .. unit.LastName end
       table.insert(tableData.Rows, { name, count })
     end
@@ -273,7 +282,7 @@ function AutoBiographer_StatisticsWindow:GetTableData(minLevel, maxLevel)
         if (Controller.CharacterData.Catalogs.ItemCatalog[catalogItemId].Name) then
           itemName = Controller.CharacterData.Catalogs.ItemCatalog[catalogItemId].Name
         else
-          itemName = "Item ID: " .. tostring(catalogItemId)
+          itemName = L["Item ID: "] .. tostring(catalogItemId)
         end
 
         local row = {
@@ -301,8 +310,8 @@ function AutoBiographer_StatisticsWindow:GetTableData(minLevel, maxLevel)
     }
     for _, roll in ipairs(Controller:GetAggregatedItemRolls(minLevel, maxLevel)) do
       local item = Controller.CharacterData.Catalogs.ItemCatalog[roll.ItemId]
-      local row = { item and item.Name or ("Item ID: " .. roll.ItemId), roll.Roll,
-        roll.RollType == Enum.LootRollType.Need and "Need" or "Greed", date("%Y-%m-%d %H:%M:%S", roll.Timestamp) }
+      local row = { item and item.Name or (L["Item ID: "] .. roll.ItemId), roll.Roll,
+        roll.RollType == Enum.LootRollType.Need and L["Need"] or L["Greed"], date(L["%Y-%m-%d %H:%M:%S"], roll.Timestamp) }
       row.ItemId = roll.ItemId
       table.insert(tableData.Rows, row)
     end
@@ -332,7 +341,7 @@ function AutoBiographer_StatisticsWindow:GetTableData(minLevel, maxLevel)
         table.insert(tableData.Rows, row)
       else
         if (not unknownRow) then
-          unknownRow = { "Unknown", 0, 0, 0, 0 }
+          unknownRow = { L["Unknown"], 0, 0, 0, 0 }
           table.insert(tableData.Rows, unknownRow)
         end
         for column = 2, 5 do
@@ -362,7 +371,7 @@ function AutoBiographer_StatisticsWindow:GetTableData(minLevel, maxLevel)
     }
     for catalogUnitId, otherPlayerStatistics in pairs(otherPlayerStatisticsByUnit) do
       local catalogUnit = Controller.CharacterData.Catalogs.UnitCatalog[catalogUnitId]
-      local unitName = catalogUnit and catalogUnit.Name or ("Unit ID: " .. tostring(catalogUnitId))
+      local unitName = catalogUnit and catalogUnit.Name or (L["Unit ID: "] .. tostring(catalogUnitId))
       if (catalogUnit and catalogUnit.Name and catalogUnit.LastName and catalogUnit.LastName ~= "") then
         unitName = unitName .. " " .. catalogUnit.LastName
       end
@@ -399,7 +408,7 @@ function AutoBiographer_StatisticsWindow:GetTableData(minLevel, maxLevel)
         if (Controller.CharacterData.Catalogs.SpellCatalog[catalogSpellId].Name) then
           spellName = Controller.CharacterData.Catalogs.SpellCatalog[catalogSpellId].Name
         else
-          spellName = "Spell ID: " .. catalogSpellId
+          spellName = L["Spell ID: "] .. catalogSpellId
         end
 
         local startedCasting = SpellStatistics.GetSum(spellStatistics, { AutoBiographerEnum.SpellTrackingType.StartedCasting })
@@ -430,7 +439,7 @@ function AutoBiographer_StatisticsWindow:GetTableData(minLevel, maxLevel)
     }
     for spellId, spellStatistics in pairs(spellStatisticsBySpell) do
       local catalogSpell = Controller.CharacterData.Catalogs.SpellCatalog[spellId]
-      local spellName = catalogSpell and catalogSpell.Name or ("Spell ID: " .. tostring(spellId))
+      local spellName = catalogSpell and catalogSpell.Name or (L["Spell ID: "] .. tostring(spellId))
       local rank = catalogSpell and catalogSpell.Rank
       if (type(rank) == "string") then rank = tonumber(string.match(rank, "%d+")) end
       rank = rank or Api.GetSpellRank(spellId) or 0
@@ -494,7 +503,7 @@ function AutoBiographer_StatisticsWindow:GetTableData(minLevel, maxLevel)
       end
     end
   else
-    print("[AutoBiographer] Unsupported Statistics Display Mode. This should not happen!")
+    print("[AutoBiographer] " .. L["Unsupported Statistics Display Mode. This should not happen!"])
     return
   end
 
@@ -544,7 +553,7 @@ function AutoBiographer_StatisticsWindow:Initialize()
     for _, view in ipairs(views) do
       if (IsViewAvailable(view[2])) then
         local info = UIDropDownMenu_CreateInfo()
-        info.text = view[1]
+        info.text = L[view[1]]
         info.checked = self.StatisticsDisplayMode == view[2]
         info.func = function() self:SelectView(view[2]) end
         UIDropDownMenu_AddButton(info)
@@ -555,7 +564,7 @@ function AutoBiographer_StatisticsWindow:Initialize()
   UIDropDownMenu_Initialize(self.LevelDropdown, function()
     for _, filter in ipairs({ { "All levels", "All" }, { "Current level", "Current" }, { "Custom range", "Custom" } }) do
       local info = UIDropDownMenu_CreateInfo()
-      info.text = filter[1]
+      info.text = L[filter[1]]
       info.checked = self:GetViewState().LevelFilter == filter[2]
       info.func = function() self:ApplyLevelFilter(filter[2]) end
       UIDropDownMenu_AddButton(info)
@@ -567,7 +576,7 @@ function AutoBiographer_StatisticsWindow:Initialize()
   self.SearchBox:SetMaxLetters(200)
   self.SearchHint = self.SearchBox:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
   self.SearchHint:SetPoint("LEFT", 2, 0)
-  self.SearchHint:SetText("Search statistics...")
+  self.SearchHint:SetText(L["Search statistics..."])
   self.SearchBox:SetScript("OnEscapePressed", function(box) box:ClearFocus() end)
   self.SearchBox:SetScript("OnEnterPressed", function(box) box:ClearFocus(); self:UpdateFilteredRows(true) end)
   self.SearchBox:SetScript("OnTextChanged", function(box)
@@ -591,7 +600,7 @@ function AutoBiographer_StatisticsWindow:Initialize()
   local previous
   for i, name in ipairs({ "Minimum", "Maximum" }) do
     local label = self.CustomRange:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    label:SetText(i == 1 and "From level" or "to")
+    label:SetText(i == 1 and L["From level"] or L["to"])
     label:SetWidth(i == 1 and 50 or 12)
     label:SetWordWrap(false)
     if (previous) then label:SetPoint("LEFT", previous, "RIGHT", 8, 0)
@@ -638,12 +647,12 @@ function AutoBiographer_StatisticsWindow:Initialize()
   self.TotalsPanel:EnableMouse(true)
   self.TotalsPanel:SetScript("OnEnter", function(panel)
     GameTooltip:SetOwner(panel, "ANCHOR_RIGHT")
-    GameTooltip:SetText(self:GetViewState().Search ~= "" and "Matching-row totals" or "Totals", 1, 0.82, 0)
-    GameTooltip:AddLine("Totals include the rows matching the current search and level filter. Names and ranks are not added together.", 1, 1, 1, true)
+    GameTooltip:SetText(self:GetViewState().Search ~= "" and L["Matching-row totals"] or L["Totals"], 1, 0.82, 0)
+    GameTooltip:AddLine(L["Totals include the rows matching the current search and level filter. Names and ranks are not added together."], 1, 1, 1, true)
     if (self.StatisticsDisplayMode == Enum.StatisticsDisplayMode.Time) then
-      GameTooltip:AddLine(headerDescriptions.Total, 1, 1, 1, true)
+      GameTooltip:AddLine(L[headerDescriptions.Total], 1, 1, 1, true)
     elseif (self.StatisticsDisplayMode == Enum.StatisticsDisplayMode.Levels) then
-      GameTooltip:AddLine(headerDescriptions["XP/hour"], 1, 1, 1, true)
+      GameTooltip:AddLine(L[headerDescriptions["XP/hour"]], 1, 1, 1, true)
     end
     GameTooltip:Show()
   end)
@@ -716,7 +725,7 @@ function AutoBiographer_StatisticsWindow:RenderStatisticsTable()
     header:ClearAllPoints()
     header:SetPoint("TOPLEFT", 18 + offsets[i], -55)
     header:SetSize(offsets[i + 1] - offsets[i], 26)
-    header:SetText(label)
+    header:SetText(L[label])
     local text = header:GetFontString()
     text:ClearAllPoints()
     text:SetPoint("LEFT", 6, 0)
@@ -745,7 +754,7 @@ function AutoBiographer_StatisticsWindow:RenderStatisticsTable()
     totalCell:SetWidth(math.max(1, offsets[i + 1] - offsets[i] - 16))
     totalCell:SetWordWrap(false)
     totalCell:SetJustifyH(i == 1 and "LEFT" or "RIGHT")
-    totalCell:SetText(i == 1 and (state.Search ~= "" and "Matching total" or "Total") or FormatValue(self, i, self.FilteredTotals[i]))
+    totalCell:SetText(i == 1 and (state.Search ~= "" and L["Matching total"] or L["Total"]) or FormatValue(self, i, self.FilteredTotals[i]))
     totalCell:Show()
   end
   local height = math.max(1, #self.FilteredRows * rowHeight)
@@ -760,10 +769,10 @@ function AutoBiographer_StatisticsWindow:RenderStatisticsTable()
   state.Scroll = scroll
   self.ScrollFrame.Scrollbar:SetShown(maximum > 0)
   self.EmptyMessage:SetShown(#self.FilteredRows == 0)
-  self.EmptyMessage:SetText(#tableData.Rows == 0 and "No statistics recorded for this view and level range.\nTry All levels or another statistics type." or "No statistics match your search.\nTry another name or clear the filters.")
-  self.Footer:SetText(HF.CommaValue(#self.FilteredRows) .. " of " .. HF.CommaValue(#tableData.Rows) .. " rows")
+  self.EmptyMessage:SetText(#tableData.Rows == 0 and L["No statistics recorded for this view and level range.\nTry All levels or another statistics type."] or L["No statistics match your search.\nTry another name or clear the filters."])
+  self.Footer:SetText(L("%s of %s rows", HF.CommaValue(#self.FilteredRows), HF.CommaValue(#tableData.Rows)))
   if (self.StatisticsDisplayMode == Enum.StatisticsDisplayMode.Levels) then
-    self.Footer:SetText(self.Footer:GetText() .. "  |  * Partial recording  + In progress")
+    self.Footer:SetText(self.Footer:GetText() .. L["  |  * Partial recording  + In progress"])
   end
   self:RenderVisibleRows()
 end
@@ -878,9 +887,9 @@ end
 function AutoBiographer_StatisticsWindow:ShowRowTooltip(owner, row, column)
   GameTooltip:SetOwner(owner, "ANCHOR_RIGHT")
   if (row.LevelStatistics) then
-    GameTooltip:SetText("Level " .. row[1], 1, 0.82, 0)
-    if (row.LevelStatistics.IsInProgress) then GameTooltip:AddLine("In progress", 0.3, 1, 0.3) end
-    if (row.LevelStatistics.IsPartial) then GameTooltip:AddLine("The beginning of this level was not recorded; statistics may be partial.", 1, 0.82, 0, true) end
+    GameTooltip:SetText(L["Level "] .. row[1], 1, 0.82, 0)
+    if (row.LevelStatistics.IsInProgress) then GameTooltip:AddLine(L["In progress"], 0.3, 1, 0.3) end
+    if (row.LevelStatistics.IsPartial) then GameTooltip:AddLine(L["The beginning of this level was not recorded; statistics may be partial."], 1, 0.82, 0, true) end
   elseif (column == 1 and row.ItemId and Api.GetItemInfo(row.ItemId)) then
     GameTooltip:SetHyperlink("item:" .. tostring(row.ItemId))
   elseif (column == 1 and row.SpellId and Api.GetSpellInfo(row.SpellId)) then
@@ -891,21 +900,21 @@ function AutoBiographer_StatisticsWindow:ShowRowTooltip(owner, row, column)
   for i = 2, #self.CurrentTableData.HeaderValues do
     local value = row[i]
     local text = IsDurationColumn(self, i) and HF.SecondsToTimeString(value, true) or FormatValue(self, i, value, row)
-    GameTooltip:AddDoubleLine(self.CurrentTableData.HeaderValues[i], text, 0.8, 0.8, 0.8, 1, 1, 1)
+    GameTooltip:AddDoubleLine(L[self.CurrentTableData.HeaderValues[i]], text, 0.8, 0.8, 0.8, 1, 1, 1)
   end
   if (row.LevelStatistics) then
     local statistics, xp = row.LevelStatistics, row.LevelStatistics.Experience
     local types = Enum.ExperienceTrackingType
     local killXp, rested, group, penalty = xp[types.Kill] or 0, xp[types.RestedBonus] or 0, xp[types.GroupBonus] or 0, xp[types.RaidPenalty] or 0
-    GameTooltip:AddLine("XP breakdown", 1, 0.82, 0)
+    GameTooltip:AddLine(L["XP breakdown"], 1, 0.82, 0)
     for _, entry in ipairs({ { "Kills (total)", killXp }, { "  Kills (base)", killXp - rested - group + penalty },
       { "  Rested bonus", rested }, { "  Group bonus", group }, { "  Raid penalty", penalty },
       { "Quests", xp[types.Quest] or 0 }, { "Exploration", xp[types.Discovery] or 0 } }) do
-      GameTooltip:AddDoubleLine(entry[1], HF.CommaValue(entry[2]), 0.8, 0.8, 0.8, 1, 1, 1)
+      GameTooltip:AddDoubleLine(L[entry[1]], HF.CommaValue(entry[2]), 0.8, 0.8, 0.8, 1, 1, 1)
     end
-    GameTooltip:AddDoubleLine("AFK time", HF.SecondsToTimeString(statistics.AfkTime, true), 0.8, 0.8, 0.8, 1, 1, 1)
-    GameTooltip:AddDoubleLine("Grouped time", HF.SecondsToTimeString(statistics.GroupedTime, true), 0.8, 0.8, 0.8, 1, 1, 1)
-    GameTooltip:AddDoubleLine("Distance travelled", HF.FormatDistance(statistics.DistanceTravelled), 0.8, 0.8, 0.8, 1, 1, 1)
+    GameTooltip:AddDoubleLine(L["AFK time"], HF.SecondsToTimeString(statistics.AfkTime, true), 0.8, 0.8, 0.8, 1, 1, 1)
+    GameTooltip:AddDoubleLine(L["Grouped time"], HF.SecondsToTimeString(statistics.GroupedTime, true), 0.8, 0.8, 0.8, 1, 1, 1)
+    GameTooltip:AddDoubleLine(L["Distance travelled"], HF.FormatDistance(statistics.DistanceTravelled), 0.8, 0.8, 0.8, 1, 1, 1)
   end
   GameTooltip:Show()
 end
@@ -929,9 +938,9 @@ function AutoBiographer_StatisticsWindow:Update(resetScroll)
   self.MaximumLevelEb:SetNumber(state.MaxLevel)
   self.CustomRange:SetShown(state.LevelFilter == "Custom")
   self.IsRestoringView = false
-  UIDropDownMenu_SetText(self.Dropdown, self.DropdownText)
-  UIDropDownMenu_SetText(self.LevelDropdown, state.LevelFilter == "All" and "All levels" or state.LevelFilter == "Current" and "Current level" or "Custom range")
-  self.ScopeLabel:SetText(minLevel == maxLevel and "Statistics recorded at level " .. minLevel or "Statistics recorded at levels " .. minLevel .. "–" .. maxLevel)
+  UIDropDownMenu_SetText(self.Dropdown, L[self.DropdownText])
+  UIDropDownMenu_SetText(self.LevelDropdown, state.LevelFilter == "All" and L["All levels"] or state.LevelFilter == "Current" and L["Current level"] or L["Custom range"])
+  self.ScopeLabel:SetText(minLevel == maxLevel and L("Statistics recorded at level %s", minLevel) or L("Statistics recorded at levels %s–%s", minLevel, maxLevel))
   -- Refresh active play-time counters through the existing tracking path.
   if (EM.PlayerEnteringWorldHasFired and EM.TemporaryTimestamps.EnteredArea and not EM.NewLevelToAddToHistory) then
     EM:UpdateTimestamps(EM.PersistentPlayerInfo.CurrentZone, EM.PersistentPlayerInfo.CurrentSubZone)
