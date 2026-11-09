@@ -11,6 +11,7 @@ local views = {
   { "Damage Taken by Spell", Enum.StatisticsDisplayMode.DamageTakenBySpell },
   { "Damage Taken by Unit", Enum.StatisticsDisplayMode.DamageTakenByUnit },
   { "Deaths", Enum.StatisticsDisplayMode.Deaths },
+  { "Feature Usage", Enum.StatisticsDisplayMode.FeatureUsage },
   { "Healing Dealt", Enum.StatisticsDisplayMode.HealingDealt },
   { "Healing Dealt by Rank", Enum.StatisticsDisplayMode.HealingDealtByRank },
   { "Item Acquisitions", Enum.StatisticsDisplayMode.Items },
@@ -24,9 +25,13 @@ local views = {
   { "Time", Enum.StatisticsDisplayMode.Time },
   { "UI Usage", Enum.StatisticsDisplayMode.UiUsage },
 }
+local function IsViewAvailable(mode)
+  return mode ~= Enum.StatisticsDisplayMode.FeatureUsage or AutoBiographer_Settings.Options.EnableDebugLogging
+end
+
 local headerDescriptions = {
-  ["Times Opened"] = "How many times this window became visible during the selected levels.",
-  ["Time Open"] = "Time this window was visible, including AFK time. Several windows can be open together, so their times overlap.",
+  ["Times Opened"] = "How many times this window or feature became visible during the selected levels.",
+  ["Time Open"] = "Time visible, including AFK time. Overlapping windows and parent/sub-item totals should not be added together.",
   Roll = "Your rolled number. Random Rolls only includes rolls with a range of exactly 1-100.",
   ["Times Rolled"] = "How many times your character rolled this number in the selected level range.",
   ["Roll Type"] = "Whether you rolled Need or Greed for the item. Passes, disenchant and transmog rolls are not included.",
@@ -97,6 +102,7 @@ end
 local function IsDurationColumn(window, column)
   return window.StatisticsDisplayMode == Enum.StatisticsDisplayMode.Time and column > 1 or
     window.StatisticsDisplayMode == Enum.StatisticsDisplayMode.UiUsage and column == 3 or
+    window.StatisticsDisplayMode == Enum.StatisticsDisplayMode.FeatureUsage and column == 3 or
     window.StatisticsDisplayMode == Enum.StatisticsDisplayMode.OtherPlayers and column == 6 or
     window.StatisticsDisplayMode == Enum.StatisticsDisplayMode.Levels and column == 2
 end
@@ -159,14 +165,15 @@ function AutoBiographer_StatisticsWindow:GetTableData(minLevel, maxLevel)
     self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.HealingDealtByRank or
     self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.SpellsByRank
   
-  if (self.StatisticsDisplayMode == Enum.StatisticsDisplayMode.UiUsage) then
-    local totals = Controller:GetAggregatedUiStatistics(minLevel, maxLevel)
+  if (self.StatisticsDisplayMode == Enum.StatisticsDisplayMode.UiUsage or self.StatisticsDisplayMode == Enum.StatisticsDisplayMode.FeatureUsage) then
+    local features = self.StatisticsDisplayMode == Enum.StatisticsDisplayMode.FeatureUsage
+    local totals = features and Controller:GetAggregatedFeatureStatistics(minLevel, maxLevel) or Controller:GetAggregatedUiStatistics(minLevel, maxLevel)
     tableData = {
-      HeaderValues = { "UI Element", "Times Opened", "Time Open" },
+      HeaderValues = { features and "Feature" or "UI Element", "Times Opened", "Time Open" },
       RowOffsets = { 0, 300, 450, 650 },
       Rows = {},
     }
-    for _, definition in ipairs(AutoBiographer_UiActivity.Definitions) do
+    for _, definition in ipairs(features and AutoBiographer_FeatureActivity.Definitions or AutoBiographer_UiActivity.Definitions) do
       local entry = totals[definition.Id]
       table.insert(tableData.Rows, { definition.Name, entry and entry.OpenCount or 0, entry and entry.TimeSpent or 0 })
     end
@@ -531,11 +538,13 @@ function AutoBiographer_StatisticsWindow:Initialize()
   self.Dropdown = CreateFrame("Frame", nil, self, "UIDropDownMenuTemplate")
   UIDropDownMenu_Initialize(self.Dropdown, function()
     for _, view in ipairs(views) do
-      local info = UIDropDownMenu_CreateInfo()
-      info.text = view[1]
-      info.checked = self.StatisticsDisplayMode == view[2]
-      info.func = function() self:SelectView(view[2]) end
-      UIDropDownMenu_AddButton(info)
+      if (IsViewAvailable(view[2])) then
+        local info = UIDropDownMenu_CreateInfo()
+        info.text = view[1]
+        info.checked = self.StatisticsDisplayMode == view[2]
+        info.func = function() self:SelectView(view[2]) end
+        UIDropDownMenu_AddButton(info)
+      end
     end
   end)
   self.LevelDropdown = CreateFrame("Frame", nil, self, "UIDropDownMenuTemplate")
@@ -835,6 +844,7 @@ function AutoBiographer_StatisticsWindow:ScrollRows(delta)
 end
 
 function AutoBiographer_StatisticsWindow:SelectView(mode, minLevel, maxLevel)
+  if (not IsViewAvailable(mode)) then mode = Enum.StatisticsDisplayMode.Levels end
   self:SaveViewState()
   self.IsRestoringView = true
   self.SearchBox:ClearFocus()
@@ -844,6 +854,7 @@ function AutoBiographer_StatisticsWindow:SelectView(mode, minLevel, maxLevel)
   for _, view in ipairs(views) do
     if (view[2] == mode) then self.StatisticsDisplayMode = mode; self.DropdownText = view[1]; break end
   end
+  AutoBiographer_FeatureActivity:Update()
   local state = self:GetViewState()
   if (minLevel and maxLevel) then
     local currentLevel = Controller:GetCurrentLevelNum()
@@ -896,6 +907,10 @@ function AutoBiographer_StatisticsWindow:ShowRowTooltip(owner, row, column)
 end
 
 function AutoBiographer_StatisticsWindow:Update(resetScroll)
+  if (not IsViewAvailable(self.StatisticsDisplayMode)) then
+    self:SelectView(Enum.StatisticsDisplayMode.Levels)
+    return
+  end
   local state = self:GetViewState()
   local currentLevel = Controller:GetCurrentLevelNum()
   local minLevel, maxLevel = 1, currentLevel

@@ -41,6 +41,7 @@ SnapshotManager.lua
 CharacterRosterManager.lua
 ClassActivity.lua
 UiActivity.lua
+FeatureActivity.lua
 Fishing.lua
 Rolls.lua
 Milestones.lua

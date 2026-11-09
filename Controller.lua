@@ -508,6 +508,19 @@ function Controller:GetAggregatedUiStatistics(minLevel, maxLevel)
   return totals
 end
 
+function Controller:GetAggregatedFeatureStatistics(minLevel, maxLevel)
+  AutoBiographer_FeatureActivity:Update()
+  local totals = UiStatistics.New()
+  for levelNum, statistics in pairs(self.CharacterData.Levels) do
+    if (levelNum >= minLevel and levelNum <= maxLevel) then
+      for feature, entry in pairs(statistics.FeatureStatistics or {}) do
+        UiStatistics.Add(totals, feature, entry.OpenCount, entry.TimeSpent)
+      end
+    end
+  end
+  return totals
+end
+
 function Controller:GetDamageOrHealing(damageOrHealingCategory, minLevel, maxLevel)
   local amountSum = 0
   local overSum = 0
@@ -1084,6 +1097,7 @@ function Controller:OnLevelUp(timestamp, coordinates, levelNum, totalTimePlayedA
   
   self.CharacterData.Levels[levelNum] = LevelStatistics.New(levelNum, totalTimePlayedAtDing, nil)
   AutoBiographer_UiActivity:FlushPending()
+  AutoBiographer_FeatureActivity:FlushPending()
   
   local currentLevel = self.CharacterData.Levels[levelNum]
   local previousLevel = self.CharacterData.Levels[levelNum - 1]

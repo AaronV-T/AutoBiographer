@@ -469,6 +469,7 @@ end
 function AutoBiographer_SummaryPanel:SelectTab(name)
   if (not self.DashboardPages[name]) then return end
   self.ActiveTab = name
+  AutoBiographer_FeatureActivity:Update()
   AutoBiographer_Settings.MainWindowTab = name
   self.ScrollFrame.Scrollbar:SetValue(0)
   self:Update()

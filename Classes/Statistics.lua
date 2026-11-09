@@ -10,6 +10,7 @@ function AggregatedStatistics.New()
     DeathStatisticsByUnit = {}, -- Dict<CatalogUnitId, count>
     DistanceStatistics = DistanceStatistics.New(), -- Dict<DistanceTrackingType, yards>
     ExperienceStatistics = ExperienceStatistics.New(),
+    FeatureStatistics = UiStatistics.New(), -- Dict<AddonFeature, { OpenCount, TimeSpent }>
     GatheringStatistics = nil,
     ItemStatisticsByItem = {}, -- Dict<CatalogItemId, ItemStatistics>
     KillStatisticsByUnit = {}, -- Dict<CatalogUnitId, KillStatistics>

@@ -5,6 +5,7 @@ AutoBiographer_UiActivity = {
   HookedFrames = {},
   PendingStatistics = {},
   Generation = 0,
+  StatisticsKey = "UiStatistics",
 }
 
 local Activity = AutoBiographer_UiActivity
@@ -133,8 +134,8 @@ end
 function Activity:GetStatistics()
   local level = Controller.CharacterData.Levels[self.LevelNum]
   if (level) then
-    if (not level.UiStatistics) then level.UiStatistics = UiStatistics.New() end
-    return level.UiStatistics
+    if (not level[self.StatisticsKey]) then level[self.StatisticsKey] = UiStatistics.New() end
+    return level[self.StatisticsKey]
   end
   -- The played-time response can create the new level after PLAYER_LEVEL_UP.
   if (not self.PendingStatistics[self.LevelNum]) then self.PendingStatistics[self.LevelNum] = UiStatistics.New() end
@@ -145,9 +146,9 @@ function Activity:FlushPending()
   for levelNum, pending in pairs(self.PendingStatistics) do
     local level = Controller.CharacterData.Levels[levelNum]
     if (level) then
-      if (not level.UiStatistics) then level.UiStatistics = UiStatistics.New() end
+      if (not level[self.StatisticsKey]) then level[self.StatisticsKey] = UiStatistics.New() end
       for element, entry in pairs(pending) do
-        UiStatistics.Add(level.UiStatistics, element, entry.OpenCount, entry.TimeSpent)
+        UiStatistics.Add(level[self.StatisticsKey], element, entry.OpenCount, entry.TimeSpent)
       end
       self.PendingStatistics[levelNum] = nil
     end
