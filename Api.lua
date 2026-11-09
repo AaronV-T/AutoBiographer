@@ -392,6 +392,7 @@ function Api.GetPlayerSnapshotTalents(level, diagnostic)
   local stage = "talent snapshot"
   local function Value(value)
     if (issecretvalue and issecretvalue(value)) then return "<secret>" end
+    if (type(value) == "table") then return "<table>" end
     return tostring(value)
   end
   local function Trace(message)
@@ -702,17 +703,22 @@ function Api.GetRestedExperiencePool()
 end
 
 function Api.GetSpellInfo(spellId)
+  local spellInfo
   if (GetSpellInfo) then
-    return GetSpellInfo(spellId)
+    local name, rank, icon, castTime, minRange, maxRange, id, originalIcon = GetSpellInfo(spellId)
+    -- Compatibility shims can expose the modern table through the old global.
+    if (not IsReadable(name, "table")) then
+      return name, rank, icon, castTime, minRange, maxRange, id, originalIcon
+    end
+    spellInfo = name
+  elseif (C_Spell and C_Spell.GetSpellInfo) then
+    spellInfo = C_Spell.GetSpellInfo(spellId)
   end
 
-  if (C_Spell and C_Spell.GetSpellInfo) then
-    local spellInfo = C_Spell.GetSpellInfo(spellId)
-    if (spellInfo) then
-      return spellInfo.name, nil, spellInfo.iconID, spellInfo.castTime,
-        spellInfo.minRange, spellInfo.maxRange, spellInfo.spellID,
-        spellInfo.originalIconID
-    end
+  if (IsReadable(spellInfo, "table")) then
+    return spellInfo.name, nil, spellInfo.iconID, spellInfo.castTime,
+      spellInfo.minRange, spellInfo.maxRange, spellInfo.spellID,
+      spellInfo.originalIconID
   end
 end
 
