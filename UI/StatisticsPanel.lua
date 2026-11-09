@@ -22,8 +22,11 @@ local views = {
   { "Spells", Enum.StatisticsDisplayMode.Spells },
   { "Spells by Rank", Enum.StatisticsDisplayMode.SpellsByRank },
   { "Time", Enum.StatisticsDisplayMode.Time },
+  { "UI Usage", Enum.StatisticsDisplayMode.UiUsage },
 }
 local headerDescriptions = {
+  ["Times Opened"] = "How many times this window became visible during the selected levels.",
+  ["Time Open"] = "Time this window was visible, including AFK time. Several windows can be open together, so their times overlap.",
   Roll = "Your rolled number. Random Rolls only includes rolls with a range of exactly 1-100.",
   ["Times Rolled"] = "How many times your character rolled this number in the selected level range.",
   ["Roll Type"] = "Whether you rolled Need or Greed for the item. Passes, disenchant and transmog rolls are not included.",
@@ -93,6 +96,7 @@ end
 
 local function IsDurationColumn(window, column)
   return window.StatisticsDisplayMode == Enum.StatisticsDisplayMode.Time and column > 1 or
+    window.StatisticsDisplayMode == Enum.StatisticsDisplayMode.UiUsage and column == 3 or
     window.StatisticsDisplayMode == Enum.StatisticsDisplayMode.OtherPlayers and column == 6 or
     window.StatisticsDisplayMode == Enum.StatisticsDisplayMode.Levels and column == 2
 end
@@ -155,7 +159,18 @@ function AutoBiographer_StatisticsWindow:GetTableData(minLevel, maxLevel)
     self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.HealingDealtByRank or
     self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.SpellsByRank
   
-  if (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.DamageDealt) then
+  if (self.StatisticsDisplayMode == Enum.StatisticsDisplayMode.UiUsage) then
+    local totals = Controller:GetAggregatedUiStatistics(minLevel, maxLevel)
+    tableData = {
+      HeaderValues = { "UI Element", "Times Opened", "Time Open" },
+      RowOffsets = { 0, 300, 450, 650 },
+      Rows = {},
+    }
+    for _, definition in ipairs(AutoBiographer_UiActivity.Definitions) do
+      local entry = totals[definition.Id]
+      table.insert(tableData.Rows, { definition.Name, entry and entry.OpenCount or 0, entry and entry.TimeSpent or 0 })
+    end
+  elseif (self.StatisticsDisplayMode == AutoBiographerEnum.StatisticsDisplayMode.DamageDealt) then
     local abilitiesBySpellName = Controller:GetAggregatedDamageMeterAbilities({ AutoBiographerEnum.DamageOrHealingCategory.DamageDealt }, minLevel, maxLevel, true)
     tableData = {
       HeaderValues = { "Spell Name", "Effective Damage", "Over Damage" },

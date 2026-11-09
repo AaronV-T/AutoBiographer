@@ -40,6 +40,7 @@ Classes/TravelHistory.lua
 SnapshotManager.lua
 CharacterRosterManager.lua
 ClassActivity.lua
+UiActivity.lua
 Fishing.lua
 Rolls.lua
 Milestones.lua

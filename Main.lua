@@ -1136,6 +1136,7 @@ function EM.EventHandlers.PLAYER_ENTERING_WORLD(self, isLogin, isReload)
   if (Api.IsWoWForever()) then self.LastRestedExperiencePool = Api.GetRestedExperiencePool() end
   self:StartDistanceTracking()
   if (AutoBiographer_ClassActivity) then AutoBiographer_ClassActivity:Start() end
+  AutoBiographer_UiActivity:Start()
   self.GearTrackingReady = true
   self:UpdatePlayerGear()
   AutoBiographer_SnapshotManager:Resume()
@@ -1175,6 +1176,7 @@ function EM.EventHandlers.PLAYER_INTERACTION_MANAGER_FRAME_HIDE(self, type)
 end
 
 function EM.EventHandlers.PLAYER_LEAVING_WORLD(self)
+  AutoBiographer_UiActivity:Stop()
   AutoBiographer_Fishing:Stop()
   AutoBiographer_CampfireSharing:OnLeavingWorld()
   if (AutoBiographer_SnapshotManager) then AutoBiographer_SnapshotManager:Pause() end
@@ -1195,6 +1197,7 @@ function EM.EventHandlers.PLAYER_LEAVING_WORLD(self)
 end
 
 function EM.EventHandlers.PLAYER_LEVEL_UP(self, newLevel)
+  AutoBiographer_UiActivity:SetLevel(newLevel)
   self:UpdateTimestamps(self.PersistentPlayerInfo.CurrentZone, self.PersistentPlayerInfo.CurrentSubZone)
   self.NewLevelToAddToHistory = newLevel
   
@@ -1210,6 +1213,10 @@ end
 
 function EM.EventHandlers.PLAYER_LOGIN(self)
   
+end
+
+function EM.EventHandlers.PLAYER_LOGOUT(self)
+  AutoBiographer_UiActivity:Stop()
 end
 
 function EM.EventHandlers.PLAYER_MONEY(self)
@@ -3051,6 +3058,9 @@ end
 function EM:ClearCharacterData(doNotRequireConfirmation, doNotReloadUI) 
   local clearFunc = function(confirmed)
     if (not confirmed) then return end
+    AutoBiographer_UiActivity:Stop()
+    AutoBiographer_UiActivity.States = {}
+    AutoBiographer_UiActivity.PendingStatistics = {}
     _G["AUTOBIOGRAPHER_CATALOGS_CHAR"] = nil
     _G["AUTOBIOGRAPHER_EVENTS_CHAR"] = nil
     _G["AUTOBIOGRAPHER_GEAR_CHAR"] = nil

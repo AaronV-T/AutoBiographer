@@ -24,6 +24,7 @@ function AggregatedStatistics.New()
     TimeStatisticsByArea = {}, -- Dict<ZoneName-SubZoneName, TimeStatistics>
     TimeStatisticsByCompanionFamily = {}, -- Dict<CreatureFamilyId, seconds>
     TimeStatisticsBySpell = {}, -- Dict<CatalogSpellId, seconds>; auras, seals, and totems
+    UiStatistics = UiStatistics.New(), -- Dict<UiElement, { OpenCount, TimeSpent }>
   }
 end
 
@@ -453,4 +454,21 @@ function TimeStatistics.GetSum(ts, timeTrackingTypes)
   end
 
   return sum
+end
+
+-- *** UiStatistics ***
+
+UiStatistics = {}
+function UiStatistics.New()
+  return {}
+end
+
+function UiStatistics.Add(statistics, element, openCount, seconds)
+  local entry = statistics[element]
+  if (not entry) then
+    entry = { OpenCount = 0, TimeSpent = 0 }
+    statistics[element] = entry
+  end
+  entry.OpenCount = entry.OpenCount + openCount
+  entry.TimeSpent = entry.TimeSpent + seconds
 end
