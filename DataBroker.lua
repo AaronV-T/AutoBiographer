@@ -27,9 +27,9 @@ local function RegisterLauncher()
       end,
       OnTooltipShow = function(tooltip)
         tooltip:AddLine("AutoBiographer", 1, 0.82, 0)
-        tooltip:AddLine("Left-click: Toggle the AutoBiographer interface", 1, 1, 1)
-        tooltip:AddLine("Middle-click: Adventure Replay", 1, 1, 1)
-        tooltip:AddLine("Right-click: Options", 1, 1, 1)
+        tooltip:AddLine("|cffe6cc80Left-click:|r Toggle the AutoBiographer interface", 0.7, 0.7, 0.7)
+        tooltip:AddLine("|cffe6cc80Middle-click:|r Adventure Replay", 0.7, 0.7, 0.7)
+        tooltip:AddLine("|cffe6cc80Right-click:|r Options", 0.7, 0.7, 0.7)
       end,
     })
   end
