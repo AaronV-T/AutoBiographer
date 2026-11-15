@@ -72,3 +72,4 @@ UI/MinimapButton.lua
 UI/MinimapButton.xml
 UI/WorldMapWindow.lua
 UI/Options.lua
+DataBroker.lua
