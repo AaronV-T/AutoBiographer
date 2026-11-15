@@ -18,6 +18,8 @@ local function RegisterLauncher()
         if (not AutoBiographer_MainWindow.Initialized) then return end
         if (button == "LeftButton") then
           AutoBiographer_MainWindow:Toggle()
+        elseif (button == "MiddleButton") then
+          AutoBiographer_MainWindow:ShowSection("Replay")
         elseif (button == "RightButton") then
           Settings.OpenToCategory(AutoBiographer_OptionWindow.categoryID)
           AutoBiographer_MainWindow:Hide()
@@ -26,6 +28,7 @@ local function RegisterLauncher()
       OnTooltipShow = function(tooltip)
         tooltip:AddLine("AutoBiographer", 1, 0.82, 0)
         tooltip:AddLine("Left-click: Toggle the AutoBiographer interface", 1, 1, 1)
+        tooltip:AddLine("Middle-click: Adventure Replay", 1, 1, 1)
         tooltip:AddLine("Right-click: Options", 1, 1, 1)
       end,
     })
